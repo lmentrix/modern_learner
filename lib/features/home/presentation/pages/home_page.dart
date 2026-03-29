@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../../core/theme/app_colors.dart';
@@ -264,12 +265,14 @@ class _HomePageState extends State<HomePage> {
                     label: 'Home',
                     isActive: true,
                     activeColor: AppColors.primary,
+                    onTap: () {},
                   ),
                   _NavItem(
                     icon: Icons.explore_rounded,
                     label: 'Explore',
                     isActive: false,
                     activeColor: AppColors.primary,
+                    onTap: () {},
                   ),
                   _NavItem(
                     icon: Icons.mic_rounded,
@@ -277,18 +280,21 @@ class _HomePageState extends State<HomePage> {
                     isActive: false,
                     activeColor: AppColors.primary,
                     centerFab: true,
+                    onTap: () {},
                   ),
                   _NavItem(
                     icon: Icons.bar_chart_rounded,
                     label: 'Progress',
                     isActive: false,
                     activeColor: AppColors.primary,
+                    onTap: () => context.go('/progress'),
                   ),
                   _NavItem(
                     icon: Icons.person_rounded,
                     label: 'Profile',
                     isActive: false,
                     activeColor: AppColors.primary,
+                    onTap: () {},
                   ),
                 ],
               ),
@@ -307,6 +313,7 @@ class _NavItem extends StatelessWidget {
     required this.isActive,
     required this.activeColor,
     this.centerFab = false,
+    this.onTap,
   });
 
   final IconData icon;
@@ -314,12 +321,13 @@ class _NavItem extends StatelessWidget {
   final bool isActive;
   final Color activeColor;
   final bool centerFab;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     if (centerFab) {
       return GestureDetector(
-        onTap: () {},
+        onTap: onTap ?? () {},
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -345,7 +353,7 @@ class _NavItem extends StatelessWidget {
     }
 
     return GestureDetector(
-      onTap: () {},
+      onTap: onTap ?? () {},
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
