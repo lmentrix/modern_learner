@@ -65,7 +65,7 @@ class _BottomNavigationBarWidget extends StatelessWidget {
                     label: 'Explore',
                     isActive: currentIndex == 1,
                     activeColor: AppColors.primary,
-                    onTap: () {},
+                    onTap: () => context.go('/explore'),
                   ),
                   _NavItem(
                     icon: Icons.mic_rounded,

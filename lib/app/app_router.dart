@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/app/presentation/widgets/main_layout.dart';
 import '../features/home/presentation/pages/home_page.dart';
+import '../features/explore/presentation/pages/explore_page.dart';
 import '../features/progress/presentation/pages/progress_page.dart';
 
 abstract final class AppRouter {
@@ -15,7 +15,9 @@ abstract final class AppRouter {
         builder: (context, state, child) {
           // 根据当前路径确定选中的标签
           int currentIndex = 0;
-          if (state.matchedLocation == '/progress') {
+          if (state.matchedLocation == '/explore') {
+            currentIndex = 1;
+          } else if (state.matchedLocation == '/progress') {
             currentIndex = 3;
           }
           return MainLayout(
@@ -27,6 +29,10 @@ abstract final class AppRouter {
           GoRoute(
             path: '/',
             builder: (context, state) => const HomePage(),
+          ),
+          GoRoute(
+            path: '/explore',
+            builder: (context, state) => const ExplorePage(),
           ),
           GoRoute(
             path: '/progress',
