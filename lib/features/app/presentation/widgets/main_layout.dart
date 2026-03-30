@@ -87,7 +87,7 @@ class _BottomNavigationBarWidget extends StatelessWidget {
                     label: 'Profile',
                     isActive: currentIndex == 4,
                     activeColor: AppColors.primary,
-                    onTap: () {},
+                    onTap: () => context.go('/profile'),
                   ),
                 ],
               ),
