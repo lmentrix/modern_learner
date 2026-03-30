@@ -481,88 +481,91 @@ class _ProfilePageState extends State<ProfilePage> {
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (context) => StatefulBuilder(
-        builder: (context, setSheetState) => Container(
-          decoration: const BoxDecoration(
-            color: AppColors.surfaceContainerHigh,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          padding: EdgeInsets.only(
-            top: 12,
-            left: 24,
-            right: 24,
-            bottom: MediaQuery.of(context).padding.bottom + 24,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(child: _sheetHandle()),
-              const SizedBox(height: 20),
-              _sheetTitle(
-                  'Language', Icons.language_rounded, const Color(0xFFFF9500)),
-              const SizedBox(height: 6),
-              Text(
-                'Choose your preferred app language',
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  color: AppColors.onSurfaceVariant,
-                ),
+        builder: (context, setSheetState) => DraggableScrollableSheet(
+          initialChildSize: 0.6,
+          minChildSize: 0.4,
+          maxChildSize: 0.85,
+          builder: (context, scrollController) => Container(
+            decoration: const BoxDecoration(
+              color: AppColors.surfaceContainerHigh,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            child: ListView(
+              controller: scrollController,
+              padding: EdgeInsets.only(
+                top: 12,
+                left: 24,
+                right: 24,
+                bottom: MediaQuery.of(context).padding.bottom + 24,
               ),
-              const SizedBox(height: 20),
-              ...languages.map((lang) {
-                final isSelected = _selectedLanguage == lang.$2;
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: GestureDetector(
-                    onTap: () {
-                      setSheetState(() {});
-                      setState(() => _selectedLanguage = lang.$2);
-                    },
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 150),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 13),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? const Color(0xFFFF9500).withValues(alpha: 0.08)
-                            : AppColors.surfaceContainerHighest
-                                .withValues(alpha: 0.4),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
+              children: [
+                Center(child: _sheetHandle()),
+                const SizedBox(height: 20),
+                _sheetTitle(
+                    'Language', Icons.language_rounded, const Color(0xFFFF9500)),
+                const SizedBox(height: 6),
+                Text(
+                  'Choose your preferred app language',
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                ...languages.map((lang) {
+                  final isSelected = _selectedLanguage == lang.$2;
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: GestureDetector(
+                      onTap: () {
+                        setSheetState(() {});
+                        setState(() => _selectedLanguage = lang.$2);
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 150),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 13),
+                        decoration: BoxDecoration(
                           color: isSelected
-                              ? const Color(0xFFFF9500)
-                                  .withValues(alpha: 0.45)
-                              : Colors.transparent,
+                              ? const Color(0xFFFF9500).withValues(alpha: 0.08)
+                              : AppColors.surfaceContainerHighest
+                                  .withValues(alpha: 0.4),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isSelected
+                                ? const Color(0xFFFF9500).withValues(alpha: 0.45)
+                                : Colors.transparent,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Text(lang.$1,
+                                style: const TextStyle(fontSize: 20)),
+                            const SizedBox(width: 12),
+                            Text(
+                              lang.$2,
+                              style: GoogleFonts.inter(
+                                fontSize: 14,
+                                fontWeight: isSelected
+                                    ? FontWeight.w600
+                                    : FontWeight.w400,
+                                color: isSelected
+                                    ? AppColors.onSurface
+                                    : AppColors.onSurfaceVariant,
+                              ),
+                            ),
+                            const Spacer(),
+                            if (isSelected)
+                              const Icon(Icons.check_circle_rounded,
+                                  color: Color(0xFFFF9500), size: 20),
+                          ],
                         ),
                       ),
-                      child: Row(
-                        children: [
-                          Text(lang.$1,
-                              style: const TextStyle(fontSize: 20)),
-                          const SizedBox(width: 12),
-                          Text(
-                            lang.$2,
-                            style: GoogleFonts.inter(
-                              fontSize: 14,
-                              fontWeight: isSelected
-                                  ? FontWeight.w600
-                                  : FontWeight.w400,
-                              color: isSelected
-                                  ? AppColors.onSurface
-                                  : AppColors.onSurfaceVariant,
-                            ),
-                          ),
-                          const Spacer(),
-                          if (isSelected)
-                            const Icon(Icons.check_circle_rounded,
-                                color: Color(0xFFFF9500), size: 20),
-                        ],
-                      ),
                     ),
-                  ),
-                );
-              }),
-            ],
+                  );
+                }),
+              ],
+            ),
           ),
         ),
       ),
@@ -1107,7 +1110,7 @@ class _ProfilePageState extends State<ProfilePage> {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: _achievements.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        separatorBuilder: (_, i) => const SizedBox(width: 12),
         itemBuilder: (context, i) {
           final a = _achievements[i];
           return AchievementBadge(

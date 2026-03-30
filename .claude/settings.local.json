@@ -10,7 +10,12 @@
       "Bash(flutter pub:*)",
       "Bash(adb shell:*)",
       "Bash(adb uninstall:*)",
-      "Bash(flutter clean:*)"
+      "Bash(flutter clean:*)",
+      "Bash(xcrun simctl:*)",
+      "Bash(gem list:*)",
+      "Bash(brew list:*)",
+      "Bash(sudo gem:*)",
+      "Bash(brew install:*)"
     ]
   }
 }
