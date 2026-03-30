@@ -956,115 +956,91 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF0E1020), AppColors.surface],
-        ),
-      ),
-      child: Column(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 14),
+      child: Row(
         children: [
-          Row(
-            children: [
-              Container(
-                width: 72,
-                height: 72,
-                decoration: BoxDecoration(
-                  gradient: AppColors.primaryGradient,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.primaryDim.withValues(alpha: 0.3),
-                      blurRadius: 20,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Center(
-                  child: Text(
-                    'A',
-                    style: GoogleFonts.spaceGrotesk(
-                      fontSize: 32,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
+          Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              gradient: AppColors.primaryGradient,
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Text(
+                'A',
+                style: GoogleFonts.spaceGrotesk(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
                 ),
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Alex Johnson',
+                  style: GoogleFonts.spaceGrotesk(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Row(
                   children: [
-                    Text(
-                      'Alex Johnson',
-                      style: GoogleFonts.spaceGrotesk(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
                     Text(
                       'Advanced Learner',
                       style: GoogleFonts.inter(
-                        fontSize: 13,
+                        fontSize: 12,
                         color: AppColors.onSurfaceVariant,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
+                          horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
                         gradient: AppColors.primaryGradient,
                         borderRadius: BorderRadius.circular(100),
                       ),
                       child: Text(
-                        'LEVEL 8',
+                        'LVL 8',
                         style: GoogleFonts.inter(
-                          fontSize: 10,
+                          fontSize: 9,
                           fontWeight: FontWeight.w700,
                           color: const Color(0xFF1A1028),
-                          letterSpacing: 1.2,
+                          letterSpacing: 1.0,
                         ),
                       ),
                     ),
                   ],
                 ),
-              ),
-              GestureDetector(
-                onTap: _showAccountSheet,
-                child: Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceContainerHigh,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: AppColors.outlineVariant.withValues(alpha: 0.15),
-                    ),
-                  ),
-                  child: const Icon(
-                    Icons.edit_rounded,
-                    color: AppColors.onSurfaceVariant,
-                    size: 20,
-                  ),
+              ],
+            ),
+          ),
+          GestureDetector(
+            onTap: _showAccountSheet,
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: AppColors.surfaceContainerHigh,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: AppColors.outlineVariant.withValues(alpha: 0.15),
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Text(
-            '📚 Language enthusiast | 🎯 Daily learner | 🌟 Goal: Fluent in 3 languages',
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              color: AppColors.onSurfaceVariant,
-              height: 1.5,
+              child: const Icon(
+                Icons.edit_rounded,
+                color: AppColors.onSurfaceVariant,
+                size: 17,
+              ),
             ),
-            textAlign: TextAlign.center,
           ),
         ],
       ),
