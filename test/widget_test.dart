@@ -1,30 +1,54 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:modern_learner_production/main.dart';
+import 'package:modern_learner_production/app/app.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('App loads with home page', (WidgetTester tester) async {
+    await tester.pumpWidget(const App());
+    await tester.pumpAndSettle();
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    // Verify home page content is visible
+    expect(find.text('Good morning,'), findsOneWidget);
+    expect(find.text('Alex 👋'), findsOneWidget);
+  });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+  testWidgets('Bottom navigation bar is visible', (WidgetTester tester) async {
+    await tester.pumpWidget(const App());
+    await tester.pumpAndSettle();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // Verify bottom nav items
+    expect(find.text('Home'), findsOneWidget);
+    expect(find.text('Explore'), findsOneWidget);
+    expect(find.text('Voice'), findsOneWidget);
+    expect(find.text('Progress'), findsOneWidget);
+    expect(find.text('Profile'), findsOneWidget);
+  });
+
+  testWidgets('Navigate to Progress page', (WidgetTester tester) async {
+    await tester.pumpWidget(const App());
+    await tester.pumpAndSettle();
+
+    // Tap on Progress in bottom nav
+    await tester.tap(find.text('Progress'));
+    await tester.pumpAndSettle();
+
+    // Verify progress page content
+    expect(find.text('Level 8'), findsOneWidget);
+    expect(find.text('LVL'), findsOneWidget);
+  });
+
+  testWidgets('Skill tree nodes are visible on Progress page', (WidgetTester tester) async {
+    await tester.pumpWidget(const App());
+    await tester.pumpAndSettle();
+
+    // Navigate to Progress page
+    await tester.tap(find.text('Progress'));
+    await tester.pumpAndSettle();
+
+    // Verify skill tree nodes (emojis)
+    expect(find.text('🌱'), findsOneWidget); // Basics
+    expect(find.text('👋'), findsOneWidget); // Greetings
+    expect(find.text('📝'), findsOneWidget); // Introductions
   });
 }

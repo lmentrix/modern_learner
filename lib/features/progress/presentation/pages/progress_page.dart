@@ -46,10 +46,9 @@ class _ProgressPageState extends State<ProgressPage> {
   Widget build(BuildContext context) {
     return BlocProvider.value(
       value: _bloc,
-      child: Scaffold(
-        backgroundColor: AppColors.surface,
-        extendBodyBehindAppBar: true,
-        body: BlocBuilder<ProgressBloc, ProgressState>(
+      child: Container(
+        color: AppColors.surface,
+        child: BlocBuilder<ProgressBloc, ProgressState>(
           builder: (context, state) {
             if (state.status == ProgressStatus.loading) {
               return const Center(

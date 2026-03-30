@@ -1,7 +1,4 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../../core/theme/app_colors.dart';
@@ -19,16 +16,6 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final _scrollCtrl = ScrollController();
-  bool _navBlurred = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _scrollCtrl.addListener(() {
-      final blur = _scrollCtrl.offset > 20;
-      if (blur != _navBlurred) setState(() => _navBlurred = blur);
-    });
-  }
 
   @override
   void dispose() {
@@ -38,98 +25,87 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.surface,
-      extendBodyBehindAppBar: true,
-      appBar: _buildAppBar(),
-      body: CustomScrollView(
-        controller: _scrollCtrl,
-        physics: const BouncingScrollPhysics(),
-        slivers: [
-          // ── Header ──────────────────────────────────────────────────────
-          SliverToBoxAdapter(child: _buildHeader()),
+    return Container(
+      color: AppColors.surface,
+      child: SafeArea(
+        child: CustomScrollView(
+          controller: _scrollCtrl,
+          physics: const BouncingScrollPhysics(),
+          slivers: [
+            // ── Header ──────────────────────────────────────────────────────
+            SliverToBoxAdapter(child: _buildHeader()),
 
-          // ── Progress overview ──────────────────────────────────────────
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            sliver: SliverToBoxAdapter(
-              child: ProgressOverviewCard(
-                level: 8,
-                xp: 2400,
-                xpToNext: 3000,
-                progress: 0.73,
+            const SliverToBoxAdapter(child: SizedBox(height: 24)),
+
+            // ── Progress overview ──────────────────────────────────────────
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              sliver: SliverToBoxAdapter(
+                child: ProgressOverviewCard(
+                  level: 8,
+                  xp: 2400,
+                  xpToNext: 3000,
+                  progress: 0.73,
+                ),
               ),
             ),
-          ),
 
-          const SliverToBoxAdapter(child: SizedBox(height: 32)),
+            const SliverToBoxAdapter(child: SizedBox(height: 32)),
 
-          // ── Voice lessons label ────────────────────────────────────────
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            sliver: SliverToBoxAdapter(child: _sectionLabel('VOICE LESSONS')),
-          ),
-
-          const SliverToBoxAdapter(child: SizedBox(height: 14)),
-
-          // ── Voice lessons horizontal scroll ────────────────────────────
-          SliverToBoxAdapter(child: _buildVoiceLessons()),
-
-          const SliverToBoxAdapter(child: SizedBox(height: 32)),
-
-          // ── Continue learning label ────────────────────────────────────
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            sliver: SliverToBoxAdapter(
-                child: _sectionLabel('CONTINUE LEARNING')),
-          ),
-
-          const SliverToBoxAdapter(child: SizedBox(height: 14)),
-
-          // ── Lesson cards ───────────────────────────────────────────────
-          SliverPadding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 20),
-            sliver: SliverList.separated(
-              itemCount: _lessons.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (context, i) {
-                final l = _lessons[i];
-                return LessonCard(
-                  emoji: l.emoji,
-                  title: l.title,
-                  chapter: l.chapter,
-                  duration: l.duration,
-                  progress: l.progress,
-                  accentColor: l.color,
-                  isNew: l.isNew,
-                );
-              },
+            // ── Voice lessons label ────────────────────────────────────────
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              sliver: SliverToBoxAdapter(child: _sectionLabel('VOICE LESSONS')),
             ),
-          ),
 
-          const SliverToBoxAdapter(child: SizedBox(height: 120)),
-        ],
+            const SliverToBoxAdapter(child: SizedBox(height: 14)),
+
+            // ── Voice lessons horizontal scroll ────────────────────────────
+            SliverToBoxAdapter(child: _buildVoiceLessons()),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 32)),
+
+            // ── Continue learning label ────────────────────────────────────
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              sliver: SliverToBoxAdapter(
+                  child: _sectionLabel('CONTINUE LEARNING')),
+            ),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 14)),
+
+            // ── Lesson cards ───────────────────────────────────────────────
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              sliver: SliverList.separated(
+                itemCount: _lessons.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                itemBuilder: (context, i) {
+                  final l = _lessons[i];
+                  return LessonCard(
+                    emoji: l.emoji,
+                    title: l.title,
+                    chapter: l.chapter,
+                    duration: l.duration,
+                    progress: l.progress,
+                    accentColor: l.color,
+                    isNew: l.isNew,
+                  );
+                },
+              ),
+            ),
+
+            // Add padding for bottom navigation bar
+            const SliverToBoxAdapter(child: SizedBox(height: 100)),
+          ],
+        ),
       ),
-      bottomNavigationBar: _buildBottomNav(),
-    );
-  }
-
-  PreferredSizeWidget _buildAppBar() {
-    return PreferredSize(
-      preferredSize: const Size.fromHeight(0),
-      child: AppBar(backgroundColor: Colors.transparent, elevation: 0),
     );
   }
 
   Widget _buildHeader() {
     return Container(
-      padding: EdgeInsets.fromLTRB(
-        20,
-        MediaQuery.of(context).padding.top + 16,
-        20,
-        28,
-      ),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
@@ -236,142 +212,6 @@ class _HomePageState extends State<HomePage> {
         fontWeight: FontWeight.w700,
         color: AppColors.onSurfaceVariant,
         letterSpacing: 1.8,
-      ),
-    );
-  }
-
-  Widget _buildBottomNav() {
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppColors.surfaceContainer.withValues(alpha: 0.85),
-            border: Border(
-              top: BorderSide(
-                color: AppColors.outlineVariant.withValues(alpha: 0.15),
-                width: 0.5,
-              ),
-            ),
-          ),
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _NavItem(
-                    icon: Icons.home_rounded,
-                    label: 'Home',
-                    isActive: true,
-                    activeColor: AppColors.primary,
-                    onTap: () {},
-                  ),
-                  _NavItem(
-                    icon: Icons.explore_rounded,
-                    label: 'Explore',
-                    isActive: false,
-                    activeColor: AppColors.primary,
-                    onTap: () {},
-                  ),
-                  _NavItem(
-                    icon: Icons.mic_rounded,
-                    label: 'Voice',
-                    isActive: false,
-                    activeColor: AppColors.primary,
-                    centerFab: true,
-                    onTap: () {},
-                  ),
-                  _NavItem(
-                    icon: Icons.bar_chart_rounded,
-                    label: 'Progress',
-                    isActive: false,
-                    activeColor: AppColors.primary,
-                    onTap: () => context.go('/progress'),
-                  ),
-                  _NavItem(
-                    icon: Icons.person_rounded,
-                    label: 'Profile',
-                    isActive: false,
-                    activeColor: AppColors.primary,
-                    onTap: () {},
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _NavItem extends StatelessWidget {
-  const _NavItem({
-    required this.icon,
-    required this.label,
-    required this.isActive,
-    required this.activeColor,
-    this.centerFab = false,
-    this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final bool isActive;
-  final Color activeColor;
-  final bool centerFab;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    if (centerFab) {
-      return GestureDetector(
-        onTap: onTap ?? () {},
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                gradient: AppColors.primaryGradient,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primaryDim.withValues(alpha: 0.4),
-                    blurRadius: 20,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Icon(icon, color: Colors.white, size: 24),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return GestureDetector(
-      onTap: onTap ?? () {},
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            color: isActive ? activeColor : AppColors.onSurfaceVariant,
-            size: 24,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: GoogleFonts.inter(
-              fontSize: 11,
-              fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-              color: isActive ? activeColor : AppColors.onSurfaceVariant,
-            ),
-          ),
-        ],
       ),
     );
   }

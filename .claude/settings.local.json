@@ -7,7 +7,10 @@
       "Bash(if not:*)",
       "Bash(flutter run:*)",
       "Bash(flutter analyze:*)",
-      "Bash(flutter pub:*)"
+      "Bash(flutter pub:*)",
+      "Bash(adb shell:*)",
+      "Bash(adb uninstall:*)",
+      "Bash(flutter clean:*)"
     ]
   }
 }
