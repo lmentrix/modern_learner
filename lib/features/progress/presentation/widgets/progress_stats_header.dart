@@ -14,187 +14,178 @@ class ProgressStatsHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final xpInLevel = progress.totalXp % 500;
+    final xpFraction = (xpInLevel / 500.0).clamp(0.0, 1.0);
+
+    return Padding(
       padding: EdgeInsets.only(
         top: MediaQuery.of(context).padding.top + 16,
-        left: 20,
-        right: 20,
-        bottom: 20,
-      ),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            AppColors.primaryDim.withValues(alpha: 0.2),
-            AppColors.surface,
-          ],
-        ),
+        left: 28,
+        right: 28,
+        bottom: 16,
       ),
       child: Column(
         children: [
-          // Level and XP
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              // Level badge
-              Container(
-                width: 72,
-                height: 72,
-                decoration: BoxDecoration(
-                  gradient: AppColors.primaryGradient,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.primaryDim.withValues(alpha: 0.4),
-                      blurRadius: 16,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Text(
-                      '${progress.level}',
-                      style: GoogleFonts.spaceGrotesk(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                      ),
-                    ),
-                    Positioned(
-                      bottom: 4,
-                      child: Text(
-                        'LVL',
-                        style: GoogleFonts.inter(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white70,
-                          letterSpacing: 1,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+              _StatItem(
+                emoji: '🔥',
+                value: '${progress.streak}',
+                label: 'Day streak',
               ),
-              const SizedBox(width: 16),
-              // XP bar
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Level ${progress.level}',
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.onSurfaceVariant,
-                          ),
-                        ),
-                        Text(
-                          'Level ${progress.level + 1}',
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Container(
-                        height: 12,
-                        color: AppColors.surfaceContainerHighest.withValues(alpha: 0.5),
-                        child: FractionallySizedBox(
-                          alignment: Alignment.centerLeft,
-                          widthFactor: _xpProgress,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              gradient: AppColors.primaryGradient,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${_formatNumber(progress.totalXp % 500)} / 500 XP',
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        color: AppColors.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
+              _LevelRing(level: progress.level),
+              _StatItem(
+                emoji: '💎',
+                value: '${progress.gems}',
+                label: 'Gems',
               ),
             ],
           ),
           const SizedBox(height: 20),
-          // Stats row
-          Row(
-            children: [
-              Expanded(child: _buildStatCard('🔥', '${progress.streak}', 'Day Streak')),
-              const SizedBox(width: 12),
-              Expanded(child: _buildStatCard('💎', '${progress.gems}', 'Gems')),
-              const SizedBox(width: 12),
-              Expanded(child: _buildStatCard('⭐', '${progress.totalXp}', 'Total XP')),
-            ],
+          _XpBar(
+            xpInLevel: xpInLevel,
+            level: progress.level,
+            fraction: xpFraction,
           ),
         ],
       ),
     );
   }
+}
 
-  double get _xpProgress {
-    final xpForCurrentLevel = progress.totalXp % 500;
-    return xpForCurrentLevel / 500;
-  }
+class _StatItem extends StatelessWidget {
+  final String emoji;
+  final String value;
+  final String label;
 
-  Widget _buildStatCard(String icon, String value, String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 14),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerHighest.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppColors.outlineVariant.withValues(alpha: 0.2),
+  const _StatItem({
+    required this.emoji,
+    required this.value,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(emoji, style: const TextStyle(fontSize: 22)),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: GoogleFonts.spaceGrotesk(
+            fontSize: 20,
+            fontWeight: FontWeight.w800,
+            color: AppColors.onSurface,
+          ),
         ),
-      ),
-      child: Column(
-        children: [
-          Text(icon, style: const TextStyle(fontSize: 20)),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: GoogleFonts.spaceGrotesk(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              color: AppColors.onSurface,
-            ),
+        Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: 11,
+            color: AppColors.onSurfaceVariant,
           ),
-          Text(
-            label,
-            style: GoogleFonts.inter(
-              fontSize: 10,
-              color: AppColors.onSurfaceVariant,
-              fontWeight: FontWeight.w500,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
+}
 
-  String _formatNumber(int num) {
-    if (num >= 1000) {
-      return '${(num / 1000).toStringAsFixed(1)}k';
-    }
-    return num.toString();
+class _LevelRing extends StatelessWidget {
+  final int level;
+
+  const _LevelRing({required this.level});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Container(
+          width: 52,
+          height: 52,
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: AppColors.primaryGradient,
+          ),
+          child: Center(
+            child: Text(
+              '$level',
+              style: GoogleFonts.spaceGrotesk(
+                fontSize: 22,
+                fontWeight: FontWeight.w900,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Level',
+          style: GoogleFonts.inter(
+            fontSize: 11,
+            color: AppColors.onSurfaceVariant,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _XpBar extends StatelessWidget {
+  final int xpInLevel;
+  final int level;
+  final double fraction;
+
+  const _XpBar({
+    required this.xpInLevel,
+    required this.level,
+    required this.fraction,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Lvl $level',
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: AppColors.onSurfaceVariant,
+              ),
+            ),
+            Text(
+              '$xpInLevel / 500 XP',
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: AppColors.primary,
+              ),
+            ),
+            Text(
+              'Lvl ${level + 1}',
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: AppColors.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 7),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: fraction,
+            backgroundColor: AppColors.surfaceContainerHighest,
+            valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
+            minHeight: 7,
+          ),
+        ),
+      ],
+    );
   }
 }

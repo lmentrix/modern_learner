@@ -22,22 +22,8 @@ class SkillNodeDetailSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            AppColors.surfaceContainerHigh,
-            AppColors.surfaceContainer,
-          ],
-        ),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.4),
-            blurRadius: 20,
-            offset: const Offset(0, -4),
-          ),
-        ],
+        color: AppColors.surfaceContainerHigh,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -45,27 +31,27 @@ class SkillNodeDetailSheet extends StatelessWidget {
           // Handle bar
           Container(
             margin: const EdgeInsets.only(top: 12),
-            width: 40,
+            width: 36,
             height: 4,
             decoration: BoxDecoration(
-              color: AppColors.outlineVariant.withValues(alpha: 0.5),
+              color: AppColors.outlineVariant.withValues(alpha: 0.4),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header with emoji and type badge
+                // Type badge + XP reward
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _buildTypeBadge(node.type),
-                    const Spacer(),
+                    _TypeBadge(type: node.type),
                     Text(
                       '+${node.xpReward} XP',
                       style: GoogleFonts.spaceGrotesk(
-                        fontSize: 18,
+                        fontSize: 16,
                         fontWeight: FontWeight.w700,
                         color: AppColors.primary,
                       ),
@@ -74,31 +60,24 @@ class SkillNodeDetailSheet extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
 
-                // Emoji and title
+                // Emoji + title + description
                 Row(
                   children: [
                     Container(
-                      width: 80,
-                      height: 80,
+                      width: 68,
+                      height: 68,
                       decoration: BoxDecoration(
-                        gradient: AppColors.primaryGradient,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.primaryDim.withValues(alpha: 0.4),
-                            blurRadius: 16,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Center(
-                        child: Text(
-                          node.emoji,
-                          style: const TextStyle(fontSize: 40),
+                        color: AppColors.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: AppColors.outlineVariant.withValues(alpha: 0.3),
                         ),
                       ),
+                      child: Center(
+                        child: Text(node.emoji, style: const TextStyle(fontSize: 36)),
+                      ),
                     ),
-                    const SizedBox(width: 20),
+                    const SizedBox(width: 16),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -106,7 +85,7 @@ class SkillNodeDetailSheet extends StatelessWidget {
                           Text(
                             node.title,
                             style: GoogleFonts.spaceGrotesk(
-                              fontSize: 24,
+                              fontSize: 20,
                               fontWeight: FontWeight.w700,
                               color: AppColors.onSurface,
                             ),
@@ -115,7 +94,7 @@ class SkillNodeDetailSheet extends StatelessWidget {
                           Text(
                             node.description,
                             style: GoogleFonts.inter(
-                              fontSize: 14,
+                              fontSize: 13,
                               color: AppColors.onSurfaceVariant,
                             ),
                           ),
@@ -124,278 +103,166 @@ class SkillNodeDetailSheet extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
 
-                // Stats row
+                // Quick stats (duration + gems)
                 if (node.duration != null) ...[
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceContainerHighest.withValues(alpha: 0.5),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        _buildStatItem(
-                          icon: Icons.timer_outlined,
-                          label: 'Duration',
-                          value: _formatDuration(node.duration!),
-                        ),
-                        Container(
-                          width: 1,
-                          height: 40,
-                          color: AppColors.outlineVariant.withValues(alpha: 0.3),
-                        ),
-                        _buildStatItem(
-                          icon: Icons.workspace_premium_outlined,
-                          label: 'XP Reward',
-                          value: '+${node.xpReward}',
-                          valueColor: AppColors.primary,
-                        ),
-                        Container(
-                          width: 1,
-                          height: 40,
-                          color: AppColors.outlineVariant.withValues(alpha: 0.3),
-                        ),
-                        _buildStatItem(
-                          icon: Icons.diamond_outlined,
-                          label: 'Gems',
-                          value: '+${node.rewards.where((r) => r.name == 'Gem').fold<int>(0, (sum, r) => sum + r.quantity)}',
-                          valueColor: AppColors.tertiary,
-                        ),
-                      ],
-                    ),
+                  Row(
+                    children: [
+                      _QuickStat(
+                        icon: Icons.timer_outlined,
+                        label: _formatDuration(node.duration!),
+                        color: AppColors.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 16),
+                      _QuickStat(
+                        icon: Icons.diamond_outlined,
+                        label: '+${node.rewards.where((r) => r.name == 'Gem').fold<int>(0, (s, r) => s + r.quantity)} gems',
+                        color: AppColors.tertiary,
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 20),
-                ],
-
-                // Rewards
-                if (node.rewards.isNotEmpty) ...[
-                  Text(
-                    'REWARDS',
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.onSurfaceVariant,
-                      letterSpacing: 1.5,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 12,
-                    runSpacing: 12,
-                    children: node.rewards.map((reward) {
-                      return Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 10,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.surfaceContainerHighest,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: AppColors.outlineVariant.withValues(alpha: 0.3),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(reward.icon, style: const TextStyle(fontSize: 20)),
-                            const SizedBox(width: 8),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'x${reward.quantity}',
-                                  style: GoogleFonts.spaceGrotesk(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.onSurface,
-                                  ),
-                                ),
-                                Text(
-                                  reward.name,
-                                  style: GoogleFonts.inter(
-                                    fontSize: 11,
-                                    color: AppColors.onSurfaceVariant,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 24),
                 ],
 
                 // Action button
                 SizedBox(
                   width: double.infinity,
-                  height: 56,
-                  child: canClaim
-                      ? _buildClaimButton()
-                      : _buildStartButton(node.status),
+                  height: 52,
+                  child: canClaim ? _ClaimButton(onTap: onClaim) : _StartButton(status: node.status, onTap: onStart),
                 ),
               ],
             ),
           ),
-          SafeArea(child: const SizedBox(height: 8)),
+          SafeArea(child: const SizedBox(height: 4)),
         ],
       ),
     );
   }
 
-  Widget _buildTypeBadge(SkillNodeType type) {
-    final config = switch (type) {
-      SkillNodeType.core => (label: 'CORE', color: AppColors.primary),
-      SkillNodeType.bonus => (label: 'BONUS', color: AppColors.tertiary),
-      SkillNodeType.challenge => (label: 'CHALLENGE', color: AppColors.error),
-      SkillNodeType.boss => (label: 'BOSS', color: AppColors.error),
+  String _formatDuration(Duration duration) {
+    if (duration.inMinutes > 0) return '${duration.inMinutes} min';
+    return '${duration.inSeconds} sec';
+  }
+}
+
+class _TypeBadge extends StatelessWidget {
+  final SkillNodeType type;
+
+  const _TypeBadge({required this.type});
+
+  @override
+  Widget build(BuildContext context) {
+    final (label, color) = switch (type) {
+      SkillNodeType.core => ('CORE', AppColors.primary),
+      SkillNodeType.bonus => ('BONUS', AppColors.tertiary),
+      SkillNodeType.challenge => ('CHALLENGE', AppColors.error),
+      SkillNodeType.boss => ('BOSS', AppColors.error),
     };
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: config.color.withValues(alpha: 0.15),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: config.color.withValues(alpha: 0.5),
-        ),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
       ),
       child: Text(
-        config.label,
+        label,
         style: GoogleFonts.inter(
           fontSize: 10,
           fontWeight: FontWeight.w700,
-          color: config.color,
-          letterSpacing: 1.2,
+          color: color,
+          letterSpacing: 1.0,
         ),
       ),
     );
   }
+}
 
-  Widget _buildStatItem({
-    required IconData icon,
-    required String label,
-    required String value,
-    Color? valueColor,
-  }) {
-    return Column(
+class _QuickStat extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+
+  const _QuickStat({required this.icon, required this.label, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
       children: [
-        Icon(
-          icon,
-          color: AppColors.onSurfaceVariant,
-          size: 20,
-        ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: GoogleFonts.spaceGrotesk(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            color: valueColor ?? AppColors.onSurface,
-          ),
-        ),
-        const SizedBox(height: 2),
+        Icon(icon, size: 16, color: color),
+        const SizedBox(width: 5),
         Text(
           label,
           style: GoogleFonts.inter(
-            fontSize: 10,
-            color: AppColors.onSurfaceVariant,
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            color: color,
           ),
         ),
       ],
     );
   }
+}
 
-  Widget _buildStartButton(SkillNodeStatus status) {
-    final buttonText = switch (status) {
-      SkillNodeStatus.available => 'START LESSON',
-      SkillNodeStatus.inProgress => 'CONTINUE',
-      _ => 'START',
+class _StartButton extends StatelessWidget {
+  final SkillNodeStatus status;
+  final VoidCallback onTap;
+
+  const _StartButton({required this.status, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final label = switch (status) {
+      SkillNodeStatus.available => 'Start Lesson',
+      SkillNodeStatus.inProgress => 'Continue',
+      _ => 'Start',
     };
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onStart,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: AppColors.primaryGradient,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primaryDim.withValues(alpha: 0.4),
-                blurRadius: 16,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Center(
-            child: Text(
-              buttonText,
-              style: GoogleFonts.spaceGrotesk(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
-                letterSpacing: 1.2,
-              ),
-            ),
-          ),
+    return ElevatedButton(
+      onPressed: onTap,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.onPrimary,
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        textStyle: GoogleFonts.spaceGrotesk(
+          fontSize: 16,
+          fontWeight: FontWeight.w700,
         ),
       ),
+      child: Text(label),
     );
   }
+}
 
-  Widget _buildClaimButton() {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onClaim,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: AppColors.tertiaryGradient,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.tertiary.withValues(alpha: 0.4),
-                blurRadius: 16,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text(
-                '🎉 ',
-                style: TextStyle(fontSize: 20),
-              ),
-              Text(
-                'CLAIM REWARDS',
-                style: GoogleFonts.spaceGrotesk(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.surface,
-                  letterSpacing: 1.2,
-                ),
-              ),
-            ],
-          ),
+class _ClaimButton extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _ClaimButton({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      onPressed: onTap,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppColors.tertiary,
+        foregroundColor: Colors.black,
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        textStyle: GoogleFonts.spaceGrotesk(
+          fontSize: 16,
+          fontWeight: FontWeight.w700,
         ),
       ),
+      child: const Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text('🎉 ', style: TextStyle(fontSize: 18)),
+          Text('Claim Rewards'),
+        ],
+      ),
     );
-  }
-
-  String _formatDuration(Duration duration) {
-    if (duration.inMinutes > 0) {
-      return '${duration.inMinutes} min';
-    }
-    return '${duration.inSeconds} sec';
   }
 }

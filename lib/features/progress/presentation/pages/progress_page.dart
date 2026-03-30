@@ -11,9 +11,9 @@ import '../bloc/progress_bloc.dart';
 import '../bloc/progress_event.dart';
 import '../bloc/progress_state.dart';
 import '../widgets/celebration_overlay.dart';
+import '../widgets/lesson_path_widget.dart';
 import '../widgets/progress_stats_header.dart';
 import '../widgets/skill_node_detail_sheet.dart';
-import '../widgets/skill_tree_canvas.dart';
 
 class ProgressPage extends StatefulWidget {
   const ProgressPage({super.key});
@@ -89,33 +89,23 @@ class _ProgressPageState extends State<ProgressPage> {
               return const SizedBox.shrink();
             }
 
-            return Stack(
+            return Column(
               children: [
-                CustomScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  slivers: [
-                    // Stats header
-                    SliverToBoxAdapter(
-                      child: ProgressStatsHeader(
-                        progress: state.userProgress!,
-                      ),
-                    ),
-                    // Skill tree
-                    SliverFillRemaining(
-                      hasScrollBody: false,
-                      child: SkillTreeCanvas(
-                        skillTree: state.skillTree!,
-                        selectedNodeId: state.selectedNodeId,
-                        onNodeTap: (nodeId) {
-                          _bloc.add(SelectNode(nodeId));
-                          _showNodeDetail(nodeId, state);
-                        },
-                        onNodeLongPress: (nodeId) {
-                          // Could show quick preview
-                        },
-                      ),
-                    ),
-                  ],
+                ProgressStatsHeader(progress: state.userProgress!),
+                Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: AppColors.outlineVariant.withValues(alpha: 0.25),
+                ),
+                Expanded(
+                  child: LessonPathWidget(
+                    skillTree: state.skillTree!,
+                    selectedNodeId: state.selectedNodeId,
+                    onNodeTap: (nodeId) {
+                      _bloc.add(SelectNode(nodeId));
+                      _showNodeDetail(nodeId, state);
+                    },
+                  ),
                 ),
               ],
             );
