@@ -29,14 +29,18 @@ class _NewLessonPageState extends State<NewLessonPage> {
   ];
 
   static const _topics = [
-    ('📖', 'Vocabulary'),
-    ('💬', 'Conversation'),
-    ('✍️', 'Grammar'),
-    ('🔊', 'Pronunciation'),
-    ('📝', 'Writing'),
-    ('👂', 'Listening'),
-    ('📚', 'Reading'),
-    ('🎭', 'Culture'),
+    ('➕', 'Mathematics'),
+    ('🔬', 'Science'),
+    ('🌍', 'Geography'),
+    ('📜', 'History'),
+    ('📖', 'Literature'),
+    ('🎨', 'Art'),
+    ('🎵', 'Music'),
+    ('💻', 'Computer Science'),
+    ('⚗️', 'Chemistry'),
+    ('🧬', 'Biology'),
+    ('⚡', 'Physics'),
+    ('🏛️', 'Philosophy'),
   ];
 
   static const _difficulties = [
@@ -64,7 +68,7 @@ class _NewLessonPageState extends State<NewLessonPage> {
                     const SizedBox(height: 12),
                     _buildLanguageGrid(),
                     const SizedBox(height: 28),
-                    _sectionLabel('TOPIC'),
+                    _sectionLabel('SCHOOL LESSON'),
                     const SizedBox(height: 12),
                     _buildTopicGrid(),
                     const SizedBox(height: 28),
