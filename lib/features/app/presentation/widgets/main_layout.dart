@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../new_lesson/presentation/pages/new_lesson_page.dart';
 
 /// 全局主布局 - 包含唯一的底部导航栏
 class MainLayout extends StatelessWidget {
@@ -68,12 +69,17 @@ class _BottomNavigationBarWidget extends StatelessWidget {
                     onTap: () => context.go('/explore'),
                   ),
                   _NavItem(
-                    icon: Icons.mic_rounded,
-                    label: 'Voice',
+                    icon: Icons.add_rounded,
+                    label: 'New',
                     isActive: currentIndex == 2,
                     activeColor: AppColors.primary,
                     centerFab: true,
-                    onTap: () {},
+                    onTap: () => Navigator.of(context, rootNavigator: true).push(
+                      MaterialPageRoute(
+                        fullscreenDialog: true,
+                        builder: (_) => const NewLessonPage(),
+                      ),
+                    ),
                   ),
                   _NavItem(
                     icon: Icons.bar_chart_rounded,
