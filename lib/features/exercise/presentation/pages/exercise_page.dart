@@ -241,10 +241,10 @@ class _ExercisePageState extends State<ExercisePage> {
         totalQuestions: _exercises.length,
         correctAnswers: _correctAnswers,
         onContinue: () {
-          // Pop back to home dashboard
+          // Pop dialog and exercise page, then navigate to progress page
           Navigator.of(context, rootNavigator: true).pop(); // Close dialog
           Navigator.of(context, rootNavigator: true).pop(); // Close exercise page
-          Navigator.of(context, rootNavigator: true).pop(); // Close lesson detail page
+          context.go('/progress'); // Navigate to progress page
         },
       ),
     );

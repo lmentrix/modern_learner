@@ -46,7 +46,7 @@ class StreakDetailsDialog extends StatelessWidget {
 
   Widget _buildHeader() {
     return Container(
-      height: 200,
+      height: 220,
       decoration: const BoxDecoration(
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(24),
@@ -62,12 +62,12 @@ class StreakDetailsDialog extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text('🔥', style: TextStyle(fontSize: 64)),
-            const SizedBox(height: 8),
+            const Text('🔥', style: TextStyle(fontSize: 56)),
+            const SizedBox(height: 4),
             Text(
               '$streak',
               style: GoogleFonts.spaceGrotesk(
-                fontSize: 64,
+                fontSize: 56,
                 fontWeight: FontWeight.w900,
                 color: Colors.white,
                 height: 1,
@@ -80,10 +80,11 @@ class StreakDetailsDialog extends StatelessWidget {
                 ],
               ),
             ),
+            const SizedBox(height: 4),
             Text(
               'Day Streak',
               style: GoogleFonts.inter(
-                fontSize: 18,
+                fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: Colors.white.withValues(alpha: 0.95),
                 shadows: [

@@ -2,24 +2,11 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Flutter Run (Hot Reload Enabled)",
-      "request": "launch",
-      "type": "dart",
-      "flutterMode": "run",
-      "program": "lib/main.dart",
-      "args": [
-        "--hot-reload"
-      ]
-    },
-    {
-      "name": "Flutter Debug (Hot Reload Enabled)",
+      "name": "Flutter Run (Hot Reload)",
       "request": "launch",
       "type": "dart",
       "flutterMode": "debug",
-      "program": "lib/main.dart",
-      "args": [
-        "--hot-reload"
-      ]
+      "program": "lib/main.dart"
     }
   ]
 }

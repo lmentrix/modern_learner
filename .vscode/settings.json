@@ -1,6 +1,6 @@
 {
-  "dart.flutterHotReloadOnSave": "manual",
-  "dart.hotReloadOnSave": "manual",
+  "dart.flutterHotReloadOnSave": "always",
+  "dart.hotReloadOnSave": "always",
   "dart.hotReload": true,
   "dart.debugExternalPackageLibraries": false,
   "dart.debugSdkLibraries": false,
