@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../exercise/presentation/pages/exercise_page.dart';
 
 enum LessonType { voice, school, continueLearning }
 
@@ -508,9 +509,7 @@ class _LessonDetailPageState extends State<LessonDetailPage> {
             height: 50,
             child: FilledButton(
               onPressed: canStart
-                  ? () {
-                      // Start lesson
-                    }
+                  ? () => _startExercise(context)
                   : null,
               style: FilledButton.styleFrom(
                 backgroundColor: canStart ? widget.accentColor : AppColors.surfaceContainerHighest,
@@ -559,6 +558,24 @@ class _LessonDetailPageState extends State<LessonDetailPage> {
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         backgroundColor: AppColors.surfaceContainerHigh,
+      ),
+    );
+  }
+
+  void _startExercise(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ExercisePage(
+          lessonType: widget.type,
+          title: widget.title,
+          sectionTitle: widget.sections.firstWhere(
+            (s) => s.status == LessonSectionStatus.current,
+            orElse: () => widget.sections.first,
+          ).title,
+          accentColor: widget.accentColor,
+          emoji: widget.emoji,
+        ),
       ),
     );
   }
