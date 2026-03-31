@@ -17,7 +17,8 @@
       "Bash(sudo gem:*)",
       "Bash(brew install:*)",
       "Bash(adb kill-server:*)",
-      "Bash(adb start-server:*)"
+      "Bash(adb start-server:*)",
+      "Bash(ls:*)"
     ]
   }
 }

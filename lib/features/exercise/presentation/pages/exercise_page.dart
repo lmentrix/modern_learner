@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -62,21 +63,21 @@ class _ExercisePageState extends State<ExercisePage> {
 
   List<Exercise> _generateVoiceExercises() {
     return [
-      Exercise(
+      const Exercise(
         type: ExerciseType.speaking,
         question: 'Listen and repeat the following phrase:',
         content: 'The quick brown fox jumps over the lazy dog',
         hint: 'Focus on clear pronunciation of each word',
         correctAnswer: 'speech recognition',
       ),
-      Exercise(
+      const Exercise(
         type: ExerciseType.multipleChoice,
         question: 'Which word has a different vowel sound?',
         options: ['cat', 'bat', 'cake', 'mat'],
         correctAnswer: 'cake',
         hint: 'Think about the "a" sound in each word',
       ),
-      Exercise(
+      const Exercise(
         type: ExerciseType.matching,
         question: 'Match the words with their pronunciations:',
         pairs: [
@@ -86,14 +87,14 @@ class _ExercisePageState extends State<ExercisePage> {
         ],
         hint: 'Listen carefully to each sound',
       ),
-      Exercise(
+      const Exercise(
         type: ExerciseType.fillBlank,
         question: 'Complete the tongue twister:',
         content: 'She sells _____ shells by the seashore',
         correctAnswer: 'seashell',
         hint: 'It rhymes with "treasure"',
       ),
-      Exercise(
+      const Exercise(
         type: ExerciseType.trueFalse,
         question: 'True or False: The "th" sound is made with the tongue between the teeth',
         correctAnswer: 'true',
@@ -104,33 +105,33 @@ class _ExercisePageState extends State<ExercisePage> {
 
   List<Exercise> _generateSchoolExercises() {
     return [
-      Exercise(
+      const Exercise(
         type: ExerciseType.multipleChoice,
         question: 'What is the capital of France?',
         options: ['London', 'Berlin', 'Paris', 'Madrid'],
         correctAnswer: 'Paris',
         hint: 'It\'s known for the Eiffel Tower',
       ),
-      Exercise(
+      const Exercise(
         type: ExerciseType.trueFalse,
         question: 'The mitochondria is the powerhouse of the cell',
         correctAnswer: 'true',
         hint: 'Think about cellular respiration',
       ),
-      Exercise(
+      const Exercise(
         type: ExerciseType.fillBlank,
         question: 'Complete the equation: E = _____',
         content: 'E = _____',
         correctAnswer: 'mc²',
         hint: 'Einstein\'s famous equation',
       ),
-      Exercise(
+      const Exercise(
         type: ExerciseType.writing,
         question: 'Explain the water cycle in 2-3 sentences:',
         hint: 'Include evaporation, condensation, and precipitation',
         correctAnswer: 'written response',
       ),
-      Exercise(
+      const Exercise(
         type: ExerciseType.matching,
         question: 'Match the historical events with their dates:',
         pairs: [
@@ -145,33 +146,33 @@ class _ExercisePageState extends State<ExercisePage> {
 
   List<Exercise> _generateGeneralExercises() {
     return [
-      Exercise(
+      const Exercise(
         type: ExerciseType.multipleChoice,
         question: 'What does the prefix "un-" mean?',
         options: ['Again', 'Not', 'Before', 'After'],
         correctAnswer: 'Not',
         hint: 'Think about words like "unable" or "unhappy"',
       ),
-      Exercise(
+      const Exercise(
         type: ExerciseType.fillBlank,
         question: 'Choose the correct word:',
         content: 'Their/There/They\'re going to the park',
         correctAnswer: 'They\'re',
         hint: 'It\'s a contraction of "they are"',
       ),
-      Exercise(
+      const Exercise(
         type: ExerciseType.trueFalse,
         question: 'A noun is a person, place, thing, or idea',
         correctAnswer: 'true',
         hint: 'This is the basic definition',
       ),
-      Exercise(
+      const Exercise(
         type: ExerciseType.writing,
         question: 'Write a sentence using a metaphor:',
         hint: 'Compare two things without using "like" or "as"',
         correctAnswer: 'written response',
       ),
-      Exercise(
+      const Exercise(
         type: ExerciseType.matching,
         question: 'Match the synonyms:',
         pairs: [
@@ -240,8 +241,10 @@ class _ExercisePageState extends State<ExercisePage> {
         totalQuestions: _exercises.length,
         correctAnswers: _correctAnswers,
         onContinue: () {
-          Navigator.pop(context);
-          Navigator.pop(context);
+          // Pop back to home dashboard
+          Navigator.of(context, rootNavigator: true).pop(); // Close dialog
+          Navigator.of(context, rootNavigator: true).pop(); // Close exercise page
+          Navigator.of(context, rootNavigator: true).pop(); // Close lesson detail page
         },
       ),
     );
@@ -688,7 +691,7 @@ class _ExercisePageState extends State<ExercisePage> {
                         ),
                       ),
                     ),
-                    Icon(
+                    const Icon(
                       Icons.arrow_forward_rounded,
                       size: 18,
                       color: AppColors.onSurfaceVariant,
