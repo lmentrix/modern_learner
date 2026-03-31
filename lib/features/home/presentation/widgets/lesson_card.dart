@@ -13,6 +13,7 @@ class LessonCard extends StatefulWidget {
     required this.progress,
     required this.accentColor,
     this.isNew = false,
+    this.onTap,
   });
 
   final String emoji;
@@ -22,6 +23,7 @@ class LessonCard extends StatefulWidget {
   final double progress;
   final Color accentColor;
   final bool isNew;
+  final VoidCallback? onTap;
 
   @override
   State<LessonCard> createState() => _LessonCardState();
@@ -70,7 +72,7 @@ class _LessonCardState extends State<LessonCard>
         borderRadius: BorderRadius.circular(24),
         child: InkWell(
           borderRadius: BorderRadius.circular(24),
-          onTap: () {},
+          onTap: widget.onTap,
           splashColor: widget.accentColor.withValues(alpha: 0.06),
           highlightColor: widget.accentColor.withValues(alpha: 0.03),
           child: Padding(

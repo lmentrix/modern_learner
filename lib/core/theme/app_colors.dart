@@ -13,6 +13,7 @@ abstract final class AppColors {
   // ── Primary ───────────────────────────────────────────────────────────────
   static const Color primary = Color(0xFFB1A0FF);
   static const Color primaryDim = Color(0xFF7E51FF);
+  static const Color primaryContainer = Color(0xFF2A1F5C);
   static const Color onPrimary = Color(0xFF340090);
 
   // ── Secondary ─────────────────────────────────────────────────────────────

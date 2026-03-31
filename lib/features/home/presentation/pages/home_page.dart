@@ -5,7 +5,9 @@ import '../../../../../core/theme/app_colors.dart';
 import '../widgets/lesson_card.dart';
 import '../widgets/progress_overview_card.dart';
 import '../widgets/streak_badge.dart';
+import '../widgets/streak_details_dialog.dart';
 import '../widgets/voice_lesson_card.dart';
+import '../../../lesson_detail/presentation/pages/lesson_detail_page.dart' as lesson_detail;
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -16,6 +18,123 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final _scrollCtrl = ScrollController();
+
+  void _showStreakDetails() {
+    showDialog(
+      context: context,
+      builder: (context) => const StreakDetailsDialog(streak: 14),
+    );
+  }
+
+  void _openLessonDetail(_Lesson lesson) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => lesson_detail.LessonDetailPage(
+          type: lesson_detail.LessonType.continueLearning,
+          title: lesson.title,
+          subtitle: '${lesson.chapter} · ${lesson.duration}',
+          emoji: lesson.emoji,
+          duration: lesson.duration,
+          accentColor: lesson.color,
+          progress: lesson.progress,
+          totalLessons: 12,
+          completedLessons: (lesson.progress * 12).round(),
+          learningObjectives: [
+            'Master key concepts and fundamentals',
+            'Apply knowledge through practical exercises',
+            'Build confidence with hands-on practice',
+            'Track progress and celebrate achievements',
+          ],
+          sections: [
+            const lesson_detail.LessonSection(
+              title: 'Introduction to Basics',
+              emoji: '📖',
+              duration: '10 min',
+              lessonCount: 3,
+              status: lesson_detail.LessonSectionStatus.completed,
+            ),
+            const lesson_detail.LessonSection(
+              title: 'Core Concepts',
+              emoji: '🧠',
+              duration: '15 min',
+              lessonCount: 4,
+              status: lesson_detail.LessonSectionStatus.current,
+            ),
+            const lesson_detail.LessonSection(
+              title: 'Advanced Topics',
+              emoji: '🚀',
+              duration: '20 min',
+              lessonCount: 3,
+              status: lesson_detail.LessonSectionStatus.locked,
+            ),
+            const lesson_detail.LessonSection(
+              title: 'Final Project',
+              emoji: '🏆',
+              duration: '30 min',
+              lessonCount: 2,
+              status: lesson_detail.LessonSectionStatus.locked,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _openVoiceLessonDetail(_VoiceLesson lesson) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => lesson_detail.LessonDetailPage(
+          type: lesson_detail.LessonType.voice,
+          title: lesson.title,
+          subtitle: lesson.subtitle,
+          emoji: lesson.emoji,
+          duration: lesson.duration,
+          accentColor: lesson.color,
+          progress: 0.3,
+          totalLessons: 8,
+          completedLessons: 2,
+          learningObjectives: [
+            'Improve pronunciation and accent',
+            'Build speaking confidence',
+            'Master conversational flow',
+            'Develop listening skills',
+          ],
+          sections: [
+            const lesson_detail.LessonSection(
+              title: 'Warm-up Exercises',
+              emoji: '🎤',
+              duration: '5 min',
+              lessonCount: 2,
+              status: lesson_detail.LessonSectionStatus.completed,
+            ),
+            const lesson_detail.LessonSection(
+              title: 'Vowel Sounds',
+              emoji: '🅰️',
+              duration: '12 min',
+              lessonCount: 3,
+              status: lesson_detail.LessonSectionStatus.current,
+            ),
+            const lesson_detail.LessonSection(
+              title: 'Consonant Clusters',
+              emoji: '🔤',
+              duration: '15 min',
+              lessonCount: 2,
+              status: lesson_detail.LessonSectionStatus.locked,
+            ),
+            const lesson_detail.LessonSection(
+              title: 'Conversation Practice',
+              emoji: '💬',
+              duration: '20 min',
+              lessonCount: 1,
+              status: lesson_detail.LessonSectionStatus.locked,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   void dispose() {
@@ -90,6 +209,7 @@ class _HomePageState extends State<HomePage> {
                     progress: l.progress,
                     accentColor: l.color,
                     isNew: l.isNew,
+                    onTap: () => _openLessonDetail(l),
                   );
                 },
               ),
@@ -175,7 +295,10 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
           const SizedBox(height: 16),
-          const StreakBadge(count: 14),
+          GestureDetector(
+            onTap: () => _showStreakDetails(),
+            child: const StreakBadge(count: 14),
+          ),
         ],
       ),
     );
@@ -198,6 +321,7 @@ class _HomePageState extends State<HomePage> {
             accentColor: v.color,
             emoji: v.emoji,
             isActive: i == 0,
+            onTap: () => _openVoiceLessonDetail(v),
           );
         },
       ),
