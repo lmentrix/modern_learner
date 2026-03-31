@@ -1,11 +1,11 @@
-import '../entities/skill_tree.dart';
+import '../entities/roadmap.dart';
 import '../entities/user_progress.dart';
 
 abstract class ProgressRepository {
-  Future<SkillTree> getSkillTree();
+  Future<Roadmap> getRoadmap();
   Future<UserProgress> getUserProgress();
-  Future<void> startNode(String nodeId);
-  Future<void> completeNode(String nodeId);
-  Future<void> updateNodeProgress(String nodeId, double progress);
+  Future<void> startLesson(String lessonId);
+  Future<void> completeLesson(String lessonId);
+  Future<void> updateLessonProgress(String lessonId, double progress);
   Stream<UserProgress> getProgressStream();
 }

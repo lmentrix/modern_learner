@@ -1,54 +1,60 @@
-import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../domain/usecases/complete_node.dart' as domain;
-import '../../domain/usecases/get_skill_tree.dart';
+import '../../domain/entities/roadmap.dart';
+import '../../domain/entities/user_progress.dart';
+import '../../domain/usecases/complete_lesson.dart' as domain;
+import '../../domain/usecases/start_lesson.dart' as start;
+import '../../domain/usecases/get_roadmap.dart';
 import '../../domain/usecases/get_user_progress.dart';
 import 'progress_event.dart';
 import 'progress_state.dart';
 
 class ProgressBloc extends Bloc<ProgressEvent, ProgressState> {
-  final GetSkillTree getSkillTree;
+  final GetRoadmap getRoadmap;
   final GetUserProgress getUserProgress;
-  final domain.CompleteNode completeNode;
-
-  StreamSubscription? _progressSubscription;
+  final domain.CompleteLesson completeLesson;
+  final start.StartLesson startLesson;
 
   ProgressBloc({
-    required this.getSkillTree,
+    required this.getRoadmap,
     required this.getUserProgress,
-    required this.completeNode,
+    required this.completeLesson,
+    required this.startLesson,
   }) : super(const ProgressState()) {
-    on<LoadProgress>(_onLoadProgress);
-    on<SelectNode>(_onSelectNode);
-    on<StartNode>(_onStartNode);
-    on<CompleteNodeEvent>(_onCompleteNode);
+    on<LoadRoadmap>(_onLoadRoadmap);
+    on<SelectLesson>(_onSelectLesson);
+    on<SelectChapter>(_onSelectChapter);
+    on<StartLessonEvent>(_onStartLesson);
+    on<CompleteLessonEvent>(_onCompleteLesson);
     on<ClaimReward>(_onClaimReward);
-
-    // Listen to progress stream
-    getUserProgress.stream().listen((progress) {
-      if (!isClosed) {
-        add(_ProgressUpdated(progress));
-      }
-    });
+    on<ExpandChapter>(_onExpandChapter);
+    on<CollapseChapter>(_onCollapseChapter);
   }
 
-  Future<void> _onLoadProgress(
-    LoadProgress event,
+  Future<void> _onLoadRoadmap(
+    LoadRoadmap event,
     Emitter<ProgressState> emit,
   ) async {
     emit(state.copyWith(status: ProgressStatus.loading));
 
     try {
       final results = await Future.wait([
-        getSkillTree(),
+        getRoadmap(),
         getUserProgress(),
       ]);
 
+      final roadmap = results[0] as Roadmap;
+      // Auto-expand the first available chapter
+      final firstAvailableChapter = roadmap.chapters.firstWhere(
+        (c) => c.lessons.any((l) => l.status != LessonStatus.locked),
+        orElse: () => roadmap.chapters.first,
+      );
+
       emit(state.copyWith(
         status: ProgressStatus.loaded,
-        skillTree: results[0] as dynamic,
-        userProgress: results[1] as dynamic,
+        roadmap: roadmap,
+        userProgress: results[1] as UserProgress,
+        expandedChapters: {firstAvailableChapter.id},
       ));
     } catch (e) {
       emit(state.copyWith(
@@ -58,27 +64,35 @@ class ProgressBloc extends Bloc<ProgressEvent, ProgressState> {
     }
   }
 
-  void _onSelectNode(SelectNode event, Emitter<ProgressState> emit) {
-    emit(state.copyWith(selectedNodeId: event.nodeId));
+  void _onSelectLesson(SelectLesson event, Emitter<ProgressState> emit) {
+    emit(state.copyWith(selectedLessonId: event.lessonId));
   }
 
-  void _onProgressUpdated(_ProgressUpdated event, Emitter<ProgressState> emit) {
-    emit(state.copyWith(userProgress: event.progress));
+  void _onSelectChapter(SelectChapter event, Emitter<ProgressState> emit) {
+    emit(state.copyWith(selectedChapterId: event.chapterId));
   }
 
-  Future<void> _onStartNode(
-    StartNode event,
-    Emitter<ProgressState> emit,
-  ) async {
-    // Navigate to lesson screen (handled by presentation layer)
-  }
-
-  Future<void> _onCompleteNode(
-    CompleteNodeEvent event,
+  Future<void> _onStartLesson(
+    StartLessonEvent event,
     Emitter<ProgressState> emit,
   ) async {
     try {
-      await completeNode(event.nodeId);
+      await startLesson(event.lessonId);
+      // Navigate to lesson screen (handled by presentation layer)
+    } catch (e) {
+      emit(state.copyWith(
+        status: ProgressStatus.error,
+        errorMessage: e.toString(),
+      ));
+    }
+  }
+
+  Future<void> _onCompleteLesson(
+    CompleteLessonEvent event,
+    Emitter<ProgressState> emit,
+  ) async {
+    try {
+      await completeLesson(event.lessonId);
       // Show celebration (handled by presentation layer)
     } catch (e) {
       emit(state.copyWith(
@@ -90,31 +104,24 @@ class ProgressBloc extends Bloc<ProgressEvent, ProgressState> {
 
   void _onClaimReward(ClaimReward event, Emitter<ProgressState> emit) {
     emit(state.copyWith(
-      claimedRewards: {...state.claimedRewards, event.nodeId},
+      claimedRewards: {...state.claimedRewards, event.lessonId},
+    ));
+  }
+
+  void _onExpandChapter(ExpandChapter event, Emitter<ProgressState> emit) {
+    emit(state.copyWith(
+      expandedChapters: {...state.expandedChapters, event.chapterId},
+    ));
+  }
+
+  void _onCollapseChapter(CollapseChapter event, Emitter<ProgressState> emit) {
+    emit(state.copyWith(
+      expandedChapters: {...state.expandedChapters}..remove(event.chapterId),
     ));
   }
 
   @override
   Future<void> close() {
-    _progressSubscription?.cancel();
     return super.close();
   }
-}
-
-class _ProgressUpdated extends ProgressEvent {
-  final dynamic progress;
-
-  const _ProgressUpdated(this.progress);
-
-  @override
-  List<Object?> get props => [progress];
-}
-
-class CompleteNodeEvent extends ProgressEvent {
-  final String nodeId;
-
-  const CompleteNodeEvent(this.nodeId);
-
-  @override
-  List<Object?> get props => [nodeId];
 }

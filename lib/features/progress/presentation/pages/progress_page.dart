@@ -2,18 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../../core/di/injection.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../domain/usecases/complete_node.dart' as domain;
-import '../../domain/usecases/get_skill_tree.dart';
-import '../../domain/usecases/get_user_progress.dart';
-import '../bloc/progress_bloc.dart';
-import '../bloc/progress_event.dart';
-import '../bloc/progress_state.dart';
-import '../widgets/celebration_overlay.dart';
-import '../widgets/lesson_path_widget.dart';
-import '../widgets/progress_stats_header.dart';
-import '../widgets/skill_node_detail_sheet.dart';
+import 'package:modern_learner_production/core/di/injection.dart';
+import 'package:modern_learner_production/core/theme/app_colors.dart';
+import 'package:modern_learner_production/features/progress/domain/usecases/complete_lesson.dart' as domain;
+import 'package:modern_learner_production/features/progress/domain/usecases/start_lesson.dart' as start;
+import 'package:modern_learner_production/features/progress/domain/usecases/get_roadmap.dart';
+import 'package:modern_learner_production/features/progress/domain/usecases/get_user_progress.dart';
+import 'package:modern_learner_production/features/progress/presentation/bloc/progress_bloc.dart';
+import 'package:modern_learner_production/features/progress/presentation/bloc/progress_event.dart';
+import 'package:modern_learner_production/features/progress/presentation/bloc/progress_state.dart';
+import 'package:modern_learner_production/features/progress/presentation/widgets/celebration_overlay.dart';
+import 'package:modern_learner_production/features/progress/presentation/widgets/roadmap_view.dart';
+import 'package:modern_learner_production/features/progress/presentation/widgets/progress_stats_header.dart';
+import 'package:modern_learner_production/features/progress/presentation/widgets/lesson_detail_sheet.dart';
 
 class ProgressPage extends StatefulWidget {
   const ProgressPage({super.key});
@@ -29,11 +30,12 @@ class _ProgressPageState extends State<ProgressPage> {
   void initState() {
     super.initState();
     _bloc = ProgressBloc(
-      getSkillTree: GetSkillTree(getIt()),
+      getRoadmap: GetRoadmap(getIt()),
       getUserProgress: GetUserProgress(getIt()),
-      completeNode: domain.CompleteNode(getIt()),
+      completeLesson: domain.CompleteLesson(getIt()),
+      startLesson: start.StartLesson(getIt()),
     );
-    _bloc.add(LoadProgress());
+    _bloc.add(LoadRoadmap());
   }
 
   @override
@@ -70,14 +72,14 @@ class _ProgressPageState extends State<ProgressPage> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Failed to load progress',
+                      'Failed to load roadmap',
                       style: GoogleFonts.inter(
                         color: AppColors.onSurfaceVariant,
                       ),
                     ),
                     const SizedBox(height: 16),
                     ElevatedButton(
-                      onPressed: () => _bloc.add(LoadProgress()),
+                      onPressed: () => _bloc.add(LoadRoadmap()),
                       child: const Text('Retry'),
                     ),
                   ],
@@ -85,7 +87,7 @@ class _ProgressPageState extends State<ProgressPage> {
               );
             }
 
-            if (state.skillTree == null || state.userProgress == null) {
+            if (state.roadmap == null || state.userProgress == null) {
               return const SizedBox.shrink();
             }
 
@@ -98,12 +100,24 @@ class _ProgressPageState extends State<ProgressPage> {
                   color: AppColors.outlineVariant.withValues(alpha: 0.25),
                 ),
                 Expanded(
-                  child: LessonPathWidget(
-                    skillTree: state.skillTree!,
-                    selectedNodeId: state.selectedNodeId,
-                    onNodeTap: (nodeId) {
-                      _bloc.add(SelectNode(nodeId));
-                      _showNodeDetail(nodeId, state);
+                  child: RoadmapView(
+                    roadmap: state.roadmap!,
+                    userProgress: state.userProgress!,
+                    selectedLessonId: state.selectedLessonId,
+                    expandedChapters: state.expandedChapters,
+                    onLessonTap: (lessonId) {
+                      _bloc.add(SelectLesson(lessonId));
+                      _showLessonDetail(lessonId, state);
+                    },
+                    onChapterTap: (chapterId) {
+                      _bloc.add(SelectChapter(chapterId));
+                    },
+                    onChapterToggle: (chapterId, isExpanded) {
+                      if (isExpanded) {
+                        _bloc.add(ExpandChapter(chapterId));
+                      } else {
+                        _bloc.add(CollapseChapter(chapterId));
+                      }
                     },
                   ),
                 ),
@@ -115,28 +129,31 @@ class _ProgressPageState extends State<ProgressPage> {
     );
   }
 
-  void _showNodeDetail(String nodeId, ProgressState state) {
-    final node = state.skillTree!.nodes.firstWhere((n) => n.id == nodeId);
-    final isCompleted = state.userProgress!.completedNodes.containsKey(nodeId);
-    final isInProgress = state.userProgress!.nodeProgress.containsKey(nodeId);
+  void _showLessonDetail(String lessonId, ProgressState state) {
+    final chapter = state.roadmap!.chapters.firstWhere(
+      (c) => c.lessons.any((l) => l.id == lessonId),
+    );
+    final lesson = chapter.lessons.firstWhere((l) => l.id == lessonId);
+    final isCompleted = state.userProgress!.completedLessons.containsKey(lessonId);
+    final isInProgress = state.userProgress!.lessonProgress.containsKey(lessonId);
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
-        return SkillNodeDetailSheet(
-          node: node,
+        return LessonDetailSheet(
+          chapter: chapter,
+          lesson: lesson,
           canClaim: isCompleted && !isInProgress,
           onStart: () {
             Navigator.pop(context);
-            _bloc.add(StartNode(nodeId));
-            // Navigate to lesson or start interaction
+            _bloc.add(StartLessonEvent(lessonId));
             _showLessonCompleteCelebration();
           },
           onClaim: () {
             Navigator.pop(context);
-            _bloc.add(CompleteNodeEvent(nodeId));
+            _bloc.add(CompleteLessonEvent(lessonId));
             _showLessonCompleteCelebration();
           },
         );

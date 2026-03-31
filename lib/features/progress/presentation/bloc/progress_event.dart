@@ -1,8 +1,5 @@
 import 'package:equatable/equatable.dart';
 
-import '../../domain/entities/skill_tree.dart';
-import '../../domain/entities/user_progress.dart';
-
 abstract class ProgressEvent extends Equatable {
   const ProgressEvent();
 
@@ -10,40 +7,67 @@ abstract class ProgressEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-class LoadProgress extends ProgressEvent {}
+class LoadRoadmap extends ProgressEvent {}
 
-class SelectNode extends ProgressEvent {
-  final String nodeId;
+class SelectLesson extends ProgressEvent {
+  final String lessonId;
 
-  const SelectNode(this.nodeId);
+  const SelectLesson(this.lessonId);
 
   @override
-  List<Object?> get props => [nodeId];
+  List<Object?> get props => [lessonId];
 }
 
-class StartNode extends ProgressEvent {
-  final String nodeId;
+class SelectChapter extends ProgressEvent {
+  final String chapterId;
 
-  const StartNode(this.nodeId);
+  const SelectChapter(this.chapterId);
 
   @override
-  List<Object?> get props => [nodeId];
+  List<Object?> get props => [chapterId];
 }
 
-class CompleteNode extends ProgressEvent {
-  final String nodeId;
+class StartLessonEvent extends ProgressEvent {
+  final String lessonId;
 
-  const CompleteNode(this.nodeId);
+  const StartLessonEvent(this.lessonId);
 
   @override
-  List<Object?> get props => [nodeId];
+  List<Object?> get props => [lessonId];
+}
+
+class CompleteLessonEvent extends ProgressEvent {
+  final String lessonId;
+
+  const CompleteLessonEvent(this.lessonId);
+
+  @override
+  List<Object?> get props => [lessonId];
 }
 
 class ClaimReward extends ProgressEvent {
-  final String nodeId;
+  final String lessonId;
 
-  const ClaimReward(this.nodeId);
+  const ClaimReward(this.lessonId);
 
   @override
-  List<Object?> get props => [nodeId];
+  List<Object?> get props => [lessonId];
+}
+
+class ExpandChapter extends ProgressEvent {
+  final String chapterId;
+
+  const ExpandChapter(this.chapterId);
+
+  @override
+  List<Object?> get props => [chapterId];
+}
+
+class CollapseChapter extends ProgressEvent {
+  final String chapterId;
+
+  const CollapseChapter(this.chapterId);
+
+  @override
+  List<Object?> get props => [chapterId];
 }

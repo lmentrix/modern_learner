@@ -5,18 +5,22 @@ class UserProgress extends Equatable {
   final int level;
   final int gems;
   final int streak;
-  final Map<String, DateTime> completedNodes; // nodeId -> completionDate
-  final Map<String, double> nodeProgress; // nodeId -> 0.0 to 1.0
+  final Map<String, DateTime> completedLessons; // lessonId -> completionDate
+  final Map<String, double> lessonProgress; // lessonId -> 0.0 to 1.0
+  final Map<String, DateTime> completedChapters; // chapterId -> completionDate
   final List<String> unlockedAchievements;
+  final String? currentRoadmapId;
 
   const UserProgress({
     required this.totalXp,
     required this.level,
     required this.gems,
     required this.streak,
-    required this.completedNodes,
-    required this.nodeProgress,
+    required this.completedLessons,
+    required this.lessonProgress,
+    required this.completedChapters,
     required this.unlockedAchievements,
+    this.currentRoadmapId,
   });
 
   UserProgress copyWith({
@@ -24,18 +28,22 @@ class UserProgress extends Equatable {
     int? level,
     int? gems,
     int? streak,
-    Map<String, DateTime>? completedNodes,
-    Map<String, double>? nodeProgress,
+    Map<String, DateTime>? completedLessons,
+    Map<String, double>? lessonProgress,
+    Map<String, DateTime>? completedChapters,
     List<String>? unlockedAchievements,
+    String? currentRoadmapId,
   }) {
     return UserProgress(
       totalXp: totalXp ?? this.totalXp,
       level: level ?? this.level,
       gems: gems ?? this.gems,
       streak: streak ?? this.streak,
-      completedNodes: completedNodes ?? Map.from(this.completedNodes),
-      nodeProgress: nodeProgress ?? Map.from(this.nodeProgress),
+      completedLessons: completedLessons ?? Map.from(this.completedLessons),
+      lessonProgress: lessonProgress ?? Map.from(this.lessonProgress),
+      completedChapters: completedChapters ?? Map.from(this.completedChapters),
       unlockedAchievements: unlockedAchievements ?? [...this.unlockedAchievements],
+      currentRoadmapId: currentRoadmapId ?? this.currentRoadmapId,
     );
   }
 
@@ -45,8 +53,10 @@ class UserProgress extends Equatable {
         level,
         gems,
         streak,
-        completedNodes,
-        nodeProgress,
+        completedLessons,
+        lessonProgress,
+        completedChapters,
         unlockedAchievements,
+        currentRoadmapId,
       ];
 }

@@ -5,18 +5,22 @@ class UserProgressModel {
   final int level;
   final int gems;
   final int streak;
-  final Map<String, String> completedNodes;
-  final Map<String, double> nodeProgress;
+  final Map<String, String> completedLessons;
+  final Map<String, double> lessonProgress;
+  final Map<String, String> completedChapters;
   final List<String> unlockedAchievements;
+  final String? currentRoadmapId;
 
   UserProgressModel({
     required this.totalXp,
     required this.level,
     required this.gems,
     required this.streak,
-    required this.completedNodes,
-    required this.nodeProgress,
+    required this.completedLessons,
+    required this.lessonProgress,
+    required this.completedChapters,
     required this.unlockedAchievements,
+    this.currentRoadmapId,
   });
 
   factory UserProgressModel.fromJson(Map<String, dynamic> json) {
@@ -25,9 +29,11 @@ class UserProgressModel {
       level: json['level'] as int,
       gems: json['gems'] as int,
       streak: json['streak'] as int,
-      completedNodes: Map<String, String>.from(json['completedNodes'] ?? {}),
-      nodeProgress: Map<String, double>.from(json['nodeProgress'] ?? {}),
+      completedLessons: Map<String, String>.from(json['completedLessons'] ?? {}),
+      lessonProgress: Map<String, double>.from(json['lessonProgress'] ?? {}),
+      completedChapters: Map<String, String>.from(json['completedChapters'] ?? {}),
       unlockedAchievements: (json['unlockedAchievements'] as List<dynamic>?)?.cast<String>() ?? [],
+      currentRoadmapId: json['currentRoadmapId'] as String?,
     );
   }
 
@@ -37,9 +43,11 @@ class UserProgressModel {
       'level': level,
       'gems': gems,
       'streak': streak,
-      'completedNodes': completedNodes,
-      'nodeProgress': nodeProgress,
+      'completedLessons': completedLessons,
+      'lessonProgress': lessonProgress,
+      'completedChapters': completedChapters,
       'unlockedAchievements': unlockedAchievements,
+      'currentRoadmapId': currentRoadmapId,
     };
   }
 
@@ -49,9 +57,11 @@ class UserProgressModel {
       level: level,
       gems: gems,
       streak: streak,
-      completedNodes: completedNodes.map((k, v) => MapEntry(k, DateTime.parse(v))),
-      nodeProgress: nodeProgress,
+      completedLessons: completedLessons.map((k, v) => MapEntry(k, DateTime.parse(v))),
+      lessonProgress: lessonProgress,
+      completedChapters: completedChapters.map((k, v) => MapEntry(k, DateTime.parse(v))),
       unlockedAchievements: unlockedAchievements,
+      currentRoadmapId: currentRoadmapId,
     );
   }
 
@@ -61,9 +71,11 @@ class UserProgressModel {
       level: progress.level,
       gems: progress.gems,
       streak: progress.streak,
-      completedNodes: progress.completedNodes.map((k, v) => MapEntry(k, v.toIso8601String())),
-      nodeProgress: progress.nodeProgress,
+      completedLessons: progress.completedLessons.map((k, v) => MapEntry(k, v.toIso8601String())),
+      lessonProgress: progress.lessonProgress,
+      completedChapters: progress.completedChapters.map((k, v) => MapEntry(k, v.toIso8601String())),
       unlockedAchievements: progress.unlockedAchievements,
+      currentRoadmapId: progress.currentRoadmapId,
     );
   }
 }
