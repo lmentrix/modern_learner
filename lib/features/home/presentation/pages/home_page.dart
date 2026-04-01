@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../../core/theme/app_colors.dart';
@@ -160,8 +161,8 @@ class _HomePageState extends State<HomePage> {
                   label: 'View Profile',
                   accentColor: AppColors.primary,
                   onTap: () {
-                    Navigator.pop(context);
-                    // Navigate to profile tab
+                    Navigator.of(context).pop();
+                    GoRouter.of(context).push('view-profile');
                   },
                 ),
                 const SizedBox(height: 8),
@@ -170,8 +171,8 @@ class _HomePageState extends State<HomePage> {
                   label: 'Achievements',
                   accentColor: AppColors.tertiaryContainer,
                   onTap: () {
-                    Navigator.pop(context);
-                    // Navigate to achievements
+                    Navigator.of(context).pop();
+                    GoRouter.of(context).push('achievements');
                   },
                 ),
                 const SizedBox(height: 8),
@@ -366,6 +367,30 @@ class _HomePageState extends State<HomePage> {
                             height: 1.1,
                           ),
                         ),
+                        if (user?.isVip == true) ...[
+                          const SizedBox(height: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFFFFD700), Color(0xFFFF8C00)],
+                              ),
+                              borderRadius: BorderRadius.circular(100),
+                            ),
+                            child: Text(
+                              '★ VIP Member',
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFF1A1028),
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),

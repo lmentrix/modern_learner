@@ -12,6 +12,7 @@ class UserModel extends UserEntity {
     required super.email,
     required super.name,
     super.avatarUrl,
+    super.role,
     this.accessToken,
     this.refreshToken,
   });
@@ -23,12 +24,14 @@ class UserModel extends UserEntity {
     User user, {
     String? accessToken,
     String? refreshToken,
+    String? role,
   }) =>
       UserModel(
         id: user.id,
         email: user.email ?? '',
         name: user.userMetadata?['name'] as String? ?? '',
         avatarUrl: user.userMetadata?['avatar_url'] as String?,
+        role: role == 'vip' ? UserRole.vip : UserRole.normal,
         accessToken: accessToken,
         refreshToken: refreshToken,
       );

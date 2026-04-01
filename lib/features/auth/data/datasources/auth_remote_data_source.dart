@@ -2,6 +2,7 @@ import 'package:injectable/injectable.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/errors/exceptions.dart';
+import '../../domain/entities/user_entity.dart';
 import '../models/user_model.dart';
 
 abstract interface class AuthRemoteDataSource {
@@ -34,11 +35,13 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         throw const ServerException(message: 'Login failed.');
       }
       final profile = await _fetchProfile(response.user!.id);
+      final roleStr = profile?['role'] as String? ?? 'normal';
       return UserModel(
         id: response.user!.id,
         email: response.user!.email ?? '',
         name: profile?['name'] as String? ?? '',
         avatarUrl: profile?['avatar_url'] as String?,
+        role: roleStr == 'vip' ? UserRole.vip : UserRole.normal,
         accessToken: response.session?.accessToken,
         refreshToken: response.session?.refreshToken,
       );
