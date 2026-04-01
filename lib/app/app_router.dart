@@ -5,7 +5,9 @@ import 'package:modern_learner_production/features/auth/presentation/pages/email
 import 'package:modern_learner_production/features/auth/presentation/pages/login_page.dart';
 import 'package:modern_learner_production/features/auth/presentation/pages/register_page.dart';
 import 'package:modern_learner_production/features/explore/presentation/pages/explore_page.dart';
+import 'package:modern_learner_production/features/home/presentation/pages/achievements_page.dart';
 import 'package:modern_learner_production/features/home/presentation/pages/home_page.dart';
+import 'package:modern_learner_production/features/home/presentation/pages/view_profile_page.dart';
 import 'package:modern_learner_production/features/profile/presentation/pages/profile_page.dart';
 import 'package:modern_learner_production/features/progress/presentation/pages/progress_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -70,6 +72,43 @@ abstract final class AppRouter {
           GoRoute(
             path: '/progress',
             builder: (context, state) => const ProgressPage(),
+          ),
+          // Modal routes within shell (accessible from any tab)
+          GoRoute(
+            path: 'view-profile',
+            pageBuilder: (context, state) => CustomTransitionPage(
+              child: const ViewProfilePage(),
+              transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                return SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(0, 1),
+                    end: Offset.zero,
+                  ).animate(CurvedAnimation(
+                    parent: animation,
+                    curve: Curves.easeOutCubic,
+                  )),
+                  child: child,
+                );
+              },
+            ),
+          ),
+          GoRoute(
+            path: 'achievements',
+            pageBuilder: (context, state) => CustomTransitionPage(
+              child: const AchievementsPage(),
+              transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                return SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(0, 1),
+                    end: Offset.zero,
+                  ).animate(CurvedAnimation(
+                    parent: animation,
+                    curve: Curves.easeOutCubic,
+                  )),
+                  child: child,
+                );
+              },
+            ),
           ),
         ],
       ),
