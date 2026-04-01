@@ -1,47 +1,30 @@
 part of 'auth_bloc.dart';
 
-sealed class AuthState extends Equatable {
-  const AuthState();
+enum AuthStatus { initial, loading, authenticated, unauthenticated, error }
+
+class AuthState extends Equatable {
+  const AuthState({
+    this.status = AuthStatus.initial,
+    this.user,
+    this.errorMessage,
+  });
+
+  final AuthStatus status;
+  final UserEntity? user;
+  final String? errorMessage;
 
   @override
-  List<Object?> get props => [];
-}
+  List<Object?> get props => [status, user, errorMessage];
 
-final class AuthInitial extends AuthState {
-  const AuthInitial();
-}
-
-final class AuthLoading extends AuthState {
-  const AuthLoading();
-}
-
-final class AuthAuthenticated extends AuthState {
-  const AuthAuthenticated(this.user);
-
-  final UserEntity user;
-
-  @override
-  List<Object?> get props => [user];
-}
-
-final class AuthUnauthenticated extends AuthState {
-  const AuthUnauthenticated();
-}
-
-final class AuthFailureState extends AuthState {
-  const AuthFailureState(this.message);
-
-  final String message;
-
-  @override
-  List<Object?> get props => [message];
-}
-
-final class AuthEmailConfirmationSent extends AuthState {
-  const AuthEmailConfirmationSent(this.email);
-
-  final String email;
-
-  @override
-  List<Object?> get props => [email];
+  AuthState copyWith({
+    AuthStatus? status,
+    UserEntity? user,
+    String? errorMessage,
+  }) {
+    return AuthState(
+      status: status ?? this.status,
+      user: user ?? this.user,
+      errorMessage: errorMessage ?? this.errorMessage,
+    );
+  }
 }

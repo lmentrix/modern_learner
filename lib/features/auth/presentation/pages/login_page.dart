@@ -40,14 +40,13 @@ class _LoginPageState extends State<LoginPage> {
       backgroundColor: AppColors.surface,
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
-          if (state is AuthAuthenticated) {
+          if (state.status == AuthStatus.authenticated) {
             context.go('/');
           }
         },
         builder: (context, state) {
-          final isLoading = state is AuthLoading;
-          final errorMessage =
-              state is AuthFailureState ? state.message : null;
+          final isLoading = state.status == AuthStatus.loading;
+          final errorMessage = state.errorMessage;
 
           return SafeArea(
             child: SingleChildScrollView(

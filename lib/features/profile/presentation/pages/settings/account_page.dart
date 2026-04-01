@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../auth/presentation/bloc/auth_bloc.dart';
 
 class AccountPage extends StatefulWidget {
   const AccountPage({super.key});
@@ -13,10 +15,26 @@ class AccountPage extends StatefulWidget {
 class _AccountPageState extends State<AccountPage> {
   final _scrollCtrl = ScrollController();
   final _formKey = GlobalKey<FormState>();
-  final _nameCtrl = TextEditingController(text: 'Alex Johnson');
-  final _emailCtrl = TextEditingController(text: 'alex.johnson@email.com');
-  final _bioCtrl = TextEditingController(
-      text: '📚 Language enthusiast | 🎯 Daily learner | 🌟 Goal: Fluent in 3 languages');
+  final _nameCtrl = TextEditingController();
+  final _emailCtrl = TextEditingController();
+  final _bioCtrl = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    // Load user info and populate form
+    context.read<AuthBloc>().add(const AuthLoadUserInfoRequested());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        final user = context.read<AuthBloc>().state.user;
+        if (user != null) {
+          _nameCtrl.text = user.name;
+          _emailCtrl.text = user.email;
+          _bioCtrl.text = '📚 Language enthusiast | 🎯 Daily learner | 🌟 Goal: Fluent in 3 languages';
+        }
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -146,67 +164,75 @@ class _AccountPageState extends State<AccountPage> {
   }
 
   Widget _buildProfilePicture() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: AppColors.outlineVariant.withValues(alpha: 0.1),
-          width: 1,
-        ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(
-              gradient: AppColors.primaryGradient,
-              shape: BoxShape.circle,
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, state) {
+        final user = state.user;
+        final displayName = user?.name ?? 'User';
+        final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : 'U';
+        
+        return Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: AppColors.outlineVariant.withValues(alpha: 0.1),
+              width: 1,
             ),
-            child: const Center(
-              child: Text(
-                'A',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  gradient: AppColors.primaryGradient,
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Text(
+                    initial,
+                    style: const TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Profile Picture',
-                  style: GoogleFonts.inter(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.onSurface,
-                  ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Profile Picture',
+                      style: GoogleFonts.inter(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Tap to change your photo',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        color: AppColors.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  'Tap to change your photo',
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    color: AppColors.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
+              ),
+              const Icon(
+                Icons.chevron_right_rounded,
+                color: AppColors.onSurfaceVariant,
+                size: 24,
+              ),
+            ],
           ),
-          const Icon(
-            Icons.chevron_right_rounded,
-            color: AppColors.onSurfaceVariant,
-            size: 24,
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 

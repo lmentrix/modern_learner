@@ -42,15 +42,17 @@ class _RegisterPageState extends State<RegisterPage> {
       backgroundColor: AppColors.surface,
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
-          if (state is AuthAuthenticated) {
+          if (state.status == AuthStatus.authenticated) {
             context.go('/');
-          } else if (state is AuthEmailConfirmationSent) {
-            context.go('/email-confirm', extra: state.email);
+          } else if (state.status == AuthStatus.unauthenticated &&
+              state.errorMessage != null &&
+              state.errorMessage!.contains('Email confirmation')) {
+            context.go('/email-confirm', extra: '');
           }
         },
         builder: (context, state) {
-          final isLoading = state is AuthLoading;
-          final errorMessage = state is AuthFailureState ? state.message : null;
+          final isLoading = state.status == AuthStatus.loading;
+          final errorMessage = state.errorMessage;
 
           return SafeArea(
             child: SingleChildScrollView(

@@ -12,7 +12,7 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => getIt<AuthBloc>()..add(const AuthCheckRequested()),
+      create: (_) => getIt<AuthBloc>()..add(const AuthLoadUserInfoRequested()),
       child: MaterialApp.router(
         title: 'Modern Learner',
         debugShowCheckedModeBanner: false,

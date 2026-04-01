@@ -19,11 +19,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     this._registerUseCase,
     this._logoutUseCase,
     this._getCurrentUserUseCase,
-  ) : super(const AuthInitial()) {
+  ) : super(const AuthState()) {
     on<AuthLoginRequested>(_onLoginRequested);
     on<AuthRegisterRequested>(_onRegisterRequested);
     on<AuthLogoutRequested>(_onLogoutRequested);
-    on<AuthCheckRequested>(_onCheckRequested);
+    on<AuthLoadUserInfoRequested>(_onLoadUserInfoRequested);
   }
 
   final LoginUseCase _loginUseCase;
@@ -35,13 +35,20 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthLoginRequested event,
     Emitter<AuthState> emit,
   ) async {
-    emit(const AuthLoading());
+    emit(state.copyWith(status: AuthStatus.loading));
     final result = await _loginUseCase(
       LoginParams(email: event.email, password: event.password),
     );
     result.fold(
-      (failure) => emit(AuthFailureState(failure.message)),
-      (user) => emit(AuthAuthenticated(user)),
+      (failure) => emit(state.copyWith(
+        status: AuthStatus.error,
+        errorMessage: failure.message,
+      )),
+      (user) => emit(state.copyWith(
+        status: AuthStatus.authenticated,
+        user: user,
+        errorMessage: null,
+      )),
     );
   }
 
@@ -49,7 +56,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthRegisterRequested event,
     Emitter<AuthState> emit,
   ) async {
-    emit(const AuthLoading());
+    emit(state.copyWith(status: AuthStatus.loading));
     final result = await _registerUseCase(
       RegisterParams(
         name: event.name,
@@ -60,12 +67,22 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     result.fold(
       (failure) {
         if (failure is EmailConfirmationPendingFailure) {
-          emit(AuthEmailConfirmationSent(failure.email));
+          emit(state.copyWith(
+            status: AuthStatus.unauthenticated,
+            errorMessage: 'Email confirmation required. Please check your inbox.',
+          ));
         } else {
-          emit(AuthFailureState(failure.message));
+          emit(state.copyWith(
+            status: AuthStatus.error,
+            errorMessage: failure.message,
+          ));
         }
       },
-      (user) => emit(AuthAuthenticated(user)),
+      (user) => emit(state.copyWith(
+        status: AuthStatus.authenticated,
+        user: user,
+        errorMessage: null,
+      )),
     );
   }
 
@@ -73,24 +90,40 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthLogoutRequested event,
     Emitter<AuthState> emit,
   ) async {
-    emit(const AuthLoading());
+    emit(state.copyWith(status: AuthStatus.loading));
     final result = await _logoutUseCase();
     result.fold(
-      (failure) => emit(AuthFailureState(failure.message)),
-      (_) => emit(const AuthUnauthenticated()),
+      (failure) => emit(state.copyWith(
+        status: AuthStatus.error,
+        errorMessage: failure.message,
+      )),
+      (_) => emit(state.copyWith(
+        status: AuthStatus.unauthenticated,
+        user: null,
+        errorMessage: null,
+      )),
     );
   }
 
-  Future<void> _onCheckRequested(
-    AuthCheckRequested event,
+  Future<void> _onLoadUserInfoRequested(
+    AuthLoadUserInfoRequested event,
     Emitter<AuthState> emit,
   ) async {
+    emit(state.copyWith(status: AuthStatus.loading));
     final result = await _getCurrentUserUseCase();
     result.fold(
-      (_) => emit(const AuthUnauthenticated()),
-      (user) => user != null
-          ? emit(AuthAuthenticated(user))
-          : emit(const AuthUnauthenticated()),
+      (failure) => emit(state.copyWith(
+        status: AuthStatus.unauthenticated,
+        user: null,
+        errorMessage: null,
+      )),
+      (user) => emit(state.copyWith(
+        status: user != null
+            ? AuthStatus.authenticated
+            : AuthStatus.unauthenticated,
+        user: user,
+        errorMessage: null,
+      )),
     );
   }
 }
