@@ -43,7 +43,12 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         refreshToken: response.session?.refreshToken,
       );
     } on AuthException catch (e) {
-      throw ServerException(message: e.message);
+      // Supabase returns "Invalid credentials" for both wrong password AND
+      // unconfirmed email (for security reasons). Provide a more helpful message.
+      final message = e.message.contains('Invalid')
+          ? 'Invalid email or password. If you just signed up, please check your email to confirm your account.'
+          : e.message;
+      throw ServerException(message: message);
     }
   }
 
@@ -62,7 +67,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       if (response.user == null) {
         throw const ServerException(message: 'Registration failed.');
       }
-      if (response.session == null) {
+      // When email confirmation is enabled (default), session will be null.
+      // This is expected behavior per Supabase docs - user needs to verify email.
+      final requiresConfirmation = response.session == null;
+      if (requiresConfirmation) {
         throw EmailConfirmationRequiredException(email: email);
       }
       return UserModel(
@@ -70,8 +78,8 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         email: response.user!.email ?? '',
         name: name,
         avatarUrl: null,
-        accessToken: response.session?.accessToken,
-        refreshToken: response.session?.refreshToken,
+        accessToken: response.session!.accessToken,
+        refreshToken: response.session!.refreshToken,
       );
     } on EmailConfirmationRequiredException {
       rethrow;

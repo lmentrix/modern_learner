@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(flutter *)"
+      "Bash(flutter *)",
+      "WebFetch(supabase.com)"
     ]
-  }
+  },
+  "$version": 3
 }
