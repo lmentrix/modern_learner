@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../../core/theme/app_colors.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../lesson_detail/presentation/pages/lesson_detail_page.dart'
     as lesson_detail;
 import '../../data/models/lesson_data.dart';
@@ -33,151 +35,159 @@ class _HomePageState extends State<HomePage> {
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (context) => Container(
-        decoration: const BoxDecoration(
-          color: AppColors.surfaceContainerHigh,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        padding: EdgeInsets.only(
-          top: 12,
-          left: 24,
-          right: 24,
-          bottom: MediaQuery.of(context).padding.bottom + 24,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Handle
-            Container(
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.outlineVariant.withValues(alpha: 0.4),
-                borderRadius: BorderRadius.circular(2),
-              ),
+      builder: (context) => BlocBuilder<AuthBloc, AuthState>(
+        builder: (context, state) {
+          final user = state.user;
+          final displayName = user?.name ?? 'User';
+          final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : 'U';
+          
+          return Container(
+            decoration: const BoxDecoration(
+              color: AppColors.surfaceContainerHigh,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
             ),
-            const SizedBox(height: 20),
-            // Profile header
-            Row(
+            padding: EdgeInsets.only(
+              top: 12,
+              left: 24,
+              right: 24,
+              bottom: MediaQuery.of(context).padding.bottom + 24,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
+                // Handle
                 Container(
-                  width: 60,
-                  height: 60,
-                  decoration: const BoxDecoration(
-                    gradient: AppColors.primaryGradient,
-                    shape: BoxShape.circle,
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.outlineVariant.withValues(alpha: 0.4),
+                    borderRadius: BorderRadius.circular(2),
                   ),
-                  child: Center(
-                    child: Text(
-                      'A',
-                      style: GoogleFonts.spaceGrotesk(
-                        fontSize: 26,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
+                ),
+                const SizedBox(height: 20),
+                // Profile header
+                Row(
+                  children: [
+                    Container(
+                      width: 60,
+                      height: 60,
+                      decoration: const BoxDecoration(
+                        gradient: AppColors.primaryGradient,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Text(
+                          initial,
+                          style: GoogleFonts.spaceGrotesk(
+                            fontSize: 26,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
                       ),
                     ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            displayName,
+                            style: GoogleFonts.spaceGrotesk(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.onSurface,
+                            ),
+                          ),
+                          Text(
+                            'Advanced Learner · LVL 8',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              color: AppColors.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                // Stats row
+                const Row(
+                  children: [
+                    Expanded(
+                      child: _QuickStat(
+                        emoji: '🔥',
+                        label: 'Streak',
+                        value: '14',
+                        subtitle: 'days',
+                      ),
+                    ),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: _QuickStat(
+                        emoji: '⭐',
+                        label: 'XP',
+                        value: '2.4K',
+                        subtitle: 'total',
+                      ),
+                    ),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: _QuickStat(
+                        emoji: '📚',
+                        label: 'Lessons',
+                        value: '47',
+                        subtitle: 'done',
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                // Quick actions
+                Text(
+                  'QUICK ACTIONS',
+                  style: GoogleFonts.inter(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.onSurfaceVariant,
+                    letterSpacing: 1.5,
                   ),
                 ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Alex Johnson',
-                        style: GoogleFonts.spaceGrotesk(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.onSurface,
-                        ),
-                      ),
-                      Text(
-                        'Advanced Learner · LVL 8',
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          color: AppColors.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
+                const SizedBox(height: 12),
+                _QuickActionRow(
+                  icon: Icons.person_outline_rounded,
+                  label: 'View Profile',
+                  accentColor: AppColors.primary,
+                  onTap: () {
+                    Navigator.pop(context);
+                    // Navigate to profile tab
+                  },
+                ),
+                const SizedBox(height: 8),
+                _QuickActionRow(
+                  icon: Icons.emoji_events_rounded,
+                  label: 'Achievements',
+                  accentColor: AppColors.tertiaryContainer,
+                  onTap: () {
+                    Navigator.pop(context);
+                    // Navigate to achievements
+                  },
+                ),
+                const SizedBox(height: 8),
+                _QuickActionRow(
+                  icon: Icons.settings_rounded,
+                  label: 'Settings',
+                  accentColor: AppColors.onSurfaceVariant,
+                  onTap: () {
+                    Navigator.pop(context);
+                    // Navigate to settings
+                  },
                 ),
               ],
             ),
-            const SizedBox(height: 24),
-            // Stats row
-            const Row(
-              children: [
-                Expanded(
-                  child: _QuickStat(
-                    emoji: '🔥',
-                    label: 'Streak',
-                    value: '14',
-                    subtitle: 'days',
-                  ),
-                ),
-                SizedBox(width: 12),
-                Expanded(
-                  child: _QuickStat(
-                    emoji: '⭐',
-                    label: 'XP',
-                    value: '2.4K',
-                    subtitle: 'total',
-                  ),
-                ),
-                SizedBox(width: 12),
-                Expanded(
-                  child: _QuickStat(
-                    emoji: '📚',
-                    label: 'Lessons',
-                    value: '47',
-                    subtitle: 'done',
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            // Quick actions
-            Text(
-              'QUICK ACTIONS',
-              style: GoogleFonts.inter(
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-                color: AppColors.onSurfaceVariant,
-                letterSpacing: 1.5,
-              ),
-            ),
-            const SizedBox(height: 12),
-            _QuickActionRow(
-              icon: Icons.person_outline_rounded,
-              label: 'View Profile',
-              accentColor: AppColors.primary,
-              onTap: () {
-                Navigator.pop(context);
-                // Navigate to profile tab
-              },
-            ),
-            const SizedBox(height: 8),
-            _QuickActionRow(
-              icon: Icons.emoji_events_rounded,
-              label: 'Achievements',
-              accentColor: AppColors.tertiaryContainer,
-              onTap: () {
-                Navigator.pop(context);
-                // Navigate to achievements
-              },
-            ),
-            const SizedBox(height: 8),
-            _QuickActionRow(
-              icon: Icons.settings_rounded,
-              label: 'Settings',
-              accentColor: AppColors.onSurfaceVariant,
-              onTap: () {
-                Navigator.pop(context);
-                // Navigate to settings
-              },
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -314,83 +324,91 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF0E1020), AppColors.surface],
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, state) {
+        final user = state.user;
+        final displayName = user?.name ?? 'User';
+        final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : 'U';
+        
+        return Container(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF0E1020), AppColors.surface],
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Good morning,',
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        color: AppColors.onSurfaceVariant,
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Good morning,',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            color: AppColors.onSurfaceVariant,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '$displayName 👋',
+                          style: GoogleFonts.spaceGrotesk(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.onSurface,
+                            height: 1.1,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Avatar
+                  GestureDetector(
+                    onTap: () => _showProfileQuickView(),
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        gradient: AppColors.primaryGradient,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primaryDim.withValues(alpha: 0.3),
+                            blurRadius: 16,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: Text(
+                          initial,
+                          style: GoogleFonts.spaceGrotesk(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Alex 👋',
-                      style: GoogleFonts.spaceGrotesk(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.onSurface,
-                        height: 1.1,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              // Avatar
+              const SizedBox(height: 16),
               GestureDetector(
-                onTap: () => _showProfileQuickView(),
-                child: Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    gradient: AppColors.primaryGradient,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primaryDim.withValues(alpha: 0.3),
-                        blurRadius: 16,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Center(
-                    child: Text(
-                      'A',
-                      style: GoogleFonts.spaceGrotesk(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
+                onTap: () => _showStreakDetails(),
+                child: const StreakBadge(count: 14),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          GestureDetector(
-            onTap: () => _showStreakDetails(),
-            child: const StreakBadge(count: 14),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 

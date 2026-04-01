@@ -36,6 +36,6 @@ final class AuthLogoutRequested extends AuthEvent {
   const AuthLogoutRequested();
 }
 
-final class AuthCheckRequested extends AuthEvent {
-  const AuthCheckRequested();
+final class AuthLoadUserInfoRequested extends AuthEvent {
+  const AuthLoadUserInfoRequested();
 }

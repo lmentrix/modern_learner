@@ -31,6 +31,17 @@ class _ProfilePageState extends State<ProfilePage> {
   bool _analyticsEnabled = true;
 
   @override
+  void initState() {
+    super.initState();
+    // Load user info on page load
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<AuthBloc>().add(const AuthLoadUserInfoRequested());
+      }
+    });
+  }
+
+  @override
   void dispose() {
     _scrollCtrl.dispose();
     super.dispose();
@@ -146,109 +157,120 @@ class _ProfilePageState extends State<ProfilePage> {
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (context) => Container(
-        decoration: const BoxDecoration(
-          color: AppColors.surfaceContainerHigh,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        padding: EdgeInsets.only(
-          top: 12,
-          left: 24,
-          right: 24,
-          bottom: MediaQuery.of(context).padding.bottom + 24,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _sheetHandle(),
-            const SizedBox(height: 20),
-            _sheetTitle('Account', Icons.person_outline_rounded, AppColors.primary),
-            const SizedBox(height: 24),
-            Row(
+      builder: (context) => BlocBuilder<AuthBloc, AuthState>(
+        builder: (context, state) {
+          final user = state.user;
+          final displayName = user?.name ?? 'User';
+          final email = user?.email ?? '';
+          final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : 'U';
+          
+          return Container(
+            decoration: const BoxDecoration(
+              color: AppColors.surfaceContainerHigh,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            padding: EdgeInsets.only(
+              top: 12,
+              left: 24,
+              right: 24,
+              bottom: MediaQuery.of(context).padding.bottom + 24,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
-                  width: 60,
-                  height: 60,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: AppColors.primaryGradient,
-                  ),
-                  child: Center(
-                    child: Text(
-                      'A',
-                      style: GoogleFonts.spaceGrotesk(
-                        fontSize: 26,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                _sheetHandle(),
+                const SizedBox(height: 20),
+                _sheetTitle('Account', Icons.person_outline_rounded, AppColors.primary),
+                const SizedBox(height: 24),
+                Row(
                   children: [
-                    Text(
-                      'Alex Johnson',
-                      style: GoogleFonts.spaceGrotesk(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.onSurface,
+                    Container(
+                      width: 60,
+                      height: 60,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: AppColors.primaryGradient,
+                      ),
+                      child: Center(
+                        child: Text(
+                          initial,
+                          style: GoogleFonts.spaceGrotesk(
+                            fontSize: 26,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
                       ),
                     ),
-                    Text(
-                      'alex.johnson@example.com',
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        color: AppColors.onSurfaceVariant,
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            displayName,
+                            style: GoogleFonts.spaceGrotesk(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.onSurface,
+                            ),
+                          ),
+                          Text(
+                            email,
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              color: AppColors.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
+                const SizedBox(height: 20),
+                _accountInfoRow(Icons.badge_outlined, 'Username', '@${displayName.toLowerCase().replaceAll(' ', '')}'),
+                const SizedBox(height: 8),
+                _accountInfoRow(Icons.cake_outlined, 'Member since', 'January 2024'),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                      side: BorderSide(color: AppColors.primary.withValues(alpha: 0.5)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14)),
+                      textStyle: GoogleFonts.inter(
+                          fontSize: 14, fontWeight: FontWeight.w600),
+                    ),
+                    child: const Text('Edit Profile'),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _showSignOutDialog();
+                    },
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.error,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14)),
+                      textStyle: GoogleFonts.inter(
+                          fontSize: 14, fontWeight: FontWeight.w600),
+                    ),
+                    child: const Text('Sign Out'),
+                  ),
+                ),
               ],
             ),
-            const SizedBox(height: 20),
-            _accountInfoRow(Icons.badge_outlined, 'Username', '@alexj'),
-            const SizedBox(height: 8),
-            _accountInfoRow(Icons.cake_outlined, 'Member since', 'January 2024'),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: OutlinedButton(
-                onPressed: () => Navigator.pop(context),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.primary,
-                  side: BorderSide(color: AppColors.primary.withValues(alpha: 0.5)),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14)),
-                  textStyle: GoogleFonts.inter(
-                      fontSize: 14, fontWeight: FontWeight.w600),
-                ),
-                child: const Text('Edit Profile'),
-              ),
-            ),
-            const SizedBox(height: 10),
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  _showSignOutDialog();
-                },
-                style: TextButton.styleFrom(
-                  foregroundColor: AppColors.error,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14)),
-                  textStyle: GoogleFonts.inter(
-                      fontSize: 14, fontWeight: FontWeight.w600),
-                ),
-                child: const Text('Sign Out'),
-              ),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -849,12 +871,20 @@ class _ProfilePageState extends State<ProfilePage> {
               sliver: SliverToBoxAdapter(
                 child: Column(
                   children: [
-                    SettingItem(
-                      icon: Icons.person_outline_rounded,
-                      title: 'Account',
-                      subtitle: 'Alex Johnson · alex@example.com',
-                      accentColor: AppColors.primary,
-                      onTap: _showAccountSheet,
+                    BlocBuilder<AuthBloc, AuthState>(
+                      builder: (context, state) {
+                        final user = state.user;
+                        final subtitle = user != null
+                            ? '${user.name} · ${user.email}'
+                            : 'Not signed in';
+                        return SettingItem(
+                          icon: Icons.person_outline_rounded,
+                          title: 'Account',
+                          subtitle: subtitle,
+                          accentColor: AppColors.primary,
+                          onTap: _showAccountSheet,
+                        );
+                      },
                     ),
                     const SizedBox(height: 8),
                     SettingItem(
@@ -960,95 +990,103 @@ class _ProfilePageState extends State<ProfilePage> {
   // ── Existing section builders (unchanged) ────────────────────────────────
 
   Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 14),
-      child: Row(
-        children: [
-          Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              gradient: AppColors.primaryGradient,
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Text(
-                'A',
-                style: GoogleFonts.spaceGrotesk(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, state) {
+        final user = state.user;
+        final displayName = user?.name ?? 'User';
+        final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : 'U';
+        
+        return Container(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 14),
+          child: Row(
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  gradient: AppColors.primaryGradient,
+                  shape: BoxShape.circle,
                 ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Alex Johnson',
-                  style: GoogleFonts.spaceGrotesk(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.onSurface,
+                child: Center(
+                  child: Text(
+                    initial,
+                    style: GoogleFonts.spaceGrotesk(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 2),
-                Row(
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Advanced Learner',
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        color: AppColors.onSurfaceVariant,
+                      displayName,
+                      style: GoogleFonts.spaceGrotesk(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.onSurface,
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        gradient: AppColors.primaryGradient,
-                        borderRadius: BorderRadius.circular(100),
-                      ),
-                      child: Text(
-                        'LVL 8',
-                        style: GoogleFonts.inter(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF1A1028),
-                          letterSpacing: 1.0,
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        Text(
+                          'Advanced Learner',
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            color: AppColors.onSurfaceVariant,
+                          ),
                         ),
-                      ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            gradient: AppColors.primaryGradient,
+                            borderRadius: BorderRadius.circular(100),
+                          ),
+                          child: Text(
+                            'LVL 8',
+                            style: GoogleFonts.inter(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF1A1028),
+                              letterSpacing: 1.0,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
-            ),
-          ),
-          GestureDetector(
-            onTap: _showAccountSheet,
-            child: Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: AppColors.surfaceContainerHigh,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: AppColors.outlineVariant.withValues(alpha: 0.15),
+              ),
+              GestureDetector(
+                onTap: _showAccountSheet,
+                child: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceContainerHigh,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppColors.outlineVariant.withValues(alpha: 0.15),
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.edit_rounded,
+                    color: AppColors.onSurfaceVariant,
+                    size: 17,
+                  ),
                 ),
               ),
-              child: const Icon(
-                Icons.edit_rounded,
-                color: AppColors.onSurfaceVariant,
-                size: 17,
-              ),
-            ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
