@@ -30,3 +30,11 @@ class UnauthorizedException implements Exception {
   @override
   String toString() => 'UnauthorizedException: $message';
 }
+
+class EmailConfirmationRequiredException implements Exception {
+  const EmailConfirmationRequiredException({required this.email});
+  final String email;
+
+  @override
+  String toString() => 'EmailConfirmationRequiredException: $email';
+}

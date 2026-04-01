@@ -54,6 +54,8 @@ class AuthRepositoryImpl implements AuthRepository {
           await _remote.register(name: name, email: email, password: password);
       await _local.cacheUser(user);
       return Right(user);
+    } on EmailConfirmationRequiredException catch (e) {
+      return Left(EmailConfirmationPendingFailure(e.email));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message, statusCode: e.statusCode));
     }

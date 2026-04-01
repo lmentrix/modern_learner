@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../../core/theme/app_colors.dart';
+import '../../../lesson_detail/presentation/pages/lesson_detail_page.dart'
+    as lesson_detail;
+import '../../data/models/lesson_data.dart';
 import '../widgets/lesson_card.dart';
 import '../widgets/progress_overview_card.dart';
 import '../widgets/streak_badge.dart';
 import '../widgets/streak_details_dialog.dart';
 import '../widgets/voice_lesson_card.dart';
-import '../../../lesson_detail/presentation/pages/lesson_detail_page.dart' as lesson_detail;
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -61,7 +63,7 @@ class _HomePageState extends State<HomePage> {
                 Container(
                   width: 60,
                   height: 60,
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     gradient: AppColors.primaryGradient,
                     shape: BoxShape.circle,
                   ),
@@ -103,7 +105,7 @@ class _HomePageState extends State<HomePage> {
             ),
             const SizedBox(height: 24),
             // Stats row
-            Row(
+            const Row(
               children: [
                 Expanded(
                   child: _QuickStat(
@@ -113,7 +115,7 @@ class _HomePageState extends State<HomePage> {
                     subtitle: 'days',
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 Expanded(
                   child: _QuickStat(
                     emoji: '⭐',
@@ -122,7 +124,7 @@ class _HomePageState extends State<HomePage> {
                     subtitle: 'total',
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 Expanded(
                   child: _QuickStat(
                     emoji: '📚',
@@ -192,44 +194,11 @@ class _HomePageState extends State<HomePage> {
           duration: lesson.duration,
           accentColor: lesson.color,
           progress: lesson.progress,
-          totalLessons: 12,
-          completedLessons: (lesson.progress * 12).round(),
-          learningObjectives: [
-            'Master key concepts and fundamentals',
-            'Apply knowledge through practical exercises',
-            'Build confidence with hands-on practice',
-            'Track progress and celebrate achievements',
-          ],
-          sections: [
-            const lesson_detail.LessonSection(
-              title: 'Introduction to Basics',
-              emoji: '📖',
-              duration: '10 min',
-              lessonCount: 3,
-              status: lesson_detail.LessonSectionStatus.completed,
-            ),
-            const lesson_detail.LessonSection(
-              title: 'Core Concepts',
-              emoji: '🧠',
-              duration: '15 min',
-              lessonCount: 4,
-              status: lesson_detail.LessonSectionStatus.current,
-            ),
-            const lesson_detail.LessonSection(
-              title: 'Advanced Topics',
-              emoji: '🚀',
-              duration: '20 min',
-              lessonCount: 3,
-              status: lesson_detail.LessonSectionStatus.locked,
-            ),
-            const lesson_detail.LessonSection(
-              title: 'Final Project',
-              emoji: '🏆',
-              duration: '30 min',
-              lessonCount: 2,
-              status: lesson_detail.LessonSectionStatus.locked,
-            ),
-          ],
+          totalLessons: lesson.totalLessons,
+          completedLessons: lesson.completedLessons,
+          learningObjectives: lesson.learningObjectives,
+          sections: lesson.sections,
+          lessonContent: lesson.content,
         ),
       ),
     );
@@ -246,45 +215,11 @@ class _HomePageState extends State<HomePage> {
           emoji: lesson.emoji,
           duration: lesson.duration,
           accentColor: lesson.color,
-          progress: 0.3,
-          totalLessons: 8,
-          completedLessons: 2,
-          learningObjectives: [
-            'Improve pronunciation and accent',
-            'Build speaking confidence',
-            'Master conversational flow',
-            'Develop listening skills',
-          ],
-          sections: [
-            const lesson_detail.LessonSection(
-              title: 'Warm-up Exercises',
-              emoji: '🎤',
-              duration: '5 min',
-              lessonCount: 2,
-              status: lesson_detail.LessonSectionStatus.completed,
-            ),
-            const lesson_detail.LessonSection(
-              title: 'Vowel Sounds',
-              emoji: '🅰️',
-              duration: '12 min',
-              lessonCount: 3,
-              status: lesson_detail.LessonSectionStatus.current,
-            ),
-            const lesson_detail.LessonSection(
-              title: 'Consonant Clusters',
-              emoji: '🔤',
-              duration: '15 min',
-              lessonCount: 2,
-              status: lesson_detail.LessonSectionStatus.locked,
-            ),
-            const lesson_detail.LessonSection(
-              title: 'Conversation Practice',
-              emoji: '💬',
-              duration: '20 min',
-              lessonCount: 1,
-              status: lesson_detail.LessonSectionStatus.locked,
-            ),
-          ],
+          progress: lesson.progress,
+          totalLessons: lesson.totalLessons,
+          completedLessons: lesson.completedLessons,
+          learningObjectives: lesson.learningObjectives,
+          sections: lesson.sections,
         ),
       ),
     );
@@ -311,8 +246,8 @@ class _HomePageState extends State<HomePage> {
             const SliverToBoxAdapter(child: SizedBox(height: 24)),
 
             // ── Progress overview ──────────────────────────────────────────
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+            const SliverPadding(
+              padding: EdgeInsets.symmetric(horizontal: 20),
               sliver: SliverToBoxAdapter(
                 child: ProgressOverviewCard(
                   level: 8,
@@ -342,7 +277,8 @@ class _HomePageState extends State<HomePage> {
             SliverPadding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               sliver: SliverToBoxAdapter(
-                  child: _sectionLabel('CONTINUE LEARNING')),
+                child: _sectionLabel('CONTINUE LEARNING'),
+              ),
             ),
 
             const SliverToBoxAdapter(child: SizedBox(height: 14)),
@@ -384,10 +320,7 @@ class _HomePageState extends State<HomePage> {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [
-            Color(0xFF0E1020),
-            AppColors.surface,
-          ],
+          colors: [Color(0xFF0E1020), AppColors.surface],
         ),
       ),
       child: Column(
@@ -507,9 +440,53 @@ class _VoiceLesson {
     required this.duration,
     required this.color,
     required this.emoji,
+    this.progress = 0.3,
+    this.totalLessons = 8,
+    this.completedLessons = 2,
+    this.learningObjectives = const [
+      'Improve pronunciation and accent',
+      'Build speaking confidence',
+      'Master conversational flow',
+      'Develop listening skills',
+    ],
+    this.sections = const [
+      lesson_detail.LessonSection(
+        title: 'Warm-up Exercises',
+        emoji: '🎤',
+        duration: '5 min',
+        lessonCount: 2,
+        status: lesson_detail.LessonSectionStatus.completed,
+      ),
+      lesson_detail.LessonSection(
+        title: 'Vowel Sounds',
+        emoji: '🅰️',
+        duration: '12 min',
+        lessonCount: 3,
+        status: lesson_detail.LessonSectionStatus.current,
+      ),
+      lesson_detail.LessonSection(
+        title: 'Consonant Clusters',
+        emoji: '🔤',
+        duration: '15 min',
+        lessonCount: 2,
+        status: lesson_detail.LessonSectionStatus.locked,
+      ),
+      lesson_detail.LessonSection(
+        title: 'Conversation Practice',
+        emoji: '💬',
+        duration: '20 min',
+        lessonCount: 1,
+        status: lesson_detail.LessonSectionStatus.locked,
+      ),
+    ],
   });
   final String title, subtitle, duration, emoji;
   final Color color;
+  final double progress;
+  final int totalLessons;
+  final int completedLessons;
+  final List<String> learningObjectives;
+  final List<lesson_detail.LessonSection> sections;
 }
 
 class _Lesson {
@@ -521,11 +498,55 @@ class _Lesson {
     required this.progress,
     required this.color,
     this.isNew = false,
+    this.totalLessons = 12,
+    this.completedLessons = 0,
+    this.learningObjectives = const [
+      'Master key concepts and fundamentals',
+      'Apply knowledge through practical exercises',
+      'Build confidence with hands-on practice',
+      'Track progress and celebrate achievements',
+    ],
+    this.sections = const [
+      lesson_detail.LessonSection(
+        title: 'Introduction to Basics',
+        emoji: '📖',
+        duration: '10 min',
+        lessonCount: 3,
+        status: lesson_detail.LessonSectionStatus.completed,
+      ),
+      lesson_detail.LessonSection(
+        title: 'Core Concepts',
+        emoji: '🧠',
+        duration: '15 min',
+        lessonCount: 4,
+        status: lesson_detail.LessonSectionStatus.current,
+      ),
+      lesson_detail.LessonSection(
+        title: 'Advanced Topics',
+        emoji: '🚀',
+        duration: '20 min',
+        lessonCount: 3,
+        status: lesson_detail.LessonSectionStatus.locked,
+      ),
+      lesson_detail.LessonSection(
+        title: 'Final Project',
+        emoji: '🏆',
+        duration: '30 min',
+        lessonCount: 2,
+        status: lesson_detail.LessonSectionStatus.locked,
+      ),
+    ],
+    this.content,
   });
   final String emoji, title, chapter, duration;
   final double progress;
   final Color color;
   final bool isNew;
+  final int totalLessons;
+  final int completedLessons;
+  final List<String> learningObjectives;
+  final List<lesson_detail.LessonSection> sections;
+  final LessonContent? content;
 }
 
 const _voiceLessons = [
@@ -560,15 +581,162 @@ const _lessons = [
     duration: '12 min',
     progress: 0.78,
     color: AppColors.primary,
+    completedLessons: 9,
   ),
   _Lesson(
-    emoji: '🧠',
-    title: 'AI Conversation Partner',
-    chapter: 'Session 2',
-    duration: '8 min',
+    emoji: '🍽️',
+    title: 'At the Restaurant',
+    chapter: 'Vocabulary',
+    duration: '15 min',
     progress: 0.45,
     color: AppColors.secondary,
     isNew: true,
+    totalLessons: 10,
+    completedLessons: 4,
+    learningObjectives: [
+      'Order food confidently in Spanish',
+      'Master essential restaurant vocabulary',
+      'Use polite phrases for dining out',
+      'Understand menu items and drinks',
+    ],
+    content: LessonContent(
+      lessonType: 'vocabulary',
+      introduction:
+          "Welcome to 'At the Restaurant'! Learning how to order food is one of the most practical and rewarding skills for any Spanish traveler. In this lesson, we will cover the essential food items, drinks, and useful phrases you need to dine out with confidence.",
+      vocabularyItems: [
+        VocabularyItem(
+          word: 'la carta',
+          pronunciation: 'la KAR-ta',
+          translation: 'the menu',
+          partOfSpeech: 'noun',
+          exampleSentence: 'Por favor, ¿me trae la carta?',
+          exampleTranslation: 'Please, could you bring me the menu?',
+          memoryTip: "Think of a 'cart' of food options.",
+        ),
+        VocabularyItem(
+          word: 'el agua',
+          pronunciation: 'el AH-gwa',
+          translation: 'the water',
+          partOfSpeech: 'noun',
+          exampleSentence: 'Quiero una botella de agua, por favor.',
+          exampleTranslation: 'I want a bottle of water, please.',
+          memoryTip: "Sounds like 'aqua' or aquarium.",
+        ),
+        VocabularyItem(
+          word: 'quisiera',
+          pronunciation: 'kee-SYEH-ra',
+          translation: 'I would like',
+          partOfSpeech: 'verb',
+          exampleSentence: 'Quisiera el pescado, por favor.',
+          exampleTranslation: 'I would like the fish, please.',
+          memoryTip: "Sounds like a polite 'kiss' of a request.",
+        ),
+        VocabularyItem(
+          word: 'la cuenta',
+          pronunciation: 'la KWEN-ta',
+          translation: 'the bill',
+          partOfSpeech: 'noun',
+          exampleSentence: 'La cuenta, por favor.',
+          exampleTranslation: 'The bill, please.',
+          memoryTip: "When you see the bill, you 'count' your money.",
+        ),
+        VocabularyItem(
+          word: 'la ensalada',
+          pronunciation: 'la en-sa-LA-da',
+          translation: 'the salad',
+          partOfSpeech: 'noun',
+          exampleSentence: 'Voy a pedir una ensalada mixta.',
+          exampleTranslation: 'I am going to order a mixed salad.',
+          memoryTip: 'Looks just like the English word salad.',
+        ),
+        VocabularyItem(
+          word: 'el postre',
+          pronunciation: 'el POS-treh',
+          translation: 'the dessert',
+          partOfSpeech: 'noun',
+          exampleSentence: 'No quiero postre hoy.',
+          exampleTranslation: 'I do not want dessert today.',
+          memoryTip: 'Posted after the meal.',
+        ),
+        VocabularyItem(
+          word: 'el pollo',
+          pronunciation: 'el PO-yo',
+          translation: 'the chicken',
+          partOfSpeech: 'noun',
+          exampleSentence: 'El pollo está delicioso.',
+          exampleTranslation: 'The chicken is delicious.',
+          memoryTip: "Think of a chicken 'poking' around.",
+        ),
+        VocabularyItem(
+          word: 'la mesa',
+          pronunciation: 'la ME-sa',
+          translation: 'the table',
+          partOfSpeech: 'noun',
+          exampleSentence: 'Una mesa para dos, por favor.',
+          exampleTranslation: 'A table for two, please.',
+          memoryTip: "Sounds like 'mess'-a (wipe the mess off the table).",
+        ),
+        VocabularyItem(
+          word: 'pedir',
+          pronunciation: 'pe-DEER',
+          translation: 'to order/to ask for',
+          partOfSpeech: 'verb',
+          exampleSentence: 'Es hora de pedir la comida.',
+          exampleTranslation: 'It is time to order the food.',
+          memoryTip: "You 'ped' (petition) the waiter for food.",
+        ),
+        VocabularyItem(
+          word: 'la bebida',
+          pronunciation: 'la be-BEE-da',
+          translation: 'the drink',
+          partOfSpeech: 'noun',
+          exampleSentence: '¿Qué bebida desea?',
+          exampleTranslation: 'What drink would you like?',
+          memoryTip: "Think of 'be' (to be) drinking.",
+        ),
+      ],
+      practiceExercises: [
+        PracticeExercise(
+          type: 'match',
+          instruction: 'Match the Spanish word to its correct English meaning.',
+          items: [
+            ExerciseItem(question: 'La cuenta', answer: 'The bill'),
+            ExerciseItem(question: 'La mesa', answer: 'The table'),
+            ExerciseItem(question: 'El postre', answer: 'The dessert'),
+          ],
+        ),
+        PracticeExercise(
+          type: 'fill_blank',
+          instruction: 'Fill in the blank with the correct word.',
+          items: [
+            ExerciseItem(
+              question: 'Quisiera _______ el agua, por favor.',
+              answer: 'pedir',
+            ),
+            ExerciseItem(
+              question: 'Por favor, ¿me trae la _______?',
+              answer: 'carta',
+            ),
+          ],
+        ),
+        PracticeExercise(
+          type: 'translate',
+          instruction: 'Translate the phrases into Spanish.',
+          items: [
+            ExerciseItem(
+              question: 'I would like the chicken.',
+              answer: 'Quisiera el pollo.',
+            ),
+            ExerciseItem(
+              question: 'The bill, please.',
+              answer: 'La cuenta, por favor.',
+            ),
+          ],
+        ),
+      ],
+      summary:
+          "In this lesson, you mastered essential vocabulary for ordering food: 'la carta' (menu), 'pedir' (to order), 'la mesa' (table), 'la cuenta' (bill), and basic food items like 'pollo' and 'ensalada'. Using 'quisiera' is a polite way to place your order.",
+    ),
   ),
   _Lesson(
     emoji: '✍️',
@@ -577,6 +745,7 @@ const _lessons = [
     duration: '20 min',
     progress: 0.30,
     color: AppColors.tertiary,
+    completedLessons: 3,
   ),
   _Lesson(
     emoji: '🌍',
@@ -586,6 +755,7 @@ const _lessons = [
     progress: 0.10,
     color: Color(0xFFFF9500),
     isNew: true,
+    completedLessons: 1,
   ),
 ];
 

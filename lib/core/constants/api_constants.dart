@@ -2,6 +2,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 abstract final class ApiConstants {
   static String get baseUrl => dotenv.env['BASE_URL'] ?? '';
+  static String get supabaseUrl => dotenv.env['SUPABASE_URL'] ?? '';
+  static String get supabasePublishableKey => dotenv.env['PUBLISHABLE_KEY'] ?? '';
 
   static const Duration connectTimeout = Duration(seconds: 30);
   static const Duration receiveTimeout = Duration(seconds: 30);

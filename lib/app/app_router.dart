@@ -1,32 +1,58 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-
-import '../features/app/presentation/widgets/main_layout.dart';
-import '../features/home/presentation/pages/home_page.dart';
-import '../features/explore/presentation/pages/explore_page.dart';
-import '../features/profile/presentation/pages/profile_page.dart';
-import '../features/progress/presentation/pages/progress_page.dart';
+import 'package:modern_learner_production/features/app/presentation/widgets/main_layout.dart';
+import 'package:modern_learner_production/features/auth/presentation/pages/email_confirmation_page.dart';
+import 'package:modern_learner_production/features/auth/presentation/pages/login_page.dart';
+import 'package:modern_learner_production/features/auth/presentation/pages/register_page.dart';
+import 'package:modern_learner_production/features/explore/presentation/pages/explore_page.dart';
+import 'package:modern_learner_production/features/home/presentation/pages/home_page.dart';
+import 'package:modern_learner_production/features/profile/presentation/pages/profile_page.dart';
+import 'package:modern_learner_production/features/progress/presentation/pages/progress_page.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 abstract final class AppRouter {
+  static final _authNotifier = _AuthChangeNotifier();
+
   static final router = GoRouter(
-    initialLocation: '/',
+    initialLocation: '/login',
     debugLogDiagnostics: false,
+    refreshListenable: _authNotifier,
+    redirect: (context, state) {
+      final isSignedIn =
+          Supabase.instance.client.auth.currentSession != null;
+      final isAuthRoute = state.matchedLocation == '/login' ||
+          state.matchedLocation == '/register' ||
+          state.matchedLocation == '/email-confirm';
+
+      if (!isSignedIn && !isAuthRoute) return '/login';
+      if (isSignedIn && isAuthRoute) return '/';
+      return null;
+    },
     routes: [
-      // 使用 ShellRoute 确保底部导航栏只有一个实例
+      // ── Auth routes (no shell / bottom nav) ──────────────────────────────
+      GoRoute(
+        path: '/login',
+        builder: (context, state) => const LoginPage(),
+      ),
+      GoRoute(
+        path: '/register',
+        builder: (context, state) => const RegisterPage(),
+      ),
+      GoRoute(
+        path: '/email-confirm',
+        builder: (context, state) => EmailConfirmationPage(
+          email: state.extra as String? ?? '',
+        ),
+      ),
+
+      // ── App routes (with bottom nav shell) ───────────────────────────────
       ShellRoute(
         builder: (context, state, child) {
-          // 根据当前路径确定选中的标签
           int currentIndex = 0;
-          if (state.matchedLocation == '/explore') {
-            currentIndex = 1;
-          } else if (state.matchedLocation == '/profile') {
-            currentIndex = 4;
-          } else if (state.matchedLocation == '/progress') {
-            currentIndex = 3;
-          }
-          return MainLayout(
-            child: child,
-            currentIndex: currentIndex,
-          );
+          if (state.matchedLocation == '/explore') currentIndex = 1;
+          if (state.matchedLocation == '/progress') currentIndex = 3;
+          if (state.matchedLocation == '/profile') currentIndex = 4;
+          return MainLayout(currentIndex: currentIndex, child: child);
         },
         routes: [
           GoRoute(
@@ -49,4 +75,14 @@ abstract final class AppRouter {
       ),
     ],
   );
+}
+
+/// Notifies the router whenever the Supabase auth state changes so the
+/// redirect logic reruns automatically after sign-in / sign-out.
+class _AuthChangeNotifier extends ChangeNotifier {
+  _AuthChangeNotifier() {
+    Supabase.instance.client.auth.onAuthStateChange.listen((_) {
+      notifyListeners();
+    });
+  }
 }

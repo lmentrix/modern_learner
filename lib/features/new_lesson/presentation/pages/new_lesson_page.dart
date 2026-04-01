@@ -3,6 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/theme/app_colors.dart';
 
+enum LessonType { language, school }
+
 class NewLessonPage extends StatefulWidget {
   const NewLessonPage({super.key});
 
@@ -14,8 +16,11 @@ class _NewLessonPageState extends State<NewLessonPage> {
   String? _selectedLanguage;
   String? _selectedTopic;
   String _selectedDifficulty = 'Beginner';
+  LessonType _lessonType = LessonType.language;
 
-  bool get _canStart => _selectedLanguage != null && _selectedTopic != null;
+  bool get _canStart => _lessonType == LessonType.language
+      ? _selectedLanguage != null
+      : _selectedTopic != null;
 
   static const _languages = [
     ('🇺🇸', 'English'),
@@ -64,17 +69,27 @@ class _NewLessonPageState extends State<NewLessonPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _sectionLabel('LANGUAGE'),
+                    _sectionLabel('LESSON TYPE'),
                     const SizedBox(height: 12),
-                    _buildLanguageGrid(),
+                    _buildLessonTypeSelector(),
                     const SizedBox(height: 28),
-                    _sectionLabel('SCHOOL LESSON'),
-                    const SizedBox(height: 12),
-                    _buildTopicGrid(),
-                    const SizedBox(height: 28),
-                    _sectionLabel('DIFFICULTY'),
-                    const SizedBox(height: 12),
-                    _buildDifficultyRow(),
+                    if (_lessonType == LessonType.language) ...[
+                      _sectionLabel('LANGUAGE'),
+                      const SizedBox(height: 12),
+                      _buildLanguageGrid(),
+                      const SizedBox(height: 28),
+                      _sectionLabel('DIFFICULTY'),
+                      const SizedBox(height: 12),
+                      _buildDifficultyRow(),
+                    ] else ...[
+                      _sectionLabel('SCHOOL LESSON'),
+                      const SizedBox(height: 12),
+                      _buildTopicGrid(),
+                      const SizedBox(height: 28),
+                      _sectionLabel('DIFFICULTY'),
+                      const SizedBox(height: 12),
+                      _buildDifficultyRow(),
+                    ],
                     const SizedBox(height: 8),
                   ],
                 ),
@@ -123,6 +138,30 @@ class _NewLessonPageState extends State<NewLessonPage> {
         color: AppColors.onSurfaceVariant,
         letterSpacing: 1.8,
       ),
+    );
+  }
+
+  Widget _buildLessonTypeSelector() {
+    return Row(
+      children: [
+        Expanded(
+          child: _LessonTypeCard(
+            icon: '🌍',
+            label: 'Language',
+            isSelected: _lessonType == LessonType.language,
+            onTap: () => setState(() => _lessonType = LessonType.language),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _LessonTypeCard(
+            icon: '📚',
+            label: 'School',
+            isSelected: _lessonType == LessonType.school,
+            onTap: () => setState(() => _lessonType = LessonType.school),
+          ),
+        ),
+      ],
     );
   }
 
@@ -248,6 +287,9 @@ class _NewLessonPageState extends State<NewLessonPage> {
   }
 
   Widget _buildStartButton(BuildContext context) {
+    final displayText = _lessonType == LessonType.language
+        ? _selectedLanguage ?? 'Choose a language'
+        : _selectedTopic ?? 'Choose a topic';
     return Padding(
       padding: EdgeInsets.fromLTRB(
           20, 8, 20, MediaQuery.of(context).padding.bottom + 16),
@@ -270,8 +312,10 @@ class _NewLessonPageState extends State<NewLessonPage> {
               children: [
                 Text(
                   _canStart
-                      ? 'Start $_selectedDifficulty Lesson'
-                      : 'Choose a language and topic',
+                      ? 'Start $_selectedDifficulty $displayText Lesson'
+                      : _lessonType == LessonType.language
+                          ? 'Choose a language'
+                          : 'Choose a topic',
                   style: GoogleFonts.spaceGrotesk(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
@@ -294,11 +338,14 @@ class _NewLessonPageState extends State<NewLessonPage> {
   }
 
   void _onStart(BuildContext context) {
+    final lessonName = _lessonType == LessonType.language
+        ? _selectedLanguage
+        : _selectedTopic;
     // Show a quick confirmation snackbar then close
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          'Starting $_selectedDifficulty $_selectedLanguage · $_selectedTopic',
+          'Starting $_selectedDifficulty $lessonName Lesson',
           style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500),
         ),
         backgroundColor: AppColors.surfaceContainerHigh,
@@ -346,6 +393,63 @@ class _SelectableCard extends StatelessWidget {
           ),
         ),
         child: child,
+      ),
+    );
+  }
+}
+
+// ── Lesson Type Card ──────────────────────────────────────────────────────────
+
+class _LessonTypeCard extends StatelessWidget {
+  final String icon;
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _LessonTypeCard({
+    required this.icon,
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final selectedColor = label == 'Language' ? AppColors.primary : AppColors.secondary;
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? selectedColor.withValues(alpha: 0.1)
+              : AppColors.surfaceContainerHigh,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isSelected
+                ? selectedColor.withValues(alpha: 0.5)
+                : AppColors.outlineVariant.withValues(alpha: 0.2),
+            width: isSelected ? 1.5 : 1,
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(icon, style: const TextStyle(fontSize: 28)),
+            const SizedBox(height: 6),
+            Text(
+              label,
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                color: isSelected
+                    ? selectedColor
+                    : AppColors.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:modern_learner_production/features/auth/presentation/bloc/auth_bloc.dart';
 
 import '../../../../../core/theme/app_colors.dart';
 import '../widgets/achievement_badge.dart';
@@ -781,7 +783,10 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              Navigator.pop(context);
+              context.read<AuthBloc>().add(const AuthLogoutRequested());
+            },
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
             child: Text(
               'Sign Out',

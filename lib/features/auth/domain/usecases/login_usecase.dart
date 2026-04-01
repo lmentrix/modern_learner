@@ -2,9 +2,9 @@ import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
 import 'package:injectable/injectable.dart';
 
-import '../../../../core/errors/failures.dart';
-import '../entities/user_entity.dart';
-import '../repositories/auth_repository.dart';
+import 'package:modern_learner_production/core/errors/failures.dart';
+import 'package:modern_learner_production/features/auth/domain/entities/user_entity.dart';
+import 'package:modern_learner_production/features/auth/domain/repositories/auth_repository.dart';
 
 @lazySingleton
 class LoginUseCase {
@@ -13,10 +13,7 @@ class LoginUseCase {
   final AuthRepository _repository;
 
   Future<Either<Failure, UserEntity>> call(LoginParams params) {
-    return _repository.login(
-      email: params.email,
-      password: params.password,
-    );
+    return _repository.login(email: params.email, password: params.password);
   }
 }
 

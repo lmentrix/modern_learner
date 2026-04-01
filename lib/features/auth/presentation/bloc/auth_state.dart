@@ -36,3 +36,12 @@ final class AuthFailureState extends AuthState {
   @override
   List<Object?> get props => [message];
 }
+
+final class AuthEmailConfirmationSent extends AuthState {
+  const AuthEmailConfirmationSent(this.email);
+
+  final String email;
+
+  @override
+  List<Object?> get props => [email];
+}

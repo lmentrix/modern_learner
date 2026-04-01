@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-
-import '../../../../core/theme/app_colors.dart';
-import '../../../exercise/presentation/pages/exercise_page.dart';
+import 'package:modern_learner_production/core/theme/app_colors.dart';
+import 'package:modern_learner_production/features/exercise/presentation/pages/exercise_page.dart';
+import 'package:modern_learner_production/features/home/data/models/lesson_data.dart';
 
 enum LessonType { voice, school, continueLearning }
 
@@ -18,6 +18,7 @@ class LessonDetailPage extends StatefulWidget {
   final int completedLessons;
   final List<String> learningObjectives;
   final List<LessonSection> sections;
+  final LessonContent? lessonContent;
 
   const LessonDetailPage({
     super.key,
@@ -32,6 +33,7 @@ class LessonDetailPage extends StatefulWidget {
     required this.completedLessons,
     required this.learningObjectives,
     required this.sections,
+    this.lessonContent,
   });
 
   @override
@@ -50,13 +52,25 @@ class _LessonDetailPageState extends State<LessonDetailPage> {
           const SliverToBoxAdapter(child: SizedBox(height: 24)),
           SliverToBoxAdapter(child: _buildStatsRow()),
           const SliverToBoxAdapter(child: SizedBox(height: 24)),
-          SliverToBoxAdapter(child: _buildLearningObjectives()),
-          const SliverToBoxAdapter(child: SizedBox(height: 24)),
-          SliverToBoxAdapter(child: _buildSectionHeader()),
-          SliverList.builder(
-            itemCount: widget.sections.length,
-            itemBuilder: (context, index) => _buildSectionItem(index),
-          ),
+          // Show lesson content if available (vocabulary lesson)
+          if (widget.lessonContent != null) ...[
+            SliverToBoxAdapter(child: _buildLessonIntroduction()),
+            const SliverToBoxAdapter(child: SizedBox(height: 24)),
+            SliverToBoxAdapter(child: _buildVocabularySection()),
+            const SliverToBoxAdapter(child: SizedBox(height: 24)),
+            SliverToBoxAdapter(child: _buildPracticeExercisesSection()),
+            const SliverToBoxAdapter(child: SizedBox(height: 24)),
+            SliverToBoxAdapter(child: _buildLessonSummary()),
+          ] else ...[
+            // Show traditional learning objectives and sections
+            SliverToBoxAdapter(child: _buildLearningObjectives()),
+            const SliverToBoxAdapter(child: SizedBox(height: 24)),
+            SliverToBoxAdapter(child: _buildSectionHeader()),
+            SliverList.builder(
+              itemCount: widget.sections.length,
+              itemBuilder: (context, index) => _buildSectionItem(index),
+            ),
+          ],
           const SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],
       ),
@@ -266,39 +280,472 @@ class _LessonDetailPageState extends State<LessonDetailPage> {
             ),
           ),
           const SizedBox(height: 12),
-          ...widget.learningObjectives.map((obj) => Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      margin: const EdgeInsets.only(top: 2),
-                      width: 20,
-                      height: 20,
-                      decoration: BoxDecoration(
-                        color: widget.accentColor.withValues(alpha: 0.15),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.check_rounded,
-                        size: 14,
+          ...widget.learningObjectives.map(
+            (obj) => Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    margin: const EdgeInsets.only(top: 2),
+                    width: 20,
+                    height: 20,
+                    decoration: BoxDecoration(
+                      color: widget.accentColor.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.check_rounded,
+                      size: 14,
+                      color: AppColors.onSurface,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      obj,
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
                         color: AppColors.onSurface,
+                        height: 1.4,
                       ),
                     ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        obj,
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          color: AppColors.onSurface,
-                          height: 1.4,
-                        ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLessonIntroduction() {
+    final content = widget.lessonContent!;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'INTRODUCTION',
+            style: GoogleFonts.inter(
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              color: AppColors.onSurfaceVariant,
+              letterSpacing: 1.5,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: widget.accentColor.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: widget.accentColor.withValues(alpha: 0.2),
+                width: 1,
+              ),
+            ),
+            child: Text(
+              content.introduction,
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                color: AppColors.onSurface,
+                height: 1.6,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVocabularySection() {
+    final content = widget.lessonContent!;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                'VOCABULARY',
+                style: GoogleFonts.inter(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.onSurfaceVariant,
+                  letterSpacing: 1.5,
+                ),
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: widget.accentColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  '${content.vocabularyItems.length} words',
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: widget.accentColor,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ...content.vocabularyItems.map(
+            (vocab) => _buildVocabularyCard(vocab),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVocabularyCard(VocabularyItem vocab) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColors.outlineVariant.withValues(alpha: 0.15),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      vocab.word,
+                      style: GoogleFonts.spaceGrotesk(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: widget.accentColor,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      vocab.pronunciation,
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        color: AppColors.onSurfaceVariant,
+                        fontStyle: FontStyle.italic,
                       ),
                     ),
                   ],
                 ),
-              )),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  vocab.partOfSpeech,
+                  style: GoogleFonts.inter(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      vocab.translation,
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      vocab.exampleSentence,
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        color: AppColors.onSurfaceVariant,
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      vocab.exampleTranslation,
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        color: AppColors.onSurfaceVariant.withValues(
+                          alpha: 0.7,
+                        ),
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: widget.accentColor.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('💡', style: TextStyle(fontSize: 16)),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    vocab.memoryTip,
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: AppColors.onSurfaceVariant,
+                      height: 1.4,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPracticeExercisesSection() {
+    final content = widget.lessonContent!;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'PRACTICE EXERCISES',
+            style: GoogleFonts.inter(
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              color: AppColors.onSurfaceVariant,
+              letterSpacing: 1.5,
+            ),
+          ),
+          const SizedBox(height: 12),
+          ...content.practiceExercises.map(
+            (exercise) => _buildExerciseCard(exercise),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExerciseCard(PracticeExercise exercise) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColors.outlineVariant.withValues(alpha: 0.15),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: widget.accentColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  _getExerciseIcon(exercise.type),
+                  style: const TextStyle(fontSize: 18),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _getExerciseTypeLabel(exercise.type),
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: widget.accentColor,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      exercise.instruction,
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        color: AppColors.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ...exercise.items.map((item) => _buildExerciseItem(item)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExerciseItem(ExerciseItem item) {
+    return Container(
+      margin: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerHighest.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            item.question,
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: AppColors.onSurface,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.tertiary.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  'Answer: ${item.answer}',
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.tertiary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _getExerciseIcon(String type) {
+    switch (type) {
+      case 'match':
+        return '🔗';
+      case 'fill_blank':
+        return '✍️';
+      case 'translate':
+        return '🌐';
+      default:
+        return '📝';
+    }
+  }
+
+  String _getExerciseTypeLabel(String type) {
+    switch (type) {
+      case 'match':
+        return 'MATCHING';
+      case 'fill_blank':
+        return 'FILL IN THE BLANK';
+      case 'translate':
+        return 'TRANSLATION';
+      default:
+        return 'EXERCISE';
+    }
+  }
+
+  Widget _buildLessonSummary() {
+    final content = widget.lessonContent!;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'LESSON SUMMARY',
+            style: GoogleFonts.inter(
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              color: AppColors.onSurfaceVariant,
+              letterSpacing: 1.5,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  widget.accentColor.withValues(alpha: 0.15),
+                  widget.accentColor.withValues(alpha: 0.05),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: widget.accentColor.withValues(alpha: 0.3),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('🎉', style: TextStyle(fontSize: 24)),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    content.summary,
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      color: AppColors.onSurface,
+                      height: 1.6,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -336,15 +783,15 @@ class _LessonDetailPageState extends State<LessonDetailPage> {
             color: isLocked
                 ? AppColors.surfaceContainerHigh
                 : isCurrent
-                    ? widget.accentColor.withValues(alpha: 0.1)
-                    : AppColors.surfaceContainerLow,
+                ? widget.accentColor.withValues(alpha: 0.1)
+                : AppColors.surfaceContainerLow,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: isLocked
                   ? AppColors.outlineVariant.withValues(alpha: 0.2)
                   : isCurrent
-                      ? widget.accentColor.withValues(alpha: 0.3)
-                      : AppColors.outlineVariant.withValues(alpha: 0.1),
+                  ? widget.accentColor.withValues(alpha: 0.3)
+                  : AppColors.outlineVariant.withValues(alpha: 0.1),
               width: isCurrent ? 1.5 : 1,
             ),
           ),
@@ -417,7 +864,11 @@ class _LessonDetailPageState extends State<LessonDetailPage> {
   }
 
   Widget _buildSectionIcon(
-      LessonSection section, bool isCompleted, bool isLocked, bool isNext) {
+    LessonSection section,
+    bool isCompleted,
+    bool isLocked,
+    bool isNext,
+  ) {
     if (isCompleted) {
       return Container(
         width: 44,
@@ -456,10 +907,7 @@ class _LessonDetailPageState extends State<LessonDetailPage> {
         borderRadius: BorderRadius.circular(12),
       ),
       child: Center(
-        child: Text(
-          section.emoji,
-          style: const TextStyle(fontSize: 22),
-        ),
+        child: Text(section.emoji, style: const TextStyle(fontSize: 22)),
       ),
     );
   }
@@ -467,7 +915,12 @@ class _LessonDetailPageState extends State<LessonDetailPage> {
   Widget _buildBottomBar(BuildContext context) {
     final canStart = widget.progress < 1.0;
     return Container(
-      padding: EdgeInsets.fromLTRB(20, 12, 20, MediaQuery.of(context).padding.bottom + 12),
+      padding: EdgeInsets.fromLTRB(
+        20,
+        12,
+        20,
+        MediaQuery.of(context).padding.bottom + 12,
+      ),
       decoration: BoxDecoration(
         color: AppColors.surface,
         border: Border(
@@ -508,12 +961,14 @@ class _LessonDetailPageState extends State<LessonDetailPage> {
           SizedBox(
             height: 50,
             child: FilledButton(
-              onPressed: canStart
-                  ? () => _startExercise(context)
-                  : null,
+              onPressed: canStart ? () => _startExercise(context) : null,
               style: FilledButton.styleFrom(
-                backgroundColor: canStart ? widget.accentColor : AppColors.surfaceContainerHighest,
-                foregroundColor: canStart ? Colors.white : AppColors.onSurfaceVariant,
+                backgroundColor: canStart
+                    ? widget.accentColor
+                    : AppColors.surfaceContainerHighest,
+                foregroundColor: canStart
+                    ? Colors.white
+                    : AppColors.onSurfaceVariant,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
                 ),
@@ -569,10 +1024,12 @@ class _LessonDetailPageState extends State<LessonDetailPage> {
         builder: (context) => ExercisePage(
           lessonType: widget.type,
           title: widget.title,
-          sectionTitle: widget.sections.firstWhere(
-            (s) => s.status == LessonSectionStatus.current,
-            orElse: () => widget.sections.first,
-          ).title,
+          sectionTitle: widget.sections
+              .firstWhere(
+                (s) => s.status == LessonSectionStatus.current,
+                orElse: () => widget.sections.first,
+              )
+              .title,
           accentColor: widget.accentColor,
           emoji: widget.emoji,
         ),
@@ -623,10 +1080,7 @@ class _StatCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: accentColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: accentColor.withValues(alpha: 0.2),
-          width: 1,
-        ),
+        border: Border.all(color: accentColor.withValues(alpha: 0.2), width: 1),
       ),
       child: Column(
         children: [

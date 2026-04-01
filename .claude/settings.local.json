@@ -18,7 +18,21 @@
       "Bash(brew install:*)",
       "Bash(adb kill-server:*)",
       "Bash(adb start-server:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(grep -E \"\\\\.\\(dart\\)$\")",
+      "Bash(npm install:*)",
+      "Bash(dart run:*)",
+      "mcp__supabase__get_publishable_keys",
+      "mcp__supabase__get_project_url",
+      "mcp__supabase__list_tables",
+      "mcp__supabase__get_advisors",
+      "mcp__supabase__apply_migration",
+      "mcp__supabase__execute_sql",
+      "mcp__supabase__search_docs"
     ]
-  }
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "supabase"
+  ]
 }
