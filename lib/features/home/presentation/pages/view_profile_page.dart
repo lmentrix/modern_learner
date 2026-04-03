@@ -21,7 +21,7 @@ class ViewProfilePage extends StatelessWidget {
             : 'U';
         final isVip = user?.isVip ?? false;
 
-        return Container(
+        return Material(
           color: AppColors.surface,
           child: SafeArea(
             child: CustomScrollView(
