@@ -220,8 +220,8 @@ class _AchievementsPageState extends State<AchievementsPage> {
                   value: progress,
                   minHeight: 8,
                   backgroundColor: Colors.white.withValues(alpha: 0.2),
-                  valueColor: const AlwaysStoppedAnimation<Color>(
-                    Color(0xFF1A1028),
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    Colors.white.withValues(alpha: 0.9),
                   ),
                 ),
               ),
