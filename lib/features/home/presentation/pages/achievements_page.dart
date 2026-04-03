@@ -62,7 +62,7 @@ class _AchievementsPageState extends State<AchievementsPage> {
                   crossAxisCount: 2,
                   mainAxisSpacing: 12,
                   crossAxisSpacing: 12,
-                  childAspectRatio: 0.85,
+                  childAspectRatio: 0.82,
                 ),
                 itemCount: _filteredAchievements.length,
                 itemBuilder: (context, i) {
@@ -316,73 +316,132 @@ class _AchievementCard extends StatelessWidget {
           ),
         );
       },
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          return Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: isLocked
-                  ? AppColors.surfaceContainerHighest
-                  : color.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: isLocked
-                    ? AppColors.outlineVariant.withValues(alpha: 0.2)
-                    : color.withValues(alpha: 0.3),
-                width: 1.5,
-              ),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: isLocked
-                        ? AppColors.surfaceContainerHigh
-                        : color.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Center(
-                    child: Text(
-                      emoji,
-                      style: TextStyle(
-                        fontSize: 26,
-                        color: isLocked ? AppColors.onSurfaceVariant : null,
+      child: Container(
+        decoration: BoxDecoration(
+          color: isLocked ? null : null,
+          gradient: isLocked
+              ? const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppColors.surfaceContainerHigh,
+                    AppColors.surfaceContainerHighest,
+                  ],
+                )
+              : LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    color.withValues(alpha: 0.14),
+                    AppColors.surfaceContainerHigh,
+                    AppColors.surfaceContainerHigh,
+                  ],
+                  stops: const [0.0, 0.45, 1.0],
+                ),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isLocked
+                ? AppColors.outlineVariant.withValues(alpha: 0.12)
+                : color.withValues(alpha: 0.3),
+            width: 1,
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: isLocked
+                          ? AppColors.surfaceContainerHighest
+                          : color.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(14),
+                      boxShadow: isLocked
+                          ? null
+                          : [
+                              BoxShadow(
+                                color: color.withValues(alpha: 0.35),
+                                blurRadius: 18,
+                                spreadRadius: 0,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                    ),
+                    child: Center(
+                      child: Opacity(
+                        opacity: isLocked ? 0.35 : 1.0,
+                        child: Text(
+                          emoji,
+                          style: const TextStyle(fontSize: 26),
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  title,
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: isLocked
-                        ? AppColors.onSurfaceVariant
-                        : AppColors.onSurface,
+                  Container(
+                    padding: const EdgeInsets.all(5),
+                    decoration: BoxDecoration(
+                      color: isLocked
+                          ? AppColors.surfaceContainerHighest
+                          : color.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      isLocked ? Icons.lock_rounded : Icons.check_rounded,
+                      size: 13,
+                      color: isLocked
+                          ? AppColors.onSurfaceVariant.withValues(alpha: 0.45)
+                          : color,
+                    ),
                   ),
-                  textAlign: TextAlign.center,
+                ],
+              ),
+              const Spacer(),
+              Text(
+                title,
+                style: GoogleFonts.spaceGrotesk(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: isLocked
+                      ? AppColors.onSurfaceVariant.withValues(alpha: 0.45)
+                      : AppColors.onSurface,
+                  height: 1.2,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                decoration: BoxDecoration(
+                  color: isLocked
+                      ? AppColors.surfaceContainerHighest
+                      : color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  subtitle,
+                  style: GoogleFonts.inter(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w600,
+                    color: isLocked
+                        ? AppColors.onSurfaceVariant.withValues(alpha: 0.4)
+                        : color,
+                    letterSpacing: 0.3,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: GoogleFonts.inter(
-                    fontSize: 10,
-                    color: AppColors.onSurfaceVariant,
-                  ),
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          );
-        },
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
