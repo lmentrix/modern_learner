@@ -13,6 +13,7 @@ import 'package:modern_learner_production/features/auth/domain/usecases/login_us
 import 'package:modern_learner_production/features/auth/domain/usecases/logout_usecase.dart';
 import 'package:modern_learner_production/features/auth/domain/usecases/register_usecase.dart';
 import 'package:modern_learner_production/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:modern_learner_production/features/home/presentation/bloc/achievement_bloc.dart';
 import 'package:modern_learner_production/features/progress/data/repositories/progress_repository_impl.dart';
 import 'package:modern_learner_production/features/progress/domain/repositories/progress_repository.dart';
 import 'package:modern_learner_production/core/network/network_info.dart';
@@ -57,6 +58,9 @@ Future<void> configureDependencies() async {
   getIt.registerLazySingleton(() => LogoutUseCase(getIt()));
   getIt.registerLazySingleton(() => GetCurrentUserUseCase(getIt()));
   getIt.registerFactory(() => AuthBloc(getIt(), getIt(), getIt(), getIt()));
+
+  // ── Achievement ───────────────────────────────────────────────────────────
+  getIt.registerFactory(() => AchievementBloc());
 
   // ── Progress ──────────────────────────────────────────────────────────────
   getIt.registerLazySingleton<ProgressRepository>(
