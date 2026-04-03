@@ -5,6 +5,8 @@ import 'package:modern_learner_production/features/auth/presentation/pages/email
 import 'package:modern_learner_production/features/auth/presentation/pages/login_page.dart';
 import 'package:modern_learner_production/features/auth/presentation/pages/register_page.dart';
 import 'package:modern_learner_production/features/explore/presentation/pages/explore_page.dart';
+import 'package:modern_learner_production/features/home/domain/entities/achievement_entity.dart';
+import 'package:modern_learner_production/features/home/presentation/pages/achievements_detail.dart';
 import 'package:modern_learner_production/features/home/presentation/pages/achievements_page.dart';
 import 'package:modern_learner_production/features/home/presentation/pages/home_page.dart';
 import 'package:modern_learner_production/features/home/presentation/pages/view_profile_page.dart';
@@ -29,6 +31,7 @@ abstract final class Routes {
   // Full-screen (no bottom nav)
   static const viewProfile = '/view-profile';
   static const achievements = '/achievements';
+  static const achievementDetail = '/achievement-detail';
 }
 
 // ── Router ───────────────────────────────────────────────────────────────────
@@ -80,7 +83,18 @@ abstract final class AppRouter {
       GoRoute(
         path: Routes.achievements,
         parentNavigatorKey: _rootNavigatorKey,
-        pageBuilder: (context, state) => _slideUp(state.pageKey, const AchievementsPage()),
+        pageBuilder: (context, state) =>
+            _slideUp(state.pageKey, const AchievementsPage()),
+      ),
+      GoRoute(
+        path: Routes.achievementDetail,
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) => _slideUp(
+          state.pageKey,
+          AchievementsDetailPage(
+            achievement: state.extra as AchievementEntity,
+          ),
+        ),
       ),
 
       // ── Shell (bottom nav) ────────────────────────────────────────────────
