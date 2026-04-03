@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../../../core/theme/app_colors.dart';
+import 'package:modern_learner_production/core/theme/app_colors.dart';
 
 class StreakDetailsDialog extends StatelessWidget {
-  final int streak;
 
   const StreakDetailsDialog({super.key, required this.streak});
+  final int streak;
 
   @override
   Widget build(BuildContext context) {
@@ -179,15 +179,15 @@ class StreakDetailsDialog extends StatelessWidget {
 }
 
 class _StatBox extends StatelessWidget {
-  final String emoji;
-  final String label;
-  final String value;
 
   const _StatBox({
     required this.emoji,
     required this.label,
     required this.value,
   });
+  final String emoji;
+  final String label;
+  final String value;
 
   @override
   Widget build(BuildContext context) {
@@ -224,10 +224,6 @@ class _StatBox extends StatelessWidget {
 }
 
 class _MilestoneItem extends StatelessWidget {
-  final int days;
-  final String label;
-  final bool achieved;
-  final bool isCurrent;
 
   const _MilestoneItem({
     required this.days,
@@ -235,6 +231,10 @@ class _MilestoneItem extends StatelessWidget {
     required this.achieved,
     this.isCurrent = false,
   });
+  final int days;
+  final String label;
+  final bool achieved;
+  final bool isCurrent;
 
   @override
   Widget build(BuildContext context) {

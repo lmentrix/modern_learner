@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../../core/theme/app_colors.dart';
-import '../../domain/entities/user_progress.dart';
+import 'package:modern_learner_production/core/theme/app_colors.dart';
+import 'package:modern_learner_production/features/progress/domain/entities/user_progress.dart';
 
 class ProgressStatsHeader extends StatelessWidget {
-  final UserProgress progress;
 
   const ProgressStatsHeader({
     super.key,
     required this.progress,
   });
+  final UserProgress progress;
 
   @override
   Widget build(BuildContext context) {
@@ -55,15 +55,15 @@ class ProgressStatsHeader extends StatelessWidget {
 }
 
 class _StatItem extends StatelessWidget {
-  final String emoji;
-  final String value;
-  final String label;
 
   const _StatItem({
     required this.emoji,
     required this.value,
     required this.label,
   });
+  final String emoji;
+  final String value;
+  final String label;
 
   @override
   Widget build(BuildContext context) {
@@ -92,9 +92,9 @@ class _StatItem extends StatelessWidget {
 }
 
 class _LevelRing extends StatelessWidget {
-  final int level;
 
   const _LevelRing({required this.level});
+  final int level;
 
   @override
   Widget build(BuildContext context) {
@@ -132,15 +132,15 @@ class _LevelRing extends StatelessWidget {
 }
 
 class _XpBar extends StatelessWidget {
-  final int xpInLevel;
-  final int level;
-  final double fraction;
 
   const _XpBar({
     required this.xpInLevel,
     required this.level,
     required this.fraction,
   });
+  final int xpInLevel;
+  final int level;
+  final double fraction;
 
   @override
   Widget build(BuildContext context) {

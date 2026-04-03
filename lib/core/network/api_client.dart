@@ -2,8 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 
-import '../constants/api_constants.dart';
-import 'interceptors/auth_interceptor.dart';
+import 'package:modern_learner_production/core/constants/api_constants.dart';
+import 'package:modern_learner_production/core/network/interceptors/auth_interceptor.dart';
 
 @lazySingleton
 class ApiClient {

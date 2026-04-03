@@ -1,12 +1,9 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_colors.dart';
+import 'package:modern_learner_production/core/theme/app_colors.dart';
 
 class CelebrationOverlay extends StatefulWidget {
-  final int xpGained;
-  final int gemsGained;
-  final VoidCallback onComplete;
 
   const CelebrationOverlay({
     super.key,
@@ -14,6 +11,9 @@ class CelebrationOverlay extends StatefulWidget {
     required this.gemsGained,
     required this.onComplete,
   });
+  final int xpGained;
+  final int gemsGained;
+  final VoidCallback onComplete;
 
   @override
   State<CelebrationOverlay> createState() => _CelebrationOverlayState();
@@ -190,9 +190,6 @@ class _CelebrationOverlayState extends State<CelebrationOverlay>
 }
 
 class ConfettiPainter extends CustomPainter {
-  final Animation<double> animation;
-  final Random _random = Random();
-  late List<ConfettiParticle> _particles;
 
   ConfettiPainter({required this.animation}) : super(repaint: animation) {
     _particles = List.generate(50, (i) => ConfettiParticle(
@@ -212,6 +209,9 @@ class ConfettiPainter extends CustomPainter {
           rotationSpeed: (_random.nextDouble() - 0.5) * 0.2,
         ));
   }
+  final Animation<double> animation;
+  final Random _random = Random();
+  late List<ConfettiParticle> _particles;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -246,8 +246,6 @@ class ConfettiPainter extends CustomPainter {
 }
 
 class ConfettiParticle {
-  double x, y, vx, vy, size, rotation, rotationSpeed;
-  final Color color;
 
   ConfettiParticle({
     required this.x,
@@ -259,6 +257,8 @@ class ConfettiParticle {
     required this.rotation,
     required this.rotationSpeed,
   });
+  double x, y, vx, vy, size, rotation, rotationSpeed;
+  final Color color;
 
   void update(double progress) {
     x += vx;

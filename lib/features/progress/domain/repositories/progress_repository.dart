@@ -1,5 +1,5 @@
-import '../entities/roadmap.dart';
-import '../entities/user_progress.dart';
+import 'package:modern_learner_production/features/progress/domain/entities/roadmap.dart';
+import 'package:modern_learner_production/features/progress/domain/entities/user_progress.dart';
 
 abstract class ProgressRepository {
   Future<Roadmap> getRoadmap();

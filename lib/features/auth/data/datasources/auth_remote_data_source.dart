@@ -1,9 +1,9 @@
 import 'package:injectable/injectable.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../../../core/errors/exceptions.dart';
-import '../../domain/entities/user_entity.dart';
-import '../models/user_model.dart';
+import 'package:modern_learner_production/core/errors/exceptions.dart';
+import 'package:modern_learner_production/features/auth/domain/entities/user_entity.dart';
+import 'package:modern_learner_production/features/auth/data/models/user_model.dart';
 
 abstract interface class AuthRemoteDataSource {
   Future<UserModel> login({required String email, required String password});

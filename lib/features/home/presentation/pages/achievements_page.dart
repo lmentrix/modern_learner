@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../../../core/theme/app_colors.dart';
-import 'package:modern_learner_production/features/profile/presentation/widgets/achievement_badge.dart';
+import 'package:modern_learner_production/core/theme/app_colors.dart';
 
 class AchievementsPage extends StatefulWidget {
   const AchievementsPage({super.key});
@@ -32,7 +31,7 @@ class _AchievementsPageState extends State<AchievementsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return Material(
       color: AppColors.surface,
       child: SafeArea(
         child: CustomScrollView(
@@ -88,7 +87,7 @@ class _AchievementsPageState extends State<AchievementsPage> {
 
   Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+      padding: const EdgeInsets.fromLTRB(8, 8, 20, 24),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
@@ -96,23 +95,60 @@ class _AchievementsPageState extends State<AchievementsPage> {
           colors: [Color(0xFF0E1020), AppColors.surface],
         ),
       ),
-      child: Row(
-        children: [
-          IconButton(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back_ios_rounded),
-            color: AppColors.onSurface,
-          ),
-          const SizedBox(width: 8),
-          Text(
-            'Achievements',
-            style: GoogleFonts.spaceGrotesk(
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
-              color: AppColors.onSurface,
-            ),
-          ),
-        ],
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return Row(
+            children: [
+              IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.arrow_back_ios_rounded),
+                color: AppColors.onSurface,
+              ),
+              const SizedBox(width: 4),
+              Flexible(
+                child: Text(
+                  'Achievements',
+                  style: GoogleFonts.spaceGrotesk(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.onSurface,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceContainerHigh,
+                  borderRadius: BorderRadius.circular(100),
+                  border: Border.all(
+                    color: AppColors.outlineVariant.withValues(alpha: 0.2),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.emoji_events_rounded,
+                      color: AppColors.tertiaryContainer,
+                      size: 16,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      '${_achievements.where((a) => !a.isLocked).length}/${_achievements.length}',
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.onSurface,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -122,69 +158,77 @@ class _AchievementsPageState extends State<AchievementsPage> {
     final total = _achievements.length;
     final progress = unlocked / total;
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: AppColors.primaryGradient,
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: AppColors.primaryGradient,
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: const Icon(
-                  Icons.emoji_events_rounded,
-                  color: Colors.white,
-                  size: 26,
-                ),
+              Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: const Icon(
+                      Icons.emoji_events_rounded,
+                      color: Colors.white,
+                      size: 26,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Flexible(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '$unlocked / $total Unlocked',
+                          style: GoogleFonts.spaceGrotesk(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          'Keep learning to earn more!',
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            color: Colors.white.withValues(alpha: 0.8),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '$unlocked / $total Unlocked',
-                      style: GoogleFonts.spaceGrotesk(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
-                    Text(
-                      'Keep learning to earn more!',
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        color: Colors.white.withValues(alpha: 0.8),
-                      ),
-                    ),
-                  ],
+              const SizedBox(height: 16),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(100),
+                child: LinearProgressIndicator(
+                  value: progress,
+                  minHeight: 8,
+                  backgroundColor: Colors.white.withValues(alpha: 0.2),
+                  valueColor: const AlwaysStoppedAnimation<Color>(
+                    Color(0xFF1A1028),
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(100),
-            child: LinearProgressIndicator(
-              value: progress,
-              minHeight: 8,
-              backgroundColor: Colors.white.withValues(alpha: 0.2),
-              valueColor: const AlwaysStoppedAnimation<Color>(
-                Color(0xFF1A1028),
-              ),
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -195,34 +239,33 @@ class _AchievementsPageState extends State<AchievementsPage> {
       ('Locked', 'locked'),
     ];
 
-    return Row(
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
       children: [
         for (final filter in filters)
-          Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: FilterChip(
-              label: Text(
-                filter.$1,
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: _selectedFilter == filter.$2
-                      ? Colors.white
-                      : AppColors.onSurfaceVariant,
-                ),
+          FilterChip(
+            label: Text(
+              filter.$1,
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: _selectedFilter == filter.$2
+                    ? Colors.white
+                    : AppColors.onSurfaceVariant,
               ),
-              selected: _selectedFilter == filter.$2,
-              onSelected: (selected) {
-                setState(() {
-                  _selectedFilter = filter.$2;
-                });
-              },
-              selectedColor: AppColors.primary,
-              checkmarkColor: Colors.white,
-              backgroundColor: AppColors.surfaceContainerHighest,
-              side: BorderSide.none,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             ),
+            selected: _selectedFilter == filter.$2,
+            onSelected: (selected) {
+              setState(() {
+                _selectedFilter = filter.$2;
+              });
+            },
+            selectedColor: AppColors.primary,
+            checkmarkColor: Colors.white,
+            backgroundColor: AppColors.surfaceContainerHighest,
+            side: BorderSide.none,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           ),
       ],
     );
@@ -273,69 +316,73 @@ class _AchievementCard extends StatelessWidget {
           ),
         );
       },
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: isLocked
-              ? AppColors.surfaceContainerHighest
-              : color.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isLocked
-                ? AppColors.outlineVariant.withValues(alpha: 0.2)
-                : color.withValues(alpha: 0.3),
-            width: 1.5,
-          ),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isLocked
+                  ? AppColors.surfaceContainerHighest
+                  : color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
                 color: isLocked
-                    ? AppColors.surfaceContainerHigh
-                    : color.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(16),
+                    ? AppColors.outlineVariant.withValues(alpha: 0.2)
+                    : color.withValues(alpha: 0.3),
+                width: 1.5,
               ),
-              child: Center(
-                child: Text(
-                  emoji,
-                  style: TextStyle(
-                    fontSize: 30,
-                    color: isLocked ? AppColors.onSurfaceVariant : null,
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: isLocked
+                        ? AppColors.surfaceContainerHigh
+                        : color.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Center(
+                    child: Text(
+                      emoji,
+                      style: TextStyle(
+                        fontSize: 26,
+                        color: isLocked ? AppColors.onSurfaceVariant : null,
+                      ),
+                    ),
                   ),
                 ),
-              ),
+                const SizedBox(height: 10),
+                Text(
+                  title,
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: isLocked
+                        ? AppColors.onSurfaceVariant
+                        : AppColors.onSurface,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: GoogleFonts.inter(
+                    fontSize: 10,
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
             ),
-            const SizedBox(height: 12),
-            Text(
-              title,
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: isLocked
-                    ? AppColors.onSurfaceVariant
-                    : AppColors.onSurface,
-              ),
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              subtitle,
-              style: GoogleFonts.inter(
-                fontSize: 10,
-                color: AppColors.onSurfaceVariant,
-              ),
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -419,31 +466,35 @@ class _AchievementDetailSheet extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceContainerHighest.withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  isLocked ? Icons.lock_outline_rounded : Icons.check_circle_rounded,
-                  color: isLocked ? AppColors.onSurfaceVariant : color,
-                  size: 24,
+          LayoutBuilder(
+            builder: (context, constraints) {
+              return Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceContainerHighest.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    description,
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      color: AppColors.onSurface,
+                child: Row(
+                  children: [
+                    Icon(
+                      isLocked ? Icons.lock_outline_rounded : Icons.check_circle_rounded,
+                      color: isLocked ? AppColors.onSurfaceVariant : color,
+                      size: 24,
                     ),
-                  ),
+                    const SizedBox(width: 12),
+                    Flexible(
+                      child: Text(
+                        description,
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          color: AppColors.onSurface,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              );
+            },
           ),
           const SizedBox(height: 24),
           SizedBox(
@@ -521,21 +572,21 @@ const _achievements = [
     emoji: '🌟',
     title: 'Quick Learner',
     subtitle: '5 lessons in a day',
-    color: const Color(0xFF00DC82),
+    color: Color(0xFF00DC82),
     description: 'Complete 5 lessons in a single day.',
   ),
   _Achievement(
     emoji: '💪',
     title: 'Dedicated',
     subtitle: '30 day streak',
-    color: const Color(0xFFFF6B9D),
+    color: Color(0xFFFF6B9D),
     description: 'Maintain a 30-day learning streak. True dedication!',
   ),
   _Achievement(
     emoji: '🏆',
     title: 'Champion',
     subtitle: 'Top 10 leaderboard',
-    color: const Color(0xFFFFD700),
+    color: Color(0xFFFFD700),
     description: 'Reach the top 10 on the weekly leaderboard.',
     isLocked: true,
   ),

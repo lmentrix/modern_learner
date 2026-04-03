@@ -1,13 +1,13 @@
 import 'package:dartz/dartz.dart';
 import 'package:injectable/injectable.dart';
 
-import '../../../../core/errors/exceptions.dart';
-import '../../../../core/errors/failures.dart';
-import '../../../../core/network/network_info.dart';
-import '../../domain/entities/user_entity.dart';
-import '../../domain/repositories/auth_repository.dart';
-import '../datasources/auth_local_data_source.dart';
-import '../datasources/auth_remote_data_source.dart';
+import 'package:modern_learner_production/core/errors/exceptions.dart';
+import 'package:modern_learner_production/core/errors/failures.dart';
+import 'package:modern_learner_production/core/network/network_info.dart';
+import 'package:modern_learner_production/features/auth/domain/entities/user_entity.dart';
+import 'package:modern_learner_production/features/auth/domain/repositories/auth_repository.dart';
+import 'package:modern_learner_production/features/auth/data/datasources/auth_local_data_source.dart';
+import 'package:modern_learner_production/features/auth/data/datasources/auth_remote_data_source.dart';
 
 @LazySingleton(as: AuthRepository)
 class AuthRepositoryImpl implements AuthRepository {

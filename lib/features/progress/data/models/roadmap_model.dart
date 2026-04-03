@@ -1,15 +1,7 @@
-import '../../domain/entities/roadmap.dart';
-import 'lesson_model.dart';
+import 'package:modern_learner_production/features/progress/domain/entities/roadmap.dart';
+import 'package:modern_learner_production/features/progress/data/models/lesson_model.dart';
 
 class RoadmapModel {
-  final String id;
-  final String title;
-  final String description;
-  final String targetLanguage;
-  final String level;
-  final int totalXp;
-  final int estimatedHours;
-  final List<ChapterModel> chapters;
 
   RoadmapModel({
     required this.id,
@@ -36,6 +28,14 @@ class RoadmapModel {
           .toList(),
     );
   }
+  final String id;
+  final String title;
+  final String description;
+  final String targetLanguage;
+  final String level;
+  final int totalXp;
+  final int estimatedHours;
+  final List<ChapterModel> chapters;
 
   Map<String, dynamic> toJson() {
     return {
@@ -78,17 +78,6 @@ class RoadmapModel {
 }
 
 class ChapterModel {
-  final String id;
-  final int chapterNumber;
-  final String title;
-  final String description;
-  final String icon;
-  final String type;
-  final int xpReward;
-  final int gemReward;
-  final List<String> prerequisites;
-  final List<String> skills;
-  final List<LessonModel> lessons;
 
   ChapterModel({
     required this.id,
@@ -122,6 +111,17 @@ class ChapterModel {
           [],
     );
   }
+  final String id;
+  final int chapterNumber;
+  final String title;
+  final String description;
+  final String icon;
+  final String type;
+  final int xpReward;
+  final int gemReward;
+  final List<String> prerequisites;
+  final List<String> skills;
+  final List<LessonModel> lessons;
 
   Map<String, dynamic> toJson() {
     return {

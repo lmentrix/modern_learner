@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import 'app_colors.dart';
+import 'package:modern_learner_production/core/theme/app_colors.dart';
 
 abstract final class AppTheme {
   static ThemeData get dark => ThemeData(

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../../core/theme/app_colors.dart';
+import 'package:modern_learner_production/core/theme/app_colors.dart';
 
 enum LessonType { language, school }
 
@@ -362,10 +362,6 @@ class _NewLessonPageState extends State<NewLessonPage> {
 // ── Reusable selectable card ──────────────────────────────────────────────────
 
 class _SelectableCard extends StatelessWidget {
-  final bool isSelected;
-  final Color selectedColor;
-  final VoidCallback onTap;
-  final Widget child;
 
   const _SelectableCard({
     required this.isSelected,
@@ -373,6 +369,10 @@ class _SelectableCard extends StatelessWidget {
     required this.onTap,
     required this.child,
   });
+  final bool isSelected;
+  final Color selectedColor;
+  final VoidCallback onTap;
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
@@ -401,10 +401,6 @@ class _SelectableCard extends StatelessWidget {
 // ── Lesson Type Card ──────────────────────────────────────────────────────────
 
 class _LessonTypeCard extends StatelessWidget {
-  final String icon;
-  final String label;
-  final bool isSelected;
-  final VoidCallback onTap;
 
   const _LessonTypeCard({
     required this.icon,
@@ -412,6 +408,10 @@ class _LessonTypeCard extends StatelessWidget {
     required this.isSelected,
     required this.onTap,
   });
+  final String icon;
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {

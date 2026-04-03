@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../../../core/theme/app_colors.dart';
-import '../../../../auth/presentation/bloc/auth_bloc.dart';
+import 'package:modern_learner_production/core/theme/app_colors.dart';
+import 'package:modern_learner_production/features/auth/presentation/bloc/auth_bloc.dart';
 
 class AccountPage extends StatefulWidget {
   const AccountPage({super.key});
@@ -95,7 +95,7 @@ class _AccountPageState extends State<AccountPage> {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               sliver: SliverList.separated(
                 itemCount: _securityItems.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 8),
+                separatorBuilder: (_, _) => const SizedBox(height: 8),
                 itemBuilder: (context, i) {
                   final item = _securityItems[i];
                   return _SettingTile(
@@ -185,7 +185,7 @@ class _AccountPageState extends State<AccountPage> {
               Container(
                 width: 64,
                 height: 64,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   gradient: AppColors.primaryGradient,
                   shape: BoxShape.circle,
                 ),
@@ -434,7 +434,7 @@ class _TextField extends StatelessWidget {
               fontSize: 15,
               color: AppColors.onSurface,
             ),
-            decoration: InputDecoration(
+            decoration: const InputDecoration(
               isDense: true,
               contentPadding: EdgeInsets.zero,
               border: InputBorder.none,
@@ -497,7 +497,7 @@ class _SettingTile extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            Icon(
+            const Icon(
               Icons.chevron_right_rounded,
               color: AppColors.onSurfaceVariant,
               size: 24,

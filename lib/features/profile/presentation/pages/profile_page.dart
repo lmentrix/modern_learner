@@ -3,10 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:modern_learner_production/features/auth/presentation/bloc/auth_bloc.dart';
 
-import '../../../../../core/theme/app_colors.dart';
-import '../widgets/achievement_badge.dart';
-import '../widgets/setting_item.dart';
-import '../widgets/stats_card.dart';
+import 'package:modern_learner_production/core/theme/app_colors.dart';
+import 'package:modern_learner_production/features/profile/presentation/widgets/achievement_badge.dart';
+import 'package:modern_learner_production/features/profile/presentation/widgets/setting_item.dart';
+import 'package:modern_learner_production/features/profile/presentation/widgets/stats_card.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -421,7 +421,7 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
             ),
             const SizedBox(height: 10),
-            Row(
+            const Row(
               children: [
                 Expanded(
                   child: _AppearanceOption(
@@ -431,7 +431,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     color: AppColors.primary,
                   ),
                 ),
-                const SizedBox(width: 10),
+                SizedBox(width: 10),
                 Expanded(
                   child: _AppearanceOption(
                     label: 'Light',
@@ -440,7 +440,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     color: AppColors.primary,
                   ),
                 ),
-                const SizedBox(width: 10),
+                SizedBox(width: 10),
                 Expanded(
                   child: _AppearanceOption(
                     label: 'System',
@@ -462,18 +462,18 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
             ),
             const SizedBox(height: 10),
-            Row(
+            const Row(
               children: [
                 Expanded(
                   child: _TextSizeOption(
                       label: 'Small', sampleSize: 12, isSelected: false),
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: 8),
                 Expanded(
                   child: _TextSizeOption(
                       label: 'Medium', sampleSize: 16, isSelected: true),
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: 8),
                 Expanded(
                   child: _TextSizeOption(
                       label: 'Large', sampleSize: 22, isSelected: false),
@@ -752,14 +752,14 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
               ),
               const SizedBox(height: 12),
-              _ContactRow(
+              const _ContactRow(
                 icon: Icons.email_outlined,
                 label: 'Email Support',
                 subtitle: 'support@modernlearner.app',
-                color: const Color(0xFFFF6B9D),
+                color: Color(0xFFFF6B9D),
               ),
               const SizedBox(height: 8),
-              _ContactRow(
+              const _ContactRow(
                 icon: Icons.star_outline_rounded,
                 label: 'Rate the App',
                 subtitle: 'Leave a review on the App Store',
@@ -1003,7 +1003,7 @@ class _ProfilePageState extends State<ProfilePage> {
               Container(
                 width: 52,
                 height: 52,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   gradient: AppColors.primaryGradient,
                   shape: BoxShape.circle,
                 ),
@@ -1307,10 +1307,6 @@ class _SheetDivider extends StatelessWidget {
 }
 
 class _AppearanceOption extends StatelessWidget {
-  final String label;
-  final String emoji;
-  final bool isSelected;
-  final Color color;
 
   const _AppearanceOption({
     required this.label,
@@ -1318,6 +1314,10 @@ class _AppearanceOption extends StatelessWidget {
     required this.isSelected,
     required this.color,
   });
+  final String label;
+  final String emoji;
+  final bool isSelected;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
@@ -1353,15 +1353,15 @@ class _AppearanceOption extends StatelessWidget {
 }
 
 class _TextSizeOption extends StatelessWidget {
-  final String label;
-  final double sampleSize;
-  final bool isSelected;
 
   const _TextSizeOption({
     required this.label,
     required this.sampleSize,
     required this.isSelected,
   });
+  final String label;
+  final double sampleSize;
+  final bool isSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -1403,10 +1403,10 @@ class _TextSizeOption extends StatelessWidget {
 }
 
 class _FaqTile extends StatefulWidget {
-  final String question;
-  final String answer;
 
   const _FaqTile({required this.question, required this.answer});
+  final String question;
+  final String answer;
 
   @override
   State<_FaqTile> createState() => _FaqTileState();
@@ -1477,10 +1477,6 @@ class _FaqTileState extends State<_FaqTile> {
 }
 
 class _ContactRow extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String subtitle;
-  final Color color;
 
   const _ContactRow({
     required this.icon,
@@ -1488,6 +1484,10 @@ class _ContactRow extends StatelessWidget {
     required this.subtitle,
     required this.color,
   });
+  final IconData icon;
+  final String label;
+  final String subtitle;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {

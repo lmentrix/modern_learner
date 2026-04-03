@@ -1,12 +1,6 @@
-import '../../domain/entities/roadmap.dart';
+import 'package:modern_learner_production/features/progress/domain/entities/roadmap.dart';
 
 class LessonModel {
-  final String id;
-  final String title;
-  final String type;
-  final String description;
-  final int xpReward;
-  final String status;
 
   LessonModel({
     required this.id,
@@ -27,6 +21,12 @@ class LessonModel {
       status: json['status'] as String,
     );
   }
+  final String id;
+  final String title;
+  final String type;
+  final String description;
+  final int xpReward;
+  final String status;
 
   Map<String, dynamic> toJson() {
     return {

@@ -1,9 +1,9 @@
-import '../repositories/progress_repository.dart';
+import 'package:modern_learner_production/features/progress/domain/repositories/progress_repository.dart';
 
 class CompleteLesson {
-  final ProgressRepository repository;
 
   CompleteLesson(this.repository);
+  final ProgressRepository repository;
 
   Future<void> call(String lessonId) => repository.completeLesson(lessonId);
 }

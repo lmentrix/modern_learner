@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../../../core/theme/app_colors.dart';
-import '../widgets/explore_category_card.dart';
-import '../widgets/lesson_topic_card.dart';
+import 'package:modern_learner_production/core/theme/app_colors.dart';
+import 'package:modern_learner_production/features/explore/presentation/widgets/explore_category_card.dart';
+import 'package:modern_learner_production/features/explore/presentation/widgets/lesson_topic_card.dart';
 
 class ExplorePage extends StatefulWidget {
   const ExplorePage({super.key});
@@ -90,7 +90,7 @@ class _ExplorePageState extends State<ExplorePage> {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               sliver: SliverList.separated(
                 itemCount: _topics.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                separatorBuilder: (_, _) => const SizedBox(height: 12),
                 itemBuilder: (context, i) {
                   final topic = _topics[i];
                   return LessonTopicCard(
@@ -157,7 +157,7 @@ class _ExplorePageState extends State<ExplorePage> {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: _categories.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
         itemBuilder: (context, i) {
           final category = _categories[i];
           final isActive = _selectedCategory == category;
@@ -281,7 +281,7 @@ class _ExplorePageState extends State<ExplorePage> {
                     ],
                   ),
                 ),
-                Icon(
+                const Icon(
                   Icons.arrow_forward_ios_rounded,
                   size: 14,
                   color: AppColors.onSurfaceVariant,
@@ -349,7 +349,7 @@ class _ExplorePageState extends State<ExplorePage> {
                     ],
                   ),
                 ),
-                Icon(
+                const Icon(
                   Icons.arrow_forward_ios_rounded,
                   size: 14,
                   color: AppColors.onSurfaceVariant,

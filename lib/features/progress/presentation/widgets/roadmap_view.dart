@@ -1,18 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../../core/theme/app_colors.dart';
-import '../../domain/entities/roadmap.dart';
-import '../../domain/entities/user_progress.dart';
+import 'package:modern_learner_production/core/theme/app_colors.dart';
+import 'package:modern_learner_production/features/progress/domain/entities/roadmap.dart';
+import 'package:modern_learner_production/features/progress/domain/entities/user_progress.dart';
 
 class RoadmapView extends StatelessWidget {
-  final Roadmap roadmap;
-  final UserProgress userProgress;
-  final String? selectedLessonId;
-  final Set<String> expandedChapters;
-  final Function(String lessonId) onLessonTap;
-  final Function(String chapterId) onChapterTap;
-  final Function(String chapterId, bool isExpanded) onChapterToggle;
 
   const RoadmapView({
     super.key,
@@ -24,6 +17,13 @@ class RoadmapView extends StatelessWidget {
     required this.onChapterTap,
     required this.onChapterToggle,
   });
+  final Roadmap roadmap;
+  final UserProgress userProgress;
+  final String? selectedLessonId;
+  final Set<String> expandedChapters;
+  final Function(String lessonId) onLessonTap;
+  final Function(String chapterId) onChapterTap;
+  final Function(String chapterId, bool isExpanded) onChapterToggle;
 
   @override
   Widget build(BuildContext context) {
@@ -48,12 +48,6 @@ class RoadmapView extends StatelessWidget {
 }
 
 class _ChapterSection extends StatelessWidget {
-  final Chapter chapter;
-  final UserProgress userProgress;
-  final bool isExpanded;
-  final VoidCallback onHeaderTap;
-  final Function(bool) onExpandToggle;
-  final Function(String lessonId) onLessonTap;
 
   const _ChapterSection({
     required this.chapter,
@@ -63,6 +57,12 @@ class _ChapterSection extends StatelessWidget {
     required this.onExpandToggle,
     required this.onLessonTap,
   });
+  final Chapter chapter;
+  final UserProgress userProgress;
+  final bool isExpanded;
+  final VoidCallback onHeaderTap;
+  final Function(bool) onExpandToggle;
+  final Function(String lessonId) onLessonTap;
 
   bool _isChapterCompleted() {
     return userProgress.completedChapters.containsKey(chapter.id);
@@ -106,14 +106,6 @@ class _ChapterSection extends StatelessWidget {
 }
 
 class _ChapterHeader extends StatelessWidget {
-  final Chapter chapter;
-  final bool isExpanded;
-  final double progress;
-  final bool isCompleted;
-  final int completedCount;
-  final int totalCount;
-  final VoidCallback onTap;
-  final Function(bool) onExpandToggle;
 
   const _ChapterHeader({
     required this.chapter,
@@ -125,6 +117,14 @@ class _ChapterHeader extends StatelessWidget {
     required this.onTap,
     required this.onExpandToggle,
   });
+  final Chapter chapter;
+  final bool isExpanded;
+  final double progress;
+  final bool isCompleted;
+  final int completedCount;
+  final int totalCount;
+  final VoidCallback onTap;
+  final Function(bool) onExpandToggle;
 
   @override
   Widget build(BuildContext context) {
@@ -277,7 +277,7 @@ class _ChapterHeader extends StatelessWidget {
                     ),
                     Row(
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.star_rounded,
                           size: 16,
                           color: AppColors.primary,
@@ -292,7 +292,7 @@ class _ChapterHeader extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 12),
-                        Icon(
+                        const Icon(
                           Icons.diamond_rounded,
                           size: 16,
                           color: AppColors.tertiary,
@@ -339,15 +339,15 @@ class _ChapterHeader extends StatelessWidget {
 }
 
 class _ChapterLessons extends StatelessWidget {
-  final List<Lesson> lessons;
-  final UserProgress userProgress;
-  final Function(String lessonId) onLessonTap;
 
   const _ChapterLessons({
     required this.lessons,
     required this.userProgress,
     required this.onLessonTap,
   });
+  final List<Lesson> lessons;
+  final UserProgress userProgress;
+  final Function(String lessonId) onLessonTap;
 
   LessonStatus _getLessonStatus(Lesson lesson) {
     if (userProgress.completedLessons.containsKey(lesson.id)) {
@@ -381,10 +381,6 @@ class _ChapterLessons extends StatelessWidget {
 }
 
 class _LessonItem extends StatelessWidget {
-  final Lesson lesson;
-  final LessonStatus status;
-  final bool isLast;
-  final VoidCallback onTap;
 
   const _LessonItem({
     required this.lesson,
@@ -392,6 +388,10 @@ class _LessonItem extends StatelessWidget {
     required this.isLast,
     required this.onTap,
   });
+  final Lesson lesson;
+  final LessonStatus status;
+  final bool isLast;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -460,13 +460,13 @@ class _LessonItem extends StatelessWidget {
 }
 
 class _LessonNode extends StatelessWidget {
-  final Lesson lesson;
-  final LessonStatus status;
 
   const _LessonNode({
     required this.lesson,
     required this.status,
   });
+  final Lesson lesson;
+  final LessonStatus status;
 
   @override
   Widget build(BuildContext context) {
@@ -545,23 +545,23 @@ class _LessonNode extends StatelessWidget {
           size: 18,
         );
       case LessonStatus.available:
-        return Icon(
+        return const Icon(
           Icons.play_arrow_rounded,
           color: Colors.white,
           size: 22,
         );
       case LessonStatus.inProgress:
-        return SizedBox(
+        return const SizedBox(
           width: 20,
           height: 20,
           child: CircularProgressIndicator(
             strokeWidth: 2.5,
             valueColor:
-                const AlwaysStoppedAnimation<Color>(AppColors.tertiary),
+                AlwaysStoppedAnimation<Color>(AppColors.tertiary),
           ),
         );
       case LessonStatus.completed:
-        return Icon(
+        return const Icon(
           Icons.check_rounded,
           color: AppColors.tertiary,
           size: 22,
@@ -571,9 +571,9 @@ class _LessonNode extends StatelessWidget {
 }
 
 class _LessonTypeBadge extends StatelessWidget {
-  final LessonType type;
 
   const _LessonTypeBadge({required this.type});
+  final LessonType type;
 
   @override
   Widget build(BuildContext context) {

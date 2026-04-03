@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:modern_learner_production/core/router/app_router.dart';
 
-import '../../../../core/theme/app_colors.dart';
-import '../../../lesson_detail/presentation/pages/lesson_detail_page.dart';
+import 'package:modern_learner_production/core/router/app_router.dart';
+import 'package:modern_learner_production/core/theme/app_colors.dart';
+import 'package:modern_learner_production/features/lesson_detail/presentation/pages/lesson_detail_page.dart';
 
 enum ExerciseType {
   multipleChoice,
@@ -15,11 +17,6 @@ enum ExerciseType {
 }
 
 class ExercisePage extends StatefulWidget {
-  final LessonType lessonType;
-  final String title;
-  final String sectionTitle;
-  final Color accentColor;
-  final String emoji;
 
   const ExercisePage({
     super.key,
@@ -29,6 +26,11 @@ class ExercisePage extends StatefulWidget {
     required this.accentColor,
     required this.emoji,
   });
+  final LessonType lessonType;
+  final String title;
+  final String sectionTitle;
+  final Color accentColor;
+  final String emoji;
 
   @override
   State<ExercisePage> createState() => _ExercisePageState();
@@ -37,7 +39,7 @@ class ExercisePage extends StatefulWidget {
 class _ExercisePageState extends State<ExercisePage> {
   int _currentExerciseIndex = 0;
   int _correctAnswers = 0;
-  bool _showResult = false;
+  final bool _showResult = false;
   String? _selectedAnswer;
   bool _answered = false;
   bool _isCorrect = false;
@@ -96,7 +98,8 @@ class _ExercisePageState extends State<ExercisePage> {
       ),
       const Exercise(
         type: ExerciseType.trueFalse,
-        question: 'True or False: The "th" sound is made with the tongue between the teeth',
+        question:
+            'True or False: The "th" sound is made with the tongue between the teeth',
         correctAnswer: 'true',
         hint: 'Think about how you position your tongue',
       ),
@@ -211,12 +214,14 @@ class _ExercisePageState extends State<ExercisePage> {
 
   bool _evaluateAnswer(String answer) {
     final correct = _currentExercise.correctAnswer?.toLowerCase();
-    if (correct == null) return true; // For written/speaking, accept any attempt
+    if (correct == null) {
+      return true; // For written/speaking, accept any attempt
+    }
 
     return answer.toLowerCase() == correct ||
-           answer.toLowerCase().contains(correct) ||
-           correct == 'speech recognition' ||
-           correct == 'written response';
+        answer.toLowerCase().contains(correct) ||
+        correct == 'speech recognition' ||
+        correct == 'written response';
   }
 
   void _nextExercise() {
@@ -243,8 +248,11 @@ class _ExercisePageState extends State<ExercisePage> {
         onContinue: () {
           // Pop dialog and exercise page, then navigate to progress page
           Navigator.of(context, rootNavigator: true).pop(); // Close dialog
-          Navigator.of(context, rootNavigator: true).pop(); // Close exercise page
-          context.go('/progress'); // Navigate to progress page
+          Navigator.of(
+            context,
+            rootNavigator: true,
+          ).pop(); // Close exercise page
+          context.go(Routes.progress); // Navigate to progress page
         },
       ),
     );
@@ -495,20 +503,24 @@ class _ExercisePageState extends State<ExercisePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (_currentExercise.hint != null && !_answered)
-          _buildHint(),
+        if (_currentExercise.hint != null && !_answered) _buildHint(),
         const SizedBox(height: 16),
-        ...(_currentExercise.options ?? []).map((option) => Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: _AnswerOption(
-                option: option,
-                isSelected: _selectedAnswer == option,
-                isCorrect: _answered && option == _currentExercise.correctAnswer,
-                isWrong: _answered && _selectedAnswer == option && option != _currentExercise.correctAnswer,
-                onTap: () => _checkAnswer(option),
-                accentColor: widget.accentColor,
-              ),
-            )),
+        ...(_currentExercise.options ?? []).map(
+          (option) => Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: _AnswerOption(
+              option: option,
+              isSelected: _selectedAnswer == option,
+              isCorrect: _answered && option == _currentExercise.correctAnswer,
+              isWrong:
+                  _answered &&
+                  _selectedAnswer == option &&
+                  option != _currentExercise.correctAnswer,
+              onTap: () => _checkAnswer(option),
+              accentColor: widget.accentColor,
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -517,8 +529,7 @@ class _ExercisePageState extends State<ExercisePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (_currentExercise.hint != null && !_answered)
-          _buildHint(),
+        if (_currentExercise.hint != null && !_answered) _buildHint(),
         const SizedBox(height: 16),
         TextField(
           enabled: !_answered,
@@ -571,8 +582,7 @@ class _ExercisePageState extends State<ExercisePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (_currentExercise.hint != null && !_answered)
-          _buildHint(),
+        if (_currentExercise.hint != null && !_answered) _buildHint(),
         const SizedBox(height: 24),
         Container(
           padding: const EdgeInsets.all(24),
@@ -669,48 +679,49 @@ class _ExercisePageState extends State<ExercisePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (_currentExercise.hint != null && !_answered)
-          _buildHint(),
+        if (_currentExercise.hint != null && !_answered) _buildHint(),
         const SizedBox(height: 16),
-        ...(_currentExercise.pairs ?? []).map((pair) => Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        pair.values.first,
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          color: AppColors.onSurface,
-                        ),
-                      ),
-                    ),
-                    const Icon(
-                      Icons.arrow_forward_rounded,
-                      size: 18,
-                      color: AppColors.onSurfaceVariant,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        pair.values.last,
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          color: widget.accentColor,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+        ...(_currentExercise.pairs ?? []).map(
+          (pair) => Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(12),
               ),
-            )),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      pair.values.first,
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        color: AppColors.onSurface,
+                      ),
+                    ),
+                  ),
+                  const Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 18,
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      pair.values.last,
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        color: widget.accentColor,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
         const SizedBox(height: 16),
         SizedBox(
           width: double.infinity,
@@ -740,8 +751,7 @@ class _ExercisePageState extends State<ExercisePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (_currentExercise.hint != null && !_answered)
-          _buildHint(),
+        if (_currentExercise.hint != null && !_answered) _buildHint(),
         const SizedBox(height: 16),
         Row(
           children: [
@@ -749,8 +759,12 @@ class _ExercisePageState extends State<ExercisePage> {
               child: _AnswerOption(
                 option: 'True',
                 isSelected: _selectedAnswer == 'true',
-                isCorrect: _answered && _currentExercise.correctAnswer == 'true',
-                isWrong: _answered && _selectedAnswer == 'true' && _currentExercise.correctAnswer != 'true',
+                isCorrect:
+                    _answered && _currentExercise.correctAnswer == 'true',
+                isWrong:
+                    _answered &&
+                    _selectedAnswer == 'true' &&
+                    _currentExercise.correctAnswer != 'true',
                 onTap: () => _checkAnswer('true'),
                 accentColor: widget.accentColor,
               ),
@@ -760,8 +774,12 @@ class _ExercisePageState extends State<ExercisePage> {
               child: _AnswerOption(
                 option: 'False',
                 isSelected: _selectedAnswer == 'false',
-                isCorrect: _answered && _currentExercise.correctAnswer == 'false',
-                isWrong: _answered && _selectedAnswer == 'false' && _currentExercise.correctAnswer != 'false',
+                isCorrect:
+                    _answered && _currentExercise.correctAnswer == 'false',
+                isWrong:
+                    _answered &&
+                    _selectedAnswer == 'false' &&
+                    _currentExercise.correctAnswer != 'false',
                 onTap: () => _checkAnswer('false'),
                 accentColor: widget.accentColor,
               ),
@@ -776,8 +794,7 @@ class _ExercisePageState extends State<ExercisePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (_currentExercise.hint != null && !_answered)
-          _buildHint(),
+        if (_currentExercise.hint != null && !_answered) _buildHint(),
         const SizedBox(height: 16),
         TextField(
           enabled: !_answered,
@@ -857,7 +874,12 @@ class _ExercisePageState extends State<ExercisePage> {
 
   Widget _buildFooter() {
     return Container(
-      padding: EdgeInsets.fromLTRB(20, 12, 20, MediaQuery.of(context).padding.bottom + 12),
+      padding: EdgeInsets.fromLTRB(
+        20,
+        12,
+        20,
+        MediaQuery.of(context).padding.bottom + 12,
+      ),
       decoration: BoxDecoration(
         color: AppColors.surface,
         border: Border(
@@ -883,7 +905,9 @@ class _ExercisePageState extends State<ExercisePage> {
                   ),
                 ),
                 Text(
-                  _answered ? 'Ready for the next one' : 'Think carefully before answering',
+                  _answered
+                      ? 'Ready for the next one'
+                      : 'Think carefully before answering',
                   style: GoogleFonts.inter(
                     fontSize: 11,
                     color: AppColors.onSurfaceVariant,
@@ -908,7 +932,9 @@ class _ExercisePageState extends State<ExercisePage> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      _currentExerciseIndex < _exercises.length - 1 ? 'Next' : 'Finish',
+                      _currentExerciseIndex < _exercises.length - 1
+                          ? 'Next'
+                          : 'Finish',
                       style: GoogleFonts.spaceGrotesk(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
@@ -945,13 +971,6 @@ class _ExercisePageState extends State<ExercisePage> {
 // ── Exercise Model ─────────────────────────────────────────────────────────────
 
 class Exercise {
-  final ExerciseType type;
-  final String question;
-  final String? content;
-  final List<String>? options;
-  final List<Map<String, String>>? pairs;
-  final String? correctAnswer;
-  final String? hint;
 
   const Exercise({
     required this.type,
@@ -962,17 +981,18 @@ class Exercise {
     this.correctAnswer,
     this.hint,
   });
+  final ExerciseType type;
+  final String question;
+  final String? content;
+  final List<String>? options;
+  final List<Map<String, String>>? pairs;
+  final String? correctAnswer;
+  final String? hint;
 }
 
 // ── Answer Option Widget ───────────────────────────────────────────────────────
 
 class _AnswerOption extends StatelessWidget {
-  final String option;
-  final bool isSelected;
-  final bool isCorrect;
-  final bool isWrong;
-  final VoidCallback onTap;
-  final Color accentColor;
 
   const _AnswerOption({
     required this.option,
@@ -982,6 +1002,12 @@ class _AnswerOption extends StatelessWidget {
     required this.onTap,
     required this.accentColor,
   });
+  final String option;
+  final bool isSelected;
+  final bool isCorrect;
+  final bool isWrong;
+  final VoidCallback onTap;
+  final Color accentColor;
 
   @override
   Widget build(BuildContext context) {
@@ -1030,7 +1056,11 @@ class _AnswerOption extends StatelessWidget {
               ),
             ),
             if (isCorrect)
-              const Icon(Icons.check_circle_rounded, color: Colors.green, size: 22),
+              const Icon(
+                Icons.check_circle_rounded,
+                color: Colors.green,
+                size: 22,
+              ),
             if (isWrong)
               const Icon(Icons.error_rounded, color: Colors.red, size: 22),
           ],
@@ -1043,10 +1073,6 @@ class _AnswerOption extends StatelessWidget {
 // ── Completion Dialog ──────────────────────────────────────────────────────────
 
 class _CompletionDialog extends StatelessWidget {
-  final Color accentColor;
-  final int totalQuestions;
-  final int correctAnswers;
-  final VoidCallback onContinue;
 
   const _CompletionDialog({
     required this.accentColor,
@@ -1054,6 +1080,10 @@ class _CompletionDialog extends StatelessWidget {
     required this.correctAnswers,
     required this.onContinue,
   });
+  final Color accentColor;
+  final int totalQuestions;
+  final int correctAnswers;
+  final VoidCallback onContinue;
 
   @override
   Widget build(BuildContext context) {
@@ -1081,20 +1111,28 @@ class _CompletionDialog extends StatelessWidget {
                   colors: isPerfect
                       ? [const Color(0xFFFFD700), const Color(0xFFFFA500)]
                       : isGood
-                          ? [accentColor.withValues(alpha: 0.5), accentColor]
-                          : [AppColors.outlineVariant, AppColors.onSurfaceVariant],
+                      ? [accentColor.withValues(alpha: 0.5), accentColor]
+                      : [AppColors.outlineVariant, AppColors.onSurfaceVariant],
                 ),
               ),
               child: Center(
                 child: Text(
-                  isPerfect ? '🏆' : isGood ? '🎉' : '💪',
+                  isPerfect
+                      ? '🏆'
+                      : isGood
+                      ? '🎉'
+                      : '💪',
                   style: const TextStyle(fontSize: 40),
                 ),
               ),
             ),
             const SizedBox(height: 20),
             Text(
-              isPerfect ? 'Perfect!' : isGood ? 'Great Job!' : 'Keep Practicing!',
+              isPerfect
+                  ? 'Perfect!'
+                  : isGood
+                  ? 'Great Job!'
+                  : 'Keep Practicing!',
               style: GoogleFonts.spaceGrotesk(
                 fontSize: 28,
                 fontWeight: FontWeight.w800,

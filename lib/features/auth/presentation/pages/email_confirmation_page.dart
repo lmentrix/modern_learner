@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:modern_learner_production/core/router/app_router.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 import 'package:modern_learner_production/core/theme/app_text_styles.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -84,7 +85,7 @@ class _EmailConfirmationPageState extends State<EmailConfirmationPage> {
               Align(
                 alignment: Alignment.centerLeft,
                 child: GestureDetector(
-                  onTap: () => context.go('/login'),
+                  onTap: () => context.go(Routes.login),
                   child: Container(
                     width: 40,
                     height: 40,
@@ -235,7 +236,7 @@ class _EmailConfirmationPageState extends State<EmailConfirmationPage> {
 
               // Back to sign in
               GestureDetector(
-                onTap: () => context.go('/login'),
+                onTap: () => context.go(Routes.login),
                 child: Text(
                   'Back to sign in',
                   style: AppTextStyles.labelLarge.copyWith(

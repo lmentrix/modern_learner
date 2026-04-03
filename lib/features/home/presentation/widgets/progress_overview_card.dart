@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../../../core/theme/app_colors.dart';
-import 'arc_progress_painter.dart';
-import 'glass_card.dart';
+import 'package:modern_learner_production/core/theme/app_colors.dart';
+import 'package:modern_learner_production/features/home/presentation/widgets/arc_progress_painter.dart';
+import 'package:modern_learner_production/features/home/presentation/widgets/glass_card.dart';
 
 class ProgressOverviewCard extends StatefulWidget {
   const ProgressOverviewCard({
@@ -70,7 +70,7 @@ class _ProgressOverviewCardState extends State<ProgressOverviewCard>
                   children: [
                     AnimatedBuilder(
                       animation: _anim,
-                      builder: (_, __) => Text(
+                      builder: (_, _) => Text(
                         '${(widget.progress * _anim.value * 100).round()}%',
                         style: GoogleFonts.spaceGrotesk(
                           fontSize: 22,

@@ -3,16 +3,17 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../../../core/theme/app_colors.dart';
-import '../../../auth/presentation/bloc/auth_bloc.dart';
-import '../../../lesson_detail/presentation/pages/lesson_detail_page.dart'
+import 'package:modern_learner_production/core/router/app_router.dart';
+import 'package:modern_learner_production/core/theme/app_colors.dart';
+import 'package:modern_learner_production/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:modern_learner_production/features/lesson_detail/presentation/pages/lesson_detail_page.dart'
     as lesson_detail;
-import '../../data/models/lesson_data.dart';
-import '../widgets/lesson_card.dart';
-import '../widgets/progress_overview_card.dart';
-import '../widgets/streak_badge.dart';
-import '../widgets/streak_details_dialog.dart';
-import '../widgets/voice_lesson_card.dart';
+import 'package:modern_learner_production/features/home/data/models/lesson_data.dart';
+import 'package:modern_learner_production/features/home/presentation/widgets/lesson_card.dart';
+import 'package:modern_learner_production/features/home/presentation/widgets/progress_overview_card.dart';
+import 'package:modern_learner_production/features/home/presentation/widgets/streak_badge.dart';
+import 'package:modern_learner_production/features/home/presentation/widgets/streak_details_dialog.dart';
+import 'package:modern_learner_production/features/home/presentation/widgets/voice_lesson_card.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -161,8 +162,9 @@ class _HomePageState extends State<HomePage> {
                   label: 'View Profile',
                   accentColor: AppColors.primary,
                   onTap: () {
+                    final router = GoRouter.of(context);
                     Navigator.of(context).pop();
-                    GoRouter.of(context).push('view-profile');
+                    router.push(Routes.viewProfile);
                   },
                 ),
                 const SizedBox(height: 8),
@@ -171,8 +173,9 @@ class _HomePageState extends State<HomePage> {
                   label: 'Achievements',
                   accentColor: AppColors.tertiaryContainer,
                   onTap: () {
+                    final router = GoRouter.of(context);
                     Navigator.of(context).pop();
-                    GoRouter.of(context).push('achievements');
+                    router.push(Routes.achievements);
                   },
                 ),
                 const SizedBox(height: 8),
@@ -299,7 +302,7 @@ class _HomePageState extends State<HomePage> {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               sliver: SliverList.separated(
                 itemCount: _lessons.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                separatorBuilder: (_, _) => const SizedBox(height: 12),
                 itemBuilder: (context, i) {
                   final l = _lessons[i];
                   return LessonCard(
@@ -444,7 +447,7 @@ class _HomePageState extends State<HomePage> {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 20),
         itemCount: _voiceLessons.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 14),
+        separatorBuilder: (_, _) => const SizedBox(width: 14),
         itemBuilder: (context, i) {
           final v = _voiceLessons[i];
           return VoiceLessonCard(
@@ -483,45 +486,11 @@ class _VoiceLesson {
     required this.duration,
     required this.color,
     required this.emoji,
-    this.progress = 0.3,
-    this.totalLessons = 8,
-    this.completedLessons = 2,
-    this.learningObjectives = const [
-      'Improve pronunciation and accent',
-      'Build speaking confidence',
-      'Master conversational flow',
-      'Develop listening skills',
-    ],
-    this.sections = const [
-      lesson_detail.LessonSection(
-        title: 'Warm-up Exercises',
-        emoji: '🎤',
-        duration: '5 min',
-        lessonCount: 2,
-        status: lesson_detail.LessonSectionStatus.completed,
-      ),
-      lesson_detail.LessonSection(
-        title: 'Vowel Sounds',
-        emoji: '🅰️',
-        duration: '12 min',
-        lessonCount: 3,
-        status: lesson_detail.LessonSectionStatus.current,
-      ),
-      lesson_detail.LessonSection(
-        title: 'Consonant Clusters',
-        emoji: '🔤',
-        duration: '15 min',
-        lessonCount: 2,
-        status: lesson_detail.LessonSectionStatus.locked,
-      ),
-      lesson_detail.LessonSection(
-        title: 'Conversation Practice',
-        emoji: '💬',
-        duration: '20 min',
-        lessonCount: 1,
-        status: lesson_detail.LessonSectionStatus.locked,
-      ),
-    ],
+    this.progress = 0.0,
+    this.totalLessons = 12,
+    this.completedLessons = 0,
+    this.learningObjectives = const [],
+    this.sections = const [],
   });
   final String title, subtitle, duration, emoji;
   final Color color;
@@ -549,36 +518,7 @@ class _Lesson {
       'Build confidence with hands-on practice',
       'Track progress and celebrate achievements',
     ],
-    this.sections = const [
-      lesson_detail.LessonSection(
-        title: 'Introduction to Basics',
-        emoji: '📖',
-        duration: '10 min',
-        lessonCount: 3,
-        status: lesson_detail.LessonSectionStatus.completed,
-      ),
-      lesson_detail.LessonSection(
-        title: 'Core Concepts',
-        emoji: '🧠',
-        duration: '15 min',
-        lessonCount: 4,
-        status: lesson_detail.LessonSectionStatus.current,
-      ),
-      lesson_detail.LessonSection(
-        title: 'Advanced Topics',
-        emoji: '🚀',
-        duration: '20 min',
-        lessonCount: 3,
-        status: lesson_detail.LessonSectionStatus.locked,
-      ),
-      lesson_detail.LessonSection(
-        title: 'Final Project',
-        emoji: '🏆',
-        duration: '30 min',
-        lessonCount: 2,
-        status: lesson_detail.LessonSectionStatus.locked,
-      ),
-    ],
+    this.sections = const [],
     this.content,
   });
   final String emoji, title, chapter, duration;
@@ -805,7 +745,6 @@ const _lessons = [
 // ── Quick Stat Widget ───────────────────────────────────────────────────────
 
 class _QuickStat extends StatelessWidget {
-  final String emoji, label, value, subtitle;
 
   const _QuickStat({
     required this.emoji,
@@ -813,6 +752,7 @@ class _QuickStat extends StatelessWidget {
     required this.value,
     required this.subtitle,
   });
+  final String emoji, label, value, subtitle;
 
   @override
   Widget build(BuildContext context) {
@@ -859,10 +799,6 @@ class _QuickStat extends StatelessWidget {
 // ── Quick Action Row ────────────────────────────────────────────────────────
 
 class _QuickActionRow extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color accentColor;
-  final VoidCallback onTap;
 
   const _QuickActionRow({
     required this.icon,
@@ -870,6 +806,10 @@ class _QuickActionRow extends StatelessWidget {
     required this.accentColor,
     required this.onTap,
   });
+  final IconData icon;
+  final String label;
+  final Color accentColor;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {

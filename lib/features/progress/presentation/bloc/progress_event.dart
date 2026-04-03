@@ -10,63 +10,63 @@ abstract class ProgressEvent extends Equatable {
 class LoadRoadmap extends ProgressEvent {}
 
 class SelectLesson extends ProgressEvent {
-  final String lessonId;
 
   const SelectLesson(this.lessonId);
+  final String lessonId;
 
   @override
   List<Object?> get props => [lessonId];
 }
 
 class SelectChapter extends ProgressEvent {
-  final String chapterId;
 
   const SelectChapter(this.chapterId);
+  final String chapterId;
 
   @override
   List<Object?> get props => [chapterId];
 }
 
 class StartLessonEvent extends ProgressEvent {
-  final String lessonId;
 
   const StartLessonEvent(this.lessonId);
+  final String lessonId;
 
   @override
   List<Object?> get props => [lessonId];
 }
 
 class CompleteLessonEvent extends ProgressEvent {
-  final String lessonId;
 
   const CompleteLessonEvent(this.lessonId);
+  final String lessonId;
 
   @override
   List<Object?> get props => [lessonId];
 }
 
 class ClaimReward extends ProgressEvent {
-  final String lessonId;
 
   const ClaimReward(this.lessonId);
+  final String lessonId;
 
   @override
   List<Object?> get props => [lessonId];
 }
 
 class ExpandChapter extends ProgressEvent {
-  final String chapterId;
 
   const ExpandChapter(this.chapterId);
+  final String chapterId;
 
   @override
   List<Object?> get props => [chapterId];
 }
 
 class CollapseChapter extends ProgressEvent {
-  final String chapterId;
 
   const CollapseChapter(this.chapterId);
+  final String chapterId;
 
   @override
   List<Object?> get props => [chapterId];

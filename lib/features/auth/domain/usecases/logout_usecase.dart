@@ -1,8 +1,8 @@
 import 'package:dartz/dartz.dart';
 import 'package:injectable/injectable.dart';
 
-import '../../../../core/errors/failures.dart';
-import '../repositories/auth_repository.dart';
+import 'package:modern_learner_production/core/errors/failures.dart';
+import 'package:modern_learner_production/features/auth/domain/repositories/auth_repository.dart';
 
 @lazySingleton
 class LogoutUseCase {

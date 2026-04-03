@@ -7,18 +7,6 @@ import 'package:modern_learner_production/features/home/data/models/lesson_data.
 enum LessonType { voice, school, continueLearning }
 
 class LessonDetailPage extends StatefulWidget {
-  final LessonType type;
-  final String title;
-  final String subtitle;
-  final String emoji;
-  final String duration;
-  final Color accentColor;
-  final double progress;
-  final int totalLessons;
-  final int completedLessons;
-  final List<String> learningObjectives;
-  final List<LessonSection> sections;
-  final LessonContent? lessonContent;
 
   const LessonDetailPage({
     super.key,
@@ -35,6 +23,18 @@ class LessonDetailPage extends StatefulWidget {
     required this.sections,
     this.lessonContent,
   });
+  final LessonType type;
+  final String title;
+  final String subtitle;
+  final String emoji;
+  final String duration;
+  final Color accentColor;
+  final double progress;
+  final int totalLessons;
+  final int completedLessons;
+  final List<String> learningObjectives;
+  final List<LessonSection> sections;
+  final LessonContent? lessonContent;
 
   @override
   State<LessonDetailPage> createState() => _LessonDetailPageState();
@@ -1043,11 +1043,6 @@ class _LessonDetailPageState extends State<LessonDetailPage> {
 enum LessonSectionStatus { locked, next, current, completed }
 
 class LessonSection {
-  final String title;
-  final String emoji;
-  final String duration;
-  final int lessonCount;
-  final LessonSectionStatus status;
 
   const LessonSection({
     required this.title,
@@ -1056,15 +1051,16 @@ class LessonSection {
     required this.lessonCount,
     required this.status,
   });
+  final String title;
+  final String emoji;
+  final String duration;
+  final int lessonCount;
+  final LessonSectionStatus status;
 }
 
 // ── Stat Card Widget ────────────────────────────────────────────────────────────
 
 class _StatCard extends StatelessWidget {
-  final String icon;
-  final String label;
-  final String value;
-  final Color accentColor;
 
   const _StatCard({
     required this.icon,
@@ -1072,6 +1068,10 @@ class _StatCard extends StatelessWidget {
     required this.value,
     required this.accentColor,
   });
+  final String icon;
+  final String label;
+  final String value;
+  final Color accentColor;
 
   @override
   Widget build(BuildContext context) {

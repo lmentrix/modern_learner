@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'app/app.dart';
-import 'core/constants/api_constants.dart';
-import 'core/di/injection.dart';
+import 'package:modern_learner_production/app/app.dart';
+import 'package:modern_learner_production/core/constants/api_constants.dart';
+import 'package:modern_learner_production/core/di/injection.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
