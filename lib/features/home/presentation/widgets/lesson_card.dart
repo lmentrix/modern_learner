@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../../../core/theme/app_colors.dart';
+import 'package:modern_learner_production/core/theme/app_colors.dart';
 
 class LessonCard extends StatefulWidget {
   const LessonCard({
@@ -140,7 +140,7 @@ class _LessonCardState extends State<LessonCard>
                       // Progress bar
                       AnimatedBuilder(
                         animation: _barAnim,
-                        builder: (_, __) => Column(
+                        builder: (_, _) => Column(
                           children: [
                             ClipRRect(
                               borderRadius: BorderRadius.circular(100),
@@ -173,7 +173,7 @@ class _LessonCardState extends State<LessonCard>
                   ),
                 ),
                 const SizedBox(width: 12),
-                Icon(
+                const Icon(
                   Icons.arrow_forward_ios_rounded,
                   size: 14,
                   color: AppColors.onSurfaceVariant,

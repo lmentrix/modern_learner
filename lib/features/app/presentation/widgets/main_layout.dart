@@ -4,19 +4,20 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../../core/theme/app_colors.dart';
-import '../../../new_lesson/presentation/pages/new_lesson_page.dart';
+import 'package:modern_learner_production/core/router/app_router.dart';
+import 'package:modern_learner_production/core/theme/app_colors.dart';
+import 'package:modern_learner_production/features/new_lesson/presentation/pages/new_lesson_page.dart';
 
 /// 全局主布局 - 包含唯一的底部导航栏
 class MainLayout extends StatelessWidget {
-  final Widget child;
-  final int currentIndex;
 
   const MainLayout({
     super.key,
     required this.child,
     required this.currentIndex,
   });
+  final Widget child;
+  final int currentIndex;
 
   @override
   Widget build(BuildContext context) {
@@ -29,9 +30,9 @@ class MainLayout extends StatelessWidget {
 
 /// 底部导航栏组件 - 全局唯一
 class _BottomNavigationBarWidget extends StatelessWidget {
-  final int currentIndex;
 
   const _BottomNavigationBarWidget({required this.currentIndex});
+  final int currentIndex;
 
   @override
   Widget build(BuildContext context) {
@@ -59,14 +60,14 @@ class _BottomNavigationBarWidget extends StatelessWidget {
                     label: 'Home',
                     isActive: currentIndex == 0,
                     activeColor: AppColors.primary,
-                    onTap: () => context.go('/'),
+                    onTap: () => context.go(Routes.home),
                   ),
                   _NavItem(
                     icon: Icons.explore_rounded,
                     label: 'Explore',
                     isActive: currentIndex == 1,
                     activeColor: AppColors.primary,
-                    onTap: () => context.go('/explore'),
+                    onTap: () => context.go(Routes.explore),
                   ),
                   _NavItem(
                     icon: Icons.add_rounded,
@@ -86,14 +87,14 @@ class _BottomNavigationBarWidget extends StatelessWidget {
                     label: 'Progress',
                     isActive: currentIndex == 3,
                     activeColor: AppColors.primary,
-                    onTap: () => context.go('/progress'),
+                    onTap: () => context.go(Routes.progress),
                   ),
                   _NavItem(
                     icon: Icons.person_rounded,
                     label: 'Profile',
                     isActive: currentIndex == 4,
                     activeColor: AppColors.primary,
-                    onTap: () => context.go('/profile'),
+                    onTap: () => context.go(Routes.profile),
                   ),
                 ],
               ),

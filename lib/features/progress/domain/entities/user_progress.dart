@@ -1,15 +1,6 @@
 import 'package:equatable/equatable.dart';
 
 class UserProgress extends Equatable {
-  final int totalXp;
-  final int level;
-  final int gems;
-  final int streak;
-  final Map<String, DateTime> completedLessons; // lessonId -> completionDate
-  final Map<String, double> lessonProgress; // lessonId -> 0.0 to 1.0
-  final Map<String, DateTime> completedChapters; // chapterId -> completionDate
-  final List<String> unlockedAchievements;
-  final String? currentRoadmapId;
 
   const UserProgress({
     required this.totalXp,
@@ -22,6 +13,15 @@ class UserProgress extends Equatable {
     required this.unlockedAchievements,
     this.currentRoadmapId,
   });
+  final int totalXp;
+  final int level;
+  final int gems;
+  final int streak;
+  final Map<String, DateTime> completedLessons; // lessonId -> completionDate
+  final Map<String, double> lessonProgress; // lessonId -> 0.0 to 1.0
+  final Map<String, DateTime> completedChapters; // chapterId -> completionDate
+  final List<String> unlockedAchievements;
+  final String? currentRoadmapId;
 
   UserProgress copyWith({
     int? totalXp,

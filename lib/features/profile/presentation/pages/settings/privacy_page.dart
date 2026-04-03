@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../../../core/theme/app_colors.dart';
+import 'package:modern_learner_production/core/theme/app_colors.dart';
 
 class PrivacyPage extends StatefulWidget {
   const PrivacyPage({super.key});
@@ -57,7 +57,7 @@ class _PrivacyPageState extends State<PrivacyPage> {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               sliver: SliverList.separated(
                 itemCount: 3,
-                separatorBuilder: (_, __) => const SizedBox(height: 8),
+                separatorBuilder: (_, _) => const SizedBox(height: 8),
                 itemBuilder: (context, i) {
                   final item = _visibilityItems[i];
                   return _PrivacyTile(
@@ -87,7 +87,7 @@ class _PrivacyPageState extends State<PrivacyPage> {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               sliver: SliverList.separated(
                 itemCount: _dataItems.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 8),
+                separatorBuilder: (_, _) => const SizedBox(height: 8),
                 itemBuilder: (context, i) {
                   final item = _dataItems[i];
                   return _DataPrivacyTile(
@@ -116,7 +116,7 @@ class _PrivacyPageState extends State<PrivacyPage> {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               sliver: SliverList.separated(
                 itemCount: _legalItems.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 8),
+                separatorBuilder: (_, _) => const SizedBox(height: 8),
                 itemBuilder: (context, i) {
                   final item = _legalItems[i];
                   return _DataPrivacyTile(
@@ -260,13 +260,13 @@ class _PrivacyPageState extends State<PrivacyPage> {
             ],
           ),
           const SizedBox(height: 16),
-          _PrivacyStat(
+          const _PrivacyStat(
             label: 'Data collected',
             value: 'Minimal',
             icon: Icons.storage_outlined,
           ),
           const SizedBox(height: 12),
-          _PrivacyStat(
+          const _PrivacyStat(
             label: 'Third-party sharing',
             value: 'Disabled',
             icon: Icons.share_outlined,
@@ -355,7 +355,7 @@ class _PrivacyTile extends StatelessWidget {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: AppColors.primary,
+            activeThumbColor: AppColors.primary,
           ),
         ],
       ),

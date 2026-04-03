@@ -1,12 +1,5 @@
 /// Vocabulary item model
 class VocabularyItem {
-  final String word;
-  final String pronunciation;
-  final String translation;
-  final String partOfSpeech;
-  final String exampleSentence;
-  final String exampleTranslation;
-  final String memoryTip;
 
   const VocabularyItem({
     required this.word,
@@ -17,39 +10,41 @@ class VocabularyItem {
     required this.exampleTranslation,
     required this.memoryTip,
   });
+  final String word;
+  final String pronunciation;
+  final String translation;
+  final String partOfSpeech;
+  final String exampleSentence;
+  final String exampleTranslation;
+  final String memoryTip;
 }
 
 /// Practice exercise item
 class ExerciseItem {
-  final String question;
-  final String answer;
 
   const ExerciseItem({
     required this.question,
     required this.answer,
   });
+  final String question;
+  final String answer;
 }
 
 /// Practice exercise model
 class PracticeExercise {
-  final String type; // 'match', 'fill_blank', 'translate'
-  final String instruction;
-  final List<ExerciseItem> items;
 
   const PracticeExercise({
     required this.type,
     required this.instruction,
     required this.items,
   });
+  final String type; // 'match', 'fill_blank', 'translate'
+  final String instruction;
+  final List<ExerciseItem> items;
 }
 
 /// Lesson content model
 class LessonContent {
-  final String lessonType;
-  final String introduction;
-  final List<VocabularyItem> vocabularyItems;
-  final List<PracticeExercise> practiceExercises;
-  final String summary;
 
   const LessonContent({
     required this.lessonType,
@@ -58,16 +53,15 @@ class LessonContent {
     required this.practiceExercises,
     required this.summary,
   });
+  final String lessonType;
+  final String introduction;
+  final List<VocabularyItem> vocabularyItems;
+  final List<PracticeExercise> practiceExercises;
+  final String summary;
 }
 
 /// Lesson section with content
 class LessonSectionWithContent {
-  final String title;
-  final String emoji;
-  final String duration;
-  final int lessonCount;
-  final LessonSectionStatus status;
-  final LessonContent? content;
 
   const LessonSectionWithContent({
     required this.title,
@@ -77,6 +71,12 @@ class LessonSectionWithContent {
     required this.status,
     this.content,
   });
+  final String title;
+  final String emoji;
+  final String duration;
+  final int lessonCount;
+  final LessonSectionStatus status;
+  final LessonContent? content;
 }
 
 enum LessonSectionStatus { locked, next, current, completed }

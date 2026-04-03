@@ -1,19 +1,11 @@
 import 'package:equatable/equatable.dart';
 
-import '../../domain/entities/roadmap.dart';
-import '../../domain/entities/user_progress.dart';
+import 'package:modern_learner_production/features/progress/domain/entities/roadmap.dart';
+import 'package:modern_learner_production/features/progress/domain/entities/user_progress.dart';
 
 enum ProgressStatus { initial, loading, loaded, error }
 
 class ProgressState extends Equatable {
-  final ProgressStatus status;
-  final Roadmap? roadmap;
-  final UserProgress? userProgress;
-  final String? selectedLessonId;
-  final String? selectedChapterId;
-  final String? errorMessage;
-  final Set<String> claimedRewards;
-  final Set<String> expandedChapters;
 
   const ProgressState({
     this.status = ProgressStatus.initial,
@@ -25,6 +17,14 @@ class ProgressState extends Equatable {
     this.claimedRewards = const {},
     this.expandedChapters = const {},
   });
+  final ProgressStatus status;
+  final Roadmap? roadmap;
+  final UserProgress? userProgress;
+  final String? selectedLessonId;
+  final String? selectedChapterId;
+  final String? errorMessage;
+  final Set<String> claimedRewards;
+  final Set<String> expandedChapters;
 
   ProgressState copyWith({
     ProgressStatus? status,

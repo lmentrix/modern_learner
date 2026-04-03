@@ -3,8 +3,8 @@ import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:injectable/injectable.dart';
 
-import '../../../../core/errors/exceptions.dart';
-import '../models/user_model.dart';
+import 'package:modern_learner_production/core/errors/exceptions.dart';
+import 'package:modern_learner_production/features/auth/data/models/user_model.dart';
 
 abstract interface class AuthLocalDataSource {
   Future<void> cacheUser(UserModel user);

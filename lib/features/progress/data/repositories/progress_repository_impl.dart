@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:math';
 
-import '../../domain/entities/roadmap.dart';
-import '../../domain/entities/user_progress.dart';
-import '../../domain/repositories/progress_repository.dart';
+import 'package:modern_learner_production/features/progress/domain/entities/roadmap.dart';
+import 'package:modern_learner_production/features/progress/domain/entities/user_progress.dart';
+import 'package:modern_learner_production/features/progress/domain/repositories/progress_repository.dart';
 
 class ProgressRepositoryImpl implements ProgressRepository {
   final _progressController = StreamController<UserProgress>.broadcast();

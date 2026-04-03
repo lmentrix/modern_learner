@@ -2,7 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import '../../../../../core/theme/app_colors.dart';
+import 'package:modern_learner_production/core/theme/app_colors.dart';
 
 class ArcProgressPainter extends CustomPainter {
   const ArcProgressPainter({required this.progress, required this.animation})

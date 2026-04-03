@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../../../core/theme/app_colors.dart';
+import 'package:modern_learner_production/core/theme/app_colors.dart';
 
 class LanguagePage extends StatefulWidget {
   const LanguagePage({super.key});
@@ -47,7 +47,7 @@ class _LanguagePageState extends State<LanguagePage> {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               sliver: SliverList.separated(
                 itemCount: _languages.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 8),
+                separatorBuilder: (_, _) => const SizedBox(height: 8),
                 itemBuilder: (context, i) {
                   final lang = _languages[i];
                   return _LanguageTile(
@@ -124,7 +124,7 @@ class _LanguagePageState extends State<LanguagePage> {
   }
 
   Widget _buildLearningLanguages() {
-    return Column(
+    return const Column(
       children: [
         _LearningLanguageCard(
           flag: '🇪🇸',
@@ -134,7 +134,7 @@ class _LanguagePageState extends State<LanguagePage> {
           totalLessons: 120,
           completedLessons: 87,
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
         _LearningLanguageCard(
           flag: '🇫🇷',
           name: 'French',
@@ -271,8 +271,8 @@ class _LanguageTile extends StatelessWidget {
               Container(
                 width: 28,
                 height: 28,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1A1028),
+                decoration: const BoxDecoration(
+                  color: Color(0xFF1A1028),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(

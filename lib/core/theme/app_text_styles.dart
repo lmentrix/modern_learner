@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'app_colors.dart';
+import 'package:modern_learner_production/core/theme/app_colors.dart';
 
 abstract final class AppTextStyles {
   static const TextStyle displayLarge = TextStyle(

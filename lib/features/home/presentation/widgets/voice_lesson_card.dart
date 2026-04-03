@@ -4,7 +4,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../../../core/theme/app_colors.dart';
+import 'package:modern_learner_production/core/theme/app_colors.dart';
 
 class VoiceLessonCard extends StatefulWidget {
   const VoiceLessonCard({
@@ -196,7 +196,7 @@ class _WaveformIndicatorState extends State<_WaveformIndicator>
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: _ctrl,
-      builder: (_, __) {
+      builder: (_, _) {
         return Row(
           children: List.generate(4, (i) {
             final h = 6.0 +

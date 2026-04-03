@@ -1,7 +1,7 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show User;
 
-import '../../domain/entities/user_entity.dart';
+import 'package:modern_learner_production/features/auth/domain/entities/user_entity.dart';
 
 part 'user_model.g.dart';
 

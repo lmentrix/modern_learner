@@ -23,14 +23,6 @@ enum LessonStatus {
 }
 
 class Roadmap extends Equatable {
-  final String id;
-  final String title;
-  final String description;
-  final String targetLanguage;
-  final String level;
-  final int totalXp;
-  final int estimatedHours;
-  final List<Chapter> chapters;
 
   const Roadmap({
     required this.id,
@@ -42,6 +34,14 @@ class Roadmap extends Equatable {
     required this.estimatedHours,
     required this.chapters,
   });
+  final String id;
+  final String title;
+  final String description;
+  final String targetLanguage;
+  final String level;
+  final int totalXp;
+  final int estimatedHours;
+  final List<Chapter> chapters;
 
   @override
   List<Object?> get props => [
@@ -57,17 +57,6 @@ class Roadmap extends Equatable {
 }
 
 class Chapter extends Equatable {
-  final String id;
-  final int chapterNumber;
-  final String title;
-  final String description;
-  final String icon;
-  final ChapterType type;
-  final int xpReward;
-  final int gemReward;
-  final List<String> prerequisites; // Chapter IDs
-  final List<String> skills;
-  final List<Lesson> lessons;
 
   const Chapter({
     required this.id,
@@ -82,6 +71,17 @@ class Chapter extends Equatable {
     required this.skills,
     required this.lessons,
   });
+  final String id;
+  final int chapterNumber;
+  final String title;
+  final String description;
+  final String icon;
+  final ChapterType type;
+  final int xpReward;
+  final int gemReward;
+  final List<String> prerequisites; // Chapter IDs
+  final List<String> skills;
+  final List<Lesson> lessons;
 
   @override
   List<Object?> get props => [
@@ -100,12 +100,6 @@ class Chapter extends Equatable {
 }
 
 class Lesson extends Equatable {
-  final String id;
-  final String title;
-  final LessonType type;
-  final String description;
-  final int xpReward;
-  final LessonStatus status;
 
   const Lesson({
     required this.id,
@@ -115,6 +109,12 @@ class Lesson extends Equatable {
     required this.xpReward,
     required this.status,
   });
+  final String id;
+  final String title;
+  final LessonType type;
+  final String description;
+  final int xpReward;
+  final LessonStatus status;
 
   Lesson copyWith({LessonStatus? status}) {
     return Lesson(

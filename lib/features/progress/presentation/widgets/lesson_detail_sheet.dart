@@ -1,15 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../../core/theme/app_colors.dart';
-import '../../domain/entities/roadmap.dart';
+import 'package:modern_learner_production/core/theme/app_colors.dart';
+import 'package:modern_learner_production/features/progress/domain/entities/roadmap.dart';
 
 class LessonDetailSheet extends StatelessWidget {
-  final Chapter chapter;
-  final Lesson lesson;
-  final VoidCallback onStart;
-  final VoidCallback onClaim;
-  final bool canClaim;
 
   const LessonDetailSheet({
     super.key,
@@ -19,13 +14,18 @@ class LessonDetailSheet extends StatelessWidget {
     required this.onClaim,
     required this.canClaim,
   });
+  final Chapter chapter;
+  final Lesson lesson;
+  final VoidCallback onStart;
+  final VoidCallback onClaim;
+  final bool canClaim;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppColors.surfaceContainerHigh,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -175,7 +175,7 @@ class LessonDetailSheet extends StatelessWidget {
               ],
             ),
           ),
-          SafeArea(child: const SizedBox(height: 4)),
+          const SafeArea(child: SizedBox(height: 4)),
         ],
       ),
     );
@@ -183,9 +183,9 @@ class LessonDetailSheet extends StatelessWidget {
 }
 
 class _ChapterBadge extends StatelessWidget {
-  final Chapter chapter;
 
   const _ChapterBadge({required this.chapter});
+  final Chapter chapter;
 
   @override
   Widget build(BuildContext context) {
@@ -222,9 +222,9 @@ class _ChapterBadge extends StatelessWidget {
 }
 
 class _LessonTypeIcon extends StatelessWidget {
-  final LessonType type;
 
   const _LessonTypeIcon({required this.type});
+  final LessonType type;
 
   @override
   Widget build(BuildContext context) {
@@ -242,9 +242,9 @@ class _LessonTypeIcon extends StatelessWidget {
 }
 
 class _LessonTypeLabel extends StatelessWidget {
-  final LessonType type;
 
   const _LessonTypeLabel({required this.type});
+  final LessonType type;
 
   @override
   Widget build(BuildContext context) {
@@ -277,10 +277,10 @@ class _LessonTypeLabel extends StatelessWidget {
 }
 
 class _StartButton extends StatelessWidget {
-  final LessonStatus status;
-  final VoidCallback onTap;
 
   const _StartButton({required this.status, required this.onTap});
+  final LessonStatus status;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -308,9 +308,9 @@ class _StartButton extends StatelessWidget {
 }
 
 class _ClaimButton extends StatelessWidget {
-  final VoidCallback onTap;
 
   const _ClaimButton({required this.onTap});
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {

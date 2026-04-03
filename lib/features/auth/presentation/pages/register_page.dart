@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:modern_learner_production/core/router/app_router.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 import 'package:modern_learner_production/core/theme/app_text_styles.dart';
 import 'package:modern_learner_production/features/auth/presentation/bloc/auth_bloc.dart';
@@ -43,11 +44,11 @@ class _RegisterPageState extends State<RegisterPage> {
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state.status == AuthStatus.authenticated) {
-            context.go('/');
+            context.go(Routes.home);
           } else if (state.status == AuthStatus.unauthenticated &&
               state.errorMessage != null &&
               state.errorMessage!.contains('Email confirmation')) {
-            context.go('/email-confirm', extra: '');
+            context.go(Routes.emailConfirm, extra: '');
           }
         },
         builder: (context, state) {
@@ -173,7 +174,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         style: AppTextStyles.bodyMedium,
                       ),
                       GestureDetector(
-                        onTap: () => context.go('/login'),
+                        onTap: () => context.go(Routes.login),
                         child: Text(
                           'Sign in',
                           style: AppTextStyles.labelLarge.copyWith(

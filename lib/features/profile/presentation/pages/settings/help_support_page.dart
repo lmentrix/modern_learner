@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../../../core/theme/app_colors.dart';
+import 'package:modern_learner_production/core/theme/app_colors.dart';
 
 class HelpSupportPage extends StatefulWidget {
   const HelpSupportPage({super.key});
@@ -72,7 +72,7 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               sliver: SliverList.separated(
                 itemCount: _faqs.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 8),
+                separatorBuilder: (_, _) => const SizedBox(height: 8),
                 itemBuilder: (context, i) {
                   final faq = _faqs[i];
                   return _FaqTile(
@@ -309,13 +309,13 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
             ),
           ),
           const SizedBox(height: 20),
-          Row(
+          const Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               _InfoChip(label: 'Rating', value: '4.8 ★'),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
               _InfoChip(label: 'Users', value: '10K+'),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
               _InfoChip(label: 'Size', value: '45 MB'),
             ],
           ),

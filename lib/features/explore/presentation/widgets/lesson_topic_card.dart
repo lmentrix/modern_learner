@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../../../core/theme/app_colors.dart';
+import 'package:modern_learner_production/core/theme/app_colors.dart';
 
 class LessonTopicCard extends StatefulWidget {
   const LessonTopicCard({
@@ -154,7 +154,7 @@ class _LessonTopicCardState extends State<LessonTopicCard>
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Icon(
+                  const Icon(
                     Icons.arrow_forward_ios_rounded,
                     size: 14,
                     color: AppColors.onSurfaceVariant,

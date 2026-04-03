@@ -1,15 +1,6 @@
-import '../../domain/entities/user_progress.dart';
+import 'package:modern_learner_production/features/progress/domain/entities/user_progress.dart';
 
 class UserProgressModel {
-  final int totalXp;
-  final int level;
-  final int gems;
-  final int streak;
-  final Map<String, String> completedLessons;
-  final Map<String, double> lessonProgress;
-  final Map<String, String> completedChapters;
-  final List<String> unlockedAchievements;
-  final String? currentRoadmapId;
 
   UserProgressModel({
     required this.totalXp,
@@ -36,6 +27,15 @@ class UserProgressModel {
       currentRoadmapId: json['currentRoadmapId'] as String?,
     );
   }
+  final int totalXp;
+  final int level;
+  final int gems;
+  final int streak;
+  final Map<String, String> completedLessons;
+  final Map<String, double> lessonProgress;
+  final Map<String, String> completedChapters;
+  final List<String> unlockedAchievements;
+  final String? currentRoadmapId;
 
   Map<String, dynamic> toJson() {
     return {

@@ -1,19 +1,15 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../domain/entities/roadmap.dart';
-import '../../domain/entities/user_progress.dart';
-import '../../domain/usecases/complete_lesson.dart' as domain;
-import '../../domain/usecases/start_lesson.dart' as start;
-import '../../domain/usecases/get_roadmap.dart';
-import '../../domain/usecases/get_user_progress.dart';
-import 'progress_event.dart';
-import 'progress_state.dart';
+import 'package:modern_learner_production/features/progress/domain/entities/roadmap.dart';
+import 'package:modern_learner_production/features/progress/domain/entities/user_progress.dart';
+import 'package:modern_learner_production/features/progress/domain/usecases/complete_lesson.dart' as domain;
+import 'package:modern_learner_production/features/progress/domain/usecases/start_lesson.dart' as start;
+import 'package:modern_learner_production/features/progress/domain/usecases/get_roadmap.dart';
+import 'package:modern_learner_production/features/progress/domain/usecases/get_user_progress.dart';
+import 'package:modern_learner_production/features/progress/presentation/bloc/progress_event.dart';
+import 'package:modern_learner_production/features/progress/presentation/bloc/progress_state.dart';
 
 class ProgressBloc extends Bloc<ProgressEvent, ProgressState> {
-  final GetRoadmap getRoadmap;
-  final GetUserProgress getUserProgress;
-  final domain.CompleteLesson completeLesson;
-  final start.StartLesson startLesson;
 
   ProgressBloc({
     required this.getRoadmap,
@@ -30,6 +26,10 @@ class ProgressBloc extends Bloc<ProgressEvent, ProgressState> {
     on<ExpandChapter>(_onExpandChapter);
     on<CollapseChapter>(_onCollapseChapter);
   }
+  final GetRoadmap getRoadmap;
+  final GetUserProgress getUserProgress;
+  final domain.CompleteLesson completeLesson;
+  final start.StartLesson startLesson;
 
   Future<void> _onLoadRoadmap(
     LoadRoadmap event,
@@ -120,8 +120,4 @@ class ProgressBloc extends Bloc<ProgressEvent, ProgressState> {
     ));
   }
 
-  @override
-  Future<void> close() {
-    return super.close();
-  }
 }
