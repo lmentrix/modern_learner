@@ -15,4 +15,5 @@ abstract final class ApiConstants {
   static const String logout = '/auth/logout';
   static const String refreshToken = '/auth/refresh';
   static const String roadmapGenerate = '/ai/roadmap/generate';
+  static const String lessonContentGenerate = '/ai/lesson-content/generate';
 }

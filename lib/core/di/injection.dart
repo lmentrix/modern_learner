@@ -25,6 +25,7 @@ import 'package:modern_learner_production/features/profile/service/data/profile_
 import 'package:modern_learner_production/features/profile/service/data/profile_remote_data_source_impl.dart';
 import 'package:modern_learner_production/features/profile/service/data/profile_repository_impl.dart';
 import 'package:modern_learner_production/features/progress/service/progress_navigation_state.dart';
+import 'package:modern_learner_production/features/progress/service/lesson_content_service.dart';
 import 'package:modern_learner_production/features/progress/service/roadmap_generation_service.dart';
 import 'package:modern_learner_production/features/progress/data/repositories/progress_repository_impl.dart';
 import 'package:modern_learner_production/features/progress/domain/repositories/progress_repository.dart';
@@ -95,6 +96,13 @@ Future<void> configureDependencies() async {
         receiveTimeout: ApiConstants.receiveTimeout,
         sendTimeout: ApiConstants.sendTimeout,
       )));
+  getIt.registerSingletonAsync<LessonContentService>(
+    () async => LessonContentService(
+      dio: getIt<Dio>(),
+      prefs: await getIt.getAsync<SharedPreferences>(),
+    ),
+    dependsOn: [SharedPreferences],
+  );
   getIt.registerSingletonAsync<RoadmapGenerationService>(
     () async => RoadmapGenerationService(
       dio: getIt<Dio>(),
