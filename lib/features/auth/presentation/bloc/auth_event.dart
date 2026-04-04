@@ -39,3 +39,13 @@ final class AuthLogoutRequested extends AuthEvent {
 final class AuthLoadUserInfoRequested extends AuthEvent {
   const AuthLoadUserInfoRequested();
 }
+
+final class AuthUpdateUserInfoRequested extends AuthEvent {
+  const AuthUpdateUserInfoRequested({required this.name, this.avatarUrl});
+
+  final String name;
+  final String? avatarUrl;
+
+  @override
+  List<Object?> get props => [name, avatarUrl];
+}

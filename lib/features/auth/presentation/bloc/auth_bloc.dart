@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 
 import 'package:modern_learner_production/core/errors/failures.dart';
+import 'package:modern_learner_production/features/auth/data/models/user_model.dart';
 import 'package:modern_learner_production/features/auth/domain/entities/user_entity.dart';
 import 'package:modern_learner_production/features/auth/domain/usecases/get_current_user_usecase.dart';
 import 'package:modern_learner_production/features/auth/domain/usecases/login_usecase.dart';
@@ -24,6 +25,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthRegisterRequested>(_onRegisterRequested);
     on<AuthLogoutRequested>(_onLogoutRequested);
     on<AuthLoadUserInfoRequested>(_onLoadUserInfoRequested);
+    on<AuthUpdateUserInfoRequested>(_onUpdateUserInfoRequested);
   }
 
   final LoginUseCase _loginUseCase;
@@ -125,5 +127,27 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         errorMessage: null,
       )),
     );
+  }
+
+  Future<void> _onUpdateUserInfoRequested(
+    AuthUpdateUserInfoRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    if (state.user == null) return;
+    
+    final currentUser = state.user as UserModel;
+    final updatedUser = UserModel(
+      id: currentUser.id,
+      email: currentUser.email,
+      name: event.name,
+      avatarUrl: event.avatarUrl ?? currentUser.avatarUrl,
+      role: currentUser.role,
+      accessToken: currentUser.accessToken,
+      refreshToken: currentUser.refreshToken,
+    );
+    
+    emit(state.copyWith(
+      user: updatedUser,
+    ));
   }
 }
