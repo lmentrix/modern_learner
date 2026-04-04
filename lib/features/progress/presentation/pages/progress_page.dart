@@ -125,6 +125,7 @@ class _ProgressPageState extends State<ProgressPage> with SingleTickerProviderSt
                 }
               },
               onRegenerate: () => _bloc.add(RegenerateRoadmap()),
+              onRefresh: () async => _bloc.add(LoadRoadmap()),
             );
           },
         ),
