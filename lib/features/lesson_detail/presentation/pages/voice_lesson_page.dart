@@ -305,7 +305,7 @@ class _VoiceLessonPageState extends State<VoiceLessonPage> {
   }
 
   Widget _buildPhrasesTab(VoiceLessonState state) {
-    return Column(
+    return ListView(
       children: [
         const SizedBox(height: 16),
         VoicePhraseSelector(
@@ -390,7 +390,7 @@ class _VoiceLessonPageState extends State<VoiceLessonPage> {
   }
 
   Widget _buildExercisesTab(VoiceLessonState state) {
-    return Column(
+    return ListView(
       children: [
         const SizedBox(height: 16),
         VoiceExercisesProgress(
