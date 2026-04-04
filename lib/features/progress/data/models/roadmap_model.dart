@@ -146,16 +146,25 @@ class ChapterModel {
       title: title,
       description: description,
       icon: icon,
-      type: ChapterType.values.firstWhere(
-        (t) => t.name == type,
-        orElse: () => ChapterType.lesson,
-      ),
+      type: _parseChapterType(type),
       xpReward: xpReward,
       gemReward: gemReward,
       prerequisites: prerequisites,
       skills: skills,
       lessons: lessons.map((l) => l.toEntity()).toList(),
     );
+  }
+
+  static ChapterType _parseChapterType(String type) {
+    switch (type) {
+      case 'checkpoint':
+        return ChapterType.checkpoint;
+      case 'boss_challenge':
+      case 'bossChallenge':
+        return ChapterType.bossChallenge;
+      default:
+        return ChapterType.lesson;
+    }
   }
 
   static ChapterModel fromEntity(Chapter chapter) {

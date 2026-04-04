@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:modern_learner_production/core/di/injection.dart';
 import 'package:modern_learner_production/core/router/app_router.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 import 'package:modern_learner_production/features/auth/presentation/bloc/auth_bloc.dart';
@@ -16,6 +17,7 @@ import 'package:modern_learner_production/features/home/presentation/widgets/pro
 import 'package:modern_learner_production/features/home/presentation/widgets/streak_badge.dart';
 import 'package:modern_learner_production/features/home/presentation/widgets/streak_details_dialog.dart';
 import 'package:modern_learner_production/features/home/presentation/widgets/voice_lesson_card.dart';
+import 'package:modern_learner_production/features/progress/service/progress_navigation_state.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -32,6 +34,15 @@ class _HomePageState extends State<HomePage> {
       context: context,
       builder: (context) => const StreakDetailsDialog(streak: 14),
     );
+  }
+
+  void _navigateToProgress() {
+    // Set the navigation state to scroll to current chapter
+    final navState = getIt<ProgressNavigationState>();
+    navState.navigateToChapter('current');
+    
+    // Navigate to progress page
+    context.go(Routes.progress);
   }
 
   void _showProfileQuickView() {
@@ -280,14 +291,15 @@ class _HomePageState extends State<HomePage> {
             const SliverToBoxAdapter(child: SizedBox(height: 24)),
 
             // ── Progress overview ──────────────────────────────────────────
-            const SliverPadding(
-              padding: EdgeInsets.symmetric(horizontal: 20),
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
               sliver: SliverToBoxAdapter(
                 child: ProgressOverviewCard(
                   level: 8,
                   xp: 2400,
                   xpToNext: 3000,
                   progress: 0.73,
+                  onTap: _navigateToProgress,
                 ),
               ),
             ),

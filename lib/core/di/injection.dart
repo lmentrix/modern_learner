@@ -1,9 +1,12 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:injectable/injectable.dart';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:modern_learner_production/core/constants/api_constants.dart';
 import 'package:modern_learner_production/features/auth/data/datasources/auth_local_data_source.dart';
 import 'package:modern_learner_production/features/auth/data/datasources/auth_remote_data_source.dart';
 import 'package:modern_learner_production/features/auth/data/repositories/auth_repository_impl.dart';
@@ -21,6 +24,8 @@ import 'package:modern_learner_production/features/profile/presentation/bloc/pro
 import 'package:modern_learner_production/features/profile/service/data/profile_remote_data_source.dart';
 import 'package:modern_learner_production/features/profile/service/data/profile_remote_data_source_impl.dart';
 import 'package:modern_learner_production/features/profile/service/data/profile_repository_impl.dart';
+import 'package:modern_learner_production/features/progress/service/progress_navigation_state.dart';
+import 'package:modern_learner_production/features/progress/service/roadmap_generation_service.dart';
 import 'package:modern_learner_production/features/progress/data/repositories/progress_repository_impl.dart';
 import 'package:modern_learner_production/features/progress/domain/repositories/progress_repository.dart';
 import 'package:modern_learner_production/core/network/network_info.dart';
@@ -81,7 +86,28 @@ Future<void> configureDependencies() async {
   getIt.registerFactory(() => ProfileBloc(getIt(), getIt()));
 
   // ── Progress ──────────────────────────────────────────────────────────────
-  getIt.registerLazySingleton<ProgressRepository>(
-    () => ProgressRepositoryImpl(),
+  getIt.registerSingletonAsync<SharedPreferences>(
+    () => SharedPreferences.getInstance(),
   );
+  getIt.registerLazySingleton<Dio>(() => Dio(BaseOptions(
+        baseUrl: ApiConstants.baseUrl,
+        connectTimeout: ApiConstants.connectTimeout,
+        receiveTimeout: ApiConstants.receiveTimeout,
+        sendTimeout: ApiConstants.sendTimeout,
+      )));
+  getIt.registerSingletonAsync<RoadmapGenerationService>(
+    () async => RoadmapGenerationService(
+      dio: getIt<Dio>(),
+      prefs: await getIt.getAsync<SharedPreferences>(),
+    ),
+    dependsOn: [SharedPreferences],
+  );
+  getIt.registerSingletonAsync<ProgressRepository>(
+    () async => ProgressRepositoryImpl(
+      supabase: getIt<SupabaseClient>(),
+      roadmapService: await getIt.getAsync<RoadmapGenerationService>(),
+    ),
+    dependsOn: [RoadmapGenerationService],
+  );
+  getIt.registerLazySingleton(() => ProgressNavigationState());
 }

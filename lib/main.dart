@@ -4,7 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:modern_learner_production/app/app.dart';
 import 'package:modern_learner_production/core/constants/api_constants.dart';
-import 'package:modern_learner_production/core/di/injection.dart';
+import 'package:modern_learner_production/core/di/injection.dart' show configureDependencies, getIt;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,6 +17,7 @@ Future<void> main() async {
   );
 
   await configureDependencies();
+  await getIt.allReady();
 
   runApp(const App());
 }

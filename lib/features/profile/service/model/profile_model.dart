@@ -13,6 +13,10 @@ class ProfileModel extends ProfileEntity {
     super.role = ProfileRole.normal,
     super.createdAt,
     super.updatedAt,
+    super.topic = 'general programming',
+    super.targetLanguage = 'English',
+    super.proficiencyLevel = 'beginner',
+    super.nativeLanguage = 'English',
   });
 
   factory ProfileModel.fromJson(Map<String, dynamic> json) =>
@@ -30,6 +34,10 @@ class ProfileModel extends ProfileEntity {
     updatedAt: map['updated_at'] != null
         ? DateTime.parse(map['updated_at'] as String)
         : null,
+    topic: map['topic'] as String? ?? 'general programming',
+    targetLanguage: map['target_language'] as String? ?? 'English',
+    proficiencyLevel: map['proficiency_level'] as String? ?? 'beginner',
+    nativeLanguage: map['native_language'] as String? ?? 'English',
   );
 
   static ProfileRole _parseRole(String? role) {
@@ -50,6 +58,10 @@ class ProfileModel extends ProfileEntity {
     'role': role == ProfileRole.vip ? 'vip' : 'normal',
     'created_at': createdAt?.toIso8601String(),
     'updated_at': updatedAt?.toIso8601String(),
+    'topic': topic,
+    'target_language': targetLanguage,
+    'proficiency_level': proficiencyLevel,
+    'native_language': nativeLanguage,
   };
 
   Map<String, dynamic> toUpdateMap() => {

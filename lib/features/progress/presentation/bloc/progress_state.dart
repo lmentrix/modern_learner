@@ -3,7 +3,7 @@ import 'package:equatable/equatable.dart';
 import 'package:modern_learner_production/features/progress/domain/entities/roadmap.dart';
 import 'package:modern_learner_production/features/progress/domain/entities/user_progress.dart';
 
-enum ProgressStatus { initial, loading, loaded, error }
+enum ProgressStatus { initial, loading, generating, loaded, error }
 
 class ProgressState extends Equatable {
 
