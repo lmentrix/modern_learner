@@ -6,6 +6,8 @@ import 'package:modern_learner_production/core/di/injection.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 import 'package:modern_learner_production/features/progress/data/models/lesson_content_model.dart';
 import 'package:modern_learner_production/features/progress/domain/entities/roadmap.dart';
+import 'package:modern_learner_production/features/progress/domain/repositories/progress_repository.dart';
+import 'package:modern_learner_production/features/progress/domain/usecases/complete_lesson.dart';
 import 'package:modern_learner_production/features/progress/service/lesson_content_service.dart';
 
 class LessonContentPage extends StatefulWidget {
@@ -75,6 +77,37 @@ class _LessonContentPageState extends State<LessonContentPage> {
     });
   }
 
+  Lesson? get _nextLesson {
+    final idx = widget.chapter.lessons.indexWhere((l) => l.id == widget.lesson.id);
+    if (idx == -1 || idx >= widget.chapter.lessons.length - 1) return null;
+    return widget.chapter.lessons[idx + 1];
+  }
+
+  Future<void> _handleMarkDone() async {
+    // Persist completion to backend
+    try {
+      await CompleteLesson(getIt<ProgressRepository>())(widget.lesson.id);
+    } catch (_) {}
+
+    if (!mounted) return;
+
+    final next = _nextLesson;
+    if (next != null) {
+      await Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => LessonContentPage(
+            lesson: next,
+            chapter: widget.chapter,
+            roadmap: widget.roadmap,
+          ),
+        ),
+      );
+    } else {
+      Navigator.pop(context);
+    }
+  }
+
   Future<LessonContentModel> _loadContent() async {
     String nativeLanguage = 'English';
     try {
@@ -126,6 +159,7 @@ class _LessonContentPageState extends State<LessonContentPage> {
             roadmap: widget.roadmap,
             content: snapshot.data!,
             currentVocabIndex: _currentVocabIndex,
+            nextLesson: _nextLesson,
             itemAnswers: _itemAnswers,
             itemCorrect: _itemCorrect,
             onVocabNext: () {
@@ -144,6 +178,7 @@ class _LessonContentPageState extends State<LessonContentPage> {
             getShuffledAnswers: _getShuffledAnswers,
             getController: _getController,
             itemKey: _itemKey,
+            onMarkDone: _handleMarkDone,
           );
         },
       ),
@@ -384,6 +419,7 @@ class _ContentView extends StatelessWidget {
     required this.roadmap,
     required this.content,
     required this.currentVocabIndex,
+    required this.nextLesson,
     required this.itemAnswers,
     required this.itemCorrect,
     required this.onVocabNext,
@@ -393,6 +429,7 @@ class _ContentView extends StatelessWidget {
     required this.getShuffledAnswers,
     required this.getController,
     required this.itemKey,
+    required this.onMarkDone,
   });
 
   final Lesson lesson;
@@ -400,6 +437,7 @@ class _ContentView extends StatelessWidget {
   final Roadmap roadmap;
   final LessonContentModel content;
   final int currentVocabIndex;
+  final Lesson? nextLesson;
   final Map<String, String?> itemAnswers;
   final Map<String, bool?> itemCorrect;
   final VoidCallback onVocabNext;
@@ -409,6 +447,7 @@ class _ContentView extends StatelessWidget {
   final List<String> Function(int exerciseIdx, PracticeExerciseModel) getShuffledAnswers;
   final TextEditingController Function(String key) getController;
   final String Function(int exerciseIdx, int itemIdx) itemKey;
+  final VoidCallback onMarkDone;
 
   Color get _typeColor {
     switch (lesson.type) {
@@ -543,7 +582,12 @@ class _ContentView extends StatelessWidget {
               ],
 
               // ── XP reward badge ──
-              _XpRewardCard(xp: lesson.xpReward, typeColor: _typeColor),
+              _XpRewardCard(
+                xp: lesson.xpReward,
+                typeColor: _typeColor,
+                nextLesson: nextLesson,
+                onMarkDone: onMarkDone,
+              ),
               const SizedBox(height: 100),
             ]),
           ),
@@ -1787,81 +1831,164 @@ class _SummaryCard extends StatelessWidget {
 // ── XP reward card ────────────────────────────────────────────────────────────
 
 class _XpRewardCard extends StatelessWidget {
-  const _XpRewardCard({required this.xp, required this.typeColor});
+  const _XpRewardCard({
+    required this.xp,
+    required this.typeColor,
+    required this.nextLesson,
+    required this.onMarkDone,
+  });
+
   final int xp;
   final Color typeColor;
+  final Lesson? nextLesson;
+  final VoidCallback onMarkDone;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppColors.primary.withValues(alpha: 0.15),
-            AppColors.surfaceContainerHigh,
-          ],
-        ),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: AppColors.primary.withValues(alpha: 0.25),
-        ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: AppColors.primaryGradient,
+    final hasNext = nextLesson != null;
+
+    return Column(
+      children: [
+        // ── XP row ──
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                AppColors.primary.withValues(alpha: 0.15),
+                AppColors.surfaceContainerHigh,
+              ],
             ),
-            child: const Center(
-              child: Icon(Icons.star_rounded, color: Colors.white, size: 24),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: AppColors.primary.withValues(alpha: 0.25),
             ),
           ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Complete to earn',
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    color: AppColors.onSurfaceVariant,
-                  ),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: AppColors.primaryGradient,
                 ),
+                child: const Center(
+                  child:
+                      Icon(Icons.star_rounded, color: Colors.white, size: 24),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Complete to earn',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        color: AppColors.onSurfaceVariant,
+                      ),
+                    ),
+                    Text(
+                      '+$xp XP',
+                      style: GoogleFonts.spaceGrotesk(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 12),
+
+        // ── Action button ──
+        GestureDetector(
+          onTap: onMarkDone,
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [AppColors.primary, AppColors.secondary],
+              ),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.35),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  hasNext
+                      ? Icons.arrow_forward_rounded
+                      : Icons.check_circle_rounded,
+                  color: Colors.white,
+                  size: 18,
+                ),
+                const SizedBox(width: 8),
                 Text(
-                  '+$xp XP',
-                  style: GoogleFonts.spaceGrotesk(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.primary,
+                  hasNext ? 'Mark done & Next Lesson' : 'Mark done',
+                  style: GoogleFonts.inter(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
                   ),
                 ),
               ],
             ),
           ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-              elevation: 0,
+        ),
+
+        // ── Next lesson preview ──
+        if (hasNext) ...[
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceContainerHigh,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                  color: AppColors.outlineVariant.withValues(alpha: 0.2)),
             ),
-            child: Text(
-              'Mark done',
-              style: GoogleFonts.inter(
-                  fontSize: 13, fontWeight: FontWeight.w700),
+            child: Row(
+              children: [
+                const Icon(Icons.play_circle_outline_rounded,
+                    size: 16, color: AppColors.onSurfaceVariant),
+                const SizedBox(width: 8),
+                Text(
+                  'Up next: ',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    nextLesson!.title,
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.onSurface,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
-      ),
+      ],
     );
   }
 }

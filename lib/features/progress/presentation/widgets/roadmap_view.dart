@@ -17,6 +17,7 @@ class RoadmapView extends StatelessWidget {
     required this.onChapterTap,
     required this.onChapterToggle,
     required this.onRegenerate,
+    required this.onRefresh,
   });
 
   final Roadmap roadmap;
@@ -28,6 +29,7 @@ class RoadmapView extends StatelessWidget {
   final Function(String chapterId) onChapterTap;
   final Function(String chapterId, bool isExpanded) onChapterToggle;
   final VoidCallback onRegenerate;
+  final Future<void> Function() onRefresh;
 
   int get _completedChapters => roadmap.chapters
       .where((c) => c.lessons.every(
@@ -45,9 +47,16 @@ class RoadmapView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CustomScrollView(
+    return RefreshIndicator(
+      onRefresh: onRefresh,
+      color: AppColors.primary,
+      backgroundColor: AppColors.surfaceContainerHigh,
+      displacement: 60,
+      child: CustomScrollView(
       controller: scrollController,
-      physics: const BouncingScrollPhysics(),
+      physics: const AlwaysScrollableScrollPhysics(
+        parent: BouncingScrollPhysics(),
+      ),
       slivers: [
         // ── Stats bar ──────────────────────────────────────────────────────
         SliverToBoxAdapter(
@@ -103,6 +112,7 @@ class RoadmapView extends StatelessWidget {
 
         const SliverToBoxAdapter(child: SizedBox(height: 100)),
       ],
+    ),
     );
   }
 }
