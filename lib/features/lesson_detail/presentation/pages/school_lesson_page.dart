@@ -332,7 +332,6 @@ class _SchoolLessonPageState extends State<SchoolLessonPage> {
 
   Widget _buildSectionsTab(SchoolLessonState state) {
     return ListView.builder(
-      physics: const NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.symmetric(vertical: 8),
       itemCount: state.lesson!.sections.length,
       itemBuilder: (context, index) {
@@ -349,7 +348,7 @@ class _SchoolLessonPageState extends State<SchoolLessonPage> {
   }
 
   Widget _buildQuizTab(SchoolLessonState state) {
-    return Column(
+    return ListView(
       children: [
         const SizedBox(height: 16),
         if (state.quizSubmitted)
