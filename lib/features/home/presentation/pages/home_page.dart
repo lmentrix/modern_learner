@@ -8,6 +8,8 @@ import 'package:modern_learner_production/core/theme/app_colors.dart';
 import 'package:modern_learner_production/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:modern_learner_production/features/lesson_detail/presentation/pages/lesson_detail_page.dart'
     as lesson_detail;
+import 'package:modern_learner_production/features/lesson_detail/presentation/pages/school_lesson_page.dart';
+import 'package:modern_learner_production/features/lesson_detail/presentation/pages/voice_lesson_page.dart';
 import 'package:modern_learner_production/features/home/data/models/lesson_data.dart';
 import 'package:modern_learner_production/features/home/presentation/widgets/lesson_card.dart';
 import 'package:modern_learner_production/features/home/presentation/widgets/progress_overview_card.dart';
@@ -239,6 +241,24 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  void _openVoiceLessonPage() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const VoiceLessonPage(lessonId: 'daily_greetings'),
+      ),
+    );
+  }
+
+  void _openSchoolLessonPage() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const SchoolLessonPage(lessonId: 'photosynthesis'),
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _scrollCtrl.dispose();
@@ -294,6 +314,11 @@ class _HomePageState extends State<HomePage> {
                 child: _sectionLabel('CONTINUE LEARNING'),
               ),
             ),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 14)),
+
+            // ── Quick access to lesson pages ───────────────────────────────
+            SliverToBoxAdapter(child: _buildLessonQuickAccess()),
 
             const SliverToBoxAdapter(child: SizedBox(height: 14)),
 
@@ -460,6 +485,35 @@ class _HomePageState extends State<HomePage> {
             onTap: () => _openVoiceLessonDetail(v),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildLessonQuickAccess() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        children: [
+          Expanded(
+            child: _LessonQuickAccessCard(
+              title: 'Voice Lesson',
+              subtitle: 'Practice pronunciation',
+              emoji: '🎤',
+              color: AppColors.primary,
+              onTap: _openVoiceLessonPage,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _LessonQuickAccessCard(
+              title: 'School Lesson',
+              subtitle: 'Learn academics',
+              emoji: '📚',
+              color: AppColors.secondary,
+              onTap: _openSchoolLessonPage,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -849,6 +903,94 @@ class _QuickActionRow extends StatelessWidget {
               Icons.chevron_right_rounded,
               color: AppColors.onSurfaceVariant,
               size: 20,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Lesson Quick Access Card ───────────────────────────────────────────────
+
+class _LessonQuickAccessCard extends StatelessWidget {
+
+  const _LessonQuickAccessCard({
+    required this.title,
+    required this.subtitle,
+    required this.emoji,
+    required this.color,
+    required this.onTap,
+  });
+  final String title;
+  final String subtitle;
+  final String emoji;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              color.withValues(alpha: 0.15),
+              color.withValues(alpha: 0.05),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: color.withValues(alpha: 0.3),
+            width: 1.5,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Center(
+                    child: Text(emoji, style: const TextStyle(fontSize: 18)),
+                  ),
+                ),
+                const Spacer(),
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 14,
+                  color: color.withValues(alpha: 0.6),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(
+              title,
+              style: GoogleFonts.spaceGrotesk(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: AppColors.onSurface,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                color: AppColors.onSurfaceVariant,
+              ),
             ),
           ],
         ),

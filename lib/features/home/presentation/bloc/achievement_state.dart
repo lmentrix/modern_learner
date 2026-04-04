@@ -17,6 +17,16 @@ class AchievementState extends Equatable {
 
   int get unlockedCount => achievements.where((a) => !a.isLocked).length;
 
+  Map<String, List<AchievementEntity>> get groupedFiltered {
+    final map = {
+      for (final cat in AchievementBloc.categoryOrder) cat: <AchievementEntity>[],
+    };
+    for (final a in filtered) {
+      map[a.category]?.add(a);
+    }
+    return map;
+  }
+
   @override
   List<Object?> get props => [status, achievements, filtered, selectedFilter];
 

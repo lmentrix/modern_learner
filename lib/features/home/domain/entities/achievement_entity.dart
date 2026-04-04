@@ -9,6 +9,7 @@ class AchievementEntity extends Equatable {
     required this.subtitle,
     required this.description,
     required this.color,
+    required this.category,
     this.isLocked = false,
   });
 
@@ -18,8 +19,11 @@ class AchievementEntity extends Equatable {
   final String subtitle;
   final String description;
   final Color color;
+  final String category;
   final bool isLocked;
 
   @override
-  List<Object?> get props => [id, emoji, title, subtitle, description, color, isLocked];
+  List<Object?> get props => [
+        id, emoji, title, subtitle, description, color, category, isLocked,
+      ];
 }
