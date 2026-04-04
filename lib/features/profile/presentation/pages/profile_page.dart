@@ -35,10 +35,33 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     super.initState();
-    // Load user info on page load
+    // Load user info and profile data on page load
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
+        // Load auth user info
         context.read<AuthBloc>().add(const AuthLoadUserInfoRequested());
+        // Load latest profile from Supabase and update auth state
+        _loadProfileFromSupabase();
+      }
+    });
+  }
+
+  void _loadProfileFromSupabase() {
+    final profileBloc = getIt<ProfileBloc>();
+    profileBloc.add(const ProfileLoadRequested());
+    
+    // Listen for profile load completion and update AuthBloc
+    profileBloc.stream.listen((profileState) {
+      if (profileState.status == ProfileStatus.success && profileState.profile != null) {
+        final profile = profileState.profile!;
+        if (mounted) {
+          context.read<AuthBloc>().add(
+            AuthUpdateUserInfoRequested(
+              name: profile.name,
+              avatarUrl: profile.avatarUrl,
+            ),
+          );
+        }
       }
     });
   }
