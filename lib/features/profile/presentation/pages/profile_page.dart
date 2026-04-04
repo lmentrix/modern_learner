@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:modern_learner_production/features/auth/presentation/bloc/auth_bloc.dart';
-
+import 'package:modern_learner_production/core/di/injection.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
+import 'package:modern_learner_production/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:modern_learner_production/features/profile/presentation/bloc/profile_bloc.dart';
 import 'package:modern_learner_production/features/profile/presentation/widgets/achievement_badge.dart';
+import 'package:modern_learner_production/features/profile/presentation/widgets/edit_profile_sheet.dart';
 import 'package:modern_learner_production/features/profile/presentation/widgets/setting_item.dart';
 import 'package:modern_learner_production/features/profile/presentation/widgets/stats_card.dart';
 
@@ -236,7 +238,10 @@ class _ProfilePageState extends State<ProfilePage> {
                   width: double.infinity,
                   height: 48,
                   child: OutlinedButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _showEditProfileSheet();
+                    },
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.primary,
                       side: BorderSide(color: AppColors.primary.withValues(alpha: 0.5)),
@@ -816,6 +821,27 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // ── Edit profile sheet ───────────────────────────────────────────────────
+
+  void _showEditProfileSheet() {
+    final user = context.read<AuthBloc>().state.user;
+    final name = user?.name ?? '';
+    final email = user?.email ?? '';
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => BlocProvider(
+        create: (_) => getIt<ProfileBloc>()..add(const ProfileLoadRequested()),
+        child: EditProfileSheet(
+          currentName: name,
+          currentEmail: email,
+        ),
       ),
     );
   }

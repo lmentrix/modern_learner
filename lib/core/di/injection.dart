@@ -14,6 +14,13 @@ import 'package:modern_learner_production/features/auth/domain/usecases/logout_u
 import 'package:modern_learner_production/features/auth/domain/usecases/register_usecase.dart';
 import 'package:modern_learner_production/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:modern_learner_production/features/home/presentation/bloc/achievement_bloc.dart';
+import 'package:modern_learner_production/features/profile/domain/repositories/profile_repository.dart';
+import 'package:modern_learner_production/features/profile/domain/usecases/get_profile_usecase.dart';
+import 'package:modern_learner_production/features/profile/domain/usecases/update_profile_usecase.dart';
+import 'package:modern_learner_production/features/profile/presentation/bloc/profile_bloc.dart';
+import 'package:modern_learner_production/features/profile/service/data/profile_remote_data_source.dart';
+import 'package:modern_learner_production/features/profile/service/data/profile_remote_data_source_impl.dart';
+import 'package:modern_learner_production/features/profile/service/data/profile_repository_impl.dart';
 import 'package:modern_learner_production/features/progress/data/repositories/progress_repository_impl.dart';
 import 'package:modern_learner_production/features/progress/domain/repositories/progress_repository.dart';
 import 'package:modern_learner_production/core/network/network_info.dart';
@@ -61,6 +68,17 @@ Future<void> configureDependencies() async {
 
   // ── Achievement ───────────────────────────────────────────────────────────
   getIt.registerFactory(() => AchievementBloc());
+
+  // ── Profile ───────────────────────────────────────────────────────────────
+  getIt.registerLazySingleton<ProfileRemoteDataSource>(
+    () => ProfileRemoteDataSourceImpl(getIt()),
+  );
+  getIt.registerLazySingleton<ProfileRepository>(
+    () => ProfileRepositoryImpl(getIt(), getIt()),
+  );
+  getIt.registerLazySingleton(() => GetProfileUseCase(getIt()));
+  getIt.registerLazySingleton(() => UpdateProfileUseCase(getIt()));
+  getIt.registerFactory(() => ProfileBloc(getIt(), getIt()));
 
   // ── Progress ──────────────────────────────────────────────────────────────
   getIt.registerLazySingleton<ProgressRepository>(
