@@ -27,13 +27,52 @@ class LessonContentPage extends StatefulWidget {
 class _LessonContentPageState extends State<LessonContentPage> {
   late Future<LessonContentModel> _contentFuture;
   int _currentVocabIndex = 0;
-  final Map<int, String?> _exerciseAnswers = {};
-  final Map<int, bool> _exerciseRevealed = {};
+
+  // item key = "${exerciseIdx}_${itemIdx}"
+  final Map<String, String?> _itemAnswers = {};
+  final Map<String, bool?> _itemCorrect = {}; // null = unchecked
+  final Map<String, TextEditingController> _fillControllers = {};
+  final Map<int, List<String>> _shuffledMatchAnswers = {};
 
   @override
   void initState() {
     super.initState();
     _contentFuture = _loadContent();
+  }
+
+  @override
+  void dispose() {
+    for (final c in _fillControllers.values) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  String _itemKey(int exerciseIdx, int itemIdx) => '${exerciseIdx}_$itemIdx';
+
+  List<String> _getShuffledAnswers(int exerciseIdx, PracticeExerciseModel ex) {
+    return _shuffledMatchAnswers.putIfAbsent(exerciseIdx, () {
+      final answers = ex.items.map((i) => i.answer).toList()..shuffle();
+      return answers;
+    });
+  }
+
+  TextEditingController _getController(String key) {
+    return _fillControllers.putIfAbsent(key, () => TextEditingController());
+  }
+
+  void _onSelectAnswer(String key, String answer, String correctAnswer) {
+    setState(() {
+      _itemAnswers[key] = answer;
+      _itemCorrect[key] = answer.trim().toLowerCase() == correctAnswer.trim().toLowerCase();
+    });
+  }
+
+  void _onCheckFillBlank(String key, String correctAnswer) {
+    final entered = _fillControllers[key]?.text ?? '';
+    setState(() {
+      _itemCorrect[key] = entered.trim().toLowerCase() == correctAnswer.trim().toLowerCase();
+    });
   }
 
   Future<LessonContentModel> _loadContent() async {
@@ -87,8 +126,8 @@ class _LessonContentPageState extends State<LessonContentPage> {
             roadmap: widget.roadmap,
             content: snapshot.data!,
             currentVocabIndex: _currentVocabIndex,
-            exerciseAnswers: _exerciseAnswers,
-            exerciseRevealed: _exerciseRevealed,
+            itemAnswers: _itemAnswers,
+            itemCorrect: _itemCorrect,
             onVocabNext: () {
               final max = snapshot.data!.vocabularyItems.length - 1;
               if (_currentVocabIndex < max) {
@@ -100,12 +139,11 @@ class _LessonContentPageState extends State<LessonContentPage> {
                 setState(() => _currentVocabIndex--);
               }
             },
-            onRevealAnswer: (index) {
-              setState(() => _exerciseRevealed[index] = true);
-            },
-            onSelectAnswer: (index, answer) {
-              setState(() => _exerciseAnswers[index] = answer);
-            },
+            onSelectAnswer: _onSelectAnswer,
+            onCheckFillBlank: _onCheckFillBlank,
+            getShuffledAnswers: _getShuffledAnswers,
+            getController: _getController,
+            itemKey: _itemKey,
           );
         },
       ),
@@ -346,12 +384,15 @@ class _ContentView extends StatelessWidget {
     required this.roadmap,
     required this.content,
     required this.currentVocabIndex,
-    required this.exerciseAnswers,
-    required this.exerciseRevealed,
+    required this.itemAnswers,
+    required this.itemCorrect,
     required this.onVocabNext,
     required this.onVocabPrev,
-    required this.onRevealAnswer,
     required this.onSelectAnswer,
+    required this.onCheckFillBlank,
+    required this.getShuffledAnswers,
+    required this.getController,
+    required this.itemKey,
   });
 
   final Lesson lesson;
@@ -359,12 +400,15 @@ class _ContentView extends StatelessWidget {
   final Roadmap roadmap;
   final LessonContentModel content;
   final int currentVocabIndex;
-  final Map<int, String?> exerciseAnswers;
-  final Map<int, bool> exerciseRevealed;
+  final Map<String, String?> itemAnswers;
+  final Map<String, bool?> itemCorrect;
   final VoidCallback onVocabNext;
   final VoidCallback onVocabPrev;
-  final Function(int) onRevealAnswer;
-  final Function(int, String) onSelectAnswer;
+  final Function(String key, String answer, String correctAnswer) onSelectAnswer;
+  final Function(String key, String correctAnswer) onCheckFillBlank;
+  final List<String> Function(int exerciseIdx, PracticeExerciseModel) getShuffledAnswers;
+  final TextEditingController Function(String key) getController;
+  final String Function(int exerciseIdx, int itemIdx) itemKey;
 
   Color get _typeColor {
     switch (lesson.type) {
@@ -474,13 +518,16 @@ class _ContentView extends StatelessWidget {
                       (e) => Padding(
                         padding: const EdgeInsets.only(bottom: 12),
                         child: _ExerciseCard(
-                          index: e.key,
+                          exerciseIdx: e.key,
                           exercise: e.value,
-                          selectedAnswer: exerciseAnswers[e.key],
-                          isRevealed: exerciseRevealed[e.key] ?? false,
-                          onReveal: () => onRevealAnswer(e.key),
-                          onSelect: (ans) => onSelectAnswer(e.key, ans),
+                          itemAnswers: itemAnswers,
+                          itemCorrect: itemCorrect,
                           typeColor: _typeColor,
+                          onSelectAnswer: onSelectAnswer,
+                          onCheckFillBlank: onCheckFillBlank,
+                          getShuffledAnswers: getShuffledAnswers,
+                          getController: getController,
+                          itemKey: itemKey,
                         ),
                       ),
                     ),
@@ -1016,46 +1063,61 @@ class _NavButton extends StatelessWidget {
   }
 }
 
-// ── Exercise card ─────────────────────────────────────────────────────────────
+// ── Exercise card (dispatcher) ────────────────────────────────────────────────
 
 class _ExerciseCard extends StatelessWidget {
   const _ExerciseCard({
-    required this.index,
+    required this.exerciseIdx,
     required this.exercise,
-    required this.selectedAnswer,
-    required this.isRevealed,
-    required this.onReveal,
-    required this.onSelect,
+    required this.itemAnswers,
+    required this.itemCorrect,
     required this.typeColor,
+    required this.onSelectAnswer,
+    required this.onCheckFillBlank,
+    required this.getShuffledAnswers,
+    required this.getController,
+    required this.itemKey,
   });
-  final int index;
+
+  final int exerciseIdx;
   final PracticeExerciseModel exercise;
-  final String? selectedAnswer;
-  final bool isRevealed;
-  final VoidCallback onReveal;
-  final Function(String) onSelect;
+  final Map<String, String?> itemAnswers;
+  final Map<String, bool?> itemCorrect;
   final Color typeColor;
+  final Function(String key, String answer, String correctAnswer) onSelectAnswer;
+  final Function(String key, String correctAnswer) onCheckFillBlank;
+  final List<String> Function(int, PracticeExerciseModel) getShuffledAnswers;
+  final TextEditingController Function(String key) getController;
+  final String Function(int exerciseIdx, int itemIdx) itemKey;
 
   @override
   Widget build(BuildContext context) {
+    // Count how many items are correctly answered
+    final totalItems = exercise.items.length;
+    final correctCount = exercise.items.asMap().entries.where((e) {
+      return itemCorrect[itemKey(exerciseIdx, e.key)] == true;
+    }).length;
+    final allDone = correctCount == totalItems;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppColors.outlineVariant.withValues(alpha: 0.2),
+          color: allDone
+              ? AppColors.tertiary.withValues(alpha: 0.35)
+              : AppColors.outlineVariant.withValues(alpha: 0.2),
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Exercise type badge
+          // ── Type badge + number ──
           Row(
             children: [
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                 decoration: BoxDecoration(
                   color: typeColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(5),
@@ -1072,17 +1134,38 @@ class _ExerciseCard extends StatelessWidget {
               ),
               const SizedBox(width: 6),
               Text(
-                'Exercise ${index + 1}',
+                'Exercise ${exerciseIdx + 1}',
                 style: GoogleFonts.inter(
-                  fontSize: 11,
-                  color: AppColors.onSurfaceVariant,
-                ),
+                    fontSize: 11, color: AppColors.onSurfaceVariant),
               ),
+              const Spacer(),
+              if (allDone)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.check_circle_rounded,
+                        size: 14, color: AppColors.tertiary),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Complete',
+                      style: GoogleFonts.inter(
+                          fontSize: 11,
+                          color: AppColors.tertiary,
+                          fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                )
+              else
+                Text(
+                  '$correctCount / $totalItems',
+                  style: GoogleFonts.inter(
+                      fontSize: 11, color: AppColors.onSurfaceVariant),
+                ),
             ],
           ),
           const SizedBox(height: 10),
 
-          // Instruction
+          // ── Instruction ──
           Text(
             exercise.instruction,
             style: GoogleFonts.inter(
@@ -1092,225 +1175,576 @@ class _ExerciseCard extends StatelessWidget {
               height: 1.4,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
 
-          // Items
-          ...exercise.items.asMap().entries.map((e) {
-            final item = e.value;
-            final isMatch = exercise.type == 'match';
-
-            if (isMatch) {
-              return _MatchItem(
-                item: item,
-                isRevealed: isRevealed,
-                typeColor: typeColor,
-              );
-            }
-
-            return _QuestionItem(
-              item: item,
-              isRevealed: isRevealed,
-              selectedAnswer: selectedAnswer,
+          // ── Interactive content per type ──
+          if (exercise.type == 'match')
+            _MatchExercise(
+              exerciseIdx: exerciseIdx,
+              items: exercise.items,
+              shuffledAnswers: getShuffledAnswers(exerciseIdx, exercise),
+              itemAnswers: itemAnswers,
+              itemCorrect: itemCorrect,
               typeColor: typeColor,
-              onSelect: onSelect,
-            );
-          }),
+              itemKey: itemKey,
+              onSelect: onSelectAnswer,
+            )
+          else if (exercise.type == 'fill_blank')
+            _FillBlankExercise(
+              exerciseIdx: exerciseIdx,
+              items: exercise.items,
+              itemCorrect: itemCorrect,
+              typeColor: typeColor,
+              itemKey: itemKey,
+              getController: getController,
+              onCheck: onCheckFillBlank,
+            )
+          else
+            _SelectCorrectExercise(
+              exerciseIdx: exerciseIdx,
+              items: exercise.items,
+              itemAnswers: itemAnswers,
+              itemCorrect: itemCorrect,
+              typeColor: typeColor,
+              itemKey: itemKey,
+              onSelect: onSelectAnswer,
+            ),
+        ],
+      ),
+    );
+  }
+}
 
-          const SizedBox(height: 10),
+// ── Match exercise ─────────────────────────────────────────────────────────────
+// Shows each term with all shuffled answers as tappable chips.
+// Correct tap locks the pair green; wrong tap flashes red and allows retry.
 
-          // Reveal button
-          if (!isRevealed)
-            GestureDetector(
-              onTap: onReveal,
-              child: Container(
+class _MatchExercise extends StatelessWidget {
+  const _MatchExercise({
+    required this.exerciseIdx,
+    required this.items,
+    required this.shuffledAnswers,
+    required this.itemAnswers,
+    required this.itemCorrect,
+    required this.typeColor,
+    required this.itemKey,
+    required this.onSelect,
+  });
+
+  final int exerciseIdx;
+  final List<ExerciseItemModel> items;
+  final List<String> shuffledAnswers;
+  final Map<String, String?> itemAnswers;
+  final Map<String, bool?> itemCorrect;
+  final Color typeColor;
+  final String Function(int, int) itemKey;
+  final Function(String key, String answer, String correctAnswer) onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: items.asMap().entries.map((e) {
+        final key = itemKey(exerciseIdx, e.key);
+        final item = e.value;
+        final isCorrect = itemCorrect[key] == true;
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Question term
+              Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
                 decoration: BoxDecoration(
                   color: typeColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: typeColor.withValues(alpha: 0.25),
-                  ),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.visibility_rounded, size: 15, color: typeColor),
-                    const SizedBox(width: 6),
-                    Text(
-                      'Reveal answers',
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: typeColor,
+                    Expanded(
+                      child: Text(
+                        item.question,
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.onSurface,
+                        ),
                       ),
                     ),
+                    if (isCorrect) ...[
+                      const SizedBox(width: 6),
+                      const Icon(Icons.check_circle_rounded,
+                          size: 15, color: AppColors.tertiary),
+                    ],
                   ],
                 ),
               ),
-            )
-          else
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+              const SizedBox(height: 8),
+
+              // Answer chips (hidden once correct)
+              if (!isCorrect)
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: shuffledAnswers.map((answer) {
+                    final selected = itemAnswers[key] == answer;
+                    final isWrong = selected && itemCorrect[key] == false;
+                    return GestureDetector(
+                      onTap: () => onSelect(key, answer, item.answer),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 7),
+                        decoration: BoxDecoration(
+                          color: isWrong
+                              ? AppColors.error.withValues(alpha: 0.1)
+                              : selected
+                                  ? typeColor.withValues(alpha: 0.15)
+                                  : AppColors.surfaceContainer,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: isWrong
+                                ? AppColors.error.withValues(alpha: 0.4)
+                                : selected
+                                    ? typeColor.withValues(alpha: 0.4)
+                                    : AppColors.outlineVariant
+                                        .withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (isWrong) ...[
+                              const Icon(Icons.close_rounded,
+                                  size: 12, color: AppColors.error),
+                              const SizedBox(width: 4),
+                            ],
+                            Text(
+                              answer,
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                color: isWrong
+                                    ? AppColors.error
+                                    : selected
+                                        ? typeColor
+                                        : AppColors.onSurface,
+                                fontWeight: selected
+                                    ? FontWeight.w600
+                                    : FontWeight.normal,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                )
+              else
+                // Locked correct answer
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                  decoration: BoxDecoration(
+                    color: AppColors.tertiary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                        color: AppColors.tertiary.withValues(alpha: 0.3)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.check_rounded,
+                          size: 13, color: AppColors.tertiary),
+                      const SizedBox(width: 5),
+                      Text(
+                        item.answer,
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: AppColors.tertiary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
+
+// ── Fill-blank exercise ────────────────────────────────────────────────────────
+// Shows the question with __ highlighted, a TextField, and a Check button.
+
+class _FillBlankExercise extends StatelessWidget {
+  const _FillBlankExercise({
+    required this.exerciseIdx,
+    required this.items,
+    required this.itemCorrect,
+    required this.typeColor,
+    required this.itemKey,
+    required this.getController,
+    required this.onCheck,
+  });
+
+  final int exerciseIdx;
+  final List<ExerciseItemModel> items;
+  final Map<String, bool?> itemCorrect;
+  final Color typeColor;
+  final String Function(int, int) itemKey;
+  final TextEditingController Function(String key) getController;
+  final Function(String key, String correctAnswer) onCheck;
+
+  static List<TextSpan> _buildBlankSpans(String question, Color color) {
+    final parts = question.split('__');
+    if (parts.length <= 1) return [TextSpan(text: question)];
+    final spans = <TextSpan>[];
+    for (int i = 0; i < parts.length; i++) {
+      if (parts[i].isNotEmpty) spans.add(TextSpan(text: parts[i]));
+      if (i < parts.length - 1) {
+        spans.add(TextSpan(
+          text: ' _____ ',
+          style: TextStyle(
+            color: color,
+            fontWeight: FontWeight.w700,
+            decoration: TextDecoration.underline,
+            decorationColor: color,
+          ),
+        ));
+      }
+    }
+    return spans;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: items.asMap().entries.map((e) {
+        final key = itemKey(exerciseIdx, e.key);
+        final item = e.value;
+        final controller = getController(key);
+        final correctness = itemCorrect[key];
+        final isCorrect = correctness == true;
+        final isWrong = correctness == false;
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Question with highlighted blank
+              RichText(
+                text: TextSpan(
+                  style: GoogleFonts.inter(
+                      fontSize: 14,
+                      color: AppColors.onSurface,
+                      height: 1.5),
+                  children: _buildBlankSpans(item.question, typeColor),
+                ),
+              ),
+              const SizedBox(height: 10),
+
+              // Input row
+              Row(
                 children: [
-                  const Icon(Icons.check_circle_rounded,
-                      size: 15, color: AppColors.tertiary),
-                  const SizedBox(width: 6),
-                  Text(
-                    'Answers revealed',
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.tertiary,
+                  Expanded(
+                    child: TextField(
+                      controller: controller,
+                      enabled: !isCorrect,
+                      onSubmitted: (_) => onCheck(key, item.answer),
+                      style: GoogleFonts.inter(
+                          fontSize: 14, color: AppColors.onSurface),
+                      decoration: InputDecoration(
+                        hintText: 'Type your answer…',
+                        hintStyle: GoogleFonts.inter(
+                            fontSize: 14,
+                            color: AppColors.onSurfaceVariant
+                                .withValues(alpha: 0.5)),
+                        filled: true,
+                        fillColor: isCorrect
+                            ? AppColors.tertiary.withValues(alpha: 0.08)
+                            : isWrong
+                                ? AppColors.error.withValues(alpha: 0.08)
+                                : AppColors.surfaceContainer,
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 10),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide.none,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide(
+                            color: isWrong
+                                ? AppColors.error.withValues(alpha: 0.4)
+                                : AppColors.outlineVariant
+                                    .withValues(alpha: 0.3),
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide(
+                              color: typeColor.withValues(alpha: 0.5)),
+                        ),
+                        suffixIcon: isCorrect
+                            ? const Icon(Icons.check_circle_rounded,
+                                color: AppColors.tertiary, size: 18)
+                            : isWrong
+                                ? const Icon(Icons.cancel_rounded,
+                                    color: AppColors.error, size: 18)
+                                : null,
+                      ),
                     ),
                   ),
+                  if (!isCorrect) ...[
+                    const SizedBox(width: 8),
+                    GestureDetector(
+                      onTap: () => onCheck(key, item.answer),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: typeColor,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          'Check',
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
-            ),
-        ],
-      ),
-    );
-  }
-}
 
-class _MatchItem extends StatelessWidget {
-  const _MatchItem({
-    required this.item,
-    required this.isRevealed,
-    required this.typeColor,
-  });
-  final ExerciseItemModel item;
-  final bool isRevealed;
-  final Color typeColor;
+              // Wrong feedback with correct answer
+              if (isWrong) ...[
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 10, vertical: 7),
+                  decoration: BoxDecoration(
+                    color: AppColors.error.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                        color: AppColors.error.withValues(alpha: 0.2)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.lightbulb_outline_rounded,
+                          size: 13, color: AppColors.error),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Correct answer: ',
+                        style: GoogleFonts.inter(
+                            fontSize: 12, color: AppColors.error),
+                      ),
+                      Text(
+                        item.answer,
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.error,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
 
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        children: [
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              decoration: BoxDecoration(
-                color: typeColor.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                item.question,
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.onSurface,
-                ),
-              ),
-            ),
-          ),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 8),
-            child: Icon(
-              Icons.arrow_forward_rounded,
-              size: 14,
-              color: AppColors.onSurfaceVariant,
-            ),
-          ),
-          Expanded(
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              decoration: BoxDecoration(
-                color: isRevealed
-                    ? AppColors.tertiary.withValues(alpha: 0.1)
-                    : AppColors.surfaceContainer,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: isRevealed
-                      ? AppColors.tertiary.withValues(alpha: 0.3)
-                      : Colors.transparent,
-                ),
-              ),
-              child: Text(
-                isRevealed ? item.answer : '?????',
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  color: isRevealed
-                      ? AppColors.tertiary
-                      : AppColors.onSurfaceVariant,
-                  fontWeight:
-                      isRevealed ? FontWeight.w600 : FontWeight.normal,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _QuestionItem extends StatelessWidget {
-  const _QuestionItem({
-    required this.item,
-    required this.isRevealed,
-    required this.selectedAnswer,
-    required this.typeColor,
-    required this.onSelect,
-  });
-  final ExerciseItemModel item;
-  final bool isRevealed;
-  final String? selectedAnswer;
-  final Color typeColor;
-  final Function(String) onSelect;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            item.question,
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              color: AppColors.onSurface,
-              height: 1.5,
-            ),
-          ),
-          if (isRevealed) ...[
-            const SizedBox(height: 6),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-              decoration: BoxDecoration(
-                color: AppColors.tertiary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: AppColors.tertiary.withValues(alpha: 0.3),
-                ),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.check_rounded,
-                      size: 14, color: AppColors.tertiary),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      item.answer,
+              // Correct feedback
+              if (isCorrect) ...[
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    const Icon(Icons.check_circle_rounded,
+                        size: 13, color: AppColors.tertiary),
+                    const SizedBox(width: 5),
+                    Text(
+                      'Correct!',
                       style: GoogleFonts.inter(
-                        fontSize: 13,
+                        fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: AppColors.tertiary,
                       ),
                     ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
+
+// ── Select-correct exercise ────────────────────────────────────────────────────
+// Parses options from the question string (split by " | ").
+// Displays as tappable option cards; correct/incorrect shown instantly.
+
+class _SelectCorrectExercise extends StatelessWidget {
+  const _SelectCorrectExercise({
+    required this.exerciseIdx,
+    required this.items,
+    required this.itemAnswers,
+    required this.itemCorrect,
+    required this.typeColor,
+    required this.itemKey,
+    required this.onSelect,
+  });
+
+  final int exerciseIdx;
+  final List<ExerciseItemModel> items;
+  final Map<String, String?> itemAnswers;
+  final Map<String, bool?> itemCorrect;
+  final Color typeColor;
+  final String Function(int, int) itemKey;
+  final Function(String key, String answer, String correctAnswer) onSelect;
+
+  static List<String> _parseOptions(String question) =>
+      question.split(' | ').map((s) => s.trim()).toList();
+
+  // Extracts the leading key from an option like "A: some text" → "A"
+  static String _optionKey(String option) {
+    final m = RegExp(r'^([A-Z]):').firstMatch(option.trim());
+    return m?.group(1) ?? option.trim();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: items.asMap().entries.map((e) {
+        final key = itemKey(exerciseIdx, e.key);
+        final item = e.value;
+        final options = _parseOptions(item.question);
+        final selectedKey = itemAnswers[key];
+        final correctness = itemCorrect[key];
+        final isAnswered = correctness != null;
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 4),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: options.map((option) {
+              final optKey = _optionKey(option);
+              final isSelected = selectedKey == optKey;
+              final isThisCorrect = optKey == item.answer.trim();
+              final isThisWrong = isSelected && correctness == false;
+              final showCorrect = isAnswered && isThisCorrect;
+
+              Color? bgColor;
+              Color? borderColor;
+              Color textColor = AppColors.onSurface;
+              Widget? trailingIcon;
+
+              if (showCorrect) {
+                bgColor = AppColors.tertiary.withValues(alpha: 0.1);
+                borderColor = AppColors.tertiary.withValues(alpha: 0.4);
+                textColor = AppColors.tertiary;
+                trailingIcon = const Icon(Icons.check_circle_rounded,
+                    size: 16, color: AppColors.tertiary);
+              } else if (isThisWrong) {
+                bgColor = AppColors.error.withValues(alpha: 0.08);
+                borderColor = AppColors.error.withValues(alpha: 0.35);
+                textColor = AppColors.error;
+                trailingIcon = const Icon(Icons.cancel_rounded,
+                    size: 16, color: AppColors.error);
+              } else if (isSelected) {
+                bgColor = typeColor.withValues(alpha: 0.1);
+                borderColor = typeColor.withValues(alpha: 0.35);
+                textColor = typeColor;
+              } else {
+                bgColor = AppColors.surfaceContainer;
+                borderColor = AppColors.outlineVariant.withValues(alpha: 0.3);
+              }
+
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: GestureDetector(
+                  onTap: isAnswered && correctness == true
+                      ? null
+                      : () => onSelect(key, optKey, item.answer.trim()),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 11),
+                    decoration: BoxDecoration(
+                      color: bgColor,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: borderColor),
+                    ),
+                    child: Row(
+                      children: [
+                        // Option key badge
+                        Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: showCorrect
+                                ? AppColors.tertiary.withValues(alpha: 0.2)
+                                : isThisWrong
+                                    ? AppColors.error.withValues(alpha: 0.15)
+                                    : typeColor.withValues(alpha: 0.12),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: Text(
+                              optKey,
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: showCorrect
+                                    ? AppColors.tertiary
+                                    : isThisWrong
+                                        ? AppColors.error
+                                        : typeColor,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            // Strip the leading "A: " key from display
+                            option.replaceFirst(
+                                RegExp(r'^[A-Z]:\s*'), ''),
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              color: textColor,
+                              fontWeight: isSelected
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                        if (trailingIcon != null) ...[
+                          const SizedBox(width: 8),
+                          trailingIcon,
+                        ],
+                      ],
+                    ),
                   ),
-                ],
-              ),
-            ),
-          ],
-        ],
-      ),
+                ),
+              );
+            }).toList(),
+          ),
+        );
+      }).toList(),
     );
   }
 }
