@@ -21,6 +21,8 @@ class VoiceLessonPage extends StatefulWidget {
 class _VoiceLessonPageState extends State<VoiceLessonPage> {
   late final VoiceLessonBloc _bloc;
   final PageController _pageController = PageController();
+  final ScrollController _phrasesScrollController = ScrollController();
+  final ScrollController _exercisesScrollController = ScrollController();
   int _currentTabIndex = 0; // 0 = phrases, 1 = exercises
 
   @override
@@ -34,6 +36,8 @@ class _VoiceLessonPageState extends State<VoiceLessonPage> {
   void dispose() {
     _bloc.close();
     _pageController.dispose();
+    _phrasesScrollController.dispose();
+    _exercisesScrollController.dispose();
     super.dispose();
   }
 
@@ -306,6 +310,9 @@ class _VoiceLessonPageState extends State<VoiceLessonPage> {
 
   Widget _buildPhrasesTab(VoiceLessonState state) {
     return ListView(
+      controller: _phrasesScrollController,
+      key: const PageStorageKey('voice_phrases_list'),
+      padding: const EdgeInsets.only(bottom: 100),
       children: [
         const SizedBox(height: 16),
         VoicePhraseSelector(
@@ -314,14 +321,14 @@ class _VoiceLessonPageState extends State<VoiceLessonPage> {
           accentColor: state.lesson!.accentColor,
           onPhraseSelected: _onPhraseSelected,
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 24),
         VoicePhraseCard(
           phrase: state.lesson!.phrases[state.currentPhraseIndex],
           accentColor: state.lesson!.accentColor,
           isPlaying: state.isPlaying,
           onPlayTap: () => _bloc.add(const VoiceLessonPlayToggled()),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 24),
         _buildNavigationButtons(state),
       ],
     );
@@ -391,6 +398,8 @@ class _VoiceLessonPageState extends State<VoiceLessonPage> {
 
   Widget _buildExercisesTab(VoiceLessonState state) {
     return ListView(
+      controller: _exercisesScrollController,
+      key: const PageStorageKey('voice_exercises_list'),
       children: [
         const SizedBox(height: 16),
         VoiceExercisesProgress(
