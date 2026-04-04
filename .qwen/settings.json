@@ -3,7 +3,11 @@
     "allow": [
       "Bash(flutter *)",
       "WebFetch(supabase.com)",
-      "Bash(dart *)"
+      "Bash(dart *)",
+      "Bash(git clean *)",
+      "Bash(find *)",
+      "Bash(kill *)",
+      "Bash(pkill *)"
     ]
   },
   "$version": 3
