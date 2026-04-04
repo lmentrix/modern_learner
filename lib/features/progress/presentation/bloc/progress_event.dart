@@ -71,3 +71,5 @@ class CollapseChapter extends ProgressEvent {
   @override
   List<Object?> get props => [chapterId];
 }
+
+class RegenerateRoadmap extends ProgressEvent {}

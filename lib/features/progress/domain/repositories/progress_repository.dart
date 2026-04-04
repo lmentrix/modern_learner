@@ -3,6 +3,7 @@ import 'package:modern_learner_production/features/progress/domain/entities/user
 
 abstract class ProgressRepository {
   Future<Roadmap> getRoadmap();
+  Future<Roadmap> regenerateRoadmap();
   Future<UserProgress> getUserProgress();
   Future<void> startLesson(String lessonId);
   Future<void> completeLesson(String lessonId);

@@ -8,13 +8,14 @@ import 'package:modern_learner_production/features/lesson_detail/presentation/pa
 import 'package:modern_learner_production/features/progress/domain/entities/roadmap.dart';
 import 'package:modern_learner_production/features/progress/domain/usecases/complete_lesson.dart' as domain;
 import 'package:modern_learner_production/features/progress/domain/usecases/start_lesson.dart' as start;
+import 'package:modern_learner_production/features/progress/domain/usecases/regenerate_roadmap.dart' as regen;
 import 'package:modern_learner_production/features/progress/domain/usecases/get_roadmap.dart';
 import 'package:modern_learner_production/features/progress/domain/usecases/get_user_progress.dart';
 import 'package:modern_learner_production/features/progress/presentation/bloc/progress_bloc.dart';
 import 'package:modern_learner_production/features/progress/presentation/bloc/progress_event.dart';
 import 'package:modern_learner_production/features/progress/presentation/bloc/progress_state.dart';
 import 'package:modern_learner_production/features/progress/presentation/widgets/roadmap_view.dart';
-import 'package:modern_learner_production/features/progress/presentation/widgets/progress_stats_header.dart';
+import 'package:modern_learner_production/features/progress/service/progress_navigation_state.dart';
 
 class ProgressPage extends StatefulWidget {
   const ProgressPage({super.key});
@@ -23,23 +24,58 @@ class ProgressPage extends StatefulWidget {
   State<ProgressPage> createState() => _ProgressPageState();
 }
 
-class _ProgressPageState extends State<ProgressPage> {
+class _ProgressPageState extends State<ProgressPage> with SingleTickerProviderStateMixin {
   late ProgressBloc _bloc;
+  late ProgressNavigationState _navState;
+  final ScrollController _scrollController = ScrollController();
+  String? _pendingChapterId;
+  late AnimationController _shimmerController;
 
   @override
   void initState() {
     super.initState();
+    _shimmerController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    )..repeat();
+
     _bloc = ProgressBloc(
       getRoadmap: GetRoadmap(getIt()),
       getUserProgress: GetUserProgress(getIt()),
       completeLesson: domain.CompleteLesson(getIt()),
       startLesson: start.StartLesson(getIt()),
+      regenerateRoadmap: regen.RegenerateRoadmap(getIt()),
     );
     _bloc.add(LoadRoadmap());
+
+    _navState = getIt<ProgressNavigationState>();
+    _navState.addListener(_handleNavigationRequest);
+  }
+
+  void _handleNavigationRequest() {
+    if (_navState.hasSelection && _pendingChapterId == null) {
+      _pendingChapterId = _navState.selectedChapterId;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollToChapter(_pendingChapterId!);
+      });
+    }
+  }
+
+  void _scrollToChapter(String chapterId) {
+    _navState.clearSelection();
+    _pendingChapterId = null;
+    _scrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
+    );
   }
 
   @override
   void dispose() {
+    _navState.removeListener(_handleNavigationRequest);
+    _scrollController.dispose();
+    _shimmerController.dispose();
     _bloc.close();
     super.dispose();
   }
@@ -52,38 +88,18 @@ class _ProgressPageState extends State<ProgressPage> {
         color: AppColors.surface,
         child: BlocBuilder<ProgressBloc, ProgressState>(
           builder: (context, state) {
+            if (state.status == ProgressStatus.generating) {
+              return _GeneratingView(shimmer: _shimmerController);
+            }
+
             if (state.status == ProgressStatus.loading) {
-              return const Center(
-                child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-                ),
-              );
+              return _LoadingView(shimmer: _shimmerController);
             }
 
             if (state.status == ProgressStatus.error) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.error_outline,
-                      size: 64,
-                      color: AppColors.error,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Failed to load roadmap',
-                      style: GoogleFonts.inter(
-                        color: AppColors.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () => _bloc.add(LoadRoadmap()),
-                      child: const Text('Retry'),
-                    ),
-                  ],
-                ),
+              return _ErrorView(
+                message: state.errorMessage,
+                onRetry: () => _bloc.add(LoadRoadmap()),
               );
             }
 
@@ -91,37 +107,25 @@ class _ProgressPageState extends State<ProgressPage> {
               return const SizedBox.shrink();
             }
 
-            return Column(
-              children: [
-                ProgressStatsHeader(progress: state.userProgress!),
-                Divider(
-                  height: 1,
-                  thickness: 1,
-                  color: AppColors.outlineVariant.withValues(alpha: 0.25),
-                ),
-                Expanded(
-                  child: RoadmapView(
-                    roadmap: state.roadmap!,
-                    userProgress: state.userProgress!,
-                    selectedLessonId: state.selectedLessonId,
-                    expandedChapters: state.expandedChapters,
-                    onLessonTap: (lessonId) {
-                      _bloc.add(SelectLesson(lessonId));
-                      _showLessonDetail(lessonId, state);
-                    },
-                    onChapterTap: (chapterId) {
-                      _bloc.add(SelectChapter(chapterId));
-                    },
-                    onChapterToggle: (chapterId, isExpanded) {
-                      if (isExpanded) {
-                        _bloc.add(ExpandChapter(chapterId));
-                      } else {
-                        _bloc.add(CollapseChapter(chapterId));
-                      }
-                    },
-                  ),
-                ),
-              ],
+            return RoadmapView(
+              roadmap: state.roadmap!,
+              userProgress: state.userProgress!,
+              selectedLessonId: state.selectedLessonId,
+              expandedChapters: state.expandedChapters,
+              scrollController: _scrollController,
+              onLessonTap: (lessonId) {
+                _bloc.add(SelectLesson(lessonId));
+                _showLessonDetail(lessonId, state);
+              },
+              onChapterTap: (chapterId) => _bloc.add(SelectChapter(chapterId)),
+              onChapterToggle: (chapterId, isExpanded) {
+                if (isExpanded) {
+                  _bloc.add(ExpandChapter(chapterId));
+                } else {
+                  _bloc.add(CollapseChapter(chapterId));
+                }
+              },
+              onRegenerate: () => _bloc.add(RegenerateRoadmap()),
             );
           },
         ),
@@ -136,7 +140,7 @@ class _ProgressPageState extends State<ProgressPage> {
     final lesson = chapter.lessons.firstWhere((l) => l.id == lessonId);
     final isCompleted = state.userProgress!.completedLessons.containsKey(lessonId);
     final isInProgress = state.userProgress!.lessonProgress.containsKey(lessonId);
-    final progress = isInProgress ? 0.5 : isCompleted ? 1.0 : 0.0;
+    final progress = isCompleted ? 1.0 : isInProgress ? 0.5 : 0.0;
 
     Navigator.push(
       context,
@@ -150,7 +154,9 @@ class _ProgressPageState extends State<ProgressPage> {
           accentColor: _getLessonColor(lesson.type),
           progress: progress,
           totalLessons: chapter.lessons.length,
-          completedLessons: isCompleted ? chapter.lessons.length : (progress * chapter.lessons.length).round(),
+          completedLessons: isCompleted
+              ? chapter.lessons.length
+              : (progress * chapter.lessons.length).round(),
           learningObjectives: chapter.skills,
           sections: chapter.lessons
               .map(
@@ -168,45 +174,253 @@ class _ProgressPageState extends State<ProgressPage> {
     );
   }
 
-  detail.LessonType _mapLessonType(LessonType type) {
-    return switch (type) {
-      LessonType.vocabulary => detail.LessonType.continueLearning,
-      LessonType.grammar => detail.LessonType.school,
-      LessonType.exercise => detail.LessonType.voice,
-      LessonType.listening => detail.LessonType.continueLearning,
-      LessonType.reading => detail.LessonType.continueLearning,
-      LessonType.conversation => detail.LessonType.voice,
-    };
-  }
+  detail.LessonType _mapLessonType(LessonType type) => switch (type) {
+        LessonType.vocabulary => detail.LessonType.continueLearning,
+        LessonType.grammar => detail.LessonType.school,
+        LessonType.exercise => detail.LessonType.voice,
+        LessonType.listening => detail.LessonType.continueLearning,
+        LessonType.reading => detail.LessonType.continueLearning,
+        LessonType.conversation => detail.LessonType.voice,
+      };
 
-  detail.LessonSectionStatus _mapLessonStatus(LessonStatus status) {
-    return switch (status) {
-      LessonStatus.locked => detail.LessonSectionStatus.locked,
-      LessonStatus.available => detail.LessonSectionStatus.next,
-      LessonStatus.inProgress => detail.LessonSectionStatus.current,
-      LessonStatus.completed => detail.LessonSectionStatus.completed,
-    };
-  }
+  detail.LessonSectionStatus _mapLessonStatus(LessonStatus status) =>
+      switch (status) {
+        LessonStatus.locked => detail.LessonSectionStatus.locked,
+        LessonStatus.available => detail.LessonSectionStatus.next,
+        LessonStatus.inProgress => detail.LessonSectionStatus.current,
+        LessonStatus.completed => detail.LessonSectionStatus.completed,
+      };
 
-  String _getLessonEmoji(LessonType type) {
-    return switch (type) {
-      LessonType.vocabulary => '📚',
-      LessonType.grammar => '📝',
-      LessonType.exercise => '💪',
-      LessonType.listening => '🎧',
-      LessonType.reading => '📖',
-      LessonType.conversation => '💬',
-    };
-  }
+  String _getLessonEmoji(LessonType type) => switch (type) {
+        LessonType.vocabulary => '📚',
+        LessonType.grammar => '📝',
+        LessonType.exercise => '💪',
+        LessonType.listening => '🎧',
+        LessonType.reading => '📖',
+        LessonType.conversation => '💬',
+      };
 
-  Color _getLessonColor(LessonType type) {
-    return switch (type) {
-      LessonType.vocabulary => AppColors.primary,
-      LessonType.grammar => AppColors.primary,
-      LessonType.exercise => AppColors.tertiary,
-      LessonType.listening => AppColors.secondary,
-      LessonType.reading => AppColors.secondary,
-      LessonType.conversation => AppColors.tertiary,
-    };
+  Color _getLessonColor(LessonType type) => switch (type) {
+        LessonType.vocabulary => AppColors.primary,
+        LessonType.grammar => AppColors.primary,
+        LessonType.exercise => AppColors.tertiary,
+        LessonType.listening => AppColors.secondary,
+        LessonType.reading => AppColors.secondary,
+        LessonType.conversation => AppColors.tertiary,
+      };
+}
+
+// ── Loading skeleton ─────────────────────────────────────────────────────────
+
+class _LoadingView extends StatelessWidget {
+  const _LoadingView({required this.shimmer});
+  final AnimationController shimmer;
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      physics: const NeverScrollableScrollPhysics(),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 24, 16, 80),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _SkeletonBox(shimmer: shimmer, width: double.infinity, height: 160, radius: 20),
+            const SizedBox(height: 20),
+            for (int i = 0; i < 4; i++) ...[
+              _SkeletonBox(shimmer: shimmer, width: double.infinity, height: 100, radius: 16),
+              const SizedBox(height: 12),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── AI Generating view ───────────────────────────────────────────────────────
+
+class _GeneratingView extends StatelessWidget {
+  const _GeneratingView({required this.shimmer});
+  final AnimationController shimmer;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(40),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AnimatedBuilder(
+              animation: shimmer,
+              builder: (context, _) {
+                return Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: SweepGradient(
+                      startAngle: shimmer.value * 6.28,
+                      colors: const [
+                        AppColors.primary,
+                        AppColors.secondary,
+                        AppColors.tertiary,
+                        AppColors.primary,
+                      ],
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withValues(alpha: 0.4),
+                        blurRadius: 24,
+                        spreadRadius: 4,
+                      ),
+                    ],
+                  ),
+                  child: const Center(
+                    child: Text('✨', style: TextStyle(fontSize: 32)),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 28),
+            Text(
+              'Generating your roadmap',
+              style: GoogleFonts.spaceGrotesk(
+                fontSize: 22,
+                fontWeight: FontWeight.w700,
+                color: AppColors.onSurface,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'AI is crafting a personalised learning path\njust for you…',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                color: AppColors.onSurfaceVariant,
+                height: 1.6,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 32),
+            SizedBox(
+              width: 200,
+              child: LinearProgressIndicator(
+                backgroundColor: AppColors.surfaceContainerHighest,
+                valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
+                minHeight: 4,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Error view ───────────────────────────────────────────────────────────────
+
+class _ErrorView extends StatelessWidget {
+  const _ErrorView({this.message, required this.onRetry});
+  final String? message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(40),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: AppColors.error.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.error_outline_rounded, size: 36, color: AppColors.error),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'Failed to load roadmap',
+              style: GoogleFonts.spaceGrotesk(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: AppColors.onSurface,
+              ),
+            ),
+            if (message != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                message!,
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  color: AppColors.onSurfaceVariant,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh_rounded, size: 18),
+              label: const Text('Try again'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Skeleton box ─────────────────────────────────────────────────────────────
+
+class _SkeletonBox extends StatelessWidget {
+  const _SkeletonBox({
+    required this.shimmer,
+    required this.width,
+    required this.height,
+    this.radius = 8,
+  });
+  final AnimationController shimmer;
+  final double width;
+  final double height;
+  final double radius;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: shimmer,
+      builder: (context, _) {
+        return Container(
+          width: width,
+          height: height,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(radius),
+            gradient: LinearGradient(
+              begin: Alignment(-1 + shimmer.value * 2, 0),
+              end: Alignment(shimmer.value * 2, 0),
+              colors: [
+                AppColors.surfaceContainerHigh,
+                AppColors.surfaceContainerHighest,
+                AppColors.surfaceContainerHigh,
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 }

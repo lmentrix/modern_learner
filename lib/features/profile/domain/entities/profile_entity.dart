@@ -11,6 +11,10 @@ class ProfileEntity extends Equatable {
     this.role = ProfileRole.normal,
     this.createdAt,
     this.updatedAt,
+    this.topic = 'general programming',
+    this.targetLanguage = 'English',
+    this.proficiencyLevel = 'beginner',
+    this.nativeLanguage = 'English',
   });
 
   final String id;
@@ -20,9 +24,16 @@ class ProfileEntity extends Equatable {
   final ProfileRole role;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final String topic;
+  final String targetLanguage;
+  final String proficiencyLevel;
+  final String nativeLanguage;
 
   bool get isVip => role == ProfileRole.vip;
 
   @override
-  List<Object?> get props => [id, email, name, avatarUrl, role, createdAt, updatedAt];
+  List<Object?> get props => [
+        id, email, name, avatarUrl, role, createdAt, updatedAt,
+        topic, targetLanguage, proficiencyLevel, nativeLanguage,
+      ];
 }

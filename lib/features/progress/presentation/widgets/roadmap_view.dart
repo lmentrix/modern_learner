@@ -6,137 +6,767 @@ import 'package:modern_learner_production/features/progress/domain/entities/road
 import 'package:modern_learner_production/features/progress/domain/entities/user_progress.dart';
 
 class RoadmapView extends StatelessWidget {
-
   const RoadmapView({
     super.key,
     required this.roadmap,
     required this.userProgress,
     this.selectedLessonId,
     this.expandedChapters = const {},
+    this.scrollController,
     required this.onLessonTap,
     required this.onChapterTap,
     required this.onChapterToggle,
+    required this.onRegenerate,
   });
+
   final Roadmap roadmap;
   final UserProgress userProgress;
   final String? selectedLessonId;
   final Set<String> expandedChapters;
+  final ScrollController? scrollController;
   final Function(String lessonId) onLessonTap;
   final Function(String chapterId) onChapterTap;
   final Function(String chapterId, bool isExpanded) onChapterToggle;
+  final VoidCallback onRegenerate;
+
+  int get _completedChapters => roadmap.chapters
+      .where((c) => c.lessons.every(
+            (l) => l.status == LessonStatus.completed,
+          ))
+      .length;
+
+  int get _completedLessons => roadmap.chapters
+      .expand((c) => c.lessons)
+      .where((l) => l.status == LessonStatus.completed)
+      .length;
+
+  int get _totalLessons =>
+      roadmap.chapters.fold(0, (sum, c) => sum + c.lessons.length);
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      padding: const EdgeInsets.only(top: 4, bottom: 80),
-      itemCount: roadmap.chapters.length,
-      itemBuilder: (context, index) {
-        final chapter = roadmap.chapters[index];
-        final isExpanded = expandedChapters.contains(chapter.id);
-
-        return _ChapterSection(
-          chapter: chapter,
-          userProgress: userProgress,
-          isExpanded: isExpanded,
-          onHeaderTap: () => onChapterTap(chapter.id),
-          onExpandToggle: (expanded) => onChapterToggle(chapter.id, expanded),
-          onLessonTap: onLessonTap,
-        );
-      },
-    );
-  }
-}
-
-class _ChapterSection extends StatelessWidget {
-
-  const _ChapterSection({
-    required this.chapter,
-    required this.userProgress,
-    required this.isExpanded,
-    required this.onHeaderTap,
-    required this.onExpandToggle,
-    required this.onLessonTap,
-  });
-  final Chapter chapter;
-  final UserProgress userProgress;
-  final bool isExpanded;
-  final VoidCallback onHeaderTap;
-  final Function(bool) onExpandToggle;
-  final Function(String lessonId) onLessonTap;
-
-  bool _isChapterCompleted() {
-    return userProgress.completedChapters.containsKey(chapter.id);
-  }
-
-  int _completedLessonsCount() {
-    return chapter.lessons
-        .where((l) => userProgress.completedLessons.containsKey(l.id))
-        .length;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isCompleted = _isChapterCompleted();
-    final completedCount = _completedLessonsCount();
-    final totalCount = chapter.lessons.length;
-    final progress = totalCount > 0 ? completedCount / totalCount : 0.0;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _ChapterHeader(
-          chapter: chapter,
-          isExpanded: isExpanded,
-          progress: progress,
-          isCompleted: isCompleted,
-          completedCount: completedCount,
-          totalCount: totalCount,
-          onTap: onHeaderTap,
-          onExpandToggle: onExpandToggle,
+    return CustomScrollView(
+      controller: scrollController,
+      physics: const BouncingScrollPhysics(),
+      slivers: [
+        // ── Stats bar ──────────────────────────────────────────────────────
+        SliverToBoxAdapter(
+          child: _StatsBar(progress: userProgress),
         ),
-        if (isExpanded)
-          _ChapterLessons(
-            lessons: chapter.lessons,
-            userProgress: userProgress,
-            onLessonTap: onLessonTap,
+
+        // ── Roadmap hero header ────────────────────────────────────────────
+        SliverToBoxAdapter(
+          child: _RoadmapHeader(
+            roadmap: roadmap,
+            completedChapters: _completedChapters,
+            completedLessons: _completedLessons,
+            totalLessons: _totalLessons,
+            onRegenerate: onRegenerate,
           ),
+        ),
+
+        // ── Chapter label ──────────────────────────────────────────────────
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 4),
+          sliver: SliverToBoxAdapter(
+            child: Text(
+              'LEARNING PATH · ${roadmap.chapters.length} CHAPTERS',
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: AppColors.onSurfaceVariant,
+                letterSpacing: 1.4,
+              ),
+            ),
+          ),
+        ),
+
+        // ── Chapter list ───────────────────────────────────────────────────
+        SliverList.builder(
+          itemCount: roadmap.chapters.length,
+          itemBuilder: (context, index) {
+            final chapter = roadmap.chapters[index];
+            final isExpanded = expandedChapters.contains(chapter.id);
+            final isLast = index == roadmap.chapters.length - 1;
+
+            return _ChapterSection(
+              chapter: chapter,
+              userProgress: userProgress,
+              isExpanded: isExpanded,
+              isLast: isLast,
+              onHeaderTap: () => onChapterTap(chapter.id),
+              onExpandToggle: (expanded) => onChapterToggle(chapter.id, expanded),
+              onLessonTap: onLessonTap,
+            );
+          },
+        ),
+
+        const SliverToBoxAdapter(child: SizedBox(height: 100)),
       ],
     );
   }
 }
 
-class _ChapterHeader extends StatelessWidget {
+// ── Stats bar ────────────────────────────────────────────────────────────────
 
-  const _ChapterHeader({
-    required this.chapter,
-    required this.isExpanded,
-    required this.progress,
-    required this.isCompleted,
-    required this.completedCount,
-    required this.totalCount,
-    required this.onTap,
-    required this.onExpandToggle,
+class _StatsBar extends StatelessWidget {
+  const _StatsBar({required this.progress});
+  final UserProgress progress;
+
+  @override
+  Widget build(BuildContext context) {
+    final xpInLevel = progress.totalXp % 500;
+    final xpFraction = (xpInLevel / 500.0).clamp(0.0, 1.0);
+
+    return Padding(
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top + 12,
+        left: 20,
+        right: 20,
+        bottom: 4,
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              _StatChip(
+                icon: Icons.local_fire_department_rounded,
+                iconColor: const Color(0xFFFF6B35),
+                label: '${progress.streak}',
+                sublabel: 'streak',
+              ),
+              const SizedBox(width: 10),
+              _StatChip(
+                icon: Icons.diamond_rounded,
+                iconColor: AppColors.tertiary,
+                label: '${progress.gems}',
+                sublabel: 'gems',
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  gradient: AppColors.primaryGradient,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.star_rounded, color: Colors.white, size: 16),
+                    const SizedBox(width: 4),
+                    Text(
+                      'LVL ${progress.level}',
+                      style: GoogleFonts.spaceGrotesk(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Text(
+                '$xpInLevel / 500 XP',
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.primary,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                'Next level',
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  color: AppColors.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 5),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: xpFraction,
+              minHeight: 5,
+              backgroundColor: AppColors.surfaceContainerHighest,
+              valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatChip extends StatelessWidget {
+  const _StatChip({
+    required this.icon,
+    required this.iconColor,
+    required this.label,
+    required this.sublabel,
   });
-  final Chapter chapter;
-  final bool isExpanded;
-  final double progress;
-  final bool isCompleted;
-  final int completedCount;
-  final int totalCount;
-  final VoidCallback onTap;
-  final Function(bool) onExpandToggle;
+  final IconData icon;
+  final Color iconColor;
+  final String label;
+  final String sublabel;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: AppColors.outlineVariant.withValues(alpha: 0.25),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: iconColor),
+          const SizedBox(width: 6),
+          RichText(
+            text: TextSpan(
+              children: [
+                TextSpan(
+                  text: '$label ',
+                  style: GoogleFonts.spaceGrotesk(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.onSurface,
+                  ),
+                ),
+                TextSpan(
+                  text: sublabel,
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Roadmap hero header ───────────────────────────────────────────────────────
+
+class _RoadmapHeader extends StatelessWidget {
+  const _RoadmapHeader({
+    required this.roadmap,
+    required this.completedChapters,
+    required this.completedLessons,
+    required this.totalLessons,
+    required this.onRegenerate,
+  });
+
+  final Roadmap roadmap;
+  final int completedChapters;
+  final int completedLessons;
+  final int totalLessons;
+  final VoidCallback onRegenerate;
+
+  double get _overallProgress =>
+      totalLessons > 0 ? completedLessons / totalLessons : 0.0;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF1A1F3A), Color(0xFF0E1020)],
+        ),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.25),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.12),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Top row: AI badge + regenerate ──
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                      color: AppColors.primary.withValues(alpha: 0.4),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text('✨', style: TextStyle(fontSize: 11)),
+                      const SizedBox(width: 4),
+                      Text(
+                        'AI GENERATED',
+                        style: GoogleFonts.inter(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primary,
+                          letterSpacing: 0.8,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Spacer(),
+                GestureDetector(
+                  onTap: onRegenerate,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.07),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.12),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.auto_awesome_rounded,
+                          size: 13,
+                          color: Colors.white.withValues(alpha: 0.7),
+                        ),
+                        const SizedBox(width: 5),
+                        Text(
+                          'Regenerate',
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white.withValues(alpha: 0.7),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 14),
+
+            // ── Title ──
+            Text(
+              roadmap.title,
+              style: GoogleFonts.spaceGrotesk(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+                height: 1.2,
+              ),
+            ),
+
+            const SizedBox(height: 6),
+
+            Text(
+              roadmap.description,
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                color: Colors.white.withValues(alpha: 0.6),
+                height: 1.5,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+
+            const SizedBox(height: 16),
+
+            // ── Language + level badges ──
+            Wrap(
+              spacing: 8,
+              runSpacing: 6,
+              children: [
+                _HeaderBadge(
+                  emoji: '💻',
+                  label: roadmap.targetLanguage,
+                  color: AppColors.secondary,
+                ),
+                _HeaderBadge(
+                  emoji: '📊',
+                  label: _capitalise(roadmap.level),
+                  color: AppColors.tertiary,
+                ),
+                _HeaderBadge(
+                  emoji: '⏱️',
+                  label: '${roadmap.estimatedHours}h estimated',
+                  color: Colors.white.withValues(alpha: 0.5),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 18),
+
+            // ── Overall progress ──
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '$completedLessons/$totalLessons lessons',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white.withValues(alpha: 0.7),
+                  ),
+                ),
+                Text(
+                  '${(_overallProgress * 100).round()}% complete',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 8),
+
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: LinearProgressIndicator(
+                value: _overallProgress,
+                minHeight: 7,
+                backgroundColor: Colors.white.withValues(alpha: 0.1),
+                valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
+              ),
+            ),
+
+            const SizedBox(height: 14),
+
+            // ── XP + gems summary ──
+            Row(
+              children: [
+                const Icon(Icons.star_rounded, size: 15, color: AppColors.primary),
+                const SizedBox(width: 4),
+                Text(
+                  '${roadmap.totalXp} XP total',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                const Icon(Icons.diamond_rounded, size: 15, color: AppColors.tertiary),
+                const SizedBox(width: 4),
+                Text(
+                  '${roadmap.chapters.fold(0, (s, c) => s + c.gemReward)} gems',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.tertiary,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  '$completedChapters/${roadmap.chapters.length} chapters',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    color: Colors.white.withValues(alpha: 0.5),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _capitalise(String s) =>
+      s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
+}
+
+class _HeaderBadge extends StatelessWidget {
+  const _HeaderBadge({
+    required this.emoji,
+    required this.label,
+    required this.color,
+  });
+  final String emoji;
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(emoji, style: const TextStyle(fontSize: 11)),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Chapter section ───────────────────────────────────────────────────────────
+
+class _ChapterSection extends StatelessWidget {
+  const _ChapterSection({
+    required this.chapter,
+    required this.userProgress,
+    required this.isExpanded,
+    required this.isLast,
+    required this.onHeaderTap,
+    required this.onExpandToggle,
+    required this.onLessonTap,
+  });
+
+  final Chapter chapter;
+  final UserProgress userProgress;
+  final bool isExpanded;
+  final bool isLast;
+  final VoidCallback onHeaderTap;
+  final Function(bool) onExpandToggle;
+  final Function(String lessonId) onLessonTap;
+
+  int get _completedCount => chapter.lessons
+      .where((l) => userProgress.completedLessons.containsKey(l.id))
+      .length;
+
+  double get _progress =>
+      chapter.lessons.isEmpty ? 0.0 : _completedCount / chapter.lessons.length;
+
+  bool get _isCompleted => _completedCount == chapter.lessons.length;
+
+  bool get _isSpecial =>
+      chapter.type == ChapterType.checkpoint ||
+      chapter.type == ChapterType.bossChallenge;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(16, 8, 16, isLast ? 0 : 0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── Path line + chapter number bubble ──────────────────────────
+          Column(
+            children: [
+              _ChapterBubble(
+                number: chapter.chapterNumber,
+                type: chapter.type,
+                isCompleted: _isCompleted,
+                progress: _progress,
+              ),
+              if (!isLast)
+                Container(
+                  width: 2,
+                  height: isExpanded
+                      ? (chapter.lessons.length * 68.0 + 32)
+                      : 16,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        _isCompleted
+                            ? AppColors.tertiary
+                            : AppColors.outlineVariant.withValues(alpha: 0.3),
+                        AppColors.outlineVariant.withValues(alpha: 0.1),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
+
+          const SizedBox(width: 12),
+
+          // ── Chapter card ───────────────────────────────────────────────
+          Expanded(
+            child: Column(
+              children: [
+                _ChapterCard(
+                  chapter: chapter,
+                  isExpanded: isExpanded,
+                  progress: _progress,
+                  completedCount: _completedCount,
+                  isCompleted: _isCompleted,
+                  isSpecial: _isSpecial,
+                  onTap: onHeaderTap,
+                  onExpandToggle: onExpandToggle,
+                ),
+                if (isExpanded)
+                  _LessonList(
+                    lessons: chapter.lessons,
+                    userProgress: userProgress,
+                    onLessonTap: onLessonTap,
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Chapter bubble ─────────────────────────────────────────────────────────
+
+class _ChapterBubble extends StatelessWidget {
+  const _ChapterBubble({
+    required this.number,
+    required this.type,
+    required this.isCompleted,
+    required this.progress,
+  });
+
+  final int number;
+  final ChapterType type;
+  final bool isCompleted;
+  final double progress;
+
+  @override
+  Widget build(BuildContext context) {
+    final isBoss = type == ChapterType.bossChallenge;
+    final isCheckpoint = type == ChapterType.checkpoint;
+
+    Color bubbleColor;
+    if (isCompleted) {
+      bubbleColor = AppColors.tertiary;
+    } else if (isBoss) {
+      bubbleColor = AppColors.error;
+    } else if (isCheckpoint) {
+      bubbleColor = AppColors.secondary;
+    } else if (progress > 0) {
+      bubbleColor = AppColors.primary;
+    } else {
+      bubbleColor = AppColors.surfaceContainerHigh;
+    }
+
+    return Container(
+      width: 36,
+      height: 36,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: bubbleColor,
+        border: Border.all(
+          color: isCompleted
+              ? AppColors.tertiary
+              : AppColors.outlineVariant.withValues(alpha: 0.3),
+          width: isCompleted ? 2 : 1,
+        ),
+        boxShadow: progress > 0
+            ? [
+                BoxShadow(
+                  color: bubbleColor.withValues(alpha: 0.4),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
+                ),
+              ]
+            : null,
+      ),
+      child: Center(
+        child: isCompleted
+            ? const Icon(Icons.check_rounded, color: Colors.white, size: 18)
+            : isBoss
+                ? const Text('👑', style: TextStyle(fontSize: 16))
+                : isCheckpoint
+                    ? const Text('🏁', style: TextStyle(fontSize: 15))
+                    : Text(
+                        '$number',
+                        style: GoogleFonts.spaceGrotesk(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: progress > 0
+                              ? Colors.white
+                              : AppColors.onSurfaceVariant,
+                        ),
+                      ),
+      ),
+    );
+  }
+}
+
+// ── Chapter card ──────────────────────────────────────────────────────────────
+
+class _ChapterCard extends StatelessWidget {
+  const _ChapterCard({
+    required this.chapter,
+    required this.isExpanded,
+    required this.progress,
+    required this.completedCount,
+    required this.isCompleted,
+    required this.isSpecial,
+    required this.onTap,
+    required this.onExpandToggle,
+  });
+
+  final Chapter chapter;
+  final bool isExpanded;
+  final double progress;
+  final int completedCount;
+  final bool isCompleted;
+  final bool isSpecial;
+  final VoidCallback onTap;
+  final Function(bool) onExpandToggle;
+
+  Color get _accentColor {
+    if (chapter.type == ChapterType.bossChallenge) return AppColors.error;
+    if (chapter.type == ChapterType.checkpoint) return AppColors.secondary;
+    if (isCompleted) return AppColors.tertiary;
+    if (progress > 0) return AppColors.primary;
+    return AppColors.outlineVariant;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 4),
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: _isCheckpointOrBoss
-              ? AppColors.error.withValues(alpha: 0.3)
-              : AppColors.outlineVariant.withValues(alpha: 0.35),
+          color: isSpecial
+              ? _accentColor.withValues(alpha: 0.35)
+              : isCompleted
+                  ? AppColors.tertiary.withValues(alpha: 0.3)
+                  : AppColors.outlineVariant.withValues(alpha: 0.25),
         ),
       ),
       child: Material(
@@ -145,168 +775,171 @@ class _ChapterHeader extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(16),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(14),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    // Icon + Title
+                    // Icon
+                    Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          colors: [
+                            _accentColor.withValues(alpha: 0.3),
+                            _accentColor.withValues(alpha: 0.1),
+                          ],
+                        ),
+                        border: Border.all(
+                          color: _accentColor.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          chapter.icon,
+                          style: const TextStyle(fontSize: 20),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+
+                    // Title block
                     Expanded(
-                      child: Row(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Container(
-                            width: 48,
-                            height: 48,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: _getChapterGradient(),
-                            ),
-                            child: Center(
-                              child: Text(
-                                chapter.icon,
-                                style: const TextStyle(fontSize: 24),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Text(
-                                      'Chapter ${chapter.chapterNumber}',
-                                      style: GoogleFonts.inter(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w700,
-                                        color: AppColors.primary,
-                                        letterSpacing: 0.5,
-                                      ),
-                                    ),
-                                    if (_isCheckpointOrBoss) ...[
-                                      const SizedBox(width: 6),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 6,
-                                          vertical: 2,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: AppColors.error
-                                              .withValues(alpha: 0.15),
-                                          borderRadius: BorderRadius.circular(4),
-                                        ),
-                                        child: Text(
-                                          _chapterTypeLabel,
-                                          style: GoogleFonts.inter(
-                                            fontSize: 9,
-                                            fontWeight: FontWeight.w700,
-                                            color: AppColors.error,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ],
+                          Row(
+                            children: [
+                              Text(
+                                'Chapter ${chapter.chapterNumber}',
+                                style: GoogleFonts.inter(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: _accentColor,
+                                  letterSpacing: 0.4,
                                 ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  chapter.title,
-                                  style: GoogleFonts.spaceGrotesk(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.onSurface,
+                              ),
+                              if (isSpecial) ...[
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 5,
+                                    vertical: 2,
                                   ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                                  decoration: BoxDecoration(
+                                    color: _accentColor.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    chapter.type == ChapterType.bossChallenge
+                                        ? 'BOSS'
+                                        : 'CHECKPOINT',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 8,
+                                      fontWeight: FontWeight.w800,
+                                      color: _accentColor,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
                                 ),
                               ],
+                              if (isCompleted) ...[
+                                const SizedBox(width: 6),
+                                const Icon(
+                                  Icons.check_circle_rounded,
+                                  size: 14,
+                                  color: AppColors.tertiary,
+                                ),
+                              ],
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            chapter.title,
+                            style: GoogleFonts.spaceGrotesk(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.onSurface,
                             ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ],
                       ),
                     ),
-                    // Expand/Collapse button
+
+                    // Expand toggle
                     GestureDetector(
                       onTap: () => onExpandToggle(!isExpanded),
                       child: Container(
-                        width: 36,
-                        height: 36,
+                        width: 32,
+                        height: 32,
                         decoration: BoxDecoration(
                           color: AppColors.surfaceContainerHighest,
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(8),
                         ),
                         child: Icon(
                           isExpanded
                               ? Icons.keyboard_arrow_up_rounded
                               : Icons.keyboard_arrow_down_rounded,
                           color: AppColors.onSurfaceVariant,
-                          size: 22,
+                          size: 20,
                         ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
+
+                const SizedBox(height: 10),
+
                 // Progress bar
                 ClipRRect(
                   borderRadius: BorderRadius.circular(4),
                   child: LinearProgressIndicator(
                     value: progress,
-                    minHeight: 6,
-                    backgroundColor:
-                        AppColors.outlineVariant.withValues(alpha: 0.2),
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      isCompleted
-                          ? AppColors.tertiary
-                          : AppColors.primary,
-                    ),
+                    minHeight: 4,
+                    backgroundColor: AppColors.outlineVariant.withValues(alpha: 0.15),
+                    valueColor: AlwaysStoppedAnimation<Color>(_accentColor),
                   ),
                 ),
-                const SizedBox(height: 8),
+
+                const SizedBox(height: 7),
+
                 // Stats row
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      '$completedCount/$totalCount lessons',
+                      '$completedCount/${chapter.lessons.length} lessons',
                       style: GoogleFonts.inter(
-                        fontSize: 12,
+                        fontSize: 11,
                         color: AppColors.onSurfaceVariant,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.star_rounded,
-                          size: 16,
-                          color: AppColors.primary,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '+${chapter.xpReward} XP',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        const Icon(
-                          Icons.diamond_rounded,
-                          size: 16,
-                          color: AppColors.tertiary,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '+${chapter.gemReward} gems',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            color: AppColors.tertiary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
+                    const Spacer(),
+                    const Icon(Icons.star_rounded, size: 13, color: AppColors.primary),
+                    const SizedBox(width: 3),
+                    Text(
+                      '+${chapter.xpReward} XP',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    const Icon(Icons.diamond_rounded, size: 13, color: AppColors.tertiary),
+                    const SizedBox(width: 3),
+                    Text(
+                      '+${chapter.gemReward}',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        color: AppColors.tertiary,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ],
                 ),
@@ -317,39 +950,22 @@ class _ChapterHeader extends StatelessWidget {
       ),
     );
   }
-
-  bool get _isCheckpointOrBoss =>
-      chapter.type == ChapterType.checkpoint ||
-      chapter.type == ChapterType.bossChallenge;
-
-  String get _chapterTypeLabel => switch (chapter.type) {
-        ChapterType.checkpoint => 'CHECKPOINT',
-        ChapterType.bossChallenge => 'BOSS',
-        ChapterType.lesson => 'LESSON',
-      };
-
-  LinearGradient _getChapterGradient() {
-    if (_isCheckpointOrBoss) {
-      return const LinearGradient(
-        colors: [Color(0xFFBA1A1A), Color(0xFFF2B8B5)],
-      );
-    }
-    return AppColors.primaryGradient;
-  }
 }
 
-class _ChapterLessons extends StatelessWidget {
+// ── Lesson list ───────────────────────────────────────────────────────────────
 
-  const _ChapterLessons({
+class _LessonList extends StatelessWidget {
+  const _LessonList({
     required this.lessons,
     required this.userProgress,
     required this.onLessonTap,
   });
+
   final List<Lesson> lessons;
   final UserProgress userProgress;
   final Function(String lessonId) onLessonTap;
 
-  LessonStatus _getLessonStatus(Lesson lesson) {
+  LessonStatus _getStatus(Lesson lesson) {
     if (userProgress.completedLessons.containsKey(lesson.id)) {
       return LessonStatus.completed;
     }
@@ -362,17 +978,17 @@ class _ChapterLessons extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-      padding: const EdgeInsets.only(left: 32),
+      margin: const EdgeInsets.only(left: 4, bottom: 4),
       child: Column(
         children: lessons
             .asMap()
             .entries
-            .map((entry) => _LessonItem(
-                  lesson: entry.value,
-                  status: _getLessonStatus(entry.value),
-                  isLast: entry.key == lessons.length - 1,
-                  onTap: () => onLessonTap(entry.value.id),
+            .map((e) => _LessonRow(
+                  lesson: e.value,
+                  status: _getStatus(e.value),
+                  index: e.key,
+                  isLast: e.key == lessons.length - 1,
+                  onTap: () => onLessonTap(e.value.id),
                 ))
             .toList(),
       ),
@@ -380,199 +996,153 @@ class _ChapterLessons extends StatelessWidget {
   }
 }
 
-class _LessonItem extends StatelessWidget {
-
-  const _LessonItem({
+class _LessonRow extends StatelessWidget {
+  const _LessonRow({
     required this.lesson,
     required this.status,
+    required this.index,
     required this.isLast,
     required this.onTap,
   });
+
   final Lesson lesson;
   final LessonStatus status;
+  final int index;
   final bool isLast;
   final VoidCallback onTap;
 
+  Color get _statusColor {
+    switch (status) {
+      case LessonStatus.completed:
+        return AppColors.tertiary;
+      case LessonStatus.inProgress:
+        return AppColors.primary;
+      case LessonStatus.available:
+        return AppColors.primary;
+      case LessonStatus.locked:
+        return AppColors.onSurfaceVariant.withValues(alpha: 0.4);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        children: [
-          // Connecting line
-          Column(
+    final isLocked = status == LessonStatus.locked;
+
+    return GestureDetector(
+      onTap: isLocked ? null : onTap,
+      child: Opacity(
+        opacity: isLocked ? 0.5 : 1.0,
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceContainer.withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: status == LessonStatus.available
+                  ? AppColors.primary.withValues(alpha: 0.3)
+                  : AppColors.outlineVariant.withValues(alpha: 0.15),
+            ),
+          ),
+          child: Row(
             children: [
+              // Status icon
               Container(
-                width: 2,
-                height: 20,
-                color: AppColors.outlineVariant.withValues(alpha: 0.2),
-              ),
-              if (!isLast)
-                Container(
-                  width: 2,
-                  height: 28,
-                  color: AppColors.outlineVariant.withValues(alpha: 0.2),
-                ),
-            ],
-          ),
-          const SizedBox(width: 12),
-          // Lesson node
-          GestureDetector(
-            onTap: onTap,
-            child: _LessonNode(lesson: lesson, status: status),
-          ),
-          const SizedBox(width: 12),
-          // Lesson info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  lesson.title,
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.onSurface,
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: _statusColor.withValues(alpha: 0.12),
+                  border: Border.all(
+                    color: _statusColor.withValues(alpha: 0.4),
                   ),
                 ),
-                const SizedBox(height: 2),
-                Row(
+                child: Center(child: _buildStatusIcon()),
+              ),
+
+              const SizedBox(width: 10),
+
+              // Title + badges
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _LessonTypeBadge(type: lesson.type),
-                    const SizedBox(width: 8),
                     Text(
-                      '+${lesson.xpReward} XP',
+                      lesson.title,
                       style: GoogleFonts.inter(
-                        fontSize: 11,
+                        fontSize: 13,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.primary,
+                        color: AppColors.onSurface,
                       ),
+                    ),
+                    const SizedBox(height: 3),
+                    Row(
+                      children: [
+                        _TypeBadge(type: lesson.type),
+                        const SizedBox(width: 6),
+                        Text(
+                          '+${lesson.xpReward} XP',
+                          style: GoogleFonts.inter(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
-            ),
+              ),
+
+              // Action arrow (available only)
+              if (status == LessonStatus.available)
+                Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.play_arrow_rounded,
+                    color: Colors.white,
+                    size: 16,
+                  ),
+                ),
+            ],
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _LessonNode extends StatelessWidget {
-
-  const _LessonNode({
-    required this.lesson,
-    required this.status,
-  });
-  final Lesson lesson;
-  final LessonStatus status;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 44,
-      height: 44,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: _getNodeColor(),
-        border: Border.all(
-          color: _getBorderColor(),
-          width: 2,
         ),
-        boxShadow: _getShadow(),
-      ),
-      child: Center(
-        child: _buildIcon(),
       ),
     );
   }
 
-  Color _getNodeColor() {
+  Widget _buildStatusIcon() {
     switch (status) {
-      case LessonStatus.locked:
-        return AppColors.surfaceContainer;
-      case LessonStatus.available:
-        return AppColors.primary;
-      case LessonStatus.inProgress:
-        return AppColors.surfaceContainerHighest;
       case LessonStatus.completed:
-        return AppColors.tertiaryContainer.withValues(alpha: 0.3);
-    }
-  }
-
-  Color _getBorderColor() {
-    switch (status) {
-      case LessonStatus.locked:
-        return AppColors.outlineVariant.withValues(alpha: 0.3);
-      case LessonStatus.available:
-        return AppColors.primary;
+        return const Icon(Icons.check_rounded, color: AppColors.tertiary, size: 16);
       case LessonStatus.inProgress:
-        return AppColors.tertiary.withValues(alpha: 0.5);
-      case LessonStatus.completed:
-        return AppColors.tertiary;
-    }
-  }
-
-  List<BoxShadow>? _getShadow() {
-    if (status == LessonStatus.available) {
-      return [
-        BoxShadow(
-          color: AppColors.primary.withValues(alpha: 0.4),
-          blurRadius: 12,
-          offset: const Offset(0, 3),
-        ),
-      ];
-    }
-    if (status == LessonStatus.completed) {
-      return [
-        BoxShadow(
-          color: AppColors.tertiary.withValues(alpha: 0.3),
-          blurRadius: 10,
-          offset: const Offset(0, 2),
-        ),
-      ];
-    }
-    return null;
-  }
-
-  Widget _buildIcon() {
-    switch (status) {
+        return const SizedBox(
+          width: 16,
+          height: 16,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+          ),
+        );
+      case LessonStatus.available:
+        return const Icon(Icons.play_arrow_rounded, color: AppColors.primary, size: 16);
       case LessonStatus.locked:
         return Icon(
           Icons.lock_rounded,
-          color: AppColors.onSurfaceVariant.withValues(alpha: 0.4),
-          size: 18,
-        );
-      case LessonStatus.available:
-        return const Icon(
-          Icons.play_arrow_rounded,
-          color: Colors.white,
-          size: 22,
-        );
-      case LessonStatus.inProgress:
-        return const SizedBox(
-          width: 20,
-          height: 20,
-          child: CircularProgressIndicator(
-            strokeWidth: 2.5,
-            valueColor:
-                AlwaysStoppedAnimation<Color>(AppColors.tertiary),
-          ),
-        );
-      case LessonStatus.completed:
-        return const Icon(
-          Icons.check_rounded,
-          color: AppColors.tertiary,
-          size: 22,
+          color: AppColors.onSurfaceVariant.withValues(alpha: 0.5),
+          size: 14,
         );
     }
   }
 }
 
-class _LessonTypeBadge extends StatelessWidget {
-
-  const _LessonTypeBadge({required this.type});
+class _TypeBadge extends StatelessWidget {
+  const _TypeBadge({required this.type});
   final LessonType type;
 
   @override
@@ -587,16 +1157,16 @@ class _LessonTypeBadge extends StatelessWidget {
     };
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
         label,
         style: GoogleFonts.inter(
           fontSize: 9,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
           color: color,
           letterSpacing: 0.3,
         ),

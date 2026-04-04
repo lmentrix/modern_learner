@@ -18,7 +18,7 @@ class LessonModel {
       type: json['type'] as String,
       description: json['description'] as String,
       xpReward: json['xpReward'] as int,
-      status: json['status'] as String,
+      status: json['status'] as String? ?? 'locked',
     );
   }
   final String id;
