@@ -56,34 +56,36 @@ class _AchievementsPageState extends State<AchievementsPage> {
                     child: _buildFilterChips(context, state),
                   ),
                 ),
-                const SliverToBoxAdapter(child: SizedBox(height: 16)),
-                SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  sliver: SliverToBoxAdapter(
-                    child: _sectionLabel('ALL ACHIEVEMENTS'),
-                  ),
-                ),
-                const SliverToBoxAdapter(child: SizedBox(height: 14)),
-                SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  sliver: SliverGrid.builder(
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      mainAxisSpacing: 12,
-                      crossAxisSpacing: 12,
-                      childAspectRatio: 0.82,
-                    ),
-                    itemCount: state.filtered.length,
-                    itemBuilder: (context, i) => _AchievementCard(
-                      achievement: state.filtered[i],
-                      onTap: () => context.push(
-                        Routes.achievementDetail,
-                        extra: state.filtered[i],
+                const SliverToBoxAdapter(child: SizedBox(height: 8)),
+                for (final entry in state.groupedFiltered.entries)
+                  if (entry.value.isNotEmpty) ...[
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 14),
+                      sliver: SliverToBoxAdapter(
+                        child: _sectionLabel(entry.key.toUpperCase()),
                       ),
                     ),
-                  ),
-                ),
+                    SliverPadding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      sliver: SliverGrid.builder(
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 12,
+                          crossAxisSpacing: 12,
+                          childAspectRatio: 0.82,
+                        ),
+                        itemCount: entry.value.length,
+                        itemBuilder: (context, i) => _AchievementCard(
+                          achievement: entry.value[i],
+                          onTap: () => context.push(
+                            Routes.achievementDetail,
+                            extra: entry.value[i],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 const SliverToBoxAdapter(child: SizedBox(height: 100)),
               ],
             ),
