@@ -12,7 +12,7 @@ class LessonContentModel {
     return LessonContentModel(
       id: json['id'] as String,
       lessonType: json['lessonType'] as String,
-      introduction: json['introduction'] as String,
+      introduction: json['introduction'] as String? ?? '',
       vocabularyItems: (json['vocabularyItems'] as List<dynamic>?)
               ?.map((e) => VocabularyItemModel.fromJson(e as Map<String, dynamic>))
               .toList() ??
@@ -93,7 +93,7 @@ class PracticeExerciseModel {
 
   factory PracticeExerciseModel.fromJson(Map<String, dynamic> json) {
     return PracticeExerciseModel(
-      type: json['type'] as String,
+      type: json['type'] as String? ?? '',
       instruction: json['instruction'] as String? ?? '',
       items: (json['items'] as List<dynamic>?)
               ?.map((e) => ExerciseItemModel.fromJson(e as Map<String, dynamic>))
