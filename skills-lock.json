@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "skills": {
+    "flutter-adding-home-screen-widgets": {
+      "source": "flutter/skills",
+      "sourceType": "github",
+      "computedHash": "36e04c5faf21388f872b0ce0a575970d40a0161bee3f528f5d0a3d67fc5d7cbb"
+    },
+    "flutter-architecting-apps": {
+      "source": "flutter/skills",
+      "sourceType": "github",
+      "computedHash": "eb8640b807ea631973fa259880abf07d0cb0f26d327da9970e56fbfc95650ada"
+    },
+    "flutter-building-forms": {
+      "source": "flutter/skills",
+      "sourceType": "github",
+      "computedHash": "7e7558b10bc6c832151ab344b257f207134d2e00ecb1e78dd7b5ca4b22052c84"
+    },
+    "flutter-building-layouts": {
+      "source": "flutter/skills",
+      "sourceType": "github",
+      "computedHash": "2fc5b3828e53902e4e61d79d2bbd5557409e27e9713ea0aa4efb307a6c9cda43"
+    },
+    "flutter-building-plugins": {
+      "source": "flutter/skills",
+      "sourceType": "github",
+      "computedHash": "124061ae33ee43e3dda169eb240c5c040c5c0f90140db0ba16d599095ed95b4f"
+    },
+    "flutter-caching-data": {
+      "source": "flutter/skills",
+      "sourceType": "github",
+      "computedHash": "402048bac26e92fa8fc973a411bccda6e6ad08ee13122874bf2dd576186f6912"
+    },
+    "flutter-handling-http-and-json": {
+      "source": "flutter/skills",
+      "sourceType": "github",
+      "computedHash": "1bb171225adb651761324fa9289013681ebe83a1a897f812ec2ee658826cff57"
+    },
+    "flutter-implementing-navigation-and-routing": {
+      "source": "flutter/skills",
+      "sourceType": "github",
+      "computedHash": "1ac3fdf915c37ddf8acd943c316e3119dc1436f159b3d8d7f5a4c70eaa1583bd"
+    },
+    "flutter-managing-state": {
+      "source": "flutter/skills",
+      "sourceType": "github",
+      "computedHash": "4ae2c7b298e4da58029e4318efa4d009ff517021296c93b6bcc1c051a5a10085"
+    },
+    "supabase": {
+      "source": "supabase/agent-skills",
+      "sourceType": "github",
+      "computedHash": "cb675a889c60172febe84740e7c22b600c8241c390deaff3d368c408f10dffdf"
+    }
+  }
+}

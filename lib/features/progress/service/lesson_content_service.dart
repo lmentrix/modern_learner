@@ -53,8 +53,9 @@ class LessonContentService {
     );
 
     final contentJson = (response.data!['data']) as Map<String, dynamic>;
+    final model = LessonContentModel.fromJson(contentJson);
     await prefs.setString(key, jsonEncode(contentJson));
 
-    return LessonContentModel.fromJson(contentJson);
+    return model;
   }
 }
