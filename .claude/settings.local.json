@@ -41,7 +41,8 @@
       "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); data=d.get\\('data',d\\); print\\('lessonType:', data.get\\('lessonType'\\)\\); print\\('keys:', list\\(data.keys\\(\\)\\)\\); pe=data.get\\('practiceExercises',[]\\); print\\('practiceExercises[0] keys:', list\\(pe[0].keys\\(\\)\\) if pe else 'empty'\\)\")",
       "Bash(curl -s -X POST http://localhost:3000/api/v1/ai/chapter-content/generate -H 'Content-Type: application/json' -d '{\"topic\":\"French\",\"language\":\"French\",\"level\":\"beginner\",\"chapterTitle\":\"Greetings\",\"chapterNumber\":1,\"nativeLanguage\":\"English\",\"skills\":\"basic greetings\"}' --max-time 90)",
       "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); data=d.get\\('data',d\\); print\\('keys:', list\\(data.keys\\(\\)\\) if isinstance\\(data,dict\\) else 'error'\\); print\\('statusCode:', d.get\\('statusCode'\\)\\)\")",
-      "Bash(dart analyze:*)"
+      "Bash(dart analyze:*)",
+      "Bash(supabase db:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
