@@ -5,12 +5,12 @@ import 'package:modern_learner_production/features/progress/data/models/lesson_c
 import 'package:modern_learner_production/features/progress/domain/entities/roadmap.dart';
 import 'package:modern_learner_production/features/progress/domain/repositories/progress_repository.dart';
 import 'package:modern_learner_production/features/progress/domain/usecases/complete_lesson.dart';
-import 'package:modern_learner_production/features/progress/service/chapter_content_service.dart';
-import 'package:modern_learner_production/features/progress/service/lesson_content_service.dart';
-import 'package:modern_learner_production/features/progress/service/roadmap_generation_service.dart';
 import 'package:modern_learner_production/features/progress/presentation/widgets/lesson_content/content_view.dart';
 import 'package:modern_learner_production/features/progress/presentation/widgets/lesson_content/error_content.dart';
 import 'package:modern_learner_production/features/progress/presentation/widgets/lesson_content/generating_content.dart';
+import 'package:modern_learner_production/features/progress/service/chapter_content_service.dart';
+import 'package:modern_learner_production/features/progress/service/lesson_content_service.dart';
+import 'package:modern_learner_production/features/progress/service/roadmap_generation_service.dart';
 
 class LessonContentPage extends StatefulWidget {
   const LessonContentPage({
