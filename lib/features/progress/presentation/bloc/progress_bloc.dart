@@ -2,16 +2,18 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:modern_learner_production/features/progress/domain/entities/roadmap.dart';
 import 'package:modern_learner_production/features/progress/domain/entities/user_progress.dart';
-import 'package:modern_learner_production/features/progress/domain/usecases/complete_lesson.dart' as domain;
-import 'package:modern_learner_production/features/progress/domain/usecases/start_lesson.dart' as start;
-import 'package:modern_learner_production/features/progress/domain/usecases/regenerate_roadmap.dart' as regen;
+import 'package:modern_learner_production/features/progress/domain/usecases/complete_lesson.dart'
+    as domain;
+import 'package:modern_learner_production/features/progress/domain/usecases/start_lesson.dart'
+    as start;
+import 'package:modern_learner_production/features/progress/domain/usecases/regenerate_roadmap.dart'
+    as regen;
 import 'package:modern_learner_production/features/progress/domain/usecases/get_roadmap.dart';
 import 'package:modern_learner_production/features/progress/domain/usecases/get_user_progress.dart';
 import 'package:modern_learner_production/features/progress/presentation/bloc/progress_event.dart';
 import 'package:modern_learner_production/features/progress/presentation/bloc/progress_state.dart';
 
 class ProgressBloc extends Bloc<ProgressEvent, ProgressState> {
-
   ProgressBloc({
     required this.getRoadmap,
     required this.getUserProgress,
@@ -29,6 +31,8 @@ class ProgressBloc extends Bloc<ProgressEvent, ProgressState> {
     on<ClaimReward>(_onClaimReward);
     on<ExpandChapter>(_onExpandChapter);
     on<CollapseChapter>(_onCollapseChapter);
+    on<ExpandAllChapters>(_onExpandAllChapters);
+    on<CollapseAllChapters>(_onCollapseAllChapters);
   }
   final GetRoadmap getRoadmap;
   final GetUserProgress getUserProgress;
@@ -43,8 +47,11 @@ class ProgressBloc extends Bloc<ProgressEvent, ProgressState> {
     emit(state.copyWith(status: ProgressStatus.loading));
 
     try {
+      final courseSelection = event.useCurrentSelection
+          ? state.courseSelection
+          : event.courseSelection;
       final results = await Future.wait([
-        getRoadmap(),
+        getRoadmap(courseSelection: courseSelection),
         getUserProgress(),
       ]);
 
@@ -55,17 +62,22 @@ class ProgressBloc extends Bloc<ProgressEvent, ProgressState> {
         orElse: () => roadmap.chapters.first,
       );
 
-      emit(state.copyWith(
-        status: ProgressStatus.loaded,
-        roadmap: roadmap,
-        userProgress: results[1] as UserProgress,
-        expandedChapters: {firstAvailableChapter.id},
-      ));
+      emit(
+        state.copyWith(
+          status: ProgressStatus.loaded,
+          roadmap: roadmap,
+          userProgress: results[1] as UserProgress,
+          courseSelection: courseSelection,
+          expandedChapters: {firstAvailableChapter.id},
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(
-        status: ProgressStatus.error,
-        errorMessage: e.toString(),
-      ));
+      emit(
+        state.copyWith(
+          status: ProgressStatus.error,
+          errorMessage: e.toString(),
+        ),
+      );
     }
   }
 
@@ -85,10 +97,12 @@ class ProgressBloc extends Bloc<ProgressEvent, ProgressState> {
       await startLesson(event.lessonId);
       // Navigate to lesson screen (handled by presentation layer)
     } catch (e) {
-      emit(state.copyWith(
-        status: ProgressStatus.error,
-        errorMessage: e.toString(),
-      ));
+      emit(
+        state.copyWith(
+          status: ProgressStatus.error,
+          errorMessage: e.toString(),
+        ),
+      );
     }
   }
 
@@ -100,10 +114,12 @@ class ProgressBloc extends Bloc<ProgressEvent, ProgressState> {
       await completeLesson(event.lessonId);
       // Show celebration (handled by presentation layer)
     } catch (e) {
-      emit(state.copyWith(
-        status: ProgressStatus.error,
-        errorMessage: e.toString(),
-      ));
+      emit(
+        state.copyWith(
+          status: ProgressStatus.error,
+          errorMessage: e.toString(),
+        ),
+      );
     }
   }
 
@@ -114,11 +130,16 @@ class ProgressBloc extends Bloc<ProgressEvent, ProgressState> {
     Emitter<ProgressState> emit,
   ) async {
     try {
-      final results = await Future.wait([getRoadmap(), getUserProgress()]);
-      emit(state.copyWith(
-        roadmap: results[0] as Roadmap,
-        userProgress: results[1] as UserProgress,
-      ));
+      final results = await Future.wait([
+        getRoadmap(courseSelection: state.courseSelection),
+        getUserProgress(),
+      ]);
+      emit(
+        state.copyWith(
+          roadmap: results[0] as Roadmap,
+          userProgress: results[1] as UserProgress,
+        ),
+      );
     } catch (_) {
       // Ignore — progress page keeps working with the previous roadmap.
     }
@@ -130,43 +151,75 @@ class ProgressBloc extends Bloc<ProgressEvent, ProgressState> {
   ) async {
     emit(state.copyWith(status: ProgressStatus.generating));
     try {
-      final results = await Future.wait([regenerateRoadmap(), getUserProgress()]);
+      final results = await Future.wait([
+        regenerateRoadmap(courseSelection: state.courseSelection),
+        getUserProgress(),
+      ]);
       final roadmap = results[0] as Roadmap;
       final firstAvailable = roadmap.chapters.firstWhere(
         (c) => c.lessons.any((l) => l.status != LessonStatus.locked),
         orElse: () => roadmap.chapters.first,
       );
-      emit(state.copyWith(
-        status: ProgressStatus.loaded,
-        roadmap: roadmap,
-        userProgress: results[1] as UserProgress,
-        expandedChapters: {firstAvailable.id},
-        claimedRewards: {},
-      ));
+      emit(
+        state.copyWith(
+          status: ProgressStatus.loaded,
+          roadmap: roadmap,
+          userProgress: results[1] as UserProgress,
+          courseSelection: state.courseSelection,
+          expandedChapters: {firstAvailable.id},
+          claimedRewards: {},
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(
-        status: ProgressStatus.error,
-        errorMessage: e.toString(),
-      ));
+      emit(
+        state.copyWith(
+          status: ProgressStatus.error,
+          errorMessage: e.toString(),
+        ),
+      );
     }
   }
 
   void _onClaimReward(ClaimReward event, Emitter<ProgressState> emit) {
-    emit(state.copyWith(
-      claimedRewards: {...state.claimedRewards, event.lessonId},
-    ));
+    emit(
+      state.copyWith(claimedRewards: {...state.claimedRewards, event.lessonId}),
+    );
   }
 
   void _onExpandChapter(ExpandChapter event, Emitter<ProgressState> emit) {
-    emit(state.copyWith(
-      expandedChapters: {...state.expandedChapters, event.chapterId},
-    ));
+    emit(
+      state.copyWith(
+        expandedChapters: {...state.expandedChapters, event.chapterId},
+      ),
+    );
   }
 
   void _onCollapseChapter(CollapseChapter event, Emitter<ProgressState> emit) {
-    emit(state.copyWith(
-      expandedChapters: {...state.expandedChapters}..remove(event.chapterId),
-    ));
+    emit(
+      state.copyWith(
+        expandedChapters: {...state.expandedChapters}..remove(event.chapterId),
+      ),
+    );
   }
 
+  void _onExpandAllChapters(
+    ExpandAllChapters event,
+    Emitter<ProgressState> emit,
+  ) {
+    final roadmap = state.roadmap;
+    if (roadmap == null) return;
+
+    emit(
+      state.copyWith(
+        expandedChapters: {for (final chapter in roadmap.chapters) chapter.id},
+      ),
+    );
+  }
+
+  void _onCollapseAllChapters(
+    CollapseAllChapters event,
+    Emitter<ProgressState> emit,
+  ) {
+    emit(state.copyWith(expandedChapters: {}));
+  }
 }

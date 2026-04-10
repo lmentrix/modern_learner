@@ -5,18 +5,19 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'package:modern_learner_production/core/di/injection.dart';
 import 'package:modern_learner_production/core/router/app_router.dart';
+import 'package:modern_learner_production/core/supabase/supabase_service.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 import 'package:modern_learner_production/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:modern_learner_production/features/lesson_detail/presentation/pages/lesson_detail_page.dart'
     as lesson_detail;
 import 'package:modern_learner_production/features/lesson_detail/presentation/pages/school_lesson_page.dart';
 import 'package:modern_learner_production/features/lesson_detail/presentation/pages/voice_lesson_page.dart';
-import 'package:modern_learner_production/features/home/data/models/lesson_data.dart';
 import 'package:modern_learner_production/features/home/presentation/widgets/lesson_card.dart';
 import 'package:modern_learner_production/features/home/presentation/widgets/progress_overview_card.dart';
 import 'package:modern_learner_production/features/home/presentation/widgets/streak_badge.dart';
 import 'package:modern_learner_production/features/home/presentation/widgets/streak_details_dialog.dart';
 import 'package:modern_learner_production/features/home/presentation/widgets/voice_lesson_card.dart';
+import 'package:modern_learner_production/features/progress/domain/entities/progress_course_selection.dart';
 import 'package:modern_learner_production/features/progress/service/progress_navigation_state.dart';
 
 class HomePage extends StatefulWidget {
@@ -29,6 +30,38 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final _scrollCtrl = ScrollController();
 
+  List<_SupabaseLesson> _fetchedLessons = [];
+  bool _isLoadingLessons = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchLessons();
+  }
+
+  Future<void> _fetchLessons() async {
+    try {
+      final response = await SupabaseService.client
+          .from('lessons')
+          .select(
+            'id, lesson_type, content_type, difficulty, title, status, content',
+          )
+          .neq('status', 'completed')
+          .order('created_at', ascending: false);
+
+      if (mounted) {
+        setState(() {
+          _fetchedLessons = (response as List)
+              .map((e) => _SupabaseLesson.fromMap(e as Map<String, dynamic>))
+              .toList();
+          _isLoadingLessons = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _isLoadingLessons = false);
+    }
+  }
+
   void _showStreakDetails() {
     showDialog(
       context: context,
@@ -40,7 +73,7 @@ class _HomePageState extends State<HomePage> {
     // Set the navigation state to scroll to current chapter
     final navState = getIt<ProgressNavigationState>();
     navState.navigateToChapter('current');
-    
+
     // Navigate to progress page
     context.go(Routes.progress);
   }
@@ -54,8 +87,10 @@ class _HomePageState extends State<HomePage> {
         builder: (context, state) {
           final user = state.user;
           final displayName = user?.name ?? 'User';
-          final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : 'U';
-          
+          final initial = displayName.isNotEmpty
+              ? displayName[0].toUpperCase()
+              : 'U';
+
           return Container(
             decoration: const BoxDecoration(
               color: AppColors.surfaceContainerHigh,
@@ -209,26 +244,8 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _openLessonDetail(_Lesson lesson) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => lesson_detail.LessonDetailPage(
-          type: lesson_detail.LessonType.continueLearning,
-          title: lesson.title,
-          subtitle: '${lesson.chapter} · ${lesson.duration}',
-          emoji: lesson.emoji,
-          duration: lesson.duration,
-          accentColor: lesson.color,
-          progress: lesson.progress,
-          totalLessons: lesson.totalLessons,
-          completedLessons: lesson.completedLessons,
-          learningObjectives: lesson.learningObjectives,
-          sections: lesson.sections,
-          lessonContent: lesson.content,
-        ),
-      ),
-    );
+  void _openSupabaseLesson(_SupabaseLesson lesson) {
+    context.go(Routes.progress, extra: lesson.toCourseSelection());
   }
 
   void _openVoiceLessonDetail(_VoiceLesson lesson) {
@@ -242,11 +259,11 @@ class _HomePageState extends State<HomePage> {
           emoji: lesson.emoji,
           duration: lesson.duration,
           accentColor: lesson.color,
-          progress: lesson.progress,
-          totalLessons: lesson.totalLessons,
-          completedLessons: lesson.completedLessons,
-          learningObjectives: lesson.learningObjectives,
-          sections: lesson.sections,
+          progress: 0.0,
+          totalLessons: 12,
+          completedLessons: 0,
+          learningObjectives: const [],
+          sections: const [],
         ),
       ),
     );
@@ -256,7 +273,8 @@ class _HomePageState extends State<HomePage> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => const VoiceLessonPage(lessonId: 'daily_greetings'),
+        builder: (context) =>
+            const VoiceLessonPage(lessonId: 'daily_greetings'),
       ),
     );
   }
@@ -265,7 +283,8 @@ class _HomePageState extends State<HomePage> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => const SchoolLessonPage(lessonId: 'photosynthesis'),
+        builder: (context) =>
+            const SchoolLessonPage(lessonId: 'photosynthesis'),
       ),
     );
   }
@@ -337,23 +356,48 @@ class _HomePageState extends State<HomePage> {
             // ── Lesson cards ───────────────────────────────────────────────
             SliverPadding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              sliver: SliverList.separated(
-                itemCount: _lessons.length,
-                separatorBuilder: (_, _) => const SizedBox(height: 12),
-                itemBuilder: (context, i) {
-                  final l = _lessons[i];
-                  return LessonCard(
-                    emoji: l.emoji,
-                    title: l.title,
-                    chapter: l.chapter,
-                    duration: l.duration,
-                    progress: l.progress,
-                    accentColor: l.color,
-                    isNew: l.isNew,
-                    onTap: () => _openLessonDetail(l),
-                  );
-                },
-              ),
+              sliver: _isLoadingLessons
+                  ? const SliverToBoxAdapter(
+                      child: Center(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(vertical: 24),
+                          child: CircularProgressIndicator(),
+                        ),
+                      ),
+                    )
+                  : _fetchedLessons.isEmpty
+                  ? SliverToBoxAdapter(
+                      child: Center(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 24),
+                          child: Text(
+                            'No lessons yet. Start creating!',
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              color: AppColors.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                      ),
+                    )
+                  : SliverList.separated(
+                      itemCount: _fetchedLessons.length,
+                      separatorBuilder: (_, _) => const SizedBox(height: 12),
+                      itemBuilder: (context, i) {
+                        final l = _fetchedLessons[i];
+                        return LessonCard(
+                          emoji: l.emoji,
+                          title: l.title,
+                          chapter: l.subtitle,
+                          duration: l.duration,
+                          progress: l.progress,
+                          accentColor: l.color,
+                          isNew: l.status == 'draft',
+                          lessonType: l.lessonType,
+                          onTap: () => _openSupabaseLesson(l),
+                        );
+                      },
+                    ),
             ),
 
             // Add padding for bottom navigation bar
@@ -369,8 +413,10 @@ class _HomePageState extends State<HomePage> {
       builder: (context, state) {
         final user = state.user;
         final displayName = user?.name ?? 'User';
-        final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : 'U';
-        
+        final initial = displayName.isNotEmpty
+            ? displayName[0].toUpperCase()
+            : 'U';
+
         return Container(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
           decoration: const BoxDecoration(
@@ -543,7 +589,125 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-// ── Static data ─────────────────────────────────────────────────────────────
+// ── Supabase lesson model ────────────────────────────────────────────────────
+
+class _SupabaseLesson {
+  const _SupabaseLesson({
+    required this.id,
+    required this.lessonType,
+    required this.contentType,
+    required this.difficulty,
+    required this.title,
+    required this.status,
+    this.content,
+  });
+
+  factory _SupabaseLesson.fromMap(Map<String, dynamic> map) => _SupabaseLesson(
+    id: map['id'] as String,
+    lessonType: map['lesson_type'] as String? ?? 'school',
+    contentType: map['content_type'] as String? ?? '',
+    difficulty: map['difficulty'] as String? ?? 'Beginner',
+    title: map['title'] as String? ?? '',
+    status: map['status'] as String? ?? 'draft',
+    content: map['content'] == null
+        ? null
+        : Map<String, dynamic>.from(map['content'] as Map),
+  );
+
+  final String id;
+  final String lessonType;
+  final String contentType;
+  final String difficulty;
+  final String title;
+  final String status;
+  final Map<String, dynamic>? content;
+
+  String get topic {
+    final value = content?['topic'] as String?;
+    if (value != null && value.trim().isNotEmpty) {
+      return value.trim();
+    }
+    return contentType;
+  }
+
+  String get subtitle => topic.isNotEmpty ? topic : contentType;
+
+  String get emoji {
+    if (lessonType == 'language') return '🎤';
+    switch (contentType.toLowerCase()) {
+      case 'science':
+        return '🔬';
+      case 'math':
+      case 'mathematics':
+        return '📐';
+      case 'history':
+        return '📜';
+      case 'biology':
+        return '🌱';
+      case 'chemistry':
+        return '⚗️';
+      case 'physics':
+        return '⚡';
+      case 'english':
+        return '✍️';
+      case 'geography':
+        return '🌍';
+      case 'music':
+        return '🎵';
+      default:
+        return '📚';
+    }
+  }
+
+  Color get color =>
+      lessonType == 'language' ? AppColors.primary : AppColors.secondary;
+
+  ProgressCourseSelection toCourseSelection() {
+    final roadmapJson = content?['roadmap'] is Map
+        ? Map<String, dynamic>.from(content!['roadmap'] as Map)
+        : null;
+
+    return ProgressCourseSelection(
+      title: title,
+      topic: topic,
+      roadmapLanguage:
+          (content?['roadmapLanguage'] as String?)?.trim().isNotEmpty == true
+          ? (content!['roadmapLanguage'] as String).trim()
+          : contentType,
+      level: ((content?['level'] as String?) ?? difficulty.toLowerCase())
+          .toLowerCase(),
+      nativeLanguage:
+          (content?['nativeLanguage'] as String?)?.trim().isNotEmpty == true
+          ? (content!['nativeLanguage'] as String).trim()
+          : 'English',
+      roadmapJson: roadmapJson,
+    );
+  }
+
+  String get duration {
+    switch (difficulty) {
+      case 'Advanced':
+        return '30 min';
+      case 'Intermediate':
+        return '20 min';
+      default:
+        return '10 min';
+    }
+  }
+
+  double get progress {
+    switch (status) {
+      case 'active':
+        return 0.3;
+      case 'completed':
+        return 1.0;
+      default:
+        return 0.0;
+    }
+  }
+}
+
+// ── Static voice lesson data ─────────────────────────────────────────────────
 
 class _VoiceLesson {
   const _VoiceLesson({
@@ -552,50 +716,9 @@ class _VoiceLesson {
     required this.duration,
     required this.color,
     required this.emoji,
-    this.progress = 0.0,
-    this.totalLessons = 12,
-    this.completedLessons = 0,
-    this.learningObjectives = const [],
-    this.sections = const [],
   });
   final String title, subtitle, duration, emoji;
   final Color color;
-  final double progress;
-  final int totalLessons;
-  final int completedLessons;
-  final List<String> learningObjectives;
-  final List<lesson_detail.LessonSection> sections;
-}
-
-class _Lesson {
-  const _Lesson({
-    required this.emoji,
-    required this.title,
-    required this.chapter,
-    required this.duration,
-    required this.progress,
-    required this.color,
-    this.isNew = false,
-    this.totalLessons = 12,
-    this.completedLessons = 0,
-    this.learningObjectives = const [
-      'Master key concepts and fundamentals',
-      'Apply knowledge through practical exercises',
-      'Build confidence with hands-on practice',
-      'Track progress and celebrate achievements',
-    ],
-    this.sections = const [],
-    this.content,
-  });
-  final String emoji, title, chapter, duration;
-  final double progress;
-  final Color color;
-  final bool isNew;
-  final int totalLessons;
-  final int completedLessons;
-  final List<String> learningObjectives;
-  final List<lesson_detail.LessonSection> sections;
-  final LessonContent? content;
 }
 
 const _voiceLessons = [
@@ -622,196 +745,9 @@ const _voiceLessons = [
   ),
 ];
 
-const _lessons = [
-  _Lesson(
-    emoji: '📚',
-    title: 'Grammar Fundamentals',
-    chapter: 'Chapter 4',
-    duration: '12 min',
-    progress: 0.78,
-    color: AppColors.primary,
-    completedLessons: 9,
-  ),
-  _Lesson(
-    emoji: '🍽️',
-    title: 'At the Restaurant',
-    chapter: 'Vocabulary',
-    duration: '15 min',
-    progress: 0.45,
-    color: AppColors.secondary,
-    isNew: true,
-    totalLessons: 10,
-    completedLessons: 4,
-    learningObjectives: [
-      'Order food confidently in Spanish',
-      'Master essential restaurant vocabulary',
-      'Use polite phrases for dining out',
-      'Understand menu items and drinks',
-    ],
-    content: LessonContent(
-      lessonType: 'vocabulary',
-      introduction:
-          "Welcome to 'At the Restaurant'! Learning how to order food is one of the most practical and rewarding skills for any Spanish traveler. In this lesson, we will cover the essential food items, drinks, and useful phrases you need to dine out with confidence.",
-      vocabularyItems: [
-        VocabularyItem(
-          word: 'la carta',
-          pronunciation: 'la KAR-ta',
-          translation: 'the menu',
-          partOfSpeech: 'noun',
-          exampleSentence: 'Por favor, ¿me trae la carta?',
-          exampleTranslation: 'Please, could you bring me the menu?',
-          memoryTip: "Think of a 'cart' of food options.",
-        ),
-        VocabularyItem(
-          word: 'el agua',
-          pronunciation: 'el AH-gwa',
-          translation: 'the water',
-          partOfSpeech: 'noun',
-          exampleSentence: 'Quiero una botella de agua, por favor.',
-          exampleTranslation: 'I want a bottle of water, please.',
-          memoryTip: "Sounds like 'aqua' or aquarium.",
-        ),
-        VocabularyItem(
-          word: 'quisiera',
-          pronunciation: 'kee-SYEH-ra',
-          translation: 'I would like',
-          partOfSpeech: 'verb',
-          exampleSentence: 'Quisiera el pescado, por favor.',
-          exampleTranslation: 'I would like the fish, please.',
-          memoryTip: "Sounds like a polite 'kiss' of a request.",
-        ),
-        VocabularyItem(
-          word: 'la cuenta',
-          pronunciation: 'la KWEN-ta',
-          translation: 'the bill',
-          partOfSpeech: 'noun',
-          exampleSentence: 'La cuenta, por favor.',
-          exampleTranslation: 'The bill, please.',
-          memoryTip: "When you see the bill, you 'count' your money.",
-        ),
-        VocabularyItem(
-          word: 'la ensalada',
-          pronunciation: 'la en-sa-LA-da',
-          translation: 'the salad',
-          partOfSpeech: 'noun',
-          exampleSentence: 'Voy a pedir una ensalada mixta.',
-          exampleTranslation: 'I am going to order a mixed salad.',
-          memoryTip: 'Looks just like the English word salad.',
-        ),
-        VocabularyItem(
-          word: 'el postre',
-          pronunciation: 'el POS-treh',
-          translation: 'the dessert',
-          partOfSpeech: 'noun',
-          exampleSentence: 'No quiero postre hoy.',
-          exampleTranslation: 'I do not want dessert today.',
-          memoryTip: 'Posted after the meal.',
-        ),
-        VocabularyItem(
-          word: 'el pollo',
-          pronunciation: 'el PO-yo',
-          translation: 'the chicken',
-          partOfSpeech: 'noun',
-          exampleSentence: 'El pollo está delicioso.',
-          exampleTranslation: 'The chicken is delicious.',
-          memoryTip: "Think of a chicken 'poking' around.",
-        ),
-        VocabularyItem(
-          word: 'la mesa',
-          pronunciation: 'la ME-sa',
-          translation: 'the table',
-          partOfSpeech: 'noun',
-          exampleSentence: 'Una mesa para dos, por favor.',
-          exampleTranslation: 'A table for two, please.',
-          memoryTip: "Sounds like 'mess'-a (wipe the mess off the table).",
-        ),
-        VocabularyItem(
-          word: 'pedir',
-          pronunciation: 'pe-DEER',
-          translation: 'to order/to ask for',
-          partOfSpeech: 'verb',
-          exampleSentence: 'Es hora de pedir la comida.',
-          exampleTranslation: 'It is time to order the food.',
-          memoryTip: "You 'ped' (petition) the waiter for food.",
-        ),
-        VocabularyItem(
-          word: 'la bebida',
-          pronunciation: 'la be-BEE-da',
-          translation: 'the drink',
-          partOfSpeech: 'noun',
-          exampleSentence: '¿Qué bebida desea?',
-          exampleTranslation: 'What drink would you like?',
-          memoryTip: "Think of 'be' (to be) drinking.",
-        ),
-      ],
-      practiceExercises: [
-        PracticeExercise(
-          type: 'match',
-          instruction: 'Match the Spanish word to its correct English meaning.',
-          items: [
-            ExerciseItem(question: 'La cuenta', answer: 'The bill'),
-            ExerciseItem(question: 'La mesa', answer: 'The table'),
-            ExerciseItem(question: 'El postre', answer: 'The dessert'),
-          ],
-        ),
-        PracticeExercise(
-          type: 'fill_blank',
-          instruction: 'Fill in the blank with the correct word.',
-          items: [
-            ExerciseItem(
-              question: 'Quisiera _______ el agua, por favor.',
-              answer: 'pedir',
-            ),
-            ExerciseItem(
-              question: 'Por favor, ¿me trae la _______?',
-              answer: 'carta',
-            ),
-          ],
-        ),
-        PracticeExercise(
-          type: 'translate',
-          instruction: 'Translate the phrases into Spanish.',
-          items: [
-            ExerciseItem(
-              question: 'I would like the chicken.',
-              answer: 'Quisiera el pollo.',
-            ),
-            ExerciseItem(
-              question: 'The bill, please.',
-              answer: 'La cuenta, por favor.',
-            ),
-          ],
-        ),
-      ],
-      summary:
-          "In this lesson, you mastered essential vocabulary for ordering food: 'la carta' (menu), 'pedir' (to order), 'la mesa' (table), 'la cuenta' (bill), and basic food items like 'pollo' and 'ensalada'. Using 'quisiera' is a polite way to place your order.",
-    ),
-  ),
-  _Lesson(
-    emoji: '✍️',
-    title: 'Writing & Composition',
-    chapter: 'Module 6',
-    duration: '20 min',
-    progress: 0.30,
-    color: AppColors.tertiary,
-    completedLessons: 3,
-  ),
-  _Lesson(
-    emoji: '🌍',
-    title: 'Cultural Context',
-    chapter: 'Unit 1',
-    duration: '10 min',
-    progress: 0.10,
-    color: Color(0xFFFF9500),
-    isNew: true,
-    completedLessons: 1,
-  ),
-];
-
 // ── Quick Stat Widget ───────────────────────────────────────────────────────
 
 class _QuickStat extends StatelessWidget {
-
   const _QuickStat({
     required this.emoji,
     required this.label,
@@ -865,7 +801,6 @@ class _QuickStat extends StatelessWidget {
 // ── Quick Action Row ────────────────────────────────────────────────────────
 
 class _QuickActionRow extends StatelessWidget {
-
   const _QuickActionRow({
     required this.icon,
     required this.label,
@@ -926,7 +861,6 @@ class _QuickActionRow extends StatelessWidget {
 // ── Lesson Quick Access Card ───────────────────────────────────────────────
 
 class _LessonQuickAccessCard extends StatelessWidget {
-
   const _LessonQuickAccessCard({
     required this.title,
     required this.subtitle,
@@ -956,10 +890,7 @@ class _LessonQuickAccessCard extends StatelessWidget {
             ],
           ),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: color.withValues(alpha: 0.3),
-            width: 1.5,
-          ),
+          border: Border.all(color: color.withValues(alpha: 0.3), width: 1.5),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

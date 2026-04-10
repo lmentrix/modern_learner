@@ -3,6 +3,38 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 
+class _TypeBadge extends StatelessWidget {
+  const _TypeBadge({required this.lessonType});
+  final String lessonType;
+
+  @override
+  Widget build(BuildContext context) {
+    final isLanguage = lessonType == 'language';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: BoxDecoration(
+        color: (isLanguage ? AppColors.primary : AppColors.secondary)
+            .withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(100),
+        border: Border.all(
+          color: (isLanguage ? AppColors.primary : AppColors.secondary)
+              .withValues(alpha: 0.4),
+          width: 1,
+        ),
+      ),
+      child: Text(
+        isLanguage ? '🎤 Voice' : '📚 School',
+        style: GoogleFonts.inter(
+          fontSize: 9,
+          fontWeight: FontWeight.w700,
+          color: isLanguage ? AppColors.primary : AppColors.secondary,
+          letterSpacing: 0.3,
+        ),
+      ),
+    );
+  }
+}
+
 class LessonCard extends StatefulWidget {
   const LessonCard({
     super.key,
@@ -13,6 +45,7 @@ class LessonCard extends StatefulWidget {
     required this.progress,
     required this.accentColor,
     this.isNew = false,
+    this.lessonType,
     this.onTap,
   });
 
@@ -23,6 +56,9 @@ class LessonCard extends StatefulWidget {
   final double progress;
   final Color accentColor;
   final bool isNew;
+
+  /// 'language' or 'school' — shows a type badge when set
+  final String? lessonType;
   final VoidCallback? onTap;
 
   @override
@@ -88,8 +124,10 @@ class _LessonCardState extends State<LessonCard>
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Center(
-                    child: Text(widget.emoji,
-                        style: const TextStyle(fontSize: 26)),
+                    child: Text(
+                      widget.emoji,
+                      style: const TextStyle(fontSize: 26),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -109,10 +147,16 @@ class _LessonCardState extends State<LessonCard>
                               ),
                             ),
                           ),
+                          if (widget.lessonType != null) ...[
+                            _TypeBadge(lessonType: widget.lessonType!),
+                            const SizedBox(width: 6),
+                          ],
                           if (widget.isNew)
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 3),
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
                               decoration: BoxDecoration(
                                 gradient: AppColors.tertiaryGradient,
                                 borderRadius: BorderRadius.circular(100),
@@ -147,8 +191,7 @@ class _LessonCardState extends State<LessonCard>
                               child: LinearProgressIndicator(
                                 value: widget.progress * _barAnim.value,
                                 minHeight: 5,
-                                backgroundColor:
-                                    AppColors.surfaceContainerHigh,
+                                backgroundColor: AppColors.surfaceContainerHigh,
                                 valueColor: AlwaysStoppedAnimation<Color>(
                                   widget.accentColor,
                                 ),

@@ -51,18 +51,12 @@ Future<void> configureDependencies() async {
   getIt.init();
 
   // ── Core ──────────────────────────────────────────────────────────────────
-  getIt.registerLazySingleton<SupabaseClient>(
-    () => Supabase.instance.client,
-  );
+  getIt.registerLazySingleton<SupabaseClient>(() => Supabase.instance.client);
   getIt.registerLazySingleton<FlutterSecureStorage>(
     () => const FlutterSecureStorage(),
   );
-  getIt.registerLazySingleton<InternetConnection>(
-    () => InternetConnection(),
-  );
-  getIt.registerLazySingleton<NetworkInfo>(
-    () => NetworkInfoImpl(getIt()),
-  );
+  getIt.registerLazySingleton<InternetConnection>(() => InternetConnection());
+  getIt.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl(getIt()));
 
   // ── Auth ──────────────────────────────────────────────────────────────────
   getIt.registerLazySingleton<AuthRemoteDataSource>(
@@ -98,12 +92,16 @@ Future<void> configureDependencies() async {
   getIt.registerSingletonAsync<SharedPreferences>(
     () => SharedPreferences.getInstance(),
   );
-  getIt.registerLazySingleton<Dio>(() => Dio(BaseOptions(
+  getIt.registerLazySingleton<Dio>(
+    () => Dio(
+      BaseOptions(
         baseUrl: ApiConstants.baseUrl,
         connectTimeout: ApiConstants.connectTimeout,
         receiveTimeout: ApiConstants.receiveTimeout,
         sendTimeout: ApiConstants.sendTimeout,
-      )));
+      ),
+    ),
+  );
   getIt.registerSingletonAsync<ChapterContentService>(
     () async => ChapterContentService(
       dio: getIt<Dio>(),
@@ -132,13 +130,20 @@ Future<void> configureDependencies() async {
       chapterContentService: await getIt.getAsync<ChapterContentService>(),
       lessonContentService: await getIt.getAsync<LessonContentService>(),
     ),
-    dependsOn: [RoadmapGenerationService, ChapterContentService, LessonContentService],
+    dependsOn: [
+      RoadmapGenerationService,
+      ChapterContentService,
+      LessonContentService,
+    ],
   );
   getIt.registerLazySingleton(() => ProgressNavigationState());
 
   // ── New Lesson ────────────────────────────────────────────────────────────
   getIt.registerLazySingleton<LessonRepository>(
-    () => LessonRepositoryImpl(getIt<SupabaseClient>()),
+    () => LessonRepositoryImpl(
+      getIt<SupabaseClient>(),
+      getIt<RoadmapGenerationService>(),
+    ),
   );
   getIt.registerLazySingleton(() => CreateLesson(getIt<LessonRepository>()));
   getIt.registerLazySingleton(() => GetLessons(getIt<LessonRepository>()));

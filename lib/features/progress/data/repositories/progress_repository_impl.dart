@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:modern_learner_production/features/progress/data/models/roadmap_model.dart';
+import 'package:modern_learner_production/features/progress/domain/entities/progress_course_selection.dart';
 import 'package:modern_learner_production/features/progress/domain/entities/roadmap.dart';
 import 'package:modern_learner_production/features/progress/domain/entities/user_progress.dart';
 import 'package:modern_learner_production/features/progress/domain/repositories/progress_repository.dart';
@@ -37,94 +39,48 @@ class ProgressRepositoryImpl implements ProgressRepository {
   );
 
   @override
-  Future<Roadmap> getRoadmap() async {
-    final userId = supabase.auth.currentUser?.id;
-
-    String topic = 'general programming';
-    String language = 'English';
-    String level = 'beginner';
-    String nativeLanguage = 'English';
-
-    if (userId != null) {
-      try {
-        final row = await supabase
-            .from('profiles')
-            .select('topic, target_language, proficiency_level, native_language')
-            .eq('id', userId)
-            .single();
-        topic = row['topic'] as String? ?? topic;
-        language = row['target_language'] as String? ?? language;
-        level = row['proficiency_level'] as String? ?? level;
-        nativeLanguage = row['native_language'] as String? ?? nativeLanguage;
-      } catch (_) {}
-    }
-
-    final rawRoadmap = await roadmapService.generateRoadmap(
-      topic: topic,
-      language: language,
-      level: level,
-      nativeLanguage: nativeLanguage,
+  Future<Roadmap> getRoadmap({ProgressCourseSelection? courseSelection}) async {
+    final request = await _resolveRoadmapRequest(
+      courseSelection: courseSelection,
     );
-
+    final rawRoadmap = await _loadRoadmap(request);
+    _activateRoadmap(rawRoadmap.id);
     return _applyUserProgress(rawRoadmap, _userProgress);
   }
 
   @override
-  Future<Roadmap> regenerateRoadmap() async {
-    final userId = supabase.auth.currentUser?.id;
+  Future<Roadmap> regenerateRoadmap({
+    ProgressCourseSelection? courseSelection,
+  }) async {
+    final request = await _resolveRoadmapRequest(
+      courseSelection: courseSelection,
+    );
 
-    String topic = 'general programming';
-    String language = 'English';
-    String level = 'beginner';
-    String nativeLanguage = 'English';
-
-    if (userId != null) {
-      try {
-        final row = await supabase
-            .from('profiles')
-            .select('topic, target_language, proficiency_level, native_language')
-            .eq('id', userId)
-            .single();
-        topic = row['topic'] as String? ?? topic;
-        language = row['target_language'] as String? ?? language;
-        level = row['proficiency_level'] as String? ?? level;
-        nativeLanguage = row['native_language'] as String? ?? nativeLanguage;
-      } catch (_) {}
-    }
-
-    // Reset progress BEFORE any awaits so concurrent getUserProgress() calls
-    // return the cleared state, not the old one.
-    _userProgress = const UserProgress(
-      totalXp: 0,
-      level: 1,
-      gems: 0,
-      streak: 0,
-      completedLessons: {},
-      lessonProgress: {},
-      completedChapters: {},
-      unlockedAchievements: [],
-      currentRoadmapId: '',
+    _userProgress = _clearProgressForRoadmap(
+      _userProgress,
+      _userProgress.currentRoadmapId,
     );
     _progressController.add(_userProgress);
 
     await Future.wait([
       roadmapService.clearCache(
-        topic: topic,
-        language: language,
-        level: level,
-        nativeLanguage: nativeLanguage,
+        topic: request.topic,
+        language: request.language,
+        level: request.level,
+        nativeLanguage: request.nativeLanguage,
       ),
       chapterContentService.clearAllCaches(),
       lessonContentService.clearAllCaches(),
     ]);
 
     final rawRoadmap = await roadmapService.generateRoadmap(
-      topic: topic,
-      language: language,
-      level: level,
-      nativeLanguage: nativeLanguage,
+      topic: request.topic,
+      language: request.language,
+      level: request.level,
+      nativeLanguage: request.nativeLanguage,
     );
 
+    _activateRoadmap(rawRoadmap.id);
     return _applyUserProgress(rawRoadmap, _userProgress);
   }
 
@@ -136,37 +92,35 @@ class ProgressRepositoryImpl implements ProgressRepository {
 
   @override
   Future<void> startLesson(String lessonId) async {
+    final progressKey = _progressKeyForCurrentRoadmap(lessonId);
     _userProgress = _userProgress.copyWith(
-      lessonProgress: {
-        ..._userProgress.lessonProgress,
-        lessonId: 0.1,
-      },
+      lessonProgress: {..._userProgress.lessonProgress, progressKey: 0.1},
     );
     _progressController.add(_userProgress);
   }
 
   @override
   Future<void> completeLesson(String lessonId) async {
+    final progressKey = _progressKeyForCurrentRoadmap(lessonId);
     _userProgress = _userProgress.copyWith(
       totalXp: _userProgress.totalXp + 100,
       level: (_userProgress.totalXp + 100) ~/ 500 + 1,
       gems: _userProgress.gems + 7,
       completedLessons: {
         ..._userProgress.completedLessons,
-        lessonId: DateTime.now(),
+        progressKey: DateTime.now(),
       },
-      lessonProgress: Map.from(_userProgress.lessonProgress)..remove(lessonId),
+      lessonProgress: Map.from(_userProgress.lessonProgress)
+        ..remove(progressKey),
     );
     _progressController.add(_userProgress);
   }
 
   @override
   Future<void> updateLessonProgress(String lessonId, double progress) async {
+    final progressKey = _progressKeyForCurrentRoadmap(lessonId);
     _userProgress = _userProgress.copyWith(
-      lessonProgress: {
-        ..._userProgress.lessonProgress,
-        lessonId: progress,
-      },
+      lessonProgress: {..._userProgress.lessonProgress, progressKey: progress},
     );
     _progressController.add(_userProgress);
   }
@@ -174,28 +128,149 @@ class ProgressRepositoryImpl implements ProgressRepository {
   @override
   Stream<UserProgress> getProgressStream() => _progressController.stream;
 
-  // ── Helper: overlay user progress onto AI-generated roadmap ───────────────
+  Future<_RoadmapRequest> _resolveRoadmapRequest({
+    ProgressCourseSelection? courseSelection,
+  }) async {
+    if (courseSelection != null) {
+      return _RoadmapRequest(
+        topic: courseSelection.topic,
+        language: courseSelection.roadmapLanguage,
+        level: courseSelection.level,
+        nativeLanguage: courseSelection.nativeLanguage,
+        roadmapJson: courseSelection.roadmapJson,
+      );
+    }
+
+    final userId = supabase.auth.currentUser?.id;
+
+    String topic = 'general programming';
+    String language = 'English';
+    String level = 'beginner';
+    String nativeLanguage = 'English';
+
+    if (userId != null) {
+      try {
+        final row = await supabase
+            .from('profiles')
+            .select(
+              'topic, target_language, proficiency_level, native_language',
+            )
+            .eq('id', userId)
+            .single();
+        topic = row['topic'] as String? ?? topic;
+        language = row['target_language'] as String? ?? language;
+        level = row['proficiency_level'] as String? ?? level;
+        nativeLanguage = row['native_language'] as String? ?? nativeLanguage;
+      } catch (_) {}
+    }
+
+    return _RoadmapRequest(
+      topic: topic,
+      language: language,
+      level: level,
+      nativeLanguage: nativeLanguage,
+    );
+  }
+
+  Future<Roadmap> _loadRoadmap(_RoadmapRequest request) async {
+    final storedRoadmapJson = request.roadmapJson;
+    if (storedRoadmapJson != null) {
+      await roadmapService.cacheRoadmapJson(
+        storedRoadmapJson,
+        topic: request.topic,
+        language: request.language,
+        level: request.level,
+        nativeLanguage: request.nativeLanguage,
+      );
+      return RoadmapModel.fromJson(storedRoadmapJson).toEntity();
+    }
+
+    return roadmapService.generateRoadmap(
+      topic: request.topic,
+      language: request.language,
+      level: request.level,
+      nativeLanguage: request.nativeLanguage,
+    );
+  }
+
+  void _activateRoadmap(String roadmapId) {
+    _userProgress = _userProgress.copyWith(currentRoadmapId: roadmapId);
+    _progressController.add(_userProgress);
+  }
+
+  String _progressKey(String roadmapId, String lessonId) =>
+      '$roadmapId::$lessonId';
+
+  String _progressKeyForCurrentRoadmap(String lessonId) {
+    final roadmapId = _userProgress.currentRoadmapId;
+    if (roadmapId == null || roadmapId.isEmpty) return lessonId;
+    return _progressKey(roadmapId, lessonId);
+  }
+
+  UserProgress _clearProgressForRoadmap(
+    UserProgress progress,
+    String? roadmapId,
+  ) {
+    if (roadmapId == null || roadmapId.isEmpty) return progress;
+
+    final prefix = '$roadmapId::';
+
+    Map<String, T> withoutRoadmapEntries<T>(Map<String, T> source) => {
+      for (final entry in source.entries)
+        if (!entry.key.startsWith(prefix)) entry.key: entry.value,
+    };
+
+    return progress.copyWith(
+      completedLessons: withoutRoadmapEntries(progress.completedLessons),
+      lessonProgress: withoutRoadmapEntries(progress.lessonProgress),
+      currentRoadmapId: roadmapId,
+    );
+  }
+
+  bool _hasCompletedLesson(
+    UserProgress progress,
+    String roadmapId,
+    String lessonId,
+  ) {
+    return progress.completedLessons.containsKey(
+          _progressKey(roadmapId, lessonId),
+        ) ||
+        progress.completedLessons.containsKey(lessonId);
+  }
+
+  bool _hasLessonInProgress(
+    UserProgress progress,
+    String roadmapId,
+    String lessonId,
+  ) {
+    return progress.lessonProgress.containsKey(
+          _progressKey(roadmapId, lessonId),
+        ) ||
+        progress.lessonProgress.containsKey(lessonId);
+  }
 
   Roadmap _applyUserProgress(Roadmap roadmap, UserProgress progress) {
     final completedChapterIds = <String>{};
 
     final updatedChapters = roadmap.chapters.map((chapter) {
-      final prereqsMet = chapter.prerequisites.isEmpty ||
+      final prereqsMet =
+          chapter.prerequisites.isEmpty ||
           chapter.prerequisites.every(completedChapterIds.contains);
 
       List<Lesson> updatedLessons;
 
       if (!prereqsMet) {
-        updatedLessons =
-            chapter.lessons.map((l) => l.copyWith(status: LessonStatus.locked)).toList();
+        updatedLessons = chapter.lessons
+            .map((l) => l.copyWith(status: LessonStatus.locked))
+            .toList();
       } else {
         bool prevCompleted = true;
         updatedLessons = chapter.lessons.map((lesson) {
           LessonStatus status;
-          if (progress.completedLessons.containsKey(lesson.id)) {
+          if (_hasCompletedLesson(progress, roadmap.id, lesson.id)) {
             status = LessonStatus.completed;
             prevCompleted = true;
-          } else if (progress.lessonProgress.containsKey(lesson.id)) {
+          } else if (_hasLessonInProgress(progress, roadmap.id, lesson.id)) {
             status = LessonStatus.inProgress;
             prevCompleted = false;
           } else if (prevCompleted) {
@@ -238,4 +313,20 @@ class ProgressRepositoryImpl implements ProgressRepository {
       chapters: updatedChapters,
     );
   }
+}
+
+class _RoadmapRequest {
+  const _RoadmapRequest({
+    required this.topic,
+    required this.language,
+    required this.level,
+    required this.nativeLanguage,
+    this.roadmapJson,
+  });
+
+  final String topic;
+  final String language;
+  final String level;
+  final String nativeLanguage;
+  final Map<String, dynamic>? roadmapJson;
 }
