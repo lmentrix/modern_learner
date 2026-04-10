@@ -2,7 +2,6 @@ import 'package:modern_learner_production/features/progress/domain/entities/road
 import 'package:modern_learner_production/features/progress/data/models/lesson_model.dart';
 
 class RoadmapModel {
-
   RoadmapModel({
     required this.id,
     required this.title,
@@ -15,14 +14,20 @@ class RoadmapModel {
   });
 
   factory RoadmapModel.fromJson(Map<String, dynamic> json) {
+    int asInt(Object? value, {required String field}) {
+      if (value is int) return value;
+      if (value is num) return value.round();
+      throw FormatException('Invalid "$field" value: $value');
+    }
+
     return RoadmapModel(
       id: json['id'] as String,
       title: json['title'] as String,
       description: json['description'] as String,
       targetLanguage: json['targetLanguage'] as String,
       level: json['level'] as String,
-      totalXp: json['totalXp'] as int,
-      estimatedHours: json['estimatedHours'] as int,
+      totalXp: asInt(json['totalXp'], field: 'totalXp'),
+      estimatedHours: asInt(json['estimatedHours'], field: 'estimatedHours'),
       chapters: (json['chapters'] as List<dynamic>)
           .map((c) => ChapterModel.fromJson(c as Map<String, dynamic>))
           .toList(),
@@ -72,13 +77,14 @@ class RoadmapModel {
       level: roadmap.level,
       totalXp: roadmap.totalXp,
       estimatedHours: roadmap.estimatedHours,
-      chapters: roadmap.chapters.map((c) => ChapterModel.fromEntity(c)).toList(),
+      chapters: roadmap.chapters
+          .map((c) => ChapterModel.fromEntity(c))
+          .toList(),
     );
   }
 }
 
 class ChapterModel {
-
   ChapterModel({
     required this.id,
     required this.chapterNumber,
@@ -103,9 +109,11 @@ class ChapterModel {
       type: json['type'] as String,
       xpReward: json['xpReward'] as int,
       gemReward: json['gemReward'] as int,
-      prerequisites: (json['prerequisites'] as List<dynamic>?)?.cast<String>() ?? [],
+      prerequisites:
+          (json['prerequisites'] as List<dynamic>?)?.cast<String>() ?? [],
       skills: (json['skills'] as List<dynamic>?)?.cast<String>() ?? [],
-      lessons: (json['lessons'] as List<dynamic>?)
+      lessons:
+          (json['lessons'] as List<dynamic>?)
               ?.map((l) => LessonModel.fromJson(l as Map<String, dynamic>))
               .toList() ??
           [],
