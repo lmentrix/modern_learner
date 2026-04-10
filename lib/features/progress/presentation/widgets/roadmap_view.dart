@@ -16,6 +16,8 @@ class RoadmapView extends StatelessWidget {
     required this.onLessonTap,
     required this.onChapterTap,
     required this.onChapterToggle,
+    required this.onExpandAll,
+    required this.onCollapseAll,
     required this.onRegenerate,
     required this.onRefresh,
   });
@@ -28,13 +30,13 @@ class RoadmapView extends StatelessWidget {
   final Function(String lessonId) onLessonTap;
   final Function(String chapterId) onChapterTap;
   final Function(String chapterId, bool isExpanded) onChapterToggle;
+  final VoidCallback onExpandAll;
+  final VoidCallback onCollapseAll;
   final VoidCallback onRegenerate;
   final Future<void> Function() onRefresh;
 
   int get _completedChapters => roadmap.chapters
-      .where((c) => c.lessons.every(
-            (l) => l.status == LessonStatus.completed,
-          ))
+      .where((c) => c.lessons.every((l) => l.status == LessonStatus.completed))
       .length;
 
   int get _completedLessons => roadmap.chapters
@@ -45,6 +47,12 @@ class RoadmapView extends StatelessWidget {
   int get _totalLessons =>
       roadmap.chapters.fold(0, (sum, c) => sum + c.lessons.length);
 
+  bool get _allChaptersExpanded =>
+      roadmap.chapters.isNotEmpty &&
+      roadmap.chapters.every(
+        (chapter) => expandedChapters.contains(chapter.id),
+      );
+
   @override
   Widget build(BuildContext context) {
     return RefreshIndicator(
@@ -53,66 +61,101 @@ class RoadmapView extends StatelessWidget {
       backgroundColor: AppColors.surfaceContainerHigh,
       displacement: 60,
       child: CustomScrollView(
-      controller: scrollController,
-      physics: const AlwaysScrollableScrollPhysics(
-        parent: BouncingScrollPhysics(),
-      ),
-      slivers: [
-        // ── Stats bar ──────────────────────────────────────────────────────
-        SliverToBoxAdapter(
-          child: _StatsBar(progress: userProgress),
+        controller: scrollController,
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: BouncingScrollPhysics(),
         ),
+        slivers: [
+          // ── Stats bar ──────────────────────────────────────────────────────
+          SliverToBoxAdapter(child: _StatsBar(progress: userProgress)),
 
-        // ── Roadmap hero header ────────────────────────────────────────────
-        SliverToBoxAdapter(
-          child: _RoadmapHeader(
-            roadmap: roadmap,
-            completedChapters: _completedChapters,
-            completedLessons: _completedLessons,
-            totalLessons: _totalLessons,
-            onRegenerate: onRegenerate,
+          // ── Roadmap hero header ────────────────────────────────────────────
+          SliverToBoxAdapter(
+            child: _RoadmapHeader(
+              roadmap: roadmap,
+              completedChapters: _completedChapters,
+              completedLessons: _completedLessons,
+              totalLessons: _totalLessons,
+              onRegenerate: onRegenerate,
+            ),
           ),
-        ),
 
-        // ── Chapter label ──────────────────────────────────────────────────
-        SliverPadding(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 4),
-          sliver: SliverToBoxAdapter(
-            child: Text(
-              'LEARNING PATH · ${roadmap.chapters.length} CHAPTERS',
-              style: GoogleFonts.inter(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: AppColors.onSurfaceVariant,
-                letterSpacing: 1.4,
+          // ── Chapter label ──────────────────────────────────────────────────
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 4),
+            sliver: SliverToBoxAdapter(
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'LEARNING PATH · ${roadmap.chapters.length} CHAPTERS',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.onSurfaceVariant,
+                        letterSpacing: 1.4,
+                      ),
+                    ),
+                  ),
+                  TextButton.icon(
+                    onPressed: _allChaptersExpanded
+                        ? onCollapseAll
+                        : onExpandAll,
+                    icon: Icon(
+                      _allChaptersExpanded
+                          ? Icons.unfold_less_rounded
+                          : Icons.unfold_more_rounded,
+                      size: 16,
+                      color: AppColors.primary,
+                    ),
+                    label: Text(
+                      _allChaptersExpanded
+                          ? 'Collapse all'
+                          : 'Show all lessons',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-        ),
 
-        // ── Chapter list ───────────────────────────────────────────────────
-        SliverList.builder(
-          itemCount: roadmap.chapters.length,
-          itemBuilder: (context, index) {
-            final chapter = roadmap.chapters[index];
-            final isExpanded = expandedChapters.contains(chapter.id);
-            final isLast = index == roadmap.chapters.length - 1;
+          // ── Chapter list ───────────────────────────────────────────────────
+          SliverList.builder(
+            itemCount: roadmap.chapters.length,
+            itemBuilder: (context, index) {
+              final chapter = roadmap.chapters[index];
+              final isExpanded = expandedChapters.contains(chapter.id);
+              final isLast = index == roadmap.chapters.length - 1;
 
-            return _ChapterSection(
-              chapter: chapter,
-              userProgress: userProgress,
-              isExpanded: isExpanded,
-              isLast: isLast,
-              onHeaderTap: () => onChapterTap(chapter.id),
-              onExpandToggle: (expanded) => onChapterToggle(chapter.id, expanded),
-              onLessonTap: onLessonTap,
-            );
-          },
-        ),
+              return _ChapterSection(
+                chapter: chapter,
+                userProgress: userProgress,
+                isExpanded: isExpanded,
+                isLast: isLast,
+                onHeaderTap: () => onChapterTap(chapter.id),
+                onExpandToggle: (expanded) =>
+                    onChapterToggle(chapter.id, expanded),
+                onLessonTap: onLessonTap,
+              );
+            },
+          ),
 
-        const SliverToBoxAdapter(child: SizedBox(height: 100)),
-      ],
-    ),
+          const SliverToBoxAdapter(child: SizedBox(height: 100)),
+        ],
+      ),
     );
   }
 }
@@ -154,7 +197,10 @@ class _StatsBar extends StatelessWidget {
               ),
               const Spacer(),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   gradient: AppColors.primaryGradient,
                   borderRadius: BorderRadius.circular(20),
@@ -162,7 +208,11 @@ class _StatsBar extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.star_rounded, color: Colors.white, size: 16),
+                    const Icon(
+                      Icons.star_rounded,
+                      color: Colors.white,
+                      size: 16,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       'LVL ${progress.level}',
@@ -205,7 +255,9 @@ class _StatsBar extends StatelessWidget {
               value: xpFraction,
               minHeight: 5,
               backgroundColor: AppColors.surfaceContainerHighest,
-              valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                AppColors.primary,
+              ),
             ),
           ),
         ],
@@ -300,9 +352,7 @@ class _RoadmapHeader extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: [Color(0xFF1A1F3A), Color(0xFF0E1020)],
         ),
-        border: Border.all(
-          color: AppColors.primary.withValues(alpha: 0.25),
-        ),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
         boxShadow: [
           BoxShadow(
             color: AppColors.primary.withValues(alpha: 0.12),
@@ -320,7 +370,10 @@ class _RoadmapHeader extends StatelessWidget {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.primary.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(6),
@@ -349,7 +402,10 @@ class _RoadmapHeader extends StatelessWidget {
                 GestureDetector(
                   onTap: onRegenerate,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.07),
                       borderRadius: BorderRadius.circular(8),
@@ -465,7 +521,9 @@ class _RoadmapHeader extends StatelessWidget {
                 value: _overallProgress,
                 minHeight: 7,
                 backgroundColor: Colors.white.withValues(alpha: 0.1),
-                valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
+                valueColor: const AlwaysStoppedAnimation<Color>(
+                  AppColors.primary,
+                ),
               ),
             ),
 
@@ -474,7 +532,11 @@ class _RoadmapHeader extends StatelessWidget {
             // ── XP + gems summary ──
             Row(
               children: [
-                const Icon(Icons.star_rounded, size: 15, color: AppColors.primary),
+                const Icon(
+                  Icons.star_rounded,
+                  size: 15,
+                  color: AppColors.primary,
+                ),
                 const SizedBox(width: 4),
                 Text(
                   '${roadmap.totalXp} XP total',
@@ -485,7 +547,11 @@ class _RoadmapHeader extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 16),
-                const Icon(Icons.diamond_rounded, size: 15, color: AppColors.tertiary),
+                const Icon(
+                  Icons.diamond_rounded,
+                  size: 15,
+                  color: AppColors.tertiary,
+                ),
                 const SizedBox(width: 4),
                 Text(
                   '${roadmap.chapters.fold(0, (s, c) => s + c.gemReward)} gems',
@@ -715,19 +781,19 @@ class _ChapterBubble extends StatelessWidget {
         child: isCompleted
             ? const Icon(Icons.check_rounded, color: Colors.white, size: 18)
             : isBoss
-                ? const Text('👑', style: TextStyle(fontSize: 16))
-                : isCheckpoint
-                    ? const Text('🏁', style: TextStyle(fontSize: 15))
-                    : Text(
-                        '$number',
-                        style: GoogleFonts.spaceGrotesk(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: progress > 0
-                              ? Colors.white
-                              : AppColors.onSurfaceVariant,
-                        ),
-                      ),
+            ? const Text('👑', style: TextStyle(fontSize: 16))
+            : isCheckpoint
+            ? const Text('🏁', style: TextStyle(fontSize: 15))
+            : Text(
+                '$number',
+                style: GoogleFonts.spaceGrotesk(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: progress > 0
+                      ? Colors.white
+                      : AppColors.onSurfaceVariant,
+                ),
+              ),
       ),
     );
   }
@@ -775,8 +841,8 @@ class _ChapterCard extends StatelessWidget {
           color: isSpecial
               ? _accentColor.withValues(alpha: 0.35)
               : isCompleted
-                  ? AppColors.tertiary.withValues(alpha: 0.3)
-                  : AppColors.outlineVariant.withValues(alpha: 0.25),
+              ? AppColors.tertiary.withValues(alpha: 0.3)
+              : AppColors.outlineVariant.withValues(alpha: 0.25),
         ),
       ),
       child: Material(
@@ -911,7 +977,9 @@ class _ChapterCard extends StatelessWidget {
                   child: LinearProgressIndicator(
                     value: progress,
                     minHeight: 4,
-                    backgroundColor: AppColors.outlineVariant.withValues(alpha: 0.15),
+                    backgroundColor: AppColors.outlineVariant.withValues(
+                      alpha: 0.15,
+                    ),
                     valueColor: AlwaysStoppedAnimation<Color>(_accentColor),
                   ),
                 ),
@@ -930,7 +998,11 @@ class _ChapterCard extends StatelessWidget {
                       ),
                     ),
                     const Spacer(),
-                    const Icon(Icons.star_rounded, size: 13, color: AppColors.primary),
+                    const Icon(
+                      Icons.star_rounded,
+                      size: 13,
+                      color: AppColors.primary,
+                    ),
                     const SizedBox(width: 3),
                     Text(
                       '+${chapter.xpReward} XP',
@@ -941,7 +1013,11 @@ class _ChapterCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 10),
-                    const Icon(Icons.diamond_rounded, size: 13, color: AppColors.tertiary),
+                    const Icon(
+                      Icons.diamond_rounded,
+                      size: 13,
+                      color: AppColors.tertiary,
+                    ),
                     const SizedBox(width: 3),
                     Text(
                       '+${chapter.gemReward}',
@@ -993,13 +1069,15 @@ class _LessonList extends StatelessWidget {
         children: lessons
             .asMap()
             .entries
-            .map((e) => _LessonRow(
-                  lesson: e.value,
-                  status: _getStatus(e.value),
-                  index: e.key,
-                  isLast: e.key == lessons.length - 1,
-                  onTap: () => onLessonTap(e.value.id),
-                ))
+            .map(
+              (e) => _LessonRow(
+                lesson: e.value,
+                status: _getStatus(e.value),
+                index: e.key,
+                isLast: e.key == lessons.length - 1,
+                onTap: () => onLessonTap(e.value.id),
+              ),
+            )
             .toList(),
       ),
     );
@@ -1129,7 +1207,11 @@ class _LessonRow extends StatelessWidget {
   Widget _buildStatusIcon() {
     switch (status) {
       case LessonStatus.completed:
-        return const Icon(Icons.check_rounded, color: AppColors.tertiary, size: 16);
+        return const Icon(
+          Icons.check_rounded,
+          color: AppColors.tertiary,
+          size: 16,
+        );
       case LessonStatus.inProgress:
         return const SizedBox(
           width: 16,
@@ -1140,7 +1222,11 @@ class _LessonRow extends StatelessWidget {
           ),
         );
       case LessonStatus.available:
-        return const Icon(Icons.play_arrow_rounded, color: AppColors.primary, size: 16);
+        return const Icon(
+          Icons.play_arrow_rounded,
+          color: AppColors.primary,
+          size: 16,
+        );
       case LessonStatus.locked:
         return Icon(
           Icons.lock_rounded,

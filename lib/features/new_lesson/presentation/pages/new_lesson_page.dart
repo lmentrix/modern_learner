@@ -15,14 +15,15 @@ class NewLessonPage extends StatefulWidget {
 
 class _NewLessonPageState extends State<NewLessonPage> {
   String? _selectedLanguage;
-  String? _selectedTopic;
+  String? _selectedSubject;
+  final TextEditingController _topicController = TextEditingController();
   String _selectedDifficulty = 'Beginner';
   NewLessonType _lessonType = NewLessonType.language;
   bool _isLoading = false;
 
   bool get _canStart => _lessonType == NewLessonType.language
-      ? _selectedLanguage != null
-      : _selectedTopic != null;
+      ? _selectedLanguage != null && _topicController.text.trim().isNotEmpty
+      : _selectedSubject != null && _topicController.text.trim().isNotEmpty;
 
   static const _languages = [
     ('🇺🇸', 'English'),
@@ -35,7 +36,7 @@ class _NewLessonPageState extends State<NewLessonPage> {
     ('🇧🇷', 'Portuguese'),
   ];
 
-  static const _topics = [
+  static const _subjects = [
     ('➕', 'Mathematics'),
     ('🔬', 'Science'),
     ('🌍', 'Geography'),
@@ -55,6 +56,24 @@ class _NewLessonPageState extends State<NewLessonPage> {
     ('🌿', 'Intermediate'),
     ('🌳', 'Advanced'),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _topicController.addListener(_handleTopicChanged);
+  }
+
+  @override
+  void dispose() {
+    _topicController
+      ..removeListener(_handleTopicChanged)
+      ..dispose();
+    super.dispose();
+  }
+
+  void _handleTopicChanged() {
+    if (mounted) setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -80,13 +99,27 @@ class _NewLessonPageState extends State<NewLessonPage> {
                       const SizedBox(height: 12),
                       _buildLanguageGrid(),
                       const SizedBox(height: 28),
+                      _sectionLabel('TOPIC'),
+                      const SizedBox(height: 12),
+                      _buildTopicInput(
+                        hintText:
+                            'e.g. Ordering food, travel greetings, daily small talk',
+                      ),
+                      const SizedBox(height: 28),
                       _sectionLabel('DIFFICULTY'),
                       const SizedBox(height: 12),
                       _buildDifficultyRow(),
                     ] else ...[
-                      _sectionLabel('SCHOOL LESSON'),
+                      _sectionLabel('SCHOOL SUBJECT'),
                       const SizedBox(height: 12),
-                      _buildTopicGrid(),
+                      _buildSubjectGrid(),
+                      const SizedBox(height: 28),
+                      _sectionLabel('TOPIC'),
+                      const SizedBox(height: 12),
+                      _buildTopicInput(
+                        hintText:
+                            'e.g. Fractions, photosynthesis, World War II',
+                      ),
                       const SizedBox(height: 28),
                       _sectionLabel('DIFFICULTY'),
                       const SizedBox(height: 12),
@@ -149,7 +182,7 @@ class _NewLessonPageState extends State<NewLessonPage> {
         Expanded(
           child: _LessonTypeCard(
             icon: '🌍',
-            label: 'Language',
+            label: 'Voice',
             isSelected: _lessonType == NewLessonType.language,
             onTap: () => setState(() => _lessonType = NewLessonType.language),
           ),
@@ -194,8 +227,7 @@ class _NewLessonPageState extends State<NewLessonPage> {
                 lang.$2,
                 style: GoogleFonts.inter(
                   fontSize: 13,
-                  fontWeight:
-                      isSelected ? FontWeight.w600 : FontWeight.w400,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                   color: isSelected
                       ? AppColors.primary
                       : AppColors.onSurfaceVariant,
@@ -208,11 +240,11 @@ class _NewLessonPageState extends State<NewLessonPage> {
     );
   }
 
-  Widget _buildTopicGrid() {
+  Widget _buildSubjectGrid() {
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: _topics.length,
+      itemCount: _subjects.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         crossAxisSpacing: 10,
@@ -220,23 +252,22 @@ class _NewLessonPageState extends State<NewLessonPage> {
         childAspectRatio: 2.2,
       ),
       itemBuilder: (context, i) {
-        final topic = _topics[i];
-        final isSelected = _selectedTopic == topic.$2;
+        final subject = _subjects[i];
+        final isSelected = _selectedSubject == subject.$2;
         return _SelectableCard(
           isSelected: isSelected,
           selectedColor: AppColors.secondary,
-          onTap: () => setState(() => _selectedTopic = topic.$2),
+          onTap: () => setState(() => _selectedSubject = subject.$2),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(topic.$1, style: const TextStyle(fontSize: 22)),
+              Text(subject.$1, style: const TextStyle(fontSize: 22)),
               const SizedBox(height: 4),
               Text(
-                topic.$2,
+                subject.$2,
                 style: GoogleFonts.inter(
                   fontSize: 12,
-                  fontWeight:
-                      isSelected ? FontWeight.w600 : FontWeight.w400,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                   color: isSelected
                       ? AppColors.secondary
                       : AppColors.onSurfaceVariant,
@@ -288,13 +319,49 @@ class _NewLessonPageState extends State<NewLessonPage> {
     );
   }
 
+  Widget _buildTopicInput({required String hintText}) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColors.outlineVariant.withValues(alpha: 0.2),
+        ),
+      ),
+      child: TextField(
+        controller: _topicController,
+        minLines: 1,
+        maxLines: 2,
+        textCapitalization: TextCapitalization.sentences,
+        style: GoogleFonts.inter(
+          fontSize: 14,
+          color: AppColors.onSurface,
+          height: 1.4,
+        ),
+        decoration: InputDecoration(
+          hintText: hintText,
+          hintStyle: GoogleFonts.inter(
+            fontSize: 13,
+            color: AppColors.onSurfaceVariant,
+          ),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.all(16),
+        ),
+      ),
+    );
+  }
+
   Widget _buildStartButton(BuildContext context) {
-    final displayText = _lessonType == NewLessonType.language
-        ? _selectedLanguage ?? 'Choose a language'
-        : _selectedTopic ?? 'Choose a topic';
+    final displayText = _topicController.text.trim().isEmpty
+        ? 'Choose a topic'
+        : _topicController.text.trim();
     return Padding(
       padding: EdgeInsets.fromLTRB(
-          20, 8, 20, MediaQuery.of(context).padding.bottom + 16),
+        20,
+        8,
+        20,
+        MediaQuery.of(context).padding.bottom + 16,
+      ),
       child: AnimatedOpacity(
         duration: const Duration(milliseconds: 200),
         opacity: (_canStart && !_isLoading) ? 1.0 : 0.4,
@@ -306,7 +373,11 @@ class _NewLessonPageState extends State<NewLessonPage> {
               gradient: _canStart
                   ? AppColors.primaryGradient
                   : const LinearGradient(
-                      colors: [AppColors.outlineVariant, AppColors.outlineVariant]),
+                      colors: [
+                        AppColors.outlineVariant,
+                        AppColors.outlineVariant,
+                      ],
+                    ),
               borderRadius: BorderRadius.circular(16),
             ),
             child: _isLoading
@@ -325,10 +396,10 @@ class _NewLessonPageState extends State<NewLessonPage> {
                     children: [
                       Text(
                         _canStart
-                            ? 'Start $_selectedDifficulty $displayText Lesson'
+                            ? 'Create $_selectedDifficulty $displayText Course'
                             : _lessonType == NewLessonType.language
-                                ? 'Choose a language'
-                                : 'Choose a topic',
+                            ? 'Choose a language and topic'
+                            : 'Choose a subject and topic',
                         style: GoogleFonts.spaceGrotesk(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
@@ -339,8 +410,11 @@ class _NewLessonPageState extends State<NewLessonPage> {
                       ),
                       if (_canStart) ...[
                         const SizedBox(width: 8),
-                        const Icon(Icons.arrow_forward_rounded,
-                            color: Colors.white, size: 18),
+                        const Icon(
+                          Icons.arrow_forward_rounded,
+                          color: Colors.white,
+                          size: 18,
+                        ),
                       ],
                     ],
                   ),
@@ -353,9 +427,10 @@ class _NewLessonPageState extends State<NewLessonPage> {
   Future<void> _onStart(BuildContext context) async {
     final contentType = _lessonType == NewLessonType.language
         ? _selectedLanguage!
-        : _selectedTopic!;
+        : _selectedSubject!;
+    final topic = _topicController.text.trim();
 
-    final title = '$_selectedDifficulty $contentType Lesson';
+    final title = '$_selectedDifficulty $contentType · $topic';
 
     // Capture before async gap.
     final messenger = ScaffoldMessenger.of(context);
@@ -367,6 +442,7 @@ class _NewLessonPageState extends State<NewLessonPage> {
       await getIt<CreateLesson>().call(
         lessonType: _lessonType,
         contentType: contentType,
+        topic: topic,
         difficulty: _selectedDifficulty,
         title: title,
       );
@@ -374,12 +450,14 @@ class _NewLessonPageState extends State<NewLessonPage> {
       messenger.showSnackBar(
         SnackBar(
           content: Text(
-            'Lesson "$title" created!',
+            'Course "$title" created!',
             style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500),
           ),
           backgroundColor: AppColors.surfaceContainerHigh,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           margin: const EdgeInsets.all(16),
           duration: const Duration(seconds: 2),
         ),
@@ -389,12 +467,14 @@ class _NewLessonPageState extends State<NewLessonPage> {
       messenger.showSnackBar(
         SnackBar(
           content: Text(
-            'Failed to create lesson: $e',
+            'Failed to create course: $e',
             style: GoogleFonts.inter(fontSize: 13),
           ),
           backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           margin: const EdgeInsets.all(16),
         ),
       );
@@ -458,8 +538,9 @@ class _LessonTypeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final selectedColor =
-        label == 'Language' ? AppColors.primary : AppColors.secondary;
+    final selectedColor = label == 'Language'
+        ? AppColors.primary
+        : AppColors.secondary;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(

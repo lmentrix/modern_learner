@@ -4,6 +4,7 @@ abstract class LessonRepository {
   Future<NewLesson> createLesson({
     required NewLessonType lessonType,
     required String contentType,
+    required String topic,
     required String difficulty,
     required String title,
     Map<String, dynamic>? content,

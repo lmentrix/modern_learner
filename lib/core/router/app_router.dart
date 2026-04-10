@@ -11,6 +11,7 @@ import 'package:modern_learner_production/features/home/presentation/pages/achie
 import 'package:modern_learner_production/features/home/presentation/pages/home_page.dart';
 import 'package:modern_learner_production/features/home/presentation/pages/view_profile_page.dart';
 import 'package:modern_learner_production/features/profile/presentation/pages/profile_page.dart';
+import 'package:modern_learner_production/features/progress/domain/entities/progress_course_selection.dart';
 import 'package:modern_learner_production/features/progress/presentation/pages/progress_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -46,10 +47,10 @@ abstract final class AppRouter {
     debugLogDiagnostics: false,
     refreshListenable: _authNotifier,
     redirect: (context, state) {
-      final isSignedIn =
-          Supabase.instance.client.auth.currentSession != null;
+      final isSignedIn = Supabase.instance.client.auth.currentSession != null;
       final loc = state.matchedLocation;
-      final isAuthRoute = loc == Routes.login ||
+      final isAuthRoute =
+          loc == Routes.login ||
           loc == Routes.register ||
           loc == Routes.emailConfirm;
 
@@ -69,16 +70,16 @@ abstract final class AppRouter {
       ),
       GoRoute(
         path: Routes.emailConfirm,
-        builder: (context, state) => EmailConfirmationPage(
-          email: state.extra as String? ?? '',
-        ),
+        builder: (context, state) =>
+            EmailConfirmationPage(email: state.extra as String? ?? ''),
       ),
 
       // ── Full-screen (no bottom nav) ────────────────────────────────────────
       GoRoute(
         path: Routes.viewProfile,
         parentNavigatorKey: _rootNavigatorKey,
-        pageBuilder: (context, state) => _slideUp(state.pageKey, const ViewProfilePage()),
+        pageBuilder: (context, state) =>
+            _slideUp(state.pageKey, const ViewProfilePage()),
       ),
       GoRoute(
         path: Routes.achievements,
@@ -91,9 +92,7 @@ abstract final class AppRouter {
         parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) => _slideUp(
           state.pageKey,
-          AchievementsDetailPage(
-            achievement: state.extra as AchievementEntity,
-          ),
+          AchievementsDetailPage(achievement: state.extra as AchievementEntity),
         ),
       ),
 
@@ -121,28 +120,32 @@ abstract final class AppRouter {
           ),
           GoRoute(
             path: Routes.progress,
-            builder: (context, state) => const ProgressPage(),
+            builder: (context, state) => ProgressPage(
+              initialCourseSelection: state.extra is ProgressCourseSelection
+                  ? state.extra as ProgressCourseSelection
+                  : null,
+            ),
           ),
         ],
       ),
     ],
   );
 
-  static CustomTransitionPage<void> _slideUp(LocalKey key, Widget child) =>
-      CustomTransitionPage<void>(
-        key: key,
-        child: child,
-        transitionsBuilder: (context, animation, secondaryAnimation, child) => SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 1),
-            end: Offset.zero,
-          ).animate(CurvedAnimation(
-            parent: animation,
-            curve: Curves.easeOutCubic,
-          )),
+  static CustomTransitionPage<void> _slideUp(
+    LocalKey key,
+    Widget child,
+  ) => CustomTransitionPage<void>(
+    key: key,
+    child: child,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+        SlideTransition(
+          position: Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
+              .animate(
+                CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
+              ),
           child: child,
         ),
-      );
+  );
 }
 
 // ── Auth change notifier ──────────────────────────────────────────────────────

@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:modern_learner_production/features/progress/domain/entities/progress_course_selection.dart';
 
 abstract class ProgressEvent extends Equatable {
   const ProgressEvent();
@@ -7,10 +8,17 @@ abstract class ProgressEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-class LoadRoadmap extends ProgressEvent {}
+class LoadRoadmap extends ProgressEvent {
+  const LoadRoadmap({this.courseSelection, this.useCurrentSelection = false});
+
+  final ProgressCourseSelection? courseSelection;
+  final bool useCurrentSelection;
+
+  @override
+  List<Object?> get props => [courseSelection, useCurrentSelection];
+}
 
 class SelectLesson extends ProgressEvent {
-
   const SelectLesson(this.lessonId);
   final String lessonId;
 
@@ -19,7 +27,6 @@ class SelectLesson extends ProgressEvent {
 }
 
 class SelectChapter extends ProgressEvent {
-
   const SelectChapter(this.chapterId);
   final String chapterId;
 
@@ -28,7 +35,6 @@ class SelectChapter extends ProgressEvent {
 }
 
 class StartLessonEvent extends ProgressEvent {
-
   const StartLessonEvent(this.lessonId);
   final String lessonId;
 
@@ -37,7 +43,6 @@ class StartLessonEvent extends ProgressEvent {
 }
 
 class CompleteLessonEvent extends ProgressEvent {
-
   const CompleteLessonEvent(this.lessonId);
   final String lessonId;
 
@@ -46,7 +51,6 @@ class CompleteLessonEvent extends ProgressEvent {
 }
 
 class ClaimReward extends ProgressEvent {
-
   const ClaimReward(this.lessonId);
   final String lessonId;
 
@@ -55,7 +59,6 @@ class ClaimReward extends ProgressEvent {
 }
 
 class ExpandChapter extends ProgressEvent {
-
   const ExpandChapter(this.chapterId);
   final String chapterId;
 
@@ -64,13 +67,16 @@ class ExpandChapter extends ProgressEvent {
 }
 
 class CollapseChapter extends ProgressEvent {
-
   const CollapseChapter(this.chapterId);
   final String chapterId;
 
   @override
   List<Object?> get props => [chapterId];
 }
+
+class ExpandAllChapters extends ProgressEvent {}
+
+class CollapseAllChapters extends ProgressEvent {}
 
 class RegenerateRoadmap extends ProgressEvent {}
 

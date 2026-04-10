@@ -8,6 +8,7 @@ class CreateLesson {
   Future<NewLesson> call({
     required NewLessonType lessonType,
     required String contentType,
+    required String topic,
     required String difficulty,
     required String title,
     Map<String, dynamic>? content,
@@ -15,6 +16,7 @@ class CreateLesson {
     return _repository.createLesson(
       lessonType: lessonType,
       contentType: contentType,
+      topic: topic,
       difficulty: difficulty,
       title: title,
       content: content,

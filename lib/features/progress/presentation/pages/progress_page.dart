@@ -4,10 +4,14 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'package:modern_learner_production/core/di/injection.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
+import 'package:modern_learner_production/features/progress/domain/entities/progress_course_selection.dart';
 import 'package:modern_learner_production/features/progress/presentation/pages/lesson_content_page.dart';
-import 'package:modern_learner_production/features/progress/domain/usecases/complete_lesson.dart' as domain;
-import 'package:modern_learner_production/features/progress/domain/usecases/start_lesson.dart' as start;
-import 'package:modern_learner_production/features/progress/domain/usecases/regenerate_roadmap.dart' as regen;
+import 'package:modern_learner_production/features/progress/domain/usecases/complete_lesson.dart'
+    as domain;
+import 'package:modern_learner_production/features/progress/domain/usecases/start_lesson.dart'
+    as start;
+import 'package:modern_learner_production/features/progress/domain/usecases/regenerate_roadmap.dart'
+    as regen;
 import 'package:modern_learner_production/features/progress/domain/usecases/get_roadmap.dart';
 import 'package:modern_learner_production/features/progress/domain/usecases/get_user_progress.dart';
 import 'package:modern_learner_production/features/progress/presentation/bloc/progress_bloc.dart';
@@ -17,13 +21,16 @@ import 'package:modern_learner_production/features/progress/presentation/widgets
 import 'package:modern_learner_production/features/progress/service/progress_navigation_state.dart';
 
 class ProgressPage extends StatefulWidget {
-  const ProgressPage({super.key});
+  const ProgressPage({super.key, this.initialCourseSelection});
+
+  final ProgressCourseSelection? initialCourseSelection;
 
   @override
   State<ProgressPage> createState() => _ProgressPageState();
 }
 
-class _ProgressPageState extends State<ProgressPage> with SingleTickerProviderStateMixin {
+class _ProgressPageState extends State<ProgressPage>
+    with SingleTickerProviderStateMixin {
   late ProgressBloc _bloc;
   late ProgressNavigationState _navState;
   final ScrollController _scrollController = ScrollController();
@@ -45,10 +52,19 @@ class _ProgressPageState extends State<ProgressPage> with SingleTickerProviderSt
       startLesson: start.StartLesson(getIt()),
       regenerateRoadmap: regen.RegenerateRoadmap(getIt()),
     );
-    _bloc.add(LoadRoadmap());
+    _bloc.add(LoadRoadmap(courseSelection: widget.initialCourseSelection));
 
     _navState = getIt<ProgressNavigationState>();
     _navState.addListener(_handleNavigationRequest);
+  }
+
+  @override
+  void didUpdateWidget(covariant ProgressPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.initialCourseSelection != widget.initialCourseSelection) {
+      _bloc.add(LoadRoadmap(courseSelection: widget.initialCourseSelection));
+    }
   }
 
   void _handleNavigationRequest() {
@@ -98,7 +114,8 @@ class _ProgressPageState extends State<ProgressPage> with SingleTickerProviderSt
             if (state.status == ProgressStatus.error) {
               return _ErrorView(
                 message: state.errorMessage,
-                onRetry: () => _bloc.add(LoadRoadmap()),
+                onRetry: () =>
+                    _bloc.add(const LoadRoadmap(useCurrentSelection: true)),
               );
             }
 
@@ -124,8 +141,11 @@ class _ProgressPageState extends State<ProgressPage> with SingleTickerProviderSt
                   _bloc.add(CollapseChapter(chapterId));
                 }
               },
+              onExpandAll: () => _bloc.add(ExpandAllChapters()),
+              onCollapseAll: () => _bloc.add(CollapseAllChapters()),
               onRegenerate: () => _bloc.add(RegenerateRoadmap()),
-              onRefresh: () async => _bloc.add(LoadRoadmap()),
+              onRefresh: () async =>
+                  _bloc.add(const LoadRoadmap(useCurrentSelection: true)),
             );
           },
         ),
@@ -167,10 +187,20 @@ class _LoadingView extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _SkeletonBox(shimmer: shimmer, width: double.infinity, height: 160, radius: 20),
+            _SkeletonBox(
+              shimmer: shimmer,
+              width: double.infinity,
+              height: 160,
+              radius: 20,
+            ),
             const SizedBox(height: 20),
             for (int i = 0; i < 4; i++) ...[
-              _SkeletonBox(shimmer: shimmer, width: double.infinity, height: 100, radius: 16),
+              _SkeletonBox(
+                shimmer: shimmer,
+                width: double.infinity,
+                height: 100,
+                radius: 16,
+              ),
               const SizedBox(height: 12),
             ],
           ],
@@ -250,7 +280,9 @@ class _GeneratingView extends StatelessWidget {
               constraints: const BoxConstraints(maxWidth: 200),
               child: LinearProgressIndicator(
                 backgroundColor: AppColors.surfaceContainerHighest,
-                valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
+                valueColor: const AlwaysStoppedAnimation<Color>(
+                  AppColors.primary,
+                ),
                 minHeight: 4,
                 borderRadius: BorderRadius.circular(2),
               ),
@@ -284,7 +316,11 @@ class _ErrorView extends StatelessWidget {
                 color: AppColors.error.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.error_outline_rounded, size: 36, color: AppColors.error),
+              child: const Icon(
+                Icons.error_outline_rounded,
+                size: 36,
+                color: AppColors.error,
+              ),
             ),
             const SizedBox(height: 20),
             Text(
@@ -316,8 +352,13 @@ class _ErrorView extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
           ],
