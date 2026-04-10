@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:modern_learner_production/core/di/injection.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
-
-enum LessonType { language, school }
+import 'package:modern_learner_production/features/new_lesson/domain/entities/lesson.dart';
+import 'package:modern_learner_production/features/new_lesson/domain/usecases/create_lesson.dart';
 
 class NewLessonPage extends StatefulWidget {
   const NewLessonPage({super.key});
@@ -16,9 +17,10 @@ class _NewLessonPageState extends State<NewLessonPage> {
   String? _selectedLanguage;
   String? _selectedTopic;
   String _selectedDifficulty = 'Beginner';
-  LessonType _lessonType = LessonType.language;
+  NewLessonType _lessonType = NewLessonType.language;
+  bool _isLoading = false;
 
-  bool get _canStart => _lessonType == LessonType.language
+  bool get _canStart => _lessonType == NewLessonType.language
       ? _selectedLanguage != null
       : _selectedTopic != null;
 
@@ -73,7 +75,7 @@ class _NewLessonPageState extends State<NewLessonPage> {
                     const SizedBox(height: 12),
                     _buildLessonTypeSelector(),
                     const SizedBox(height: 28),
-                    if (_lessonType == LessonType.language) ...[
+                    if (_lessonType == NewLessonType.language) ...[
                       _sectionLabel('LANGUAGE'),
                       const SizedBox(height: 12),
                       _buildLanguageGrid(),
@@ -148,8 +150,8 @@ class _NewLessonPageState extends State<NewLessonPage> {
           child: _LessonTypeCard(
             icon: '🌍',
             label: 'Language',
-            isSelected: _lessonType == LessonType.language,
-            onTap: () => setState(() => _lessonType = LessonType.language),
+            isSelected: _lessonType == NewLessonType.language,
+            onTap: () => setState(() => _lessonType = NewLessonType.language),
           ),
         ),
         const SizedBox(width: 10),
@@ -157,8 +159,8 @@ class _NewLessonPageState extends State<NewLessonPage> {
           child: _LessonTypeCard(
             icon: '📚',
             label: 'School',
-            isSelected: _lessonType == LessonType.school,
-            onTap: () => setState(() => _lessonType = LessonType.school),
+            isSelected: _lessonType == NewLessonType.school,
+            onTap: () => setState(() => _lessonType = NewLessonType.school),
           ),
         ),
       ],
@@ -287,7 +289,7 @@ class _NewLessonPageState extends State<NewLessonPage> {
   }
 
   Widget _buildStartButton(BuildContext context) {
-    final displayText = _lessonType == LessonType.language
+    final displayText = _lessonType == NewLessonType.language
         ? _selectedLanguage ?? 'Choose a language'
         : _selectedTopic ?? 'Choose a topic';
     return Padding(
@@ -295,9 +297,9 @@ class _NewLessonPageState extends State<NewLessonPage> {
           20, 8, 20, MediaQuery.of(context).padding.bottom + 16),
       child: AnimatedOpacity(
         duration: const Duration(milliseconds: 200),
-        opacity: _canStart ? 1.0 : 0.4,
+        opacity: (_canStart && !_isLoading) ? 1.0 : 0.4,
         child: GestureDetector(
-          onTap: _canStart ? () => _onStart(context) : null,
+          onTap: (_canStart && !_isLoading) ? () => _onStart(context) : null,
           child: Container(
             height: 54,
             decoration: BoxDecoration(
@@ -307,62 +309,104 @@ class _NewLessonPageState extends State<NewLessonPage> {
                       colors: [AppColors.outlineVariant, AppColors.outlineVariant]),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  _canStart
-                      ? 'Start $_selectedDifficulty $displayText Lesson'
-                      : _lessonType == LessonType.language
-                          ? 'Choose a language'
-                          : 'Choose a topic',
-                  style: GoogleFonts.spaceGrotesk(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: _canStart
-                        ? Colors.white
-                        : AppColors.onSurfaceVariant,
+            child: _isLoading
+                ? const Center(
+                    child: SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        color: Colors.white,
+                      ),
+                    ),
+                  )
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        _canStart
+                            ? 'Start $_selectedDifficulty $displayText Lesson'
+                            : _lessonType == NewLessonType.language
+                                ? 'Choose a language'
+                                : 'Choose a topic',
+                        style: GoogleFonts.spaceGrotesk(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: _canStart
+                              ? Colors.white
+                              : AppColors.onSurfaceVariant,
+                        ),
+                      ),
+                      if (_canStart) ...[
+                        const SizedBox(width: 8),
+                        const Icon(Icons.arrow_forward_rounded,
+                            color: Colors.white, size: 18),
+                      ],
+                    ],
                   ),
-                ),
-                if (_canStart) ...[
-                  const SizedBox(width: 8),
-                  const Icon(Icons.arrow_forward_rounded,
-                      color: Colors.white, size: 18),
-                ],
-              ],
-            ),
           ),
         ),
       ),
     );
   }
 
-  void _onStart(BuildContext context) {
-    final lessonName = _lessonType == LessonType.language
-        ? _selectedLanguage
-        : _selectedTopic;
-    // Show a quick confirmation snackbar then close
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Starting $_selectedDifficulty $lessonName Lesson',
-          style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500),
+  Future<void> _onStart(BuildContext context) async {
+    final contentType = _lessonType == NewLessonType.language
+        ? _selectedLanguage!
+        : _selectedTopic!;
+
+    final title = '$_selectedDifficulty $contentType Lesson';
+
+    // Capture before async gap.
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+
+    setState(() => _isLoading = true);
+
+    try {
+      await getIt<CreateLesson>().call(
+        lessonType: _lessonType,
+        contentType: contentType,
+        difficulty: _selectedDifficulty,
+        title: title,
+      );
+
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            'Lesson "$title" created!',
+            style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500),
+          ),
+          backgroundColor: AppColors.surfaceContainerHigh,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.all(16),
+          duration: const Duration(seconds: 2),
         ),
-        backgroundColor: AppColors.surfaceContainerHigh,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: const EdgeInsets.all(16),
-        duration: const Duration(seconds: 2),
-      ),
-    );
-    Navigator.of(context).pop();
+      );
+      navigator.pop(true); // return true so callers can refresh
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            'Failed to create lesson: $e',
+            style: GoogleFonts.inter(fontSize: 13),
+          ),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.all(16),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 }
 
 // ── Reusable selectable card ──────────────────────────────────────────────────
 
 class _SelectableCard extends StatelessWidget {
-
   const _SelectableCard({
     required this.isSelected,
     required this.selectedColor,
@@ -401,7 +445,6 @@ class _SelectableCard extends StatelessWidget {
 // ── Lesson Type Card ──────────────────────────────────────────────────────────
 
 class _LessonTypeCard extends StatelessWidget {
-
   const _LessonTypeCard({
     required this.icon,
     required this.label,
@@ -415,7 +458,8 @@ class _LessonTypeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final selectedColor = label == 'Language' ? AppColors.primary : AppColors.secondary;
+    final selectedColor =
+        label == 'Language' ? AppColors.primary : AppColors.secondary;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -443,9 +487,7 @@ class _LessonTypeCard extends StatelessWidget {
               style: GoogleFonts.inter(
                 fontSize: 13,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                color: isSelected
-                    ? selectedColor
-                    : AppColors.onSurfaceVariant,
+                color: isSelected ? selectedColor : AppColors.onSurfaceVariant,
               ),
             ),
           ],

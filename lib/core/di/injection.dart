@@ -24,6 +24,13 @@ import 'package:modern_learner_production/features/profile/presentation/bloc/pro
 import 'package:modern_learner_production/features/profile/service/data/profile_remote_data_source.dart';
 import 'package:modern_learner_production/features/profile/service/data/profile_remote_data_source_impl.dart';
 import 'package:modern_learner_production/features/profile/service/data/profile_repository_impl.dart';
+import 'package:modern_learner_production/features/new_lesson/data/repositories/lesson_repository_impl.dart';
+import 'package:modern_learner_production/features/new_lesson/domain/repositories/lesson_repository.dart';
+import 'package:modern_learner_production/features/new_lesson/domain/usecases/create_lesson.dart';
+import 'package:modern_learner_production/features/new_lesson/domain/usecases/delete_lesson.dart';
+import 'package:modern_learner_production/features/new_lesson/domain/usecases/get_lesson.dart';
+import 'package:modern_learner_production/features/new_lesson/domain/usecases/get_lessons.dart';
+import 'package:modern_learner_production/features/new_lesson/domain/usecases/update_lesson.dart';
 import 'package:modern_learner_production/features/progress/service/chapter_content_service.dart';
 import 'package:modern_learner_production/features/progress/service/lesson_content_service.dart';
 import 'package:modern_learner_production/features/progress/service/progress_navigation_state.dart';
@@ -128,4 +135,14 @@ Future<void> configureDependencies() async {
     dependsOn: [RoadmapGenerationService, ChapterContentService, LessonContentService],
   );
   getIt.registerLazySingleton(() => ProgressNavigationState());
+
+  // ── New Lesson ────────────────────────────────────────────────────────────
+  getIt.registerLazySingleton<LessonRepository>(
+    () => LessonRepositoryImpl(getIt<SupabaseClient>()),
+  );
+  getIt.registerLazySingleton(() => CreateLesson(getIt<LessonRepository>()));
+  getIt.registerLazySingleton(() => GetLessons(getIt<LessonRepository>()));
+  getIt.registerLazySingleton(() => GetLesson(getIt<LessonRepository>()));
+  getIt.registerLazySingleton(() => UpdateLesson(getIt<LessonRepository>()));
+  getIt.registerLazySingleton(() => DeleteLesson(getIt<LessonRepository>()));
 }
