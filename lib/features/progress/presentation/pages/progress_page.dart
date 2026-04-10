@@ -161,9 +161,8 @@ class _LoadingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      physics: const NeverScrollableScrollPhysics(),
-      child: Padding(
+    return SafeArea(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 24, 16, 80),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -189,9 +188,9 @@ class _GeneratingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(40),
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 48),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -238,7 +237,7 @@ class _GeneratingView extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             Text(
-              'AI is crafting a personalised learning path\njust for you…',
+              'AI is crafting a personalised learning path just for you…',
               style: GoogleFonts.inter(
                 fontSize: 14,
                 color: AppColors.onSurfaceVariant,
@@ -247,8 +246,8 @@ class _GeneratingView extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 32),
-            SizedBox(
-              width: 200,
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 200),
               child: LinearProgressIndicator(
                 backgroundColor: AppColors.surfaceContainerHighest,
                 valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
