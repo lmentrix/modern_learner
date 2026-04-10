@@ -14,21 +14,37 @@ class LessonContentService {
 
   static const _cachePrefix = 'lesson_content_';
 
-  String _cacheKey(String lessonId) => '$_cachePrefix$lessonId';
+  String _cacheKey(
+    String roadmapId,
+    int chapterNumber,
+    int lessonNumber,
+    String lessonId,
+  ) => '$_cachePrefix${roadmapId}_${chapterNumber}_${lessonNumber}_$lessonId';
 
+  Future<void> clearAllCaches() async {
+    final keys = prefs
+        .getKeys()
+        .where((k) => k.startsWith(_cachePrefix))
+        .toList();
+    for (final key in keys) {
+      await prefs.remove(key);
+    }
+  }
+
+  /// Step 3 — POST /ai/lesson-content/generate
+  ///
+  /// [roadmap] is the full `data` object from Step 1.
+  /// [chapterContent] is the full `data` object from Step 2.
+  /// [lessonNumber] is 1-based index within the chapter's lessons list.
   Future<LessonContentModel> generateContent({
     required String lessonId,
-    required String topic,
-    required String language,
-    required String level,
-    required String chapterTitle,
-    required String lessonTitle,
-    required String lessonType,
-    required String lessonDescription,
-    required String nativeLanguage,
-    required String chapterId,
+    required Map<String, dynamic> roadmap,
+    required Map<String, dynamic> chapterContent,
+    required int lessonNumber,
   }) async {
-    final key = _cacheKey(lessonId);
+    final roadmapId = roadmap['id'] as String? ?? 'unknown_roadmap';
+    final chapterNumber = chapterContent['chapterNumber'] as int? ?? 0;
+    final key = _cacheKey(roadmapId, chapterNumber, lessonNumber, lessonId);
     final cached = prefs.getString(key);
 
     if (cached != null) {
@@ -37,25 +53,56 @@ class LessonContentService {
       );
     }
 
-    final response = await dio.post<Map<String, dynamic>>(
-      '${ApiConstants.baseUrl}${ApiConstants.lessonContentGenerate}',
-      data: {
-        'topic': topic,
-        'language': language,
-        'level': level,
-        'chapterTitle': chapterTitle,
-        'lessonTitle': lessonTitle,
-        'lessonType': lessonType,
-        'lessonDescription': lessonDescription,
-        'nativeLanguage': nativeLanguage,
-        'chapterId': chapterId,
-      },
-    );
+    const maxRetries = 3;
+    Object? lastError;
 
-    final contentJson = (response.data!['data']) as Map<String, dynamic>;
-    final model = LessonContentModel.fromJson(contentJson);
-    await prefs.setString(key, jsonEncode(contentJson));
+    for (int attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        final response = await dio.post<Map<String, dynamic>>(
+          '${ApiConstants.baseUrl}${ApiConstants.lessonContentGenerate}',
+          data: {
+            'roadmap': roadmap,
+            'chapterContent': chapterContent,
+            'lessonNumber': lessonNumber,
+          },
+        );
 
-    return model;
+        final contentJson = response.data!['data'] as Map<String, dynamic>;
+        final model = LessonContentModel.fromJson(contentJson);
+        await prefs.setString(key, jsonEncode(contentJson));
+        return model;
+      } catch (e) {
+        lastError = e;
+        if (attempt < maxRetries) {
+          await Future.delayed(Duration(seconds: attempt));
+        }
+      }
+    }
+
+    throw Exception(_buildErrorMessage(lastError));
+  }
+
+  String _buildErrorMessage(Object? error) {
+    if (error is DioException) {
+      final endpoint = error.requestOptions.uri.toString();
+      switch (error.type) {
+        case DioExceptionType.connectionError:
+        case DioExceptionType.connectionTimeout:
+          return 'Unable to reach AI content service at $endpoint. '
+              'Check that the backend server is running and BASE_URL is reachable '
+              '(Android emulator uses 10.0.2.2 instead of localhost).';
+        case DioExceptionType.receiveTimeout:
+          return 'AI content generation timed out while waiting for server response. '
+              'Please retry.';
+        case DioExceptionType.badResponse:
+          final code = error.response?.statusCode;
+          return 'AI content service returned HTTP ${code ?? 'unknown'}.';
+        default:
+          final msg = error.message ?? 'Unknown network error.';
+          return 'Failed to generate lesson content: $msg';
+      }
+    }
+
+    return error?.toString() ?? 'Failed to generate lesson content.';
   }
 }

@@ -20,6 +20,7 @@ class ProgressBloc extends Bloc<ProgressEvent, ProgressState> {
     required this.regenerateRoadmap,
   }) : super(const ProgressState()) {
     on<LoadRoadmap>(_onLoadRoadmap);
+    on<RefreshProgress>(_onRefreshProgress);
     on<RegenerateRoadmap>(_onRegenerateRoadmap);
     on<SelectLesson>(_onSelectLesson);
     on<SelectChapter>(_onSelectChapter);
@@ -106,6 +107,23 @@ class ProgressBloc extends Bloc<ProgressEvent, ProgressState> {
     }
   }
 
+  /// Silently re-applies user progress without showing the loading skeleton.
+  /// Preserves the current expanded-chapters set so the UI doesn't jump.
+  Future<void> _onRefreshProgress(
+    RefreshProgress event,
+    Emitter<ProgressState> emit,
+  ) async {
+    try {
+      final results = await Future.wait([getRoadmap(), getUserProgress()]);
+      emit(state.copyWith(
+        roadmap: results[0] as Roadmap,
+        userProgress: results[1] as UserProgress,
+      ));
+    } catch (_) {
+      // Ignore — progress page keeps working with the previous roadmap.
+    }
+  }
+
   Future<void> _onRegenerateRoadmap(
     RegenerateRoadmap event,
     Emitter<ProgressState> emit,
@@ -123,6 +141,7 @@ class ProgressBloc extends Bloc<ProgressEvent, ProgressState> {
         roadmap: roadmap,
         userProgress: results[1] as UserProgress,
         expandedChapters: {firstAvailable.id},
+        claimedRewards: {},
       ));
     } catch (e) {
       emit(state.copyWith(

@@ -73,3 +73,7 @@ class CollapseChapter extends ProgressEvent {
 }
 
 class RegenerateRoadmap extends ProgressEvent {}
+
+/// Re-applies user progress to the roadmap silently (no loading skeleton).
+/// Used after completing a lesson to unlock the next lessons/chapters.
+class RefreshProgress extends ProgressEvent {}

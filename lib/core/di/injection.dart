@@ -24,8 +24,9 @@ import 'package:modern_learner_production/features/profile/presentation/bloc/pro
 import 'package:modern_learner_production/features/profile/service/data/profile_remote_data_source.dart';
 import 'package:modern_learner_production/features/profile/service/data/profile_remote_data_source_impl.dart';
 import 'package:modern_learner_production/features/profile/service/data/profile_repository_impl.dart';
-import 'package:modern_learner_production/features/progress/service/progress_navigation_state.dart';
+import 'package:modern_learner_production/features/progress/service/chapter_content_service.dart';
 import 'package:modern_learner_production/features/progress/service/lesson_content_service.dart';
+import 'package:modern_learner_production/features/progress/service/progress_navigation_state.dart';
 import 'package:modern_learner_production/features/progress/service/roadmap_generation_service.dart';
 import 'package:modern_learner_production/features/progress/data/repositories/progress_repository_impl.dart';
 import 'package:modern_learner_production/features/progress/domain/repositories/progress_repository.dart';
@@ -96,6 +97,13 @@ Future<void> configureDependencies() async {
         receiveTimeout: ApiConstants.receiveTimeout,
         sendTimeout: ApiConstants.sendTimeout,
       )));
+  getIt.registerSingletonAsync<ChapterContentService>(
+    () async => ChapterContentService(
+      dio: getIt<Dio>(),
+      prefs: await getIt.getAsync<SharedPreferences>(),
+    ),
+    dependsOn: [SharedPreferences],
+  );
   getIt.registerSingletonAsync<LessonContentService>(
     () async => LessonContentService(
       dio: getIt<Dio>(),
@@ -114,8 +122,10 @@ Future<void> configureDependencies() async {
     () async => ProgressRepositoryImpl(
       supabase: getIt<SupabaseClient>(),
       roadmapService: await getIt.getAsync<RoadmapGenerationService>(),
+      chapterContentService: await getIt.getAsync<ChapterContentService>(),
+      lessonContentService: await getIt.getAsync<LessonContentService>(),
     ),
-    dependsOn: [RoadmapGenerationService],
+    dependsOn: [RoadmapGenerationService, ChapterContentService, LessonContentService],
   );
   getIt.registerLazySingleton(() => ProgressNavigationState());
 }

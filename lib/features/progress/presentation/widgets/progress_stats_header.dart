@@ -1,15 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 import 'package:modern_learner_production/features/progress/domain/entities/user_progress.dart';
 
 class ProgressStatsHeader extends StatelessWidget {
-
-  const ProgressStatsHeader({
-    super.key,
-    required this.progress,
-  });
+  const ProgressStatsHeader({super.key, required this.progress});
   final UserProgress progress;
 
   @override
@@ -35,11 +30,7 @@ class ProgressStatsHeader extends StatelessWidget {
                 label: 'Day streak',
               ),
               _LevelRing(level: progress.level),
-              _StatItem(
-                emoji: '💎',
-                value: '${progress.gems}',
-                label: 'Gems',
-              ),
+              _StatItem(emoji: '💎', value: '${progress.gems}', label: 'Gems'),
             ],
           ),
           const SizedBox(height: 20),
@@ -55,7 +46,6 @@ class ProgressStatsHeader extends StatelessWidget {
 }
 
 class _StatItem extends StatelessWidget {
-
   const _StatItem({
     required this.emoji,
     required this.value,
@@ -92,7 +82,6 @@ class _StatItem extends StatelessWidget {
 }
 
 class _LevelRing extends StatelessWidget {
-
   const _LevelRing({required this.level});
   final int level;
 
@@ -132,7 +121,6 @@ class _LevelRing extends StatelessWidget {
 }
 
 class _XpBar extends StatelessWidget {
-
   const _XpBar({
     required this.xpInLevel,
     required this.level,

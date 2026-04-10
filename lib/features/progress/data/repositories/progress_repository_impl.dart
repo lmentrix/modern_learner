@@ -5,16 +5,22 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:modern_learner_production/features/progress/domain/entities/roadmap.dart';
 import 'package:modern_learner_production/features/progress/domain/entities/user_progress.dart';
 import 'package:modern_learner_production/features/progress/domain/repositories/progress_repository.dart';
+import 'package:modern_learner_production/features/progress/service/chapter_content_service.dart';
+import 'package:modern_learner_production/features/progress/service/lesson_content_service.dart';
 import 'package:modern_learner_production/features/progress/service/roadmap_generation_service.dart';
 
 class ProgressRepositoryImpl implements ProgressRepository {
   ProgressRepositoryImpl({
     required this.supabase,
     required this.roadmapService,
+    required this.chapterContentService,
+    required this.lessonContentService,
   });
 
   final SupabaseClient supabase;
   final RoadmapGenerationService roadmapService;
+  final ChapterContentService chapterContentService;
+  final LessonContentService lessonContentService;
 
   final _progressController = StreamController<UserProgress>.broadcast();
 
@@ -86,12 +92,31 @@ class ProgressRepositoryImpl implements ProgressRepository {
       } catch (_) {}
     }
 
-    await roadmapService.clearCache(
-      topic: topic,
-      language: language,
-      level: level,
-      nativeLanguage: nativeLanguage,
+    // Reset progress BEFORE any awaits so concurrent getUserProgress() calls
+    // return the cleared state, not the old one.
+    _userProgress = const UserProgress(
+      totalXp: 0,
+      level: 1,
+      gems: 0,
+      streak: 0,
+      completedLessons: {},
+      lessonProgress: {},
+      completedChapters: {},
+      unlockedAchievements: [],
+      currentRoadmapId: '',
     );
+    _progressController.add(_userProgress);
+
+    await Future.wait([
+      roadmapService.clearCache(
+        topic: topic,
+        language: language,
+        level: level,
+        nativeLanguage: nativeLanguage,
+      ),
+      chapterContentService.clearAllCaches(),
+      lessonContentService.clearAllCaches(),
+    ]);
 
     final rawRoadmap = await roadmapService.generateRoadmap(
       topic: topic,
