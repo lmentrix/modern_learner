@@ -146,6 +146,7 @@ class _ProgressPageState extends State<ProgressPage> with SingleTickerProviderSt
           lesson: lesson,
           chapter: chapter,
           roadmap: state.roadmap!,
+          onLessonCompleted: () => _bloc.add(RefreshProgress()),
         ),
       ),
     );

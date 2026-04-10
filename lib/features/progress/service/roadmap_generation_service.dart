@@ -24,6 +24,16 @@ class RoadmapGenerationService {
       .toLowerCase()
       .replaceAll(' ', '_');
 
+  static const _idPrefix = 'roadmap_json_';
+
+  /// Returns the raw roadmap JSON (i.e. the `data` object from Step 1)
+  /// previously cached under the roadmap's [id].
+  Map<String, dynamic>? getCachedRoadmapJsonById(String roadmapId) {
+    final raw = prefs.getString('$_idPrefix$roadmapId');
+    if (raw == null) return null;
+    return jsonDecode(raw) as Map<String, dynamic>;
+  }
+
   Future<Roadmap> generateRoadmap({
     required String topic,
     required String language,
@@ -35,6 +45,11 @@ class RoadmapGenerationService {
 
     if (cached != null) {
       final json = jsonDecode(cached) as Map<String, dynamic>;
+      // Ensure secondary ID-based cache is populated.
+      final roadmapId = json['id'] as String;
+      if (prefs.getString('$_idPrefix$roadmapId') == null) {
+        await prefs.setString('$_idPrefix$roadmapId', jsonEncode(json));
+      }
       return RoadmapModel.fromJson(json).toEntity();
     }
 
@@ -52,6 +67,7 @@ class RoadmapGenerationService {
     final roadmapJson = body['data'] as Map<String, dynamic>;
 
     await prefs.setString(key, jsonEncode(roadmapJson));
+    await prefs.setString('$_idPrefix${roadmapJson['id']}', jsonEncode(roadmapJson));
 
     return RoadmapModel.fromJson(roadmapJson).toEntity();
   }
@@ -64,5 +80,10 @@ class RoadmapGenerationService {
   }) async {
     final key = _cacheKey(topic, language, level, nativeLanguage);
     await prefs.remove(key);
+    // Also clear all secondary ID-keyed entries.
+    final idKeys = prefs.getKeys().where((k) => k.startsWith(_idPrefix)).toList();
+    for (final k in idKeys) {
+      await prefs.remove(k);
+    }
   }
 }
