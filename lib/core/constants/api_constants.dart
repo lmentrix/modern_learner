@@ -27,10 +27,6 @@ abstract final class ApiConstants {
   static const Duration sendTimeout = Duration(seconds: 30);
 
   // ── Endpoints ─────────────────────────────────────────────────────────────
-  static const String login = '/auth/login';
-  static const String register = '/auth/register';
-  static const String logout = '/auth/logout';
-  static const String refreshToken = '/auth/refresh';
   static const String lessonRoadmapGenerate = '/ai/lesson-roadmap/generate';
   static const String roadmapGenerate = '/ai/roadmap/generate';
   static const String chapterContentGenerate = '/ai/chapter-content/generate';

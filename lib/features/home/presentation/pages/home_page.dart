@@ -7,7 +7,7 @@ import 'package:modern_learner_production/core/di/injection.dart';
 import 'package:modern_learner_production/core/router/app_router.dart';
 import 'package:modern_learner_production/core/supabase/supabase_service.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
-import 'package:modern_learner_production/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:modern_learner_production/features/lesson_detail/presentation/pages/lesson_detail_page.dart'
     as lesson_detail;
 import 'package:modern_learner_production/features/lesson_detail/presentation/pages/school_lesson_page.dart';
@@ -83,13 +83,10 @@ class _HomePageState extends State<HomePage> {
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (context) => BlocBuilder<AuthBloc, AuthState>(
-        builder: (context, state) {
-          final user = state.user;
-          final displayName = user?.name ?? 'User';
-          final initial = displayName.isNotEmpty
-              ? displayName[0].toUpperCase()
-              : 'U';
+      builder: (context) {
+          final supaUser = Supabase.instance.client.auth.currentUser;
+          final displayName = supaUser?.userMetadata?['name'] as String? ?? 'User';
+          final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : 'U';
 
           return Container(
             decoration: const BoxDecoration(
@@ -240,7 +237,6 @@ class _HomePageState extends State<HomePage> {
             ),
           );
         },
-      ),
     );
   }
 
@@ -409,15 +405,11 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildHeader() {
-    return BlocBuilder<AuthBloc, AuthState>(
-      builder: (context, state) {
-        final user = state.user;
-        final displayName = user?.name ?? 'User';
-        final initial = displayName.isNotEmpty
-            ? displayName[0].toUpperCase()
-            : 'U';
+    final supaUser = Supabase.instance.client.auth.currentUser;
+    final displayName = supaUser?.userMetadata?['name'] as String? ?? 'User';
+    final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : 'U';
 
-        return Container(
+    return Container(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
           decoration: const BoxDecoration(
             gradient: LinearGradient(
@@ -453,7 +445,7 @@ class _HomePageState extends State<HomePage> {
                             height: 1.1,
                           ),
                         ),
-                        if (user?.isVip == true) ...[
+                        if (false) ...[
                           const SizedBox(height: 6),
                           Container(
                             padding: const EdgeInsets.symmetric(
@@ -519,8 +511,6 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
         );
-      },
-    );
   }
 
   Widget _buildVoiceLessons() {

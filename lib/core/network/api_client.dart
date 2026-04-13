@@ -3,7 +3,6 @@ import 'package:injectable/injectable.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 
 import 'package:modern_learner_production/core/constants/api_constants.dart';
-import 'package:modern_learner_production/core/network/interceptors/auth_interceptor.dart';
 
 @lazySingleton
 class ApiClient {
@@ -17,7 +16,6 @@ class ApiClient {
         headers: {'Content-Type': 'application/json'},
       )
       ..interceptors.addAll([
-        AuthInterceptor(),
         PrettyDioLogger(
           requestHeader: true,
           requestBody: true,

@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:modern_learner_production/core/theme/app_colors.dart';
-import 'package:modern_learner_production/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:modern_learner_production/features/profile/presentation/bloc/profile_bloc.dart';
 
 class EditProfileSheet extends StatefulWidget {
@@ -66,13 +65,6 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
         if (!_hasSubmittedUpdate) return;
 
         if (state.status == ProfileStatus.success) {
-          // Update AuthBloc with the new name to reflect changes immediately
-          context.read<AuthBloc>().add(
-            AuthUpdateUserInfoRequested(
-              name: _nameController.text.trim(),
-            ),
-          );
-          
           Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(

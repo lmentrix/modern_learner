@@ -7,15 +7,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:modern_learner_production/core/constants/api_constants.dart';
-import 'package:modern_learner_production/features/auth/data/datasources/auth_local_data_source.dart';
-import 'package:modern_learner_production/features/auth/data/datasources/auth_remote_data_source.dart';
-import 'package:modern_learner_production/features/auth/data/repositories/auth_repository_impl.dart';
-import 'package:modern_learner_production/features/auth/domain/repositories/auth_repository.dart';
-import 'package:modern_learner_production/features/auth/domain/usecases/get_current_user_usecase.dart';
-import 'package:modern_learner_production/features/auth/domain/usecases/login_usecase.dart';
-import 'package:modern_learner_production/features/auth/domain/usecases/logout_usecase.dart';
-import 'package:modern_learner_production/features/auth/domain/usecases/register_usecase.dart';
-import 'package:modern_learner_production/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:modern_learner_production/features/home/presentation/bloc/achievement_bloc.dart';
 import 'package:modern_learner_production/features/profile/domain/repositories/profile_repository.dart';
 import 'package:modern_learner_production/features/profile/domain/usecases/get_profile_usecase.dart';
@@ -39,6 +30,13 @@ import 'package:modern_learner_production/features/progress/data/repositories/pr
 import 'package:modern_learner_production/features/progress/domain/repositories/progress_repository.dart';
 import 'package:modern_learner_production/core/network/network_info.dart';
 import 'package:modern_learner_production/core/di/injection.config.dart';
+import 'package:modern_learner_production/features/explore/data/datasources/learning_subject_local_datasource.dart';
+import 'package:modern_learner_production/features/explore/data/repositories/learning_subject_repository_impl.dart';
+import 'package:modern_learner_production/features/explore/domain/repositories/learning_subject_repository.dart';
+import 'package:modern_learner_production/features/explore/domain/usecases/get_all_learning_subjects.dart';
+import 'package:modern_learner_production/features/explore/domain/usecases/get_subjects_by_category.dart';
+import 'package:modern_learner_production/features/explore/domain/usecases/search_learning_subjects.dart';
+import 'package:modern_learner_production/features/explore/presentation/bloc/learning_subjects_bloc.dart';
 
 final getIt = GetIt.instance;
 
@@ -57,22 +55,6 @@ Future<void> configureDependencies() async {
   );
   getIt.registerLazySingleton<InternetConnection>(() => InternetConnection());
   getIt.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl(getIt()));
-
-  // ── Auth ──────────────────────────────────────────────────────────────────
-  getIt.registerLazySingleton<AuthRemoteDataSource>(
-    () => AuthRemoteDataSourceImpl(getIt()),
-  );
-  getIt.registerLazySingleton<AuthLocalDataSource>(
-    () => AuthLocalDataSourceImpl(getIt()),
-  );
-  getIt.registerLazySingleton<AuthRepository>(
-    () => AuthRepositoryImpl(getIt(), getIt(), getIt()),
-  );
-  getIt.registerLazySingleton(() => LoginUseCase(getIt()));
-  getIt.registerLazySingleton(() => RegisterUseCase(getIt()));
-  getIt.registerLazySingleton(() => LogoutUseCase(getIt()));
-  getIt.registerLazySingleton(() => GetCurrentUserUseCase(getIt()));
-  getIt.registerFactory(() => AuthBloc(getIt(), getIt(), getIt(), getIt()));
 
   // ── Achievement ───────────────────────────────────────────────────────────
   getIt.registerFactory(() => AchievementBloc());
@@ -150,4 +132,22 @@ Future<void> configureDependencies() async {
   getIt.registerLazySingleton(() => GetLesson(getIt<LessonRepository>()));
   getIt.registerLazySingleton(() => UpdateLesson(getIt<LessonRepository>()));
   getIt.registerLazySingleton(() => DeleteLesson(getIt<LessonRepository>()));
+
+  // ── Learning Subjects (Explore) ───────────────────────────────────────────
+  getIt.registerLazySingleton<LearningSubjectLocalDatasource>(
+    () => LearningSubjectLocalDatasourceImpl(),
+  );
+  getIt.registerLazySingleton<LearningSubjectRepository>(
+    () => LearningSubjectRepositoryImpl(getIt()),
+  );
+  getIt.registerLazySingleton(() => GetAllLearningSubjects(getIt()));
+  getIt.registerLazySingleton(() => GetSubjectsByCategory(getIt()));
+  getIt.registerLazySingleton(() => SearchLearningSubjects(getIt()));
+  getIt.registerFactory(
+    () => LearningSubjectsBloc(
+      getAllSubjects: getIt(),
+      getByCategory: getIt(),
+      searchSubjects: getIt(),
+    ),
+  );
 }
