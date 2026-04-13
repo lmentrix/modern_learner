@@ -1,25 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:modern_learner_production/core/router/app_router.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
-import 'package:modern_learner_production/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ViewProfilePage extends StatelessWidget {
   const ViewProfilePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AuthBloc, AuthState>(
-      builder: (context, state) {
-        final user = state.user;
-        final displayName = user?.name ?? 'User';
-        final email = user?.email ?? '';
-        final initial = displayName.isNotEmpty
-            ? displayName[0].toUpperCase()
-            : 'U';
-        final isVip = user?.isVip ?? false;
+    final supaUser = Supabase.instance.client.auth.currentUser;
+    final displayName = supaUser?.userMetadata?['name'] as String? ?? 'User';
+    final email = supaUser?.email ?? '';
+    final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : 'U';
+    const isVip = false;
+
+    return Builder(
+      builder: (context) {
 
         return Material(
           color: AppColors.surface,

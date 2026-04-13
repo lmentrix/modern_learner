@@ -3,8 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:modern_learner_production/core/di/injection.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
-import 'package:modern_learner_production/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:modern_learner_production/features/profile/presentation/bloc/profile_bloc.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:modern_learner_production/features/profile/presentation/widgets/achievement_badge.dart';
 import 'package:modern_learner_production/features/profile/presentation/widgets/edit_profile_sheet.dart';
 import 'package:modern_learner_production/features/profile/presentation/widgets/setting_item.dart';
@@ -38,30 +38,7 @@ class _ProfilePageState extends State<ProfilePage> {
     // Load user info and profile data on page load
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        // Load auth user info
-        context.read<AuthBloc>().add(const AuthLoadUserInfoRequested());
-        // Load latest profile from Supabase and update auth state
-        _loadProfileFromSupabase();
-      }
-    });
-  }
-
-  void _loadProfileFromSupabase() {
-    final profileBloc = getIt<ProfileBloc>();
-    profileBloc.add(const ProfileLoadRequested());
-    
-    // Listen for profile load completion and update AuthBloc
-    profileBloc.stream.listen((profileState) {
-      if (profileState.status == ProfileStatus.success && profileState.profile != null) {
-        final profile = profileState.profile!;
-        if (mounted) {
-          context.read<AuthBloc>().add(
-            AuthUpdateUserInfoRequested(
-              name: profile.name,
-              avatarUrl: profile.avatarUrl,
-            ),
-          );
-        }
+        getIt<ProfileBloc>().add(const ProfileLoadRequested());
       }
     });
   }
@@ -182,13 +159,12 @@ class _ProfilePageState extends State<ProfilePage> {
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (context) => BlocBuilder<AuthBloc, AuthState>(
-        builder: (context, state) {
-          final user = state.user;
-          final displayName = user?.name ?? 'User';
-          final email = user?.email ?? '';
+      builder: (context) {
+          final supaUser = Supabase.instance.client.auth.currentUser;
+          final displayName = supaUser?.userMetadata?['name'] as String? ?? 'User';
+          final email = supaUser?.email ?? '';
           final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : 'U';
-          
+
           return Container(
             decoration: const BoxDecoration(
               color: AppColors.surfaceContainerHigh,
@@ -299,7 +275,6 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           );
         },
-      ),
     );
   }
 
@@ -835,7 +810,7 @@ class _ProfilePageState extends State<ProfilePage> {
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              context.read<AuthBloc>().add(const AuthLogoutRequested());
+              Supabase.instance.client.auth.signOut();
             },
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
             child: Text(
@@ -851,9 +826,9 @@ class _ProfilePageState extends State<ProfilePage> {
   // ── Edit profile sheet ───────────────────────────────────────────────────
 
   void _showEditProfileSheet() {
-    final user = context.read<AuthBloc>().state.user;
-    final name = user?.name ?? '';
-    final email = user?.email ?? '';
+    final supaUser = Supabase.instance.client.auth.currentUser;
+    final name = supaUser?.userMetadata?['name'] as String? ?? '';
+    final email = supaUser?.email ?? '';
 
     showModalBottomSheet(
       context: context,
@@ -920,12 +895,12 @@ class _ProfilePageState extends State<ProfilePage> {
               sliver: SliverToBoxAdapter(
                 child: Column(
                   children: [
-                    BlocBuilder<AuthBloc, AuthState>(
-                      builder: (context, state) {
-                        final user = state.user;
-                        final subtitle = user != null
-                            ? '${user.name} · ${user.email}'
-                            : 'Not signed in';
+                    Builder(
+                      builder: (context) {
+                        final supaUser = Supabase.instance.client.auth.currentUser;
+                        final name = supaUser?.userMetadata?['name'] as String? ?? '';
+                        final email = supaUser?.email ?? '';
+                        final subtitle = name.isNotEmpty ? '$name · $email' : email;
                         return SettingItem(
                           icon: Icons.person_outline_rounded,
                           title: 'Account',
@@ -1039,13 +1014,11 @@ class _ProfilePageState extends State<ProfilePage> {
   // ── Existing section builders (unchanged) ────────────────────────────────
 
   Widget _buildHeader() {
-    return BlocBuilder<AuthBloc, AuthState>(
-      builder: (context, state) {
-        final user = state.user;
-        final displayName = user?.name ?? 'User';
-        final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : 'U';
-        
-        return Container(
+    final supaUser = Supabase.instance.client.auth.currentUser;
+    final displayName = supaUser?.userMetadata?['name'] as String? ?? 'User';
+    final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : 'U';
+
+    return Container(
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 14),
           child: Row(
             children: [
@@ -1135,8 +1108,6 @@ class _ProfilePageState extends State<ProfilePage> {
             ],
           ),
         );
-      },
-    );
   }
 
   Widget _buildStatsRow() {

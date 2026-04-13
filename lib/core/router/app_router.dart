@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:modern_learner_production/features/app/presentation/widgets/main_layout.dart';
-import 'package:modern_learner_production/features/auth/presentation/pages/email_confirmation_page.dart';
-import 'package:modern_learner_production/features/auth/presentation/pages/login_page.dart';
-import 'package:modern_learner_production/features/auth/presentation/pages/register_page.dart';
+import 'package:modern_learner_production/features/explore/domain/entities/learning_subject.dart';
 import 'package:modern_learner_production/features/explore/presentation/pages/explore_page.dart';
+import 'package:modern_learner_production/features/explore/presentation/pages/learning_subject_detail_page.dart';
 import 'package:modern_learner_production/features/home/domain/entities/achievement_entity.dart';
 import 'package:modern_learner_production/features/home/presentation/pages/achievements_detail.dart';
 import 'package:modern_learner_production/features/home/presentation/pages/achievements_page.dart';
@@ -13,16 +12,10 @@ import 'package:modern_learner_production/features/home/presentation/pages/view_
 import 'package:modern_learner_production/features/profile/presentation/pages/profile_page.dart';
 import 'package:modern_learner_production/features/progress/domain/entities/progress_course_selection.dart';
 import 'package:modern_learner_production/features/progress/presentation/pages/progress_page.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 // ── Route paths ──────────────────────────────────────────────────────────────
 
 abstract final class Routes {
-  // Auth
-  static const login = '/login';
-  static const register = '/register';
-  static const emailConfirm = '/email-confirm';
-
   // Shell (bottom nav)
   static const home = '/';
   static const explore = '/explore';
@@ -33,47 +26,19 @@ abstract final class Routes {
   static const viewProfile = '/view-profile';
   static const achievements = '/achievements';
   static const achievementDetail = '/achievement-detail';
+  static const learningSubjectDetail = '/learning-subject-detail';
 }
 
 // ── Router ───────────────────────────────────────────────────────────────────
 
 abstract final class AppRouter {
   static final _rootNavigatorKey = GlobalKey<NavigatorState>();
-  static final _authNotifier = _AuthChangeNotifier();
 
   static final router = GoRouter(
     navigatorKey: _rootNavigatorKey,
-    initialLocation: Routes.login,
+    initialLocation: Routes.home,
     debugLogDiagnostics: false,
-    refreshListenable: _authNotifier,
-    redirect: (context, state) {
-      final isSignedIn = Supabase.instance.client.auth.currentSession != null;
-      final loc = state.matchedLocation;
-      final isAuthRoute =
-          loc == Routes.login ||
-          loc == Routes.register ||
-          loc == Routes.emailConfirm;
-
-      if (!isSignedIn && !isAuthRoute) return Routes.login;
-      if (isSignedIn && isAuthRoute) return Routes.home;
-      return null;
-    },
     routes: [
-      // ── Auth ──────────────────────────────────────────────────────────────
-      GoRoute(
-        path: Routes.login,
-        builder: (context, state) => const LoginPage(),
-      ),
-      GoRoute(
-        path: Routes.register,
-        builder: (context, state) => const RegisterPage(),
-      ),
-      GoRoute(
-        path: Routes.emailConfirm,
-        builder: (context, state) =>
-            EmailConfirmationPage(email: state.extra as String? ?? ''),
-      ),
-
       // ── Full-screen (no bottom nav) ────────────────────────────────────────
       GoRoute(
         path: Routes.viewProfile,
@@ -93,6 +58,14 @@ abstract final class AppRouter {
         pageBuilder: (context, state) => _slideUp(
           state.pageKey,
           AchievementsDetailPage(achievement: state.extra as AchievementEntity),
+        ),
+      ),
+      GoRoute(
+        path: Routes.learningSubjectDetail,
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) => _slideUp(
+          state.pageKey,
+          LearningSubjectDetailPage(subject: state.extra as LearningSubject),
         ),
       ),
 
@@ -146,14 +119,4 @@ abstract final class AppRouter {
           child: child,
         ),
   );
-}
-
-// ── Auth change notifier ──────────────────────────────────────────────────────
-
-class _AuthChangeNotifier extends ChangeNotifier {
-  _AuthChangeNotifier() {
-    Supabase.instance.client.auth.onAuthStateChange.listen((_) {
-      notifyListeners();
-    });
-  }
 }

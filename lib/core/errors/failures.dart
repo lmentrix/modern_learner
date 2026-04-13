@@ -25,11 +25,3 @@ final class UnauthorizedFailure extends Failure {
   const UnauthorizedFailure(super.message);
 }
 
-final class EmailConfirmationPendingFailure extends Failure {
-  const EmailConfirmationPendingFailure(this.email)
-      : super('Email confirmation required.');
-  final String email;
-
-  @override
-  List<Object?> get props => [message, email];
-}

@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:modern_learner_production/core/theme/app_colors.dart';
-import 'package:modern_learner_production/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AccountPage extends StatefulWidget {
   const AccountPage({super.key});
@@ -22,16 +21,12 @@ class _AccountPageState extends State<AccountPage> {
   @override
   void initState() {
     super.initState();
-    // Load user info and populate form
-    context.read<AuthBloc>().add(const AuthLoadUserInfoRequested());
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        final user = context.read<AuthBloc>().state.user;
-        if (user != null) {
-          _nameCtrl.text = user.name;
-          _emailCtrl.text = user.email;
-          _bioCtrl.text = '📚 Language enthusiast | 🎯 Daily learner | 🌟 Goal: Fluent in 3 languages';
-        }
+        final supaUser = Supabase.instance.client.auth.currentUser;
+        _nameCtrl.text = supaUser?.userMetadata?['name'] as String? ?? '';
+        _emailCtrl.text = supaUser?.email ?? '';
+        _bioCtrl.text = '📚 Language enthusiast | 🎯 Daily learner | 🌟 Goal: Fluent in 3 languages';
       }
     });
   }
@@ -164,13 +159,11 @@ class _AccountPageState extends State<AccountPage> {
   }
 
   Widget _buildProfilePicture() {
-    return BlocBuilder<AuthBloc, AuthState>(
-      builder: (context, state) {
-        final user = state.user;
-        final displayName = user?.name ?? 'User';
-        final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : 'U';
-        
-        return Container(
+    final supaUser = Supabase.instance.client.auth.currentUser;
+    final displayName = supaUser?.userMetadata?['name'] as String? ?? 'User';
+    final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : 'U';
+
+    return Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: AppColors.surfaceContainerLow,
@@ -232,8 +225,6 @@ class _AccountPageState extends State<AccountPage> {
             ],
           ),
         );
-      },
-    );
   }
 
   Widget _buildAccountForm() {
