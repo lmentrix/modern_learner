@@ -48,3 +48,7 @@ app.*.map.json
 
 # Flutter plugins
 .flutter-plugins
+
+# Allow .env files (explicitly include)
+!.env
+!.env.*
