@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -6,8 +8,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:modern_learner_production/core/di/injection.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 import 'package:modern_learner_production/features/explore/presentation/widgets/lesson_topic_card.dart';
-import 'package:modern_learner_production/features/explore/service/library_subject.dart';
-import 'package:modern_learner_production/features/explore/service/open_library_service.dart';
+import 'package:modern_learner_production/features/explore/service/explore_subject.dart';
+import 'package:modern_learner_production/features/explore/service/open_alex_service.dart';
 
 class ExplorePage extends StatefulWidget {
   const ExplorePage({super.key});
@@ -19,21 +21,23 @@ class ExplorePage extends StatefulWidget {
 class _ExplorePageState extends State<ExplorePage> {
   final _scrollCtrl = ScrollController();
   final _searchCtrl = TextEditingController();
-  late final OpenLibraryService _libraryService;
-  late Future<List<LibrarySubject>> _libraryFuture;
+  Timer? _searchDebounce;
+  late final OpenAlexService _libraryService;
+  late Future<List<ExploreSubject>> _libraryFuture;
   String _selectedCategory = 'All';
 
   @override
   void initState() {
     super.initState();
-    _libraryService = OpenLibraryService(getIt<Dio>());
-    _libraryFuture = _libraryService.fetchStudySubjects();
+    _libraryService = OpenAlexService(getIt<Dio>());
+    _libraryFuture = _loadSubjects();
     _searchCtrl.addListener(_handleSearchChanged);
   }
 
   @override
   void dispose() {
     _scrollCtrl.dispose();
+    _searchDebounce?.cancel();
     _searchCtrl
       ..removeListener(_handleSearchChanged)
       ..dispose();
@@ -41,40 +45,32 @@ class _ExplorePageState extends State<ExplorePage> {
   }
 
   void _handleSearchChanged() {
-    if (mounted) setState(() {});
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 350), () {
+      if (!mounted) return;
+      setState(() => _libraryFuture = _loadSubjects());
+    });
+  }
+
+  Future<List<ExploreSubject>> _loadSubjects({bool forceRefresh = false}) {
+    return _libraryService.fetchSubjects(
+      search: _searchCtrl.text.trim(),
+      category: _selectedCategory,
+      forceRefresh: forceRefresh,
+    );
   }
 
   Future<void> _reloadLibrary() async {
-    final future = _libraryService.fetchStudySubjects(forceRefresh: true);
+    final future = _loadSubjects(forceRefresh: true);
     setState(() => _libraryFuture = future);
     await future;
   }
 
-  List<String> _categoriesFor(List<LibrarySubject> subjects) {
-    final available = subjects.map((subject) => subject.category).toSet();
-    return OpenLibraryService.categoryOrder.where((category) {
-      return category == 'All' || available.contains(category);
-    }).toList();
+  List<String> _categoriesFor() {
+    return OpenAlexService.categoryOrder;
   }
 
-  List<LibrarySubject> _applyFilters(List<LibrarySubject> subjects) {
-    final query = _searchCtrl.text.trim().toLowerCase();
-
-    return subjects.where((subject) {
-      final matchesCategory =
-          _selectedCategory == 'All' || subject.category == _selectedCategory;
-      final matchesQuery =
-          query.isEmpty ||
-          subject.name.toLowerCase().contains(query) ||
-          subject.category.toLowerCase().contains(query) ||
-          subject.previewTitles.any(
-            (title) => title.toLowerCase().contains(query),
-          );
-      return matchesCategory && matchesQuery;
-    }).toList();
-  }
-
-  void _showSubjectDetails(LibrarySubject subject) {
+  void _showSubjectDetails(ExploreSubject subject) {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -88,12 +84,12 @@ class _ExplorePageState extends State<ExplorePage> {
     return Container(
       color: AppColors.surface,
       child: SafeArea(
-        child: FutureBuilder<List<LibrarySubject>>(
+        child: FutureBuilder<List<ExploreSubject>>(
           future: _libraryFuture,
           builder: (context, snapshot) {
-            final allSubjects = snapshot.data ?? const <LibrarySubject>[];
-            final categories = _categoriesFor(allSubjects);
-            final filteredSubjects = _applyFilters(allSubjects);
+            final allSubjects = snapshot.data ?? const <ExploreSubject>[];
+            final categories = _categoriesFor();
+            final filteredSubjects = allSubjects;
 
             return RefreshIndicator(
               onRefresh: _reloadLibrary,
@@ -128,11 +124,17 @@ class _ExplorePageState extends State<ExplorePage> {
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       sliver: SliverToBoxAdapter(
                         child: _EmptyState(
-                          hasSearchQuery: _searchCtrl.text.trim().isNotEmpty,
+                          hasSearchQuery:
+                              _searchCtrl.text.trim().isNotEmpty ||
+                              _selectedCategory != 'All',
                           onClearFilters: () {
+                            _searchDebounce?.cancel();
                             setState(() {
                               _selectedCategory = 'All';
                               _searchCtrl.clear();
+                              _libraryFuture = _loadSubjects(
+                                forceRefresh: true,
+                              );
                             });
                           },
                         ),
@@ -157,7 +159,7 @@ class _ExplorePageState extends State<ExplorePage> {
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       sliver: SliverToBoxAdapter(
                         child: _sectionLabel(
-                          'BROWSE LIBRARY · ${filteredSubjects.length} COLLECTIONS',
+                          'BROWSE RESEARCH · ${filteredSubjects.length} COLLECTIONS',
                         ),
                       ),
                     ),
@@ -173,7 +175,7 @@ class _ExplorePageState extends State<ExplorePage> {
                             emoji: subject.emoji,
                             title: subject.name,
                             subtitle:
-                                '${subject.works.length} featured books from ${_formatCount(subject.workCount)} works',
+                                '${subject.works.length} featured papers from ${_formatCount(subject.workCount)} OpenAlex works',
                             count: _formatCount(subject.workCount),
                             accentColor: subject.accentColor,
                             category: subject.category,
@@ -219,7 +221,7 @@ class _ExplorePageState extends State<ExplorePage> {
               ),
             ),
             child: Text(
-              'LIVE FROM OPEN LIBRARY',
+              'LIVE FROM OPENALEX',
               style: GoogleFonts.inter(
                 fontSize: 10,
                 fontWeight: FontWeight.w800,
@@ -230,7 +232,7 @@ class _ExplorePageState extends State<ExplorePage> {
           ),
           const SizedBox(height: 16),
           Text(
-            'Browse study libraries',
+            'Browse research collections',
             style: GoogleFonts.spaceGrotesk(
               fontSize: 32,
               fontWeight: FontWeight.w700,
@@ -240,7 +242,7 @@ class _ExplorePageState extends State<ExplorePage> {
           ),
           const SizedBox(height: 10),
           Text(
-            'Real subject collections, real books, and category filters built for language, school, and research learning.',
+            'Live subject feeds from OpenAlex with search and category filtering for language, school, and research learning.',
             style: GoogleFonts.inter(
               fontSize: 14,
               height: 1.6,
@@ -276,7 +278,7 @@ class _ExplorePageState extends State<ExplorePage> {
             children: [
               Expanded(
                 child: Text(
-                  'Filter the library',
+                  'Filter the research feed',
                   style: GoogleFonts.spaceGrotesk(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
@@ -311,7 +313,7 @@ class _ExplorePageState extends State<ExplorePage> {
                   Icons.search_rounded,
                   color: AppColors.onSurfaceVariant,
                 ),
-                hintText: 'Search subjects, categories, or book titles',
+                hintText: 'Search subjects, categories, or paper titles',
                 hintStyle: GoogleFonts.inter(
                   fontSize: 13,
                   color: AppColors.onSurfaceVariant,
@@ -332,7 +334,13 @@ class _ExplorePageState extends State<ExplorePage> {
                 final category = categories[index];
                 final isActive = _selectedCategory == category;
                 return GestureDetector(
-                  onTap: () => setState(() => _selectedCategory = category),
+                  onTap: () {
+                    _searchDebounce?.cancel();
+                    setState(() {
+                      _selectedCategory = category;
+                      _libraryFuture = _loadSubjects();
+                    });
+                  },
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 160),
                     padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -372,7 +380,7 @@ class _ExplorePageState extends State<ExplorePage> {
     );
   }
 
-  Widget _buildSpotlight(LibrarySubject subject) {
+  Widget _buildSpotlight(ExploreSubject subject) {
     final featuredWorks = subject.previewTitles.take(2).join('  •  ');
 
     return Container(
@@ -436,7 +444,7 @@ class _ExplorePageState extends State<ExplorePage> {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  '${_formatCount(subject.workCount)} works available to explore now.',
+                  '${_formatCount(subject.workCount)} papers available to explore now.',
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     color: Colors.white.withValues(alpha: 0.74),
@@ -502,8 +510,8 @@ class _ExplorePageState extends State<ExplorePage> {
   }
 
   Widget _buildMetrics(
-    List<LibrarySubject> filteredSubjects,
-    List<LibrarySubject> allSubjects,
+    List<ExploreSubject> filteredSubjects,
+    List<ExploreSubject> allSubjects,
   ) {
     final totalWorks = filteredSubjects.fold<int>(
       0,
@@ -523,9 +531,9 @@ class _ExplorePageState extends State<ExplorePage> {
         const SizedBox(width: 10),
         Expanded(
           child: _MetricCard(
-            label: 'Books',
+            label: 'Papers',
             value: _formatCount(totalWorks),
-            hint: 'works tracked',
+            hint: 'papers tracked',
             accentColor: AppColors.secondary,
           ),
         ),
@@ -533,7 +541,7 @@ class _ExplorePageState extends State<ExplorePage> {
         Expanded(
           child: _MetricCard(
             label: 'Source',
-            value: 'Live',
+            value: 'OpenAlex',
             hint: '${allSubjects.length} feeds',
             accentColor: AppColors.tertiary,
           ),
@@ -740,7 +748,7 @@ class _ErrorState extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Library feed unavailable',
+            'Research feed unavailable',
             style: GoogleFonts.spaceGrotesk(
               fontSize: 20,
               fontWeight: FontWeight.w700,
@@ -749,7 +757,7 @@ class _ErrorState extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Open Library did not respond. Pull to refresh or retry below.',
+            'OpenAlex did not respond. Pull to refresh or retry below.',
             style: GoogleFonts.inter(
               fontSize: 13,
               height: 1.5,
@@ -807,7 +815,7 @@ class _EmptyState extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Try another category or clear the current search to see more study fields.',
+            'Try another category or clear the current search to see more research fields.',
             textAlign: TextAlign.center,
             style: GoogleFonts.inter(
               fontSize: 13,
@@ -829,7 +837,7 @@ class _EmptyState extends StatelessWidget {
 class _LibrarySubjectSheet extends StatelessWidget {
   const _LibrarySubjectSheet({required this.subject});
 
-  final LibrarySubject subject;
+  final ExploreSubject subject;
 
   @override
   Widget build(BuildContext context) {
@@ -872,12 +880,23 @@ class _LibrarySubjectSheet extends StatelessWidget {
                               ),
                               const SizedBox(height: 6),
                               Text(
-                                '${subject.category} · ${_formatCount(subject.workCount)} works on Open Library',
+                                '${subject.category} · ${_formatCount(subject.workCount)} works on OpenAlex',
                                 style: GoogleFonts.inter(
                                   fontSize: 13,
                                   color: AppColors.onSurfaceVariant,
                                 ),
                               ),
+                              if (subject.description.isNotEmpty) ...[
+                                const SizedBox(height: 10),
+                                Text(
+                                  subject.description,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 13,
+                                    height: 1.5,
+                                    color: AppColors.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                         ),
@@ -934,26 +953,12 @@ class _LibrarySubjectSheet extends StatelessWidget {
                                   alpha: 0.12,
                                 ),
                               ),
-                              child: work.coverUrl == null
-                                  ? Center(
-                                      child: Text(
-                                        subject.emoji,
-                                        style: const TextStyle(fontSize: 28),
-                                      ),
-                                    )
-                                  : CachedNetworkImage(
-                                      imageUrl: work.coverUrl!,
-                                      fit: BoxFit.cover,
-                                      errorWidget: (context, url, error) =>
-                                          Center(
-                                            child: Text(
-                                              subject.emoji,
-                                              style: const TextStyle(
-                                                fontSize: 28,
-                                              ),
-                                            ),
-                                          ),
-                                    ),
+                              child: Center(
+                                child: Text(
+                                  subject.emoji,
+                                  style: const TextStyle(fontSize: 28),
+                                ),
+                              ),
                             ),
                             const SizedBox(width: 14),
                             Expanded(
@@ -978,20 +983,42 @@ class _LibrarySubjectSheet extends StatelessWidget {
                                       color: AppColors.onSurfaceVariant,
                                     ),
                                   ),
+                                  if (work.sourceName != null &&
+                                      work.sourceName!.isNotEmpty) ...[
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      work.sourceName!,
+                                      style: GoogleFonts.inter(
+                                        fontSize: 12,
+                                        color: AppColors.onSurfaceVariant,
+                                      ),
+                                    ),
+                                  ],
                                   const SizedBox(height: 10),
                                   Wrap(
                                     spacing: 8,
                                     runSpacing: 8,
                                     children: [
-                                      if (work.firstPublishYear != null)
+                                      if (work.publicationYear != null)
                                         _DetailPill(
-                                          label: '${work.firstPublishYear}',
+                                          label: '${work.publicationYear}',
                                           accentColor: subject.accentColor,
                                         ),
-                                      if (work.editionCount > 0)
+                                      if (work.citationCount > 0)
                                         _DetailPill(
                                           label:
-                                              '${work.editionCount} editions',
+                                              '${_formatCount(work.citationCount)} citations',
+                                          accentColor: subject.accentColor,
+                                        ),
+                                      if (work.type != null &&
+                                          work.type!.isNotEmpty)
+                                        _DetailPill(
+                                          label: work.type!,
+                                          accentColor: subject.accentColor,
+                                        ),
+                                      if (work.isOpenAccess)
+                                        _DetailPill(
+                                          label: 'Open access',
                                           accentColor: subject.accentColor,
                                         ),
                                     ],
