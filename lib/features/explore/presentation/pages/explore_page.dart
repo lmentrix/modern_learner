@@ -190,8 +190,8 @@ class _ExploreBody extends StatelessWidget {
                   ..._buildResearchContent(context, snapshot, all),
                   // ── Learning Subjects ──────────────────────────────────
                   const SliverToBoxAdapter(child: SizedBox(height: 36)),
-                  SliverPadding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                  const SliverPadding(
+                    padding: EdgeInsets.symmetric(horizontal: 20),
                     sliver: SliverToBoxAdapter(
                       child: _SectionLabel(
                         'LEARNING SUBJECTS · CURATED CATALOG',

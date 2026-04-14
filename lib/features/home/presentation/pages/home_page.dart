@@ -17,6 +17,7 @@ import 'package:modern_learner_production/features/home/presentation/widgets/pro
 import 'package:modern_learner_production/features/home/presentation/widgets/streak_badge.dart';
 import 'package:modern_learner_production/features/home/presentation/widgets/streak_details_dialog.dart';
 import 'package:modern_learner_production/features/home/presentation/widgets/voice_lesson_card.dart';
+import 'package:modern_learner_production/features/explore/service/explore_courses_service.dart';
 import 'package:modern_learner_production/features/progress/domain/entities/progress_course_selection.dart';
 import 'package:modern_learner_production/features/progress/service/progress_navigation_state.dart';
 
@@ -334,6 +335,9 @@ class _HomePageState extends State<HomePage> {
 
             const SliverToBoxAdapter(child: SizedBox(height: 32)),
 
+            // ── My Courses (from Explore) ──────────────────────────────────
+            SliverToBoxAdapter(child: _buildMyCourses()),
+
             // ── Continue learning label ────────────────────────────────────
             SliverPadding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -401,6 +405,37 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildMyCourses() {
+    return ValueListenableBuilder<List<ProgressCourseSelection>>(
+      valueListenable: ExploreCoursesService.instance.courses,
+      builder: (context, courses, _) {
+        if (courses.isEmpty) return const SizedBox.shrink();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: _sectionLabel('MY COURSES'),
+            ),
+            const SizedBox(height: 14),
+            ...courses.map(
+              (course) => Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                child: _ExploreCourseCard(
+                  course: course,
+                  onStart: () => context.go(Routes.progress, extra: course),
+                  onDismiss: () =>
+                      ExploreCoursesService.instance.removeCourse(course),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+          ],
+        );
+      },
     );
   }
 
@@ -574,6 +609,140 @@ class _HomePageState extends State<HomePage> {
         fontWeight: FontWeight.w700,
         color: AppColors.onSurfaceVariant,
         letterSpacing: 1.8,
+      ),
+    );
+  }
+}
+
+// ── Explore Course Card ───────────────────────────────────────────────────────
+
+class _ExploreCourseCard extends StatelessWidget {
+  const _ExploreCourseCard({
+    required this.course,
+    required this.onStart,
+    required this.onDismiss,
+  });
+
+  final ProgressCourseSelection course;
+  final VoidCallback onStart;
+  final VoidCallback onDismiss;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.primary.withValues(alpha: 0.18),
+            AppColors.surfaceContainerLow,
+          ],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.3),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: const Center(
+              child: Text('🎓', style: TextStyle(fontSize: 22)),
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  course.title,
+                  style: GoogleFonts.spaceGrotesk(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.onSurface,
+                    height: 1.1,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  course.topic,
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 3),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 7,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    course.level.toUpperCase(),
+                    style: GoogleFonts.inter(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.primary,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          Column(
+            children: [
+              GestureDetector(
+                onTap: onDismiss,
+                child: Icon(
+                  Icons.close_rounded,
+                  size: 18,
+                  color: AppColors.onSurfaceVariant.withValues(alpha: 0.6),
+                ),
+              ),
+              const SizedBox(height: 8),
+              GestureDetector(
+                onTap: onStart,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    'Start',
+                    style: GoogleFonts.spaceGrotesk(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
