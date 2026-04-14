@@ -8,6 +8,74 @@ import 'package:modern_learner_production/core/theme/app_colors.dart';
 import 'package:modern_learner_production/features/home/domain/entities/achievement_entity.dart';
 import 'package:modern_learner_production/features/home/presentation/bloc/achievement_bloc.dart';
 
+// ── Rarity helpers ────────────────────────────────────────────────────────────
+
+enum _Rarity { common, rare, epic, legendary }
+
+_Rarity _rarityOf(AchievementEntity a) {
+  switch (a.id) {
+    case 'year_streak':
+    case 'xp_champion':
+    case 'number_one':
+    case 'scholar':
+      return _Rarity.legendary;
+    case 'century_streak':
+    case 'xp_legend':
+    case 'top_3':
+    case 'no_mistakes':
+      return _Rarity.epic;
+    case 'month_streak':
+    case 'xp_master':
+    case 'bookworm':
+    case 'top_10':
+    case 'speed_demon':
+      return _Rarity.rare;
+    default:
+      return _Rarity.common;
+  }
+}
+
+extension _RarityLabel on _Rarity {
+  String get label {
+    switch (this) {
+      case _Rarity.legendary:
+        return 'Legendary';
+      case _Rarity.epic:
+        return 'Epic';
+      case _Rarity.rare:
+        return 'Rare';
+      case _Rarity.common:
+        return 'Common';
+    }
+  }
+
+  Color get color {
+    switch (this) {
+      case _Rarity.legendary:
+        return const Color(0xFFFFD700);
+      case _Rarity.epic:
+        return const Color(0xFFB388FF);
+      case _Rarity.rare:
+        return const Color(0xFF4FC3F7);
+      case _Rarity.common:
+        return AppColors.onSurfaceVariant;
+    }
+  }
+}
+
+// ── Category meta ─────────────────────────────────────────────────────────────
+
+const _categoryMeta = {
+  'All':        ('🏅', AppColors.primary),
+  'Streaks':    ('🔥', Color(0xFFFF9500)),
+  'Experience': ('⭐', Color(0xFFFFD700)),
+  'Learning':   ('📚', AppColors.primary),
+  'Social':     ('🤝', Color(0xFF4FC3F7)),
+  'Special':    ('🚀', Color(0xFF7E51FF)),
+};
+
+// ── Page ──────────────────────────────────────────────────────────────────────
+
 class AchievementsPage extends StatefulWidget {
   const AchievementsPage({super.key});
 
@@ -15,87 +83,162 @@ class AchievementsPage extends StatefulWidget {
   State<AchievementsPage> createState() => _AchievementsPageState();
 }
 
-class _AchievementsPageState extends State<AchievementsPage> {
+class _AchievementsPageState extends State<AchievementsPage>
+    with SingleTickerProviderStateMixin {
   final _scrollCtrl = ScrollController();
+  late final TabController _tabCtrl;
+
+  static const _tabs = ['All', 'Streaks', 'Experience', 'Learning', 'Social', 'Special'];
+
+  @override
+  void initState() {
+    super.initState();
+    _tabCtrl = TabController(length: _tabs.length, vsync: this);
+    _tabCtrl.addListener(_onTabChanged);
+  }
 
   @override
   void dispose() {
     _scrollCtrl.dispose();
+    _tabCtrl
+      ..removeListener(_onTabChanged)
+      ..dispose();
     super.dispose();
+  }
+
+  late AchievementBloc _bloc;
+
+  void _onTabChanged() {
+    if (!_tabCtrl.indexIsChanging) return;
+    final filter = _tabs[_tabCtrl.index];
+    _bloc.add(AchievementFilterChanged(filter == 'All' ? 'all' : filter));
   }
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) =>
-          AchievementBloc()..add(const AchievementLoadRequested()),
+      create: (_) {
+        _bloc = AchievementBloc()..add(const AchievementLoadRequested());
+        return _bloc;
+      },
       child: BlocBuilder<AchievementBloc, AchievementState>(
-        builder: (context, state) => _buildContent(context, state),
+        builder: (context, state) => _buildScaffold(context, state),
       ),
     );
   }
 
-  Widget _buildContent(BuildContext context, AchievementState state) {
+  Widget _buildScaffold(BuildContext context, AchievementState state) {
     return Material(
-          color: AppColors.surface,
-          child: SafeArea(
-            child: CustomScrollView(
-              controller: _scrollCtrl,
-              physics: const BouncingScrollPhysics(),
-              slivers: [
-                SliverToBoxAdapter(child: _buildHeader(context, state)),
-                const SliverToBoxAdapter(child: SizedBox(height: 16)),
-                SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  sliver: SliverToBoxAdapter(child: _buildProgressCard(state)),
-                ),
-                const SliverToBoxAdapter(child: SizedBox(height: 24)),
-                SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  sliver: SliverToBoxAdapter(
-                    child: _buildFilterChips(context, state),
+      color: AppColors.surface,
+      child: CustomScrollView(
+        controller: _scrollCtrl,
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          // ── Header ──────────────────────────────────────────────────────────
+          SliverToBoxAdapter(child: _Header(state: state)),
+
+          // ── Hero progress card ───────────────────────────────────────────────
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+            sliver: SliverToBoxAdapter(child: _HeroCard(state: state)),
+          ),
+
+          // ── Recently unlocked spotlight ──────────────────────────────────────
+          if (state.achievements.any((a) => !a.isLocked)) ...[
+            const SliverToBoxAdapter(child: SizedBox(height: 28)),
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              sliver: SliverToBoxAdapter(
+                child: _sectionLabel('RECENTLY UNLOCKED'),
+              ),
+            ),
+            const SliverToBoxAdapter(child: SizedBox(height: 12)),
+            SliverToBoxAdapter(
+              child: _RecentlyUnlockedRow(
+                achievements: state.achievements
+                    .where((a) => !a.isLocked)
+                    .take(5)
+                    .toList(),
+                onTap: (a) => context.push(Routes.achievementDetail, extra: a),
+              ),
+            ),
+          ],
+
+          // ── Category tabs ────────────────────────────────────────────────────
+          const SliverToBoxAdapter(child: SizedBox(height: 28)),
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            sliver: SliverToBoxAdapter(child: _sectionLabel('BROWSE BY CATEGORY')),
+          ),
+          const SliverToBoxAdapter(child: SizedBox(height: 12)),
+          SliverToBoxAdapter(
+            child: _CategoryTabBar(controller: _tabCtrl, tabs: _tabs),
+          ),
+
+          // ── Grid ─────────────────────────────────────────────────────────────
+          const SliverToBoxAdapter(child: SizedBox(height: 16)),
+          for (final entry in state.groupedFiltered.entries)
+            if (entry.value.isNotEmpty) ...[
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 10),
+                sliver: SliverToBoxAdapter(
+                  child: _CategoryGroupHeader(
+                    category: entry.key,
+                    count: entry.value.length,
+                    unlocked: entry.value.where((a) => !a.isLocked).length,
                   ),
                 ),
-                const SliverToBoxAdapter(child: SizedBox(height: 8)),
-                for (final entry in state.groupedFiltered.entries)
-                  if (entry.value.isNotEmpty) ...[
-                    SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 14),
-                      sliver: SliverToBoxAdapter(
-                        child: _sectionLabel(entry.key.toUpperCase()),
-                      ),
+              ),
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                sliver: SliverGrid.builder(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
+                    childAspectRatio: 0.80,
+                  ),
+                  itemCount: entry.value.length,
+                  itemBuilder: (context, i) => _AchievementCard(
+                    achievement: entry.value[i],
+                    onTap: () => context.push(
+                      Routes.achievementDetail,
+                      extra: entry.value[i],
                     ),
-                    SliverPadding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      sliver: SliverGrid.builder(
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          mainAxisSpacing: 12,
-                          crossAxisSpacing: 12,
-                          childAspectRatio: 0.82,
-                        ),
-                        itemCount: entry.value.length,
-                        itemBuilder: (context, i) => _AchievementCard(
-                          achievement: entry.value[i],
-                          onTap: () => context.push(
-                            Routes.achievementDetail,
-                            extra: entry.value[i],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                const SliverToBoxAdapter(child: SizedBox(height: 100)),
-              ],
-            ),
-          ),
-        );
+                  ),
+                ),
+              ),
+            ],
+
+          const SliverToBoxAdapter(child: SizedBox(height: 100)),
+        ],
+      ),
+    );
   }
 
-  Widget _buildHeader(BuildContext context, AchievementState state) {
+  Widget _sectionLabel(String text) => Text(
+        text,
+        style: GoogleFonts.inter(
+          fontSize: 11,
+          fontWeight: FontWeight.w800,
+          color: AppColors.onSurfaceVariant,
+          letterSpacing: 1.7,
+        ),
+      );
+}
+
+// ── Header ────────────────────────────────────────────────────────────────────
+
+class _Header extends StatelessWidget {
+  const _Header({required this.state});
+  final AchievementState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final unlocked = state.unlockedCount;
+    final total = state.achievements.length;
+
     return Container(
-      padding: const EdgeInsets.fromLTRB(8, 8, 20, 24),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
@@ -103,70 +246,128 @@ class _AchievementsPageState extends State<AchievementsPage> {
           colors: [Color(0xFF0E1020), AppColors.surface],
         ),
       ),
-      child: Row(
-        children: [
-          IconButton(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back_ios_rounded),
-            color: AppColors.onSurface,
-          ),
-          const SizedBox(width: 4),
-          Flexible(
-            child: Text(
-              'Achievements',
-              style: GoogleFonts.spaceGrotesk(
-                fontSize: 24,
-                fontWeight: FontWeight.w700,
-                color: AppColors.onSurface,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          const Spacer(),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceContainerHigh,
-              borderRadius: BorderRadius.circular(100),
-              border: Border.all(
-                color: AppColors.outlineVariant.withValues(alpha: 0.2),
-              ),
-            ),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.emoji_events_rounded,
-                  color: AppColors.tertiaryContainer,
-                  size: 16,
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  '${state.unlockedCount}/${state.achievements.length}',
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.onSurface,
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Back + badge row
+              Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.12),
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.arrow_back_rounded,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
                   ),
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 7,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.tertiaryContainer.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(
+                        color: AppColors.tertiaryContainer.withValues(alpha: 0.35),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.emoji_events_rounded,
+                          color: AppColors.tertiaryContainer,
+                          size: 15,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          '$unlocked / $total',
+                          style: GoogleFonts.spaceGrotesk(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.tertiaryContainer,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'Achievements',
+                style: GoogleFonts.spaceGrotesk(
+                  fontSize: 34,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                  height: 1.0,
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Earn badges by completing lessons, building streaks and reaching milestones.',
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  color: Colors.white.withValues(alpha: 0.55),
+                  height: 1.4,
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
+}
 
-  Widget _buildProgressCard(AchievementState state) {
+// ── Hero progress card ────────────────────────────────────────────────────────
+
+class _HeroCard extends StatelessWidget {
+  const _HeroCard({required this.state});
+  final AchievementState state;
+
+  @override
+  Widget build(BuildContext context) {
     final unlocked = state.unlockedCount;
     final total = state.achievements.length;
+    final locked = total - unlocked;
     final progress = total == 0 ? 0.0 : unlocked / total;
+    final pct = (progress * 100).toStringAsFixed(0);
 
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: AppColors.primaryGradient,
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF6C3FFF), Color(0xFF3B82F6)],
+        ),
         borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF6C3FFF).withValues(alpha: 0.35),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -174,113 +375,408 @@ class _AchievementsPageState extends State<AchievementsPage> {
           Row(
             children: [
               Container(
-                width: 48,
-                height: 48,
+                width: 52,
+                height: 52,
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(14),
+                  color: Colors.white.withValues(alpha: 0.18),
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                child: const Icon(
-                  Icons.emoji_events_rounded,
-                  color: Colors.white,
-                  size: 26,
+                child: const Center(
+                  child: Text('🏆', style: TextStyle(fontSize: 26)),
                 ),
               ),
               const SizedBox(width: 14),
-              Flexible(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '$unlocked / $total Unlocked',
+                      '$unlocked Unlocked',
                       style: GoogleFonts.spaceGrotesk(
                         fontSize: 22,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w800,
                         color: Colors.white,
+                        height: 1.1,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
                     Text(
-                      'Keep learning to earn more!',
+                      '$locked remaining · $pct% complete',
                       style: GoogleFonts.inter(
                         fontSize: 12,
-                        color: Colors.white.withValues(alpha: 0.8),
+                        color: Colors.white.withValues(alpha: 0.72),
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(100),
-            child: LinearProgressIndicator(
-              value: progress,
-              minHeight: 8,
-              backgroundColor: Colors.white.withValues(alpha: 0.2),
-              valueColor: AlwaysStoppedAnimation<Color>(
-                Colors.white.withValues(alpha: 0.9),
+          const SizedBox(height: 18),
+          // Progress bar
+          Stack(
+            children: [
+              Container(
+                height: 8,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(100),
+                ),
               ),
-            ),
+              FractionallySizedBox(
+                widthFactor: progress.clamp(0.0, 1.0),
+                child: Container(
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(100),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.white.withValues(alpha: 0.5),
+                        blurRadius: 8,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          // Stats row
+          Row(
+            children: [
+              _StatChip(
+                emoji: '🔓',
+                label: 'Unlocked',
+                value: '$unlocked',
+              ),
+              const SizedBox(width: 8),
+              _StatChip(
+                emoji: '🔒',
+                label: 'Locked',
+                value: '$locked',
+              ),
+              const SizedBox(width: 8),
+              _StatChip(
+                emoji: '📂',
+                label: 'Categories',
+                value: '${AchievementBloc.categoryOrder.length}',
+              ),
+            ],
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildFilterChips(BuildContext context, AchievementState state) {
-    const filters = [('All', 'all'), ('Unlocked', 'unlocked'), ('Locked', 'locked')];
+class _StatChip extends StatelessWidget {
+  const _StatChip({
+    required this.emoji,
+    required this.label,
+    required this.value,
+  });
 
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: [
-        for (final filter in filters)
-          FilterChip(
-            label: Text(
-              filter.$1,
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: state.selectedFilter == filter.$2
-                    ? Colors.white
-                    : AppColors.onSurfaceVariant,
+  final String emoji;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          children: [
+            Text(emoji, style: const TextStyle(fontSize: 16)),
+            const SizedBox(height: 4),
+            Text(
+              value,
+              style: GoogleFonts.spaceGrotesk(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
               ),
             ),
-            selected: state.selectedFilter == filter.$2,
-            onSelected: (_) => context
-                .read<AchievementBloc>()
-                .add(AchievementFilterChanged(filter.$2)),
-            selectedColor: AppColors.primary,
-            checkmarkColor: Colors.white,
-            backgroundColor: AppColors.surfaceContainerHighest,
-            side: BorderSide.none,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          ),
-      ],
-    );
-  }
-
-  Widget _sectionLabel(String text) {
-    return Text(
-      text,
-      style: GoogleFonts.inter(
-        fontSize: 11,
-        fontWeight: FontWeight.w700,
-        color: AppColors.onSurfaceVariant,
-        letterSpacing: 1.8,
+            Text(
+              label,
+              style: GoogleFonts.inter(
+                fontSize: 9,
+                color: Colors.white.withValues(alpha: 0.65),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-// ── Achievement Card ──────────────────────────────────────────────────────────
+// ── Recently unlocked row ─────────────────────────────────────────────────────
 
-class _AchievementCard extends StatelessWidget {
+class _RecentlyUnlockedRow extends StatelessWidget {
+  const _RecentlyUnlockedRow({
+    required this.achievements,
+    required this.onTap,
+  });
+
+  final List<AchievementEntity> achievements;
+  final void Function(AchievementEntity) onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 160,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        itemCount: achievements.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        itemBuilder: (context, i) {
+          final a = achievements[i];
+          final rarity = _rarityOf(a);
+          return GestureDetector(
+            onTap: () => onTap(a),
+            child: Container(
+              width: 130,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    a.color.withValues(alpha: 0.22),
+                    AppColors.surfaceContainerLow,
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: a.color.withValues(alpha: 0.35),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: a.color.withValues(alpha: 0.18),
+                    blurRadius: 16,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Rarity pill
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 7,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: rarity.color.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(
+                        color: rarity.color.withValues(alpha: 0.4),
+                      ),
+                    ),
+                    child: Text(
+                      rarity.label.toUpperCase(),
+                      style: GoogleFonts.inter(
+                        fontSize: 8,
+                        fontWeight: FontWeight.w800,
+                        color: rarity.color,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    a.emoji,
+                    style: const TextStyle(fontSize: 30),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    a.title,
+                    style: GoogleFonts.spaceGrotesk(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.onSurface,
+                      height: 1.1,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    a.subtitle,
+                    style: GoogleFonts.inter(
+                      fontSize: 10,
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+// ── Category tab bar ──────────────────────────────────────────────────────────
+
+class _CategoryTabBar extends StatelessWidget {
+  const _CategoryTabBar({
+    required this.controller,
+    required this.tabs,
+  });
+
+  final TabController controller;
+  final List<String> tabs;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 44,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        itemCount: tabs.length,
+        separatorBuilder: (_, _2) => const SizedBox(width: 8),
+        itemBuilder: (context, i) {
+          return AnimatedBuilder(
+            animation: controller,
+            builder: (context, _) {
+              final isSelected = controller.index == i;
+              final meta = _categoryMeta[tabs[i]];
+              final accent = meta?.$2 ?? AppColors.primary;
+              return GestureDetector(
+                onTap: () => controller.animateTo(i),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? accent.withValues(alpha: 0.15)
+                        : AppColors.surfaceContainerLow,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isSelected
+                          ? accent.withValues(alpha: 0.50)
+                          : AppColors.outlineVariant.withValues(alpha: 0.2),
+                      width: isSelected ? 1.5 : 1,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (meta != null) ...[
+                        Text(
+                          meta.$1,
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                        const SizedBox(width: 6),
+                      ],
+                      Text(
+                        tabs[i],
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          fontWeight: isSelected
+                              ? FontWeight.w700
+                              : FontWeight.w500,
+                          color: isSelected
+                              ? accent
+                              : AppColors.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+}
+
+// ── Category group header ─────────────────────────────────────────────────────
+
+class _CategoryGroupHeader extends StatelessWidget {
+  const _CategoryGroupHeader({
+    required this.category,
+    required this.count,
+    required this.unlocked,
+  });
+
+  final String category;
+  final int count;
+  final int unlocked;
+
+  @override
+  Widget build(BuildContext context) {
+    final meta = _categoryMeta[category];
+    final accent = meta?.$2 ?? AppColors.primary;
+    final emoji = meta?.$1 ?? '🏅';
+
+    return Row(
+      children: [
+        Container(
+          width: 30,
+          height: 30,
+          decoration: BoxDecoration(
+            color: accent.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Center(
+            child: Text(emoji, style: const TextStyle(fontSize: 15)),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Text(
+          category.toUpperCase(),
+          style: GoogleFonts.inter(
+            fontSize: 11,
+            fontWeight: FontWeight.w800,
+            color: AppColors.onSurfaceVariant,
+            letterSpacing: 1.6,
+          ),
+        ),
+        const Spacer(),
+        Text(
+          '$unlocked/$count',
+          style: GoogleFonts.inter(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: unlocked == count ? accent : AppColors.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(width: 6),
+        if (unlocked == count)
+          Icon(Icons.check_circle_rounded, color: accent, size: 16)
+        else
+          Icon(
+            Icons.radio_button_unchecked_rounded,
+            color: AppColors.outlineVariant.withValues(alpha: 0.5),
+            size: 16,
+          ),
+      ],
+    );
+  }
+}
+
+// ── Achievement card ──────────────────────────────────────────────────────────
+
+class _AchievementCard extends StatefulWidget {
   const _AchievementCard({
     required this.achievement,
     required this.onTap,
@@ -290,114 +786,166 @@ class _AchievementCard extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
+  State<_AchievementCard> createState() => _AchievementCardState();
+}
+
+class _AchievementCardState extends State<_AchievementCard>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double> _scale;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 90),
+      value: 1.0,
+    );
+    _scale = Tween<double>(begin: 0.96, end: 1.0)
+        .animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final color = achievement.color;
-    final isLocked = achievement.isLocked;
+    final a = widget.achievement;
+    final isLocked = a.isLocked;
+    final color = a.color;
+    final rarity = _rarityOf(a);
 
     return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: isLocked
-              ? const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    AppColors.surfaceContainerHigh,
-                    AppColors.surfaceContainerHighest,
+      onTap: widget.onTap,
+      onTapDown: (_) => _ctrl.reverse(),
+      onTapUp: (_) => _ctrl.forward(),
+      onTapCancel: () => _ctrl.forward(),
+      child: ScaleTransition(
+        scale: _scale,
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: isLocked
+                ? LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      AppColors.surfaceContainerLow,
+                      AppColors.surfaceContainerHigh,
+                    ],
+                  )
+                : LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      color.withValues(alpha: 0.18),
+                      AppColors.surfaceContainerLow,
+                      AppColors.surface.withValues(alpha: 0.9),
+                    ],
+                    stops: const [0.0, 0.5, 1.0],
+                  ),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(
+              color: isLocked
+                  ? AppColors.outlineVariant.withValues(alpha: 0.15)
+                  : color.withValues(alpha: 0.32),
+            ),
+            boxShadow: isLocked
+                ? []
+                : [
+                    BoxShadow(
+                      color: color.withValues(alpha: 0.16),
+                      blurRadius: 20,
+                      offset: const Offset(0, 6),
+                    ),
                   ],
-                )
-              : LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    color.withValues(alpha: 0.14),
-                    AppColors.surfaceContainerHigh,
-                    AppColors.surfaceContainerHigh,
-                  ],
-                  stops: const [0.0, 0.45, 1.0],
-                ),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isLocked
-                ? AppColors.outlineVariant.withValues(alpha: 0.12)
-                : color.withValues(alpha: 0.3),
-            width: 1,
           ),
-        ),
-        child: Padding(
           padding: const EdgeInsets.all(14),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Top row: emoji icon + lock/check badge
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    width: 50,
-                    height: 50,
+                    width: 52,
+                    height: 52,
                     decoration: BoxDecoration(
                       color: isLocked
                           ? AppColors.surfaceContainerHighest
-                          : color.withValues(alpha: 0.15),
+                          : color.withValues(alpha: 0.16),
                       borderRadius: BorderRadius.circular(14),
                       boxShadow: isLocked
                           ? null
                           : [
                               BoxShadow(
-                                color: color.withValues(alpha: 0.35),
-                                blurRadius: 18,
-                                spreadRadius: 0,
+                                color: color.withValues(alpha: 0.30),
+                                blurRadius: 14,
                                 offset: const Offset(0, 4),
                               ),
                             ],
                     ),
                     child: Center(
                       child: Opacity(
-                        opacity: isLocked ? 0.35 : 1.0,
+                        opacity: isLocked ? 0.30 : 1.0,
                         child: Text(
-                          achievement.emoji,
+                          a.emoji,
                           style: const TextStyle(fontSize: 26),
                         ),
                       ),
                     ),
                   ),
+                  const Spacer(),
                   Container(
                     padding: const EdgeInsets.all(5),
                     decoration: BoxDecoration(
                       color: isLocked
                           ? AppColors.surfaceContainerHighest
-                          : color.withValues(alpha: 0.15),
+                          : color.withValues(alpha: 0.16),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(
-                      isLocked ? Icons.lock_rounded : Icons.check_rounded,
-                      size: 13,
+                      isLocked
+                          ? Icons.lock_rounded
+                          : Icons.check_rounded,
+                      size: 12,
                       color: isLocked
-                          ? AppColors.onSurfaceVariant.withValues(alpha: 0.45)
+                          ? AppColors.onSurfaceVariant.withValues(alpha: 0.40)
                           : color,
                     ),
                   ),
                 ],
               ),
+
               const Spacer(),
+
+              // Title
               Text(
-                achievement.title,
+                a.title,
                 style: GoogleFonts.spaceGrotesk(
-                  fontSize: 13,
+                  fontSize: 14,
                   fontWeight: FontWeight.w700,
                   color: isLocked
-                      ? AppColors.onSurfaceVariant.withValues(alpha: 0.45)
+                      ? AppColors.onSurfaceVariant.withValues(alpha: 0.40)
                       : AppColors.onSurface,
-                  height: 1.2,
+                  height: 1.15,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 6),
+
+              const SizedBox(height: 5),
+
+              // Subtitle pill
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 7,
+                  vertical: 3,
+                ),
                 decoration: BoxDecoration(
                   color: isLocked
                       ? AppColors.surfaceContainerHighest
@@ -405,18 +953,48 @@ class _AchievementCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
-                  achievement.subtitle,
+                  a.subtitle,
                   style: GoogleFonts.inter(
                     fontSize: 9,
                     fontWeight: FontWeight.w600,
                     color: isLocked
-                        ? AppColors.onSurfaceVariant.withValues(alpha: 0.4)
+                        ? AppColors.onSurfaceVariant.withValues(alpha: 0.35)
                         : color,
-                    letterSpacing: 0.3,
+                    letterSpacing: 0.2,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
+              ),
+
+              const SizedBox(height: 6),
+
+              // Rarity badge
+              Row(
+                children: [
+                  Container(
+                    width: 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: isLocked
+                          ? AppColors.outlineVariant.withValues(alpha: 0.3)
+                          : rarity.color,
+                    ),
+                  ),
+                  const SizedBox(width: 5),
+                  Text(
+                    rarity.label,
+                    style: GoogleFonts.inter(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w600,
+                      color: isLocked
+                          ? AppColors.onSurfaceVariant.withValues(alpha: 0.3)
+                          : rarity.color,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
