@@ -5,10 +5,16 @@ import 'package:modern_learner_production/features/explore/domain/entities/learn
 import 'package:modern_learner_production/features/explore/presentation/widgets/difficulty_badge.dart';
 
 class TopicCard extends StatefulWidget {
-  const TopicCard({super.key, required this.topic, required this.accent});
+  const TopicCard({
+    super.key,
+    required this.topic,
+    required this.accent,
+    this.onTap,
+  });
 
   final LearningTopic topic;
   final Color accent;
+  final VoidCallback? onTap;
 
   @override
   State<TopicCard> createState() => _TopicCardState();
@@ -43,6 +49,7 @@ class _TopicCardState extends State<TopicCard>
     final accent = widget.accent;
 
     return GestureDetector(
+      onTap: widget.onTap,
       onTapDown: (_) => _ctrl.reverse(),
       onTapUp: (_) => _ctrl.forward(),
       onTapCancel: () => _ctrl.forward(),

@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:modern_learner_production/features/app/presentation/widgets/main_layout.dart';
 import 'package:modern_learner_production/features/explore/domain/entities/learning_subject.dart';
 import 'package:modern_learner_production/features/explore/presentation/pages/explore_page.dart';
+import 'package:modern_learner_production/features/explore/presentation/pages/create_course_page.dart';
 import 'package:modern_learner_production/features/explore/presentation/pages/learning_subject_detail_page.dart';
 import 'package:modern_learner_production/features/home/domain/entities/achievement_entity.dart';
 import 'package:modern_learner_production/features/home/presentation/pages/achievements_detail.dart';
@@ -27,6 +28,7 @@ abstract final class Routes {
   static const achievements = '/achievements';
   static const achievementDetail = '/achievement-detail';
   static const learningSubjectDetail = '/learning-subject-detail';
+  static const createCourse = '/create-course';
 }
 
 // ── Router ───────────────────────────────────────────────────────────────────
@@ -67,6 +69,17 @@ abstract final class AppRouter {
           state.pageKey,
           LearningSubjectDetailPage(subject: state.extra as LearningSubject),
         ),
+      ),
+      GoRoute(
+        path: Routes.createCourse,
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) {
+          final args = state.extra as CreateCourseArgs;
+          return _slideUp(
+            state.pageKey,
+            CreateCoursePage(subject: args.subject, topic: args.topic),
+          );
+        },
       ),
 
       // ── Shell (bottom nav) ────────────────────────────────────────────────
