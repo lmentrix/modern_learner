@@ -53,8 +53,8 @@ class _NewLessonPageState extends State<NewLessonPage> {
 
   static const _difficulties = [
     ('🌱', 'Beginner'),
-    ('🌿', 'Intermediate'),
-    ('🌳', 'Advanced'),
+    ('🔥', 'Intermediate'),
+    ('🚀', 'Advanced'),
   ];
 
   @override
@@ -75,130 +75,201 @@ class _NewLessonPageState extends State<NewLessonPage> {
     if (mounted) setState(() {});
   }
 
+  Color get _typeAccent => _lessonType == NewLessonType.language
+      ? AppColors.primary
+      : AppColors.secondary;
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.surface,
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _buildHeader(context),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _sectionLabel('LESSON TYPE'),
+    return Material(
+      color: AppColors.surface,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildHeader(context),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _sectionLabel('LESSON TYPE'),
+                  const SizedBox(height: 12),
+                  _buildLessonTypeSelector(),
+                  const SizedBox(height: 28),
+                  if (_lessonType == NewLessonType.language) ...[
+                    _sectionLabel('LANGUAGE'),
                     const SizedBox(height: 12),
-                    _buildLessonTypeSelector(),
+                    _buildLanguageGrid(),
                     const SizedBox(height: 28),
-                    if (_lessonType == NewLessonType.language) ...[
-                      _sectionLabel('LANGUAGE'),
-                      const SizedBox(height: 12),
-                      _buildLanguageGrid(),
-                      const SizedBox(height: 28),
-                      _sectionLabel('TOPIC'),
-                      const SizedBox(height: 12),
-                      _buildTopicInput(
-                        hintText:
-                            'e.g. Ordering food, travel greetings, daily small talk',
-                      ),
-                      const SizedBox(height: 28),
-                      _sectionLabel('DIFFICULTY'),
-                      const SizedBox(height: 12),
-                      _buildDifficultyRow(),
-                    ] else ...[
-                      _sectionLabel('SCHOOL SUBJECT'),
-                      const SizedBox(height: 12),
-                      _buildSubjectGrid(),
-                      const SizedBox(height: 28),
-                      _sectionLabel('TOPIC'),
-                      const SizedBox(height: 12),
-                      _buildTopicInput(
-                        hintText:
-                            'e.g. Fractions, photosynthesis, World War II',
-                      ),
-                      const SizedBox(height: 28),
-                      _sectionLabel('DIFFICULTY'),
-                      const SizedBox(height: 12),
-                      _buildDifficultyRow(),
-                    ],
-                    const SizedBox(height: 8),
+                    _sectionLabel('TOPIC'),
+                    const SizedBox(height: 12),
+                    _buildTopicInput(
+                      hintText: 'e.g. Ordering food, travel greetings, daily small talk',
+                    ),
+                  ] else ...[
+                    _sectionLabel('SCHOOL SUBJECT'),
+                    const SizedBox(height: 12),
+                    _buildSubjectGrid(),
+                    const SizedBox(height: 28),
+                    _sectionLabel('TOPIC'),
+                    const SizedBox(height: 12),
+                    _buildTopicInput(
+                      hintText: 'e.g. Fractions, photosynthesis, World War II',
+                    ),
                   ],
-                ),
+                  const SizedBox(height: 28),
+                  _sectionLabel('DIFFICULTY'),
+                  const SizedBox(height: 12),
+                  _buildDifficultyRow(),
+                  const SizedBox(height: 8),
+                ],
               ),
             ),
-            _buildStartButton(context),
+          ),
+          _buildStartButton(context),
+        ],
+      ),
+    );
+  }
+
+  // ── Header ─────────────────────────────────────────────────────────────────
+
+  Widget _buildHeader(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            _typeAccent.withValues(alpha: 0.18),
+            AppColors.surface,
           ],
+        ),
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Close button
+              GestureDetector(
+                onTap: () => Navigator.of(context).pop(),
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceContainerHigh.withValues(alpha: 0.7),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppColors.outlineVariant.withValues(alpha: 0.2),
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.close_rounded,
+                    color: AppColors.onSurfaceVariant,
+                    size: 20,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              // Badge
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: _typeAccent.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(
+                    color: _typeAccent.withValues(alpha: 0.35),
+                  ),
+                ),
+                child: Text(
+                  _lessonType == NewLessonType.language
+                      ? '🎤  VOICE LESSON'
+                      : '📚  SCHOOL LESSON',
+                  style: GoogleFonts.inter(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.3,
+                    color: _typeAccent,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'New Lesson',
+                style: GoogleFonts.spaceGrotesk(
+                  fontSize: 32,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.onSurface,
+                  height: 1.0,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Choose a type, topic and difficulty to get started.',
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  color: AppColors.onSurfaceVariant,
+                  height: 1.4,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 8, 20, 8),
-      child: Row(
-        children: [
-          IconButton(
-            onPressed: () => Navigator.of(context).pop(),
-            icon: const Icon(
-              Icons.close_rounded,
-              color: AppColors.onSurfaceVariant,
-              size: 24,
-            ),
-          ),
-          const SizedBox(width: 4),
-          Text(
-            'New Lesson',
-            style: GoogleFonts.spaceGrotesk(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              color: AppColors.onSurface,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // ── Section label ──────────────────────────────────────────────────────────
 
   Widget _sectionLabel(String text) {
     return Text(
       text,
       style: GoogleFonts.inter(
         fontSize: 11,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.w800,
         color: AppColors.onSurfaceVariant,
-        letterSpacing: 1.8,
+        letterSpacing: 1.7,
       ),
     );
   }
+
+  // ── Lesson type selector ───────────────────────────────────────────────────
 
   Widget _buildLessonTypeSelector() {
     return Row(
       children: [
         Expanded(
-          child: _LessonTypeCard(
-            icon: '🌍',
+          child: _TypeTile(
+            emoji: '🎤',
             label: 'Voice',
+            subtitle: 'Speak & listen',
             isSelected: _lessonType == NewLessonType.language,
+            accent: AppColors.primary,
             onTap: () => setState(() => _lessonType = NewLessonType.language),
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: 12),
         Expanded(
-          child: _LessonTypeCard(
-            icon: '📚',
+          child: _TypeTile(
+            emoji: '📚',
             label: 'School',
+            subtitle: 'Study & learn',
             isSelected: _lessonType == NewLessonType.school,
+            accent: AppColors.secondary,
             onTap: () => setState(() => _lessonType = NewLessonType.school),
           ),
         ),
       ],
     );
   }
+
+  // ── Language grid ──────────────────────────────────────────────────────────
 
   Widget _buildLanguageGrid() {
     return GridView.builder(
@@ -214,23 +285,21 @@ class _NewLessonPageState extends State<NewLessonPage> {
       itemBuilder: (context, i) {
         final lang = _languages[i];
         final isSelected = _selectedLanguage == lang.$2;
-        return _SelectableCard(
+        return _SelectableChip(
           isSelected: isSelected,
-          selectedColor: AppColors.primary,
+          accent: AppColors.primary,
           onTap: () => setState(() => _selectedLanguage = lang.$2),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(lang.$1, style: const TextStyle(fontSize: 20)),
+              Text(lang.$1, style: const TextStyle(fontSize: 18)),
               const SizedBox(width: 8),
               Text(
                 lang.$2,
                 style: GoogleFonts.inter(
                   fontSize: 13,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                  color: isSelected
-                      ? AppColors.primary
-                      : AppColors.onSurfaceVariant,
+                  color: isSelected ? AppColors.primary : AppColors.onSurfaceVariant,
                 ),
               ),
             ],
@@ -240,38 +309,41 @@ class _NewLessonPageState extends State<NewLessonPage> {
     );
   }
 
+  // ── Subject grid ───────────────────────────────────────────────────────────
+
   Widget _buildSubjectGrid() {
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: _subjects.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
+        crossAxisCount: 3,
         crossAxisSpacing: 10,
         mainAxisSpacing: 10,
-        childAspectRatio: 2.2,
+        childAspectRatio: 1.3,
       ),
       itemBuilder: (context, i) {
         final subject = _subjects[i];
         final isSelected = _selectedSubject == subject.$2;
-        return _SelectableCard(
+        return _SelectableChip(
           isSelected: isSelected,
-          selectedColor: AppColors.secondary,
+          accent: AppColors.secondary,
           onTap: () => setState(() => _selectedSubject = subject.$2),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(subject.$1, style: const TextStyle(fontSize: 22)),
-              const SizedBox(height: 4),
+              const SizedBox(height: 5),
               Text(
                 subject.$2,
                 style: GoogleFonts.inter(
-                  fontSize: 12,
+                  fontSize: 11,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                  color: isSelected
-                      ? AppColors.secondary
-                      : AppColors.onSurfaceVariant,
+                  color: isSelected ? AppColors.secondary : AppColors.onSurfaceVariant,
                 ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
@@ -279,6 +351,8 @@ class _NewLessonPageState extends State<NewLessonPage> {
       },
     );
   }
+
+  // ── Difficulty ─────────────────────────────────────────────────────────────
 
   Widget _buildDifficultyRow() {
     return Row(
@@ -289,25 +363,21 @@ class _NewLessonPageState extends State<NewLessonPage> {
             padding: EdgeInsets.only(
               right: d.$2 == _difficulties.last.$2 ? 0 : 10,
             ),
-            child: _SelectableCard(
+            child: _SelectableChip(
               isSelected: isSelected,
-              selectedColor: AppColors.tertiary,
+              accent: AppColors.tertiary,
               onTap: () => setState(() => _selectedDifficulty = d.$2),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(d.$1, style: const TextStyle(fontSize: 18)),
-                  const SizedBox(height: 3),
+                  Text(d.$1, style: const TextStyle(fontSize: 20)),
+                  const SizedBox(height: 5),
                   Text(
                     d.$2,
                     style: GoogleFonts.inter(
-                      fontSize: 11,
-                      fontWeight: isSelected
-                          ? FontWeight.w600
-                          : FontWeight.w400,
-                      color: isSelected
-                          ? AppColors.tertiary
-                          : AppColors.onSurfaceVariant,
+                      fontSize: 12,
+                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
+                      color: isSelected ? AppColors.tertiary : AppColors.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -319,13 +389,15 @@ class _NewLessonPageState extends State<NewLessonPage> {
     );
   }
 
+  // ── Topic input ────────────────────────────────────────────────────────────
+
   Widget _buildTopicInput({required String hintText}) {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppColors.outlineVariant.withValues(alpha: 0.2),
+          color: AppColors.outlineVariant.withValues(alpha: 0.25),
         ),
       ),
       child: TextField(
@@ -342,19 +414,28 @@ class _NewLessonPageState extends State<NewLessonPage> {
           hintText: hintText,
           hintStyle: GoogleFonts.inter(
             fontSize: 13,
-            color: AppColors.onSurfaceVariant,
+            color: AppColors.onSurfaceVariant.withValues(alpha: 0.6),
           ),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.all(16),
+          prefixIcon: Padding(
+            padding: const EdgeInsets.only(left: 14, right: 8),
+            child: Icon(
+              Icons.edit_note_rounded,
+              color: AppColors.onSurfaceVariant.withValues(alpha: 0.5),
+              size: 20,
+            ),
+          ),
+          prefixIconConstraints: const BoxConstraints(),
         ),
       ),
     );
   }
 
+  // ── Start button ───────────────────────────────────────────────────────────
+
   Widget _buildStartButton(BuildContext context) {
-    final displayText = _topicController.text.trim().isEmpty
-        ? 'Choose a topic'
-        : _topicController.text.trim();
+    final canAct = _canStart && !_isLoading;
     return Padding(
       padding: EdgeInsets.fromLTRB(
         20,
@@ -362,63 +443,73 @@ class _NewLessonPageState extends State<NewLessonPage> {
         20,
         MediaQuery.of(context).padding.bottom + 16,
       ),
-      child: AnimatedOpacity(
-        duration: const Duration(milliseconds: 200),
-        opacity: (_canStart && !_isLoading) ? 1.0 : 0.4,
-        child: GestureDetector(
-          onTap: (_canStart && !_isLoading) ? () => _onStart(context) : null,
-          child: Container(
-            height: 54,
-            decoration: BoxDecoration(
-              gradient: _canStart
-                  ? AppColors.primaryGradient
-                  : const LinearGradient(
-                      colors: [
-                        AppColors.outlineVariant,
-                        AppColors.outlineVariant,
-                      ],
-                    ),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: _isLoading
-                ? const Center(
-                    child: SizedBox(
-                      width: 22,
-                      height: 22,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.5,
-                        color: Colors.white,
-                      ),
-                    ),
+      child: GestureDetector(
+        onTap: canAct ? () => _onStart(context) : null,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          height: 56,
+          decoration: BoxDecoration(
+            gradient: canAct
+                ? LinearGradient(
+                    colors: [_typeAccent, _typeAccent.withValues(alpha: 0.75)],
                   )
-                : Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        _canStart
-                            ? 'Create $_selectedDifficulty $displayText Course'
-                            : _lessonType == NewLessonType.language
-                            ? 'Choose a language and topic'
-                            : 'Choose a subject and topic',
-                        style: GoogleFonts.spaceGrotesk(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: _canStart
-                              ? Colors.white
-                              : AppColors.onSurfaceVariant,
-                        ),
-                      ),
-                      if (_canStart) ...[
-                        const SizedBox(width: 8),
-                        const Icon(
-                          Icons.arrow_forward_rounded,
-                          color: Colors.white,
-                          size: 18,
-                        ),
-                      ],
+                : LinearGradient(
+                    colors: [
+                      AppColors.surfaceContainerHigh,
+                      AppColors.surfaceContainerHigh,
                     ],
                   ),
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: canAct
+                ? [
+                    BoxShadow(
+                      color: _typeAccent.withValues(alpha: 0.35),
+                      blurRadius: 20,
+                      offset: const Offset(0, 6),
+                    ),
+                  ]
+                : [],
           ),
+          child: _isLoading
+              ? const Center(
+                  child: SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      color: Colors.white,
+                    ),
+                  ),
+                )
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      canAct
+                          ? Icons.rocket_launch_rounded
+                          : Icons.lock_outline_rounded,
+                      color: canAct
+                          ? Colors.white
+                          : AppColors.onSurfaceVariant,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      canAct
+                          ? 'Create $_selectedDifficulty Lesson'
+                          : _lessonType == NewLessonType.language
+                              ? 'Choose a language and topic'
+                              : 'Choose a subject and topic',
+                      style: GoogleFonts.spaceGrotesk(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: canAct
+                            ? Colors.white
+                            : AppColors.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
         ),
       ),
     );
@@ -429,10 +520,8 @@ class _NewLessonPageState extends State<NewLessonPage> {
         ? _selectedLanguage!
         : _selectedSubject!;
     final topic = _topicController.text.trim();
-
     final title = '$_selectedDifficulty $contentType · $topic';
 
-    // Capture before async gap.
     final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
 
@@ -449,32 +538,40 @@ class _NewLessonPageState extends State<NewLessonPage> {
 
       messenger.showSnackBar(
         SnackBar(
-          content: Text(
-            'Course "$title" created!',
-            style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500),
+          content: Row(
+            children: [
+              const Text('✅', style: TextStyle(fontSize: 16)),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  '"$title" created!',
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.onSurface,
+                  ),
+                ),
+              ),
+            ],
           ),
           backgroundColor: AppColors.surfaceContainerHigh,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           margin: const EdgeInsets.all(16),
           duration: const Duration(seconds: 2),
         ),
       );
-      navigator.pop(true); // return true so callers can refresh
+      navigator.pop(true);
     } catch (e) {
       messenger.showSnackBar(
         SnackBar(
           content: Text(
-            'Failed to create course: $e',
-            style: GoogleFonts.inter(fontSize: 13),
+            'Failed: $e',
+            style: GoogleFonts.inter(fontSize: 13, color: Colors.white),
           ),
           backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           margin: const EdgeInsets.all(16),
         ),
       );
@@ -484,17 +581,100 @@ class _NewLessonPageState extends State<NewLessonPage> {
   }
 }
 
-// ── Reusable selectable card ──────────────────────────────────────────────────
+// ── Type tile ─────────────────────────────────────────────────────────────────
 
-class _SelectableCard extends StatelessWidget {
-  const _SelectableCard({
+class _TypeTile extends StatelessWidget {
+  const _TypeTile({
+    required this.emoji,
+    required this.label,
+    required this.subtitle,
     required this.isSelected,
-    required this.selectedColor,
+    required this.accent,
+    required this.onTap,
+  });
+
+  final String emoji;
+  final String label;
+  final String subtitle;
+  final bool isSelected;
+  final Color accent;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? accent.withValues(alpha: 0.12)
+              : AppColors.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: isSelected
+                ? accent.withValues(alpha: 0.50)
+                : AppColors.outlineVariant.withValues(alpha: 0.2),
+            width: isSelected ? 1.5 : 1,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: accent.withValues(alpha: 0.12),
+                    blurRadius: 16,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : [],
+        ),
+        child: Row(
+          children: [
+            Text(emoji, style: const TextStyle(fontSize: 26)),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: GoogleFonts.spaceGrotesk(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: isSelected ? accent : AppColors.onSurface,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (isSelected)
+              Icon(Icons.check_circle_rounded, color: accent, size: 18),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Selectable chip card ──────────────────────────────────────────────────────
+
+class _SelectableChip extends StatelessWidget {
+  const _SelectableChip({
+    required this.isSelected,
+    required this.accent,
     required this.onTap,
     required this.child,
   });
+
   final bool isSelected;
-  final Color selectedColor;
+  final Color accent;
   final VoidCallback onTap;
   final Widget child;
 
@@ -506,73 +686,17 @@ class _SelectableCard extends StatelessWidget {
         duration: const Duration(milliseconds: 150),
         decoration: BoxDecoration(
           color: isSelected
-              ? selectedColor.withValues(alpha: 0.1)
-              : AppColors.surfaceContainerHigh,
+              ? accent.withValues(alpha: 0.10)
+              : AppColors.surfaceContainerLow,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: isSelected
-                ? selectedColor.withValues(alpha: 0.5)
+                ? accent.withValues(alpha: 0.45)
                 : AppColors.outlineVariant.withValues(alpha: 0.2),
             width: isSelected ? 1.5 : 1,
           ),
         ),
         child: child,
-      ),
-    );
-  }
-}
-
-// ── Lesson Type Card ──────────────────────────────────────────────────────────
-
-class _LessonTypeCard extends StatelessWidget {
-  const _LessonTypeCard({
-    required this.icon,
-    required this.label,
-    required this.isSelected,
-    required this.onTap,
-  });
-  final String icon;
-  final String label;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final selectedColor = label == 'Language'
-        ? AppColors.primary
-        : AppColors.secondary;
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? selectedColor.withValues(alpha: 0.1)
-              : AppColors.surfaceContainerHigh,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: isSelected
-                ? selectedColor.withValues(alpha: 0.5)
-                : AppColors.outlineVariant.withValues(alpha: 0.2),
-            width: isSelected ? 1.5 : 1,
-          ),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(icon, style: const TextStyle(fontSize: 28)),
-            const SizedBox(height: 6),
-            Text(
-              label,
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                color: isSelected ? selectedColor : AppColors.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
