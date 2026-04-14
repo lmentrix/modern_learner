@@ -223,126 +223,118 @@ class _Header extends StatelessWidget {
     final displayEmoji = topic?.emoji ?? subject.emoji;
     final displayName = topic?.name ?? subject.name;
 
-    return SizedBox(
-      height: 240,
-      child: Stack(
-        children: [
-          // Background
-          Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [accent.withValues(alpha: 0.32), AppColors.surface],
-                ),
-              ),
+    return Stack(
+      children: [
+        // Decorative circle (clipped by the Stack's own bounds)
+        Positioned(
+          top: -40,
+          right: -40,
+          child: Container(
+            width: 200,
+            height: 200,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: accent.withValues(alpha: 0.10),
             ),
           ),
-          // Decorative circle
-          Positioned(
-            top: -40,
-            right: -40,
-            child: Container(
-              width: 200,
-              height: 200,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: accent.withValues(alpha: 0.10),
-              ),
+        ),
+        // Content drives the height
+        Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [accent.withValues(alpha: 0.32), AppColors.surface],
             ),
           ),
-          // Content
-          Positioned.fill(
-            child: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Back button
-                    GestureDetector(
-                      onTap: () => context.pop(),
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.10),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.14),
-                          ),
-                        ),
-                        child: const Icon(
-                          Icons.arrow_back_rounded,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      ),
-                    ),
-                    const Spacer(),
-                    // Label
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 5,
-                      ),
+          child: SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Back button
+                  GestureDetector(
+                    onTap: () => context.pop(),
+                    child: Container(
+                      width: 40,
+                      height: 40,
                       decoration: BoxDecoration(
-                        color: accent.withValues(alpha: 0.22),
-                        borderRadius: BorderRadius.circular(999),
+                        color: Colors.white.withValues(alpha: 0.10),
+                        borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: accent.withValues(alpha: 0.40),
+                          color: Colors.white.withValues(alpha: 0.14),
                         ),
                       ),
-                      child: Text(
-                        'CREATE COURSE',
-                        style: GoogleFonts.inter(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 1.4,
-                          color: accent,
-                        ),
+                      child: const Icon(
+                        Icons.arrow_back_rounded,
+                        color: Colors.white,
+                        size: 20,
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(
-                          displayEmoji,
-                          style: const TextStyle(fontSize: 42),
-                        ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Text(
-                            displayName,
-                            style: GoogleFonts.spaceGrotesk(
-                              fontSize: 28,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.white,
-                              height: 1.05,
-                            ),
-                          ),
-                        ),
-                      ],
+                  ),
+                  const SizedBox(height: 20),
+                  // Label pill
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
                     ),
-                    if (topic != null) ...[
-                      const SizedBox(height: 6),
+                    decoration: BoxDecoration(
+                      color: accent.withValues(alpha: 0.22),
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(color: accent.withValues(alpha: 0.40)),
+                    ),
+                    child: Text(
+                      'CREATE COURSE',
+                      style: GoogleFonts.inter(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.4,
+                        color: accent,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
                       Text(
-                        'in ${subject.name}',
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          color: Colors.white.withValues(alpha: 0.65),
+                        displayEmoji,
+                        style: const TextStyle(fontSize: 42),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Text(
+                          displayName,
+                          style: GoogleFonts.spaceGrotesk(
+                            fontSize: 26,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                            height: 1.05,
+                          ),
                         ),
                       ),
                     ],
+                  ),
+                  if (topic != null) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      'in ${subject.name}',
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        color: Colors.white.withValues(alpha: 0.65),
+                      ),
+                    ),
                   ],
-                ),
+                ],
               ),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
