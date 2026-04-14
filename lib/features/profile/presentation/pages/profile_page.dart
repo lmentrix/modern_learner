@@ -882,7 +882,7 @@ class _ProfilePageState extends State<ProfilePage> {
             const SliverToBoxAdapter(child: SizedBox(height: 14)),
             SliverPadding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              sliver: SliverToBoxAdapter(child: _buildWeeklyActivity()),
+              sliver: const SliverToBoxAdapter(child: _ActivityChart()),
             ),
             const SliverToBoxAdapter(child: SizedBox(height: 28)),
             SliverPadding(
@@ -1164,80 +1164,6 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildWeeklyActivity() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: AppColors.outlineVariant.withValues(alpha: 0.1),
-        ),
-      ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Learning Activity',
-                style: GoogleFonts.spaceGrotesk(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.onSurface,
-                ),
-              ),
-              Text(
-                '5.2h total',
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: _weekDays.map((day) {
-              final height = day.activity * 0.8;
-              return Column(
-                children: [
-                  Text(
-                    '${day.activity}m',
-                    style: GoogleFonts.inter(
-                      fontSize: 10,
-                      color: AppColors.onSurfaceVariant,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Container(
-                    width: 8,
-                    height: height,
-                    decoration: BoxDecoration(
-                      gradient: AppColors.primaryGradient,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    day.name,
-                    style: GoogleFonts.inter(
-                      fontSize: 10,
-                      color: AppColors.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              );
-            }).toList(),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _sectionLabel(String text) {
     return Text(
       text,
@@ -1310,6 +1236,370 @@ const _weekDays = [
   _WeekDay(name: 'S', activity: 25),
   _WeekDay(name: 'S', activity: 48),
 ];
+
+// ── Animated activity chart ───────────────────────────────────────────────────
+
+class _ActivityChart extends StatefulWidget {
+  const _ActivityChart();
+
+  @override
+  State<_ActivityChart> createState() => _ActivityChartState();
+}
+
+class _ActivityChartState extends State<_ActivityChart>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  // One CurvedAnimation per bar (staggered intervals)
+  late final List<Animation<double>> _barAnims;
+  late final List<Animation<int>> _countAnims;
+
+  static const _maxBarHeight = 72.0;
+  // Today = index 4 (Friday, highest bar)
+  static const _todayIndex = 4;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    );
+
+    final maxActivity = _weekDays.map((d) => d.activity).reduce(
+          (a, b) => a > b ? a : b,
+        );
+
+    _barAnims = List.generate(_weekDays.length, (i) {
+      // Each bar starts 80ms later than the previous
+      final start = (i * 0.08).clamp(0.0, 0.7);
+      final end = (start + 0.55).clamp(0.0, 1.0);
+      return Tween<double>(
+        begin: 0,
+        end: (_weekDays[i].activity / maxActivity) * _maxBarHeight,
+      ).animate(
+        CurvedAnimation(
+          parent: _ctrl,
+          curve: Interval(start, end, curve: Curves.easeOutCubic),
+        ),
+      );
+    });
+
+    _countAnims = List.generate(_weekDays.length, (i) {
+      final start = (i * 0.08).clamp(0.0, 0.7);
+      final end = (start + 0.55).clamp(0.0, 1.0);
+      return IntTween(begin: 0, end: _weekDays[i].activity).animate(
+        CurvedAnimation(
+          parent: _ctrl,
+          curve: Interval(start, end, curve: Curves.easeOut),
+        ),
+      );
+    });
+
+    // Fade-in for the whole card
+    _ctrl.forward();
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  int get _totalMinutes =>
+      _weekDays.fold(0, (sum, d) => sum + d.activity);
+
+  String get _totalFormatted {
+    final h = _totalMinutes ~/ 60;
+    final m = _totalMinutes % 60;
+    return h > 0 ? '${h}h ${m}m' : '${m}m';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _ctrl,
+      builder: (context, _) {
+        return FadeTransition(
+          opacity: CurvedAnimation(
+            parent: _ctrl,
+            curve: const Interval(0.0, 0.35, curve: Curves.easeIn),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceContainerLow,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: AppColors.outlineVariant.withValues(alpha: 0.12),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── Header ─────────────────────────────────────────────
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Learning Activity',
+                            style: GoogleFonts.spaceGrotesk(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.onSurface,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'This week',
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              color: AppColors.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.10),
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(
+                          color: AppColors.primary.withValues(alpha: 0.25),
+                        ),
+                      ),
+                      child: Text(
+                        _totalFormatted,
+                        style: GoogleFonts.spaceGrotesk(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 24),
+
+                // ── Chart ───────────────────────────────────────────────
+                SizedBox(
+                  height: _maxBarHeight + 52,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: List.generate(_weekDays.length, (i) {
+                      final day = _weekDays[i];
+                      final isToday = i == _todayIndex;
+                      final isMax = day.activity ==
+                          _weekDays
+                              .map((d) => d.activity)
+                              .reduce((a, b) => a > b ? a : b);
+                      final barH = _barAnims[i].value;
+                      final count = _countAnims[i].value;
+
+                      return Expanded(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            // Minute label
+                            Text(
+                              '${count}m',
+                              style: GoogleFonts.inter(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w600,
+                                color: isToday
+                                    ? AppColors.primary
+                                    : AppColors.onSurfaceVariant
+                                        .withValues(alpha: 0.7),
+                              ),
+                            ),
+                            const SizedBox(height: 5),
+                            // Bar
+                            Stack(
+                              alignment: Alignment.bottomCenter,
+                              children: [
+                                // Glow behind tallest/today bar
+                                if (isMax || isToday)
+                                  Positioned(
+                                    bottom: 0,
+                                    child: Container(
+                                      width: 28,
+                                      height: barH,
+                                      decoration: BoxDecoration(
+                                        borderRadius:
+                                            BorderRadius.circular(6),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: AppColors.primary
+                                                .withValues(alpha: 0.40),
+                                            blurRadius: 12,
+                                            spreadRadius: 1,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                // The bar itself
+                                Container(
+                                  width: 22,
+                                  height: barH.clamp(4.0, _maxBarHeight),
+                                  decoration: BoxDecoration(
+                                    gradient: isToday || isMax
+                                        ? const LinearGradient(
+                                            begin: Alignment.topCenter,
+                                            end: Alignment.bottomCenter,
+                                            colors: [
+                                              Color(0xFF7C3AED),
+                                              AppColors.primary,
+                                            ],
+                                          )
+                                        : LinearGradient(
+                                            begin: Alignment.topCenter,
+                                            end: Alignment.bottomCenter,
+                                            colors: [
+                                              AppColors.primary
+                                                  .withValues(alpha: 0.5),
+                                              AppColors.primary
+                                                  .withValues(alpha: 0.25),
+                                            ],
+                                          ),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            // Day label
+                            Container(
+                              width: 26,
+                              height: 26,
+                              decoration: isToday
+                                  ? BoxDecoration(
+                                      color: AppColors.primary
+                                          .withValues(alpha: 0.15),
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: AppColors.primary
+                                            .withValues(alpha: 0.40),
+                                      ),
+                                    )
+                                  : null,
+                              child: Center(
+                                child: Text(
+                                  day.name,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 11,
+                                    fontWeight: isToday
+                                        ? FontWeight.w700
+                                        : FontWeight.w400,
+                                    color: isToday
+                                        ? AppColors.primary
+                                        : AppColors.onSurfaceVariant,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                // ── Footer stats ────────────────────────────────────────
+                Row(
+                  children: [
+                    _FooterStat(
+                      label: 'Best day',
+                      value: '${_weekDays[_todayIndex].activity}m',
+                      icon: Icons.local_fire_department_rounded,
+                      color: const Color(0xFFFF9500),
+                    ),
+                    const SizedBox(width: 8),
+                    _FooterStat(
+                      label: 'Daily avg',
+                      value:
+                          '${(_totalMinutes / _weekDays.length).round()}m',
+                      icon: Icons.trending_up_rounded,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    _FooterStat(
+                      label: 'Days active',
+                      value:
+                          '${_weekDays.where((d) => d.activity > 0).length}/7',
+                      icon: Icons.calendar_today_rounded,
+                      color: AppColors.secondary,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _FooterStat extends StatelessWidget {
+  const _FooterStat({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.color,
+  });
+
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: color.withValues(alpha: 0.18)),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 16),
+            const SizedBox(height: 5),
+            Text(
+              value,
+              style: GoogleFonts.spaceGrotesk(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: AppColors.onSurface,
+              ),
+            ),
+            Text(
+              label,
+              style: GoogleFonts.inter(
+                fontSize: 9,
+                color: AppColors.onSurfaceVariant,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 // ── Reusable sheet sub-widgets ───────────────────────────────────────────────
 

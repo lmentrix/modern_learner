@@ -11,7 +11,7 @@ class LearningSubjectLocalDatasourceImpl
     implements LearningSubjectLocalDatasource {
   static final List<LearningSubjectModel> _catalog = [
     // ── Mathematics ──────────────────────────────────────────────────────────
-    LearningSubjectModel(
+    const LearningSubjectModel(
       id: 'mathematics',
       name: 'Mathematics',
       category: 'STEM',
@@ -87,7 +87,7 @@ class LearningSubjectLocalDatasourceImpl
     ),
 
     // ── Computer Science ──────────────────────────────────────────────────────
-    LearningSubjectModel(
+    const LearningSubjectModel(
       id: 'computer-science',
       name: 'Computer Science',
       category: 'STEM',
@@ -164,7 +164,7 @@ class LearningSubjectLocalDatasourceImpl
     ),
 
     // ── Physics ──────────────────────────────────────────────────────────────
-    LearningSubjectModel(
+    const LearningSubjectModel(
       id: 'physics',
       name: 'Physics',
       category: 'STEM',
@@ -233,7 +233,7 @@ class LearningSubjectLocalDatasourceImpl
     ),
 
     // ── Chemistry ─────────────────────────────────────────────────────────────
-    LearningSubjectModel(
+    const LearningSubjectModel(
       id: 'chemistry',
       name: 'Chemistry',
       category: 'STEM',
@@ -302,7 +302,7 @@ class LearningSubjectLocalDatasourceImpl
     ),
 
     // ── Biology ──────────────────────────────────────────────────────────────
-    LearningSubjectModel(
+    const LearningSubjectModel(
       id: 'biology',
       name: 'Biology',
       category: 'STEM',
@@ -371,7 +371,7 @@ class LearningSubjectLocalDatasourceImpl
     ),
 
     // ── Engineering ──────────────────────────────────────────────────────────
-    LearningSubjectModel(
+    const LearningSubjectModel(
       id: 'engineering',
       name: 'Engineering',
       category: 'STEM',
@@ -431,7 +431,7 @@ class LearningSubjectLocalDatasourceImpl
     ),
 
     // ── History ──────────────────────────────────────────────────────────────
-    LearningSubjectModel(
+    const LearningSubjectModel(
       id: 'history',
       name: 'History',
       category: 'Humanities',
@@ -509,7 +509,7 @@ class LearningSubjectLocalDatasourceImpl
     ),
 
     // ── Philosophy ───────────────────────────────────────────────────────────
-    LearningSubjectModel(
+    const LearningSubjectModel(
       id: 'philosophy',
       name: 'Philosophy',
       category: 'Humanities',
@@ -578,7 +578,7 @@ class LearningSubjectLocalDatasourceImpl
     ),
 
     // ── Literature ───────────────────────────────────────────────────────────
-    LearningSubjectModel(
+    const LearningSubjectModel(
       id: 'literature',
       name: 'Literature',
       category: 'Humanities',
@@ -647,7 +647,7 @@ class LearningSubjectLocalDatasourceImpl
     ),
 
     // ── Psychology ───────────────────────────────────────────────────────────
-    LearningSubjectModel(
+    const LearningSubjectModel(
       id: 'psychology',
       name: 'Psychology',
       category: 'Social Sciences',
@@ -716,7 +716,7 @@ class LearningSubjectLocalDatasourceImpl
     ),
 
     // ── Economics ────────────────────────────────────────────────────────────
-    LearningSubjectModel(
+    const LearningSubjectModel(
       id: 'economics',
       name: 'Economics',
       category: 'Social Sciences',
@@ -785,7 +785,7 @@ class LearningSubjectLocalDatasourceImpl
     ),
 
     // ── Geography ────────────────────────────────────────────────────────────
-    LearningSubjectModel(
+    const LearningSubjectModel(
       id: 'geography',
       name: 'Geography',
       category: 'Social Sciences',
@@ -845,7 +845,7 @@ class LearningSubjectLocalDatasourceImpl
     ),
 
     // ── Languages ────────────────────────────────────────────────────────────
-    LearningSubjectModel(
+    const LearningSubjectModel(
       id: 'languages',
       name: 'Languages',
       category: 'Languages',
@@ -932,7 +932,7 @@ class LearningSubjectLocalDatasourceImpl
     ),
 
     // ── Arts & Music ─────────────────────────────────────────────────────────
-    LearningSubjectModel(
+    const LearningSubjectModel(
       id: 'arts-music',
       name: 'Arts & Music',
       category: 'Arts',
