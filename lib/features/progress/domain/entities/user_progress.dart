@@ -10,7 +10,7 @@ class UserProgress extends Equatable {
     required this.completedLessons,
     required this.lessonProgress,
     required this.completedChapters,
-    required this.unlockedAchievements,
+    required this.achievementLevels,
     this.currentRoadmapId,
   });
   final int totalXp;
@@ -20,7 +20,8 @@ class UserProgress extends Equatable {
   final Map<String, DateTime> completedLessons; // lessonId -> completionDate
   final Map<String, double> lessonProgress; // lessonId -> 0.0 to 1.0
   final Map<String, DateTime> completedChapters; // chapterId -> completionDate
-  final List<String> unlockedAchievements;
+  /// Maps achievement ID → highest earned level (1–5). Absent key = level 0.
+  final Map<String, int> achievementLevels;
   final String? currentRoadmapId;
 
   UserProgress copyWith({
@@ -31,7 +32,7 @@ class UserProgress extends Equatable {
     Map<String, DateTime>? completedLessons,
     Map<String, double>? lessonProgress,
     Map<String, DateTime>? completedChapters,
-    List<String>? unlockedAchievements,
+    Map<String, int>? achievementLevels,
     String? currentRoadmapId,
   }) {
     return UserProgress(
@@ -42,7 +43,7 @@ class UserProgress extends Equatable {
       completedLessons: completedLessons ?? Map.from(this.completedLessons),
       lessonProgress: lessonProgress ?? Map.from(this.lessonProgress),
       completedChapters: completedChapters ?? Map.from(this.completedChapters),
-      unlockedAchievements: unlockedAchievements ?? [...this.unlockedAchievements],
+      achievementLevels: achievementLevels ?? Map.from(this.achievementLevels),
       currentRoadmapId: currentRoadmapId ?? this.currentRoadmapId,
     );
   }
@@ -56,7 +57,7 @@ class UserProgress extends Equatable {
         completedLessons,
         lessonProgress,
         completedChapters,
-        unlockedAchievements,
+        achievementLevels,
         currentRoadmapId,
       ];
 }

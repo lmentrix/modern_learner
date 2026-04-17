@@ -35,7 +35,7 @@ class ProgressRepositoryImpl implements ProgressRepository {
     completedLessons: {},
     lessonProgress: {},
     completedChapters: {},
-    unlockedAchievements: [],
+    achievementLevels: {},
     currentRoadmapId: '',
   );
 
@@ -203,19 +203,21 @@ class ProgressRepositoryImpl implements ProgressRepository {
     _progressController.add(_userProgress);
   }
 
-  /// Evaluates all achievement criteria against the current [_userProgress]
-  /// and merges any newly earned IDs into [_userProgress.unlockedAchievements].
+  /// Evaluates achievement levels against the current [_userProgress]
+  /// and upgrades any achievement that has earned a higher level.
   void _evaluateAndApplyAchievements() {
-    final shouldUnlock = AchievementEvaluator.evaluate(_userProgress);
-    final alreadyUnlocked = _userProgress.unlockedAchievements.toSet();
-    final newlyUnlocked = shouldUnlock.difference(alreadyUnlocked);
-    if (newlyUnlocked.isNotEmpty) {
-      _userProgress = _userProgress.copyWith(
-        unlockedAchievements: [
-          ..._userProgress.unlockedAchievements,
-          ...newlyUnlocked,
-        ],
-      );
+    final earned = AchievementEvaluator.evaluate(_userProgress);
+    final current = Map<String, int>.from(_userProgress.achievementLevels);
+    var changed = false;
+    for (final entry in earned.entries) {
+      final prev = current[entry.key] ?? 0;
+      if (entry.value > prev) {
+        current[entry.key] = entry.value;
+        changed = true;
+      }
+    }
+    if (changed) {
+      _userProgress = _userProgress.copyWith(achievementLevels: current);
     }
   }
 

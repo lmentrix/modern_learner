@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 import 'package:modern_learner_production/features/home/domain/entities/achievement_entity.dart';
+import 'package:modern_learner_production/features/home/service/achievement_evaluator.dart';
 import 'package:modern_learner_production/features/progress/domain/entities/user_progress.dart';
 import 'package:modern_learner_production/features/progress/domain/repositories/progress_repository.dart';
 
@@ -35,267 +36,168 @@ class AchievementBloc extends Bloc<AchievementEvent, AchievementState> {
     return super.close();
   }
 
+  // ── Category order ────────────────────────────────────────────────────────
+
   static const List<String> categoryOrder = [
     'Streaks',
     'Experience',
     'Learning',
-    'Social',
     'Special',
   ];
+
+  // ── Achievement definitions (8 achievements × 5 levels) ──────────────────
 
   static const List<AchievementEntity> allAchievements = [
     // ── Streaks ──────────────────────────────────────────────────────────────
     AchievementEntity(
-      id: 'week_streak',
+      id: 'streak_master',
       emoji: '🔥',
-      title: 'Week Streak',
-      subtitle: '7 day streak',
+      title: 'Streak Guardian',
+      description:
+          'Maintain daily learning streaks without missing a single day. '
+          'The longer you go, the higher your tier!',
       color: Color(0xFFFF9500),
       category: 'Streaks',
-      description: 'Maintain a 7-day learning streak without missing a day.',
-    ),
-    AchievementEntity(
-      id: 'fortnight_streak',
-      emoji: '⚡',
-      title: 'Fortnight',
-      subtitle: '14 day streak',
-      color: Color(0xFFFF9500),
-      category: 'Streaks',
-      description: 'Keep your learning streak alive for 14 consecutive days.',
-    ),
-    AchievementEntity(
-      id: 'month_streak',
-      emoji: '💪',
-      title: 'Dedicated',
-      subtitle: '30 day streak',
-      color: Color(0xFFFF6B9D),
-      category: 'Streaks',
-      description: 'Maintain a 30-day learning streak. True dedication!',
-    ),
-    AchievementEntity(
-      id: 'century_streak',
-      emoji: '🌋',
-      title: 'Unstoppable',
-      subtitle: '100 day streak',
-      color: Color(0xFFFF4500),
-      category: 'Streaks',
-      description: 'Reach a 100-day streak. Truly unstoppable!',
-      isLocked: true,
-    ),
-    AchievementEntity(
-      id: 'year_streak',
-      emoji: '♾️',
-      title: 'Eternal Flame',
-      subtitle: '365 day streak',
-      color: Color(0xFFFF2D55),
-      category: 'Streaks',
-      description: 'A full year of daily learning. Legendary dedication!',
-      isLocked: true,
+      levelThresholds: [3, 7, 14, 30, 100],
+      levelRequirements: [
+        '3-day streak',
+        '7-day streak',
+        '14-day streak',
+        '30-day streak',
+        '100-day streak',
+      ],
     ),
 
     // ── Experience ───────────────────────────────────────────────────────────
     AchievementEntity(
-      id: 'first_xp',
-      emoji: '✨',
-      title: 'First Steps',
-      subtitle: '100 XP earned',
-      color: AppColors.tertiaryContainer,
-      category: 'Experience',
-      description: 'Earn your first 100 XP points. Every journey starts here!',
-    ),
-    AchievementEntity(
-      id: 'xp_hunter',
+      id: 'xp_collector',
       emoji: '⭐',
-      title: 'XP Hunter',
-      subtitle: '500 XP earned',
-      color: AppColors.tertiaryContainer,
+      title: 'XP Collector',
+      description:
+          'Accumulate XP by completing lessons, chapters, and challenges. '
+          'More XP means a higher tier!',
+      color: Color(0xFFFFC107),
       category: 'Experience',
-      description: 'Accumulate 500 XP through lessons and exercises.',
+      levelThresholds: [100, 500, 2000, 10000, 50000],
+      levelRequirements: [
+        '100 XP',
+        '500 XP',
+        '2,000 XP',
+        '10,000 XP',
+        '50,000 XP',
+      ],
     ),
     AchievementEntity(
-      id: 'xp_master',
+      id: 'level_legend',
       emoji: '🌟',
-      title: 'XP Master',
-      subtitle: '2000 XP earned',
-      color: AppColors.tertiaryContainer,
+      title: 'Level Legend',
+      description:
+          'Rise through the player levels by completing more and more content. '
+          'Each new tier represents a new milestone!',
+      color: AppColors.tertiary,
       category: 'Experience',
-      description: 'Earn 2000 XP points through lessons and exercises.',
-    ),
-    AchievementEntity(
-      id: 'xp_legend',
-      emoji: '💎',
-      title: 'XP Legend',
-      subtitle: '10,000 XP earned',
-      color: Color(0xFF00B4D8),
-      category: 'Experience',
-      description: 'Reach 10,000 XP. You\'re a true legend!',
-      isLocked: true,
-    ),
-    AchievementEntity(
-      id: 'xp_champion',
-      emoji: '👑',
-      title: 'XP Champion',
-      subtitle: '50,000 XP earned',
-      color: Color(0xFFFFD700),
-      category: 'Experience',
-      description: 'Earn 50,000 XP. The absolute pinnacle of achievement!',
-      isLocked: true,
+      levelThresholds: [2, 5, 10, 20, 50],
+      levelRequirements: [
+        'Level 2',
+        'Level 5',
+        'Level 10',
+        'Level 20',
+        'Level 50',
+      ],
     ),
 
     // ── Learning ─────────────────────────────────────────────────────────────
     AchievementEntity(
-      id: 'first_lesson',
-      emoji: '📖',
-      title: 'First Lesson',
-      subtitle: 'Complete 1 lesson',
-      color: AppColors.primary,
-      category: 'Learning',
-      description:
-          'Complete your very first lesson. Every journey begins with a single step!',
-    ),
-    AchievementEntity(
-      id: 'quick_learner',
-      emoji: '🎯',
-      title: 'Quick Learner',
-      subtitle: '5 lessons in a day',
-      color: Color(0xFF00DC82),
-      category: 'Learning',
-      description: 'Complete 5 lessons in a single day.',
-    ),
-    AchievementEntity(
-      id: 'perfectionist',
-      emoji: '💯',
-      title: 'Perfectionist',
-      subtitle: '100% accuracy',
-      color: AppColors.secondary,
-      category: 'Learning',
-      description: 'Complete a lesson with 100% accuracy on the first try.',
-    ),
-    AchievementEntity(
-      id: 'bookworm',
+      id: 'lesson_warrior',
       emoji: '📚',
-      title: 'Bookworm',
-      subtitle: '25 lessons done',
+      title: 'Lesson Warrior',
+      description:
+          'Complete lessons across all your courses. '
+          'Every lesson brings you one step closer to the Diamond tier!',
       color: AppColors.primary,
       category: 'Learning',
-      description: 'Complete 25 lessons across all courses.',
+      levelThresholds: [1, 10, 25, 50, 100],
+      levelRequirements: [
+        '1 lesson',
+        '10 lessons',
+        '25 lessons',
+        '50 lessons',
+        '100 lessons',
+      ],
     ),
     AchievementEntity(
-      id: 'no_mistakes',
-      emoji: '🏅',
-      title: 'Flawless',
-      subtitle: '5 perfect lessons',
+      id: 'daily_champion',
+      emoji: '🎯',
+      title: 'Daily Champion',
+      description:
+          'Prove your dedication by completing multiple lessons in a single day. '
+          'Your best single-day count determines your tier!',
       color: Color(0xFF00DC82),
       category: 'Learning',
-      description: 'Complete 5 lessons in a row without a single mistake.',
-      isLocked: true,
+      levelThresholds: [2, 3, 5, 7, 10],
+      levelRequirements: [
+        '2 lessons/day',
+        '3 lessons/day',
+        '5 lessons/day',
+        '7 lessons/day',
+        '10 lessons/day',
+      ],
     ),
     AchievementEntity(
-      id: 'century_learner',
-      emoji: '🏫',
-      title: 'Century Learner',
-      subtitle: '100 lessons done',
-      color: AppColors.primaryDim,
-      category: 'Learning',
-      description: 'Complete 100 lessons. An impressive milestone!',
-      isLocked: true,
-    ),
-    AchievementEntity(
-      id: 'scholar',
-      emoji: '🎓',
-      title: 'Scholar',
-      subtitle: 'Complete all courses',
-      color: AppColors.primary,
-      category: 'Learning',
-      description: 'Finish all available courses and become a true scholar.',
-      isLocked: true,
-    ),
-
-    // ── Social ───────────────────────────────────────────────────────────────
-    AchievementEntity(
-      id: 'top_10',
+      id: 'chapter_ace',
       emoji: '🏆',
-      title: 'Champion',
-      subtitle: 'Top 10 leaderboard',
+      title: 'Chapter Ace',
+      description:
+          'Fully complete chapters across your learning roadmaps. '
+          'Each tier represents mastery of more complete chapters!',
       color: Color(0xFFFFD700),
-      category: 'Social',
-      description: 'Reach the top 10 on the weekly leaderboard.',
-      isLocked: true,
-    ),
-    AchievementEntity(
-      id: 'top_3',
-      emoji: '🥇',
-      title: 'Podium',
-      subtitle: 'Top 3 leaderboard',
-      color: Color(0xFFFFD700),
-      category: 'Social',
-      description: 'Reach the top 3 on the weekly leaderboard.',
-      isLocked: true,
-    ),
-    AchievementEntity(
-      id: 'number_one',
-      emoji: '🌍',
-      title: 'World #1',
-      subtitle: 'Rank #1 globally',
-      color: Color(0xFFFFD700),
-      category: 'Social',
-      description: 'Claim the #1 spot on the global leaderboard.',
-      isLocked: true,
-    ),
-    AchievementEntity(
-      id: 'referral',
-      emoji: '🤝',
-      title: 'Team Player',
-      subtitle: 'Invite 3 friends',
-      color: Color(0xFF4FC3F7),
-      category: 'Social',
-      description: 'Invite 3 friends to join Modern Learner.',
-      isLocked: true,
+      category: 'Learning',
+      levelThresholds: [1, 3, 7, 15, 30],
+      levelRequirements: [
+        '1 chapter',
+        '3 chapters',
+        '7 chapters',
+        '15 chapters',
+        '30 chapters',
+      ],
     ),
 
     // ── Special ──────────────────────────────────────────────────────────────
     AchievementEntity(
-      id: 'early_adopter',
-      emoji: '🚀',
-      title: 'Early Adopter',
-      subtitle: 'Joined early access',
-      color: Color(0xFF7E51FF),
-      category: 'Special',
-      description:
-          'You joined during the early access period. Thanks for being here from the start!',
-    ),
-    AchievementEntity(
       id: 'night_owl',
       emoji: '🦉',
       title: 'Night Owl',
-      subtitle: 'Study after midnight',
+      description:
+          'Study in the quiet hours between midnight and 5 AM. '
+          'More midnight sessions = a higher tier!',
       color: Color(0xFF6C63FF),
       category: 'Special',
-      description:
-          'Complete a lesson after midnight. The night is your classroom!',
-      isLocked: true,
+      levelThresholds: [1, 3, 7, 15, 30],
+      levelRequirements: [
+        '1 midnight session',
+        '3 midnight sessions',
+        '7 midnight sessions',
+        '15 midnight sessions',
+        '30 midnight sessions',
+      ],
     ),
     AchievementEntity(
-      id: 'speed_demon',
-      emoji: '💨',
-      title: 'Speed Demon',
-      subtitle: 'Fastest completion',
-      color: Color(0xFF00DC82),
-      category: 'Special',
+      id: 'pioneer',
+      emoji: '🚀',
+      title: 'Pioneer',
       description:
-          'Complete a lesson faster than the average time. Lightning speed!',
-      isLocked: true,
-    ),
-    AchievementEntity(
-      id: 'comeback_kid',
-      emoji: '🦅',
-      title: 'Comeback Kid',
-      subtitle: 'Return after 7 days',
-      color: Color(0xFFFF9500),
+          'Progress through the game levels to unlock higher Pioneer tiers. '
+          'The highest tier proves you\'ve been here from the start!',
+      color: Color(0xFF7E51FF),
       category: 'Special',
-      description:
-          'Return to learning after a 7-day break. Comebacks are always welcome!',
-      isLocked: true,
+      levelThresholds: [1, 2, 5, 10, 20],
+      levelRequirements: [
+        'Level 1',
+        'Level 2',
+        'Level 5',
+        'Level 10',
+        'Level 20',
+      ],
     ),
   ];
 
@@ -307,7 +209,7 @@ class AchievementBloc extends Bloc<AchievementEvent, AchievementState> {
   ) async {
     emit(state.copyWith(status: AchievementStatus.loading));
     final progress = await _progressRepository.getUserProgress();
-    final list = _buildList(progress.unlockedAchievements.toSet());
+    final list = _buildList(progress);
     emit(state.copyWith(
       status: AchievementStatus.loaded,
       achievements: list,
@@ -329,23 +231,24 @@ class AchievementBloc extends Bloc<AchievementEvent, AchievementState> {
     AchievementProgressUpdated event,
     Emitter<AchievementState> emit,
   ) {
-    final unlockedIds = event.progress.unlockedAchievements.toSet();
-    final previouslyUnlockedIds =
-        state.achievements.where((a) => !a.isLocked).map((a) => a.id).toSet();
+    // Track previous levels to detect level-ups.
+    final previousLevels = {
+      for (final a in state.achievements) a.id: a.currentLevel,
+    };
 
-    final newList = _buildList(unlockedIds);
-    final newlyUnlocked = newList
-        .where((a) => !a.isLocked && !previouslyUnlockedIds.contains(a.id))
-        .toList();
+    final newList = _buildList(event.progress);
+
+    // Collect achievements that just gained a level.
+    final levelUps = newList.where((a) {
+      final prev = previousLevels[a.id] ?? 0;
+      return a.currentLevel > prev;
+    }).toList();
 
     emit(state.copyWith(
       status: AchievementStatus.loaded,
       achievements: newList,
       filtered: _applyFilter(newList, state.selectedFilter),
-      newlyUnlocked: [
-        ...state.newlyUnlocked,
-        ...newlyUnlocked,
-      ],
+      newlyUnlocked: [...state.newlyUnlocked, ...levelUps],
     ));
   }
 
@@ -358,20 +261,15 @@ class AchievementBloc extends Bloc<AchievementEvent, AchievementState> {
 
   // ── Helpers ───────────────────────────────────────────────────────────────
 
-  /// Rebuilds the full achievement list with [isLocked] computed from [unlockedIds].
-  List<AchievementEntity> _buildList(Set<String> unlockedIds) {
-    return allAchievements.map((a) {
-      final locked = !unlockedIds.contains(a.id);
-      if (locked == a.isLocked) return a;
-      return AchievementEntity(
-        id: a.id,
-        emoji: a.emoji,
-        title: a.title,
-        subtitle: a.subtitle,
-        description: a.description,
-        color: a.color,
-        category: a.category,
-        isLocked: locked,
+  /// Rebuilds the full list with [currentLevel] and [currentProgress] set
+  /// from [progress.achievementLevels] and the evaluator.
+  List<AchievementEntity> _buildList(UserProgress progress) {
+    return allAchievements.map((template) {
+      final level = progress.achievementLevels[template.id] ?? 0;
+      final rawProgress = AchievementEvaluator.progressFor(template.id, progress);
+      return template.copyWith(
+        currentLevel: level,
+        currentProgress: rawProgress,
       );
     }).toList();
   }

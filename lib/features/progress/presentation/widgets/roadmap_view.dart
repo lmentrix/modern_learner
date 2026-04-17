@@ -1395,54 +1395,43 @@ class _AchievementsSection extends StatelessWidget {
     return best;
   }
 
-  _MilestoneData? _milestoneFor(
-    AchievementEntity a,
-    UserProgress p,
-  ) {
-    final lessons = p.completedLessons.length;
+  _MilestoneData? _milestoneFor(AchievementEntity a, UserProgress p) {
+    if (a.currentLevel >= 5) return null; // already maxed
+    final nextThreshold = a.levelThresholds[a.currentLevel];
+    final nextRequirement = a.levelRequirements[a.currentLevel];
+
     switch (a.id) {
-      // Streaks
-      case 'week_streak':
-        return _MilestoneData(a, p.streak, 7, 'day streak');
-      case 'fortnight_streak':
-        return _MilestoneData(a, p.streak, 14, 'day streak');
-      case 'month_streak':
-        return _MilestoneData(a, p.streak, 30, 'day streak');
-      case 'century_streak':
-        return _MilestoneData(a, p.streak, 100, 'day streak');
-      case 'year_streak':
-        return _MilestoneData(a, p.streak, 365, 'day streak');
-      // XP
-      case 'first_xp':
-        return _MilestoneData(a, p.totalXp, 100, 'XP');
-      case 'xp_hunter':
-        return _MilestoneData(a, p.totalXp, 500, 'XP');
-      case 'xp_master':
-        return _MilestoneData(a, p.totalXp, 2000, 'XP');
-      case 'xp_legend':
-        return _MilestoneData(a, p.totalXp, 10000, 'XP');
-      case 'xp_champion':
-        return _MilestoneData(a, p.totalXp, 50000, 'XP');
-      // Lessons
-      case 'first_lesson':
-        return _MilestoneData(a, lessons, 1, 'lesson');
-      case 'quick_learner':
-        return null; // time-of-day tracking not shown
-      case 'perfectionist':
-        return _MilestoneData(a, lessons, 1, 'lesson');
-      case 'no_mistakes':
-        return _MilestoneData(a, lessons, 5, 'lessons');
-      case 'bookworm':
-        return _MilestoneData(a, lessons, 25, 'lessons');
-      case 'scholar':
-        return _MilestoneData(a, lessons, 50, 'lessons');
-      case 'century_learner':
-        return _MilestoneData(a, lessons, 100, 'lessons');
-      case 'speed_demon':
-        return _MilestoneData(a, lessons, 3, 'lessons');
+      case 'streak_master':
+        return _MilestoneData(a, p.streak, nextThreshold, nextRequirement);
+      case 'xp_collector':
+        return _MilestoneData(a, p.totalXp, nextThreshold, nextRequirement);
+      case 'lesson_warrior':
+        return _MilestoneData(
+            a, p.completedLessons.length, nextThreshold, nextRequirement);
+      case 'daily_champion':
+        return _MilestoneData(
+            a, _maxDailyLessons(p), nextThreshold, nextRequirement);
+      case 'chapter_ace':
+        return _MilestoneData(
+            a, p.completedChapters.length, nextThreshold, nextRequirement);
+      case 'level_legend':
+        return _MilestoneData(a, p.level, nextThreshold, nextRequirement);
+      case 'pioneer':
+        return _MilestoneData(a, p.level, nextThreshold, nextRequirement);
       default:
         return null;
     }
+  }
+
+  int _maxDailyLessons(UserProgress p) {
+    if (p.completedLessons.isEmpty) return 0;
+    final counts = <String, int>{};
+    for (final dt in p.completedLessons.values) {
+      final key =
+          '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
+      counts[key] = (counts[key] ?? 0) + 1;
+    }
+    return counts.values.reduce((a, b) => a > b ? a : b);
   }
 }
 
@@ -1463,25 +1452,26 @@ class _AchievementBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accent = achievement.color;
+    final tierColor = AchievementEntity.tierColor(achievement.currentLevel);
     return GestureDetector(
       onTap: () => context.push(Routes.achievementDetail, extra: achievement),
       child: Container(
-        width: 56,
-        height: 64,
+        width: 60,
+        height: 68,
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              accent.withValues(alpha: 0.28),
-              accent.withValues(alpha: 0.10),
+              tierColor.withValues(alpha: 0.22),
+              accent.withValues(alpha: 0.08),
             ],
           ),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: accent.withValues(alpha: 0.40)),
+          border: Border.all(color: tierColor.withValues(alpha: 0.45)),
           boxShadow: [
             BoxShadow(
-              color: accent.withValues(alpha: 0.22),
+              color: tierColor.withValues(alpha: 0.20),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -1492,12 +1482,13 @@ class _AchievementBadge extends StatelessWidget {
           children: [
             Text(achievement.emoji, style: const TextStyle(fontSize: 22)),
             const SizedBox(height: 4),
-            Container(
-              width: 6,
-              height: 6,
-              decoration: BoxDecoration(
-                color: accent,
-                shape: BoxShape.circle,
+            Text(
+              AchievementEntity.tierRoman(achievement.currentLevel),
+              style: GoogleFonts.inter(
+                fontSize: 9,
+                fontWeight: FontWeight.w800,
+                color: tierColor,
+                letterSpacing: 0.5,
               ),
             ),
           ],
