@@ -1,76 +1,94 @@
 import 'package:modern_learner_production/features/progress/domain/entities/user_progress.dart';
 
-/// Pure static utility that computes which achievement IDs should be unlocked
-/// for a given [UserProgress]. Contains no state and requires no DI registration.
+/// Pure static utility. Evaluates [UserProgress] and returns a map of
+/// achievement ID → earned level (1–5). IDs absent from the result = level 0.
 abstract final class AchievementEvaluator {
-  // Social achievements that require a backend leaderboard — always locked.
-  static const _alwaysLocked = {'top_10', 'top_3', 'number_one', 'referral'};
+  /// Level thresholds for each achievement, mirroring [AchievementBloc.allAchievements].
+  static const _thresholds = {
+    'streak_master': [3, 7, 14, 30, 100],
+    'xp_collector': [100, 500, 2000, 10000, 50000],
+    'lesson_warrior': [1, 10, 25, 50, 100],
+    'daily_champion': [2, 3, 5, 7, 10],
+    'chapter_ace': [1, 3, 7, 15, 30],
+    'level_legend': [2, 5, 10, 20, 50],
+    'night_owl': [1, 3, 7, 15, 30],
+    'pioneer': [1, 2, 5, 10, 20],
+  };
 
-  /// Returns the set of achievement IDs that [progress] qualifies for.
-  static Set<String> evaluate(UserProgress progress) {
-    final unlocked = <String>{};
+  /// Returns the achieved level for each achievement given current [progress].
+  static Map<String, int> evaluate(UserProgress progress) {
     final lessons = progress.completedLessons;
-    final lessonCount = lessons.length;
 
-    // ── Streaks ───────────────────────────────────────────────────────────────
-    final streak = progress.streak;
-    if (streak >= 7) unlocked.add('week_streak');
-    if (streak >= 14) unlocked.add('fortnight_streak');
-    if (streak >= 30) unlocked.add('month_streak');
-    if (streak >= 100) unlocked.add('century_streak');
-    if (streak >= 365) unlocked.add('year_streak');
+    final metrics = <String, int>{
+      'streak_master': progress.streak,
+      'xp_collector': progress.totalXp,
+      'lesson_warrior': lessons.length,
+      'daily_champion': _maxLessonsInOneDay(lessons),
+      'chapter_ace': progress.completedChapters.length,
+      'level_legend': progress.level,
+      'night_owl': _nightOwlCount(lessons),
+      'pioneer': progress.level, // 1 per level milestone
+    };
 
-    // ── Experience ────────────────────────────────────────────────────────────
-    final xp = progress.totalXp;
-    if (xp >= 100) unlocked.add('first_xp');
-    if (xp >= 500) unlocked.add('xp_hunter');
-    if (xp >= 2000) unlocked.add('xp_master');
-    if (xp >= 10000) unlocked.add('xp_legend');
-    if (xp >= 50000) unlocked.add('xp_champion');
-
-    // ── Learning ──────────────────────────────────────────────────────────────
-    if (lessonCount >= 1) {
-      unlocked.add('first_lesson');
-      // No per-lesson accuracy tracked; treat first completion as "perfect".
-      unlocked.add('perfectionist');
+    final result = <String, int>{};
+    for (final entry in _thresholds.entries) {
+      final id = entry.key;
+      final thresholds = entry.value;
+      final value = metrics[id] ?? 0;
+      final level = _levelFor(value, thresholds);
+      if (level > 0) result[id] = level;
     }
-    if (_lessonsCompletedToday(lessons) >= 5) unlocked.add('quick_learner');
-    if (lessonCount >= 5) unlocked.add('no_mistakes');
-    if (lessonCount >= 25) unlocked.add('bookworm');
-    if (lessonCount >= 50) unlocked.add('scholar');
-    if (lessonCount >= 100) unlocked.add('century_learner');
+    return result;
+  }
 
-    // ── Special ───────────────────────────────────────────────────────────────
-    unlocked.add('early_adopter'); // every user qualifies
-    if (_hasNightOwlLesson(lessons)) unlocked.add('night_owl');
-    if (lessonCount >= 3) unlocked.add('speed_demon');
-    if (_hasComebackKid(lessons)) unlocked.add('comeback_kid');
-
-    // Remove any always-locked IDs that may have leaked in.
-    unlocked.removeAll(_alwaysLocked);
-
-    return unlocked;
+  /// Returns the raw progress value for a given achievement ID.
+  /// Used to populate [AchievementEntity.currentProgress].
+  static int progressFor(String id, UserProgress progress) {
+    final lessons = progress.completedLessons;
+    switch (id) {
+      case 'streak_master':
+        return progress.streak;
+      case 'xp_collector':
+        return progress.totalXp;
+      case 'lesson_warrior':
+        return lessons.length;
+      case 'daily_champion':
+        return _maxLessonsInOneDay(lessons);
+      case 'chapter_ace':
+        return progress.completedChapters.length;
+      case 'level_legend':
+        return progress.level;
+      case 'night_owl':
+        return _nightOwlCount(lessons);
+      case 'pioneer':
+        return progress.level;
+      default:
+        return 0;
+    }
   }
 
   // ── Helpers ─────────────────────────────────────────────────────────────────
 
-  static int _lessonsCompletedToday(Map<String, DateTime> lessons) {
-    final now = DateTime.now();
-    return lessons.values.where((dt) {
-      return dt.year == now.year && dt.month == now.month && dt.day == now.day;
-    }).length;
-  }
-
-  static bool _hasNightOwlLesson(Map<String, DateTime> lessons) {
-    return lessons.values.any((dt) => dt.hour >= 0 && dt.hour < 5);
-  }
-
-  static bool _hasComebackKid(Map<String, DateTime> lessons) {
-    if (lessons.length < 2) return false;
-    final sorted = lessons.values.toList()..sort();
-    for (var i = 1; i < sorted.length; i++) {
-      if (sorted[i].difference(sorted[i - 1]).inDays >= 7) return true;
+  /// Highest level index (1–5) whose threshold is met by [value], or 0.
+  static int _levelFor(int value, List<int> thresholds) {
+    int level = 0;
+    for (var i = 0; i < thresholds.length; i++) {
+      if (value >= thresholds[i]) level = i + 1;
     }
-    return false;
+    return level;
   }
+
+  static int _maxLessonsInOneDay(Map<String, DateTime> lessons) {
+    if (lessons.isEmpty) return 0;
+    final counts = <String, int>{};
+    for (final dt in lessons.values) {
+      final key =
+          '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
+      counts[key] = (counts[key] ?? 0) + 1;
+    }
+    return counts.values.reduce((a, b) => a > b ? a : b);
+  }
+
+  static int _nightOwlCount(Map<String, DateTime> lessons) =>
+      lessons.values.where((dt) => dt.hour >= 0 && dt.hour < 5).length;
 }

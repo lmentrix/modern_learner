@@ -1409,18 +1409,21 @@ class _ActivityChartState extends State<_ActivityChart>
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
                             // Minute label
-                            Text(
-                              '${count}m',
-                              style: GoogleFonts.inter(
-                                fontSize: 9,
-                                fontWeight: FontWeight.w600,
-                                color: isToday
-                                    ? AppColors.primary
-                                    : AppColors.onSurfaceVariant
-                                        .withValues(alpha: 0.7),
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                '${count}m',
+                                style: GoogleFonts.inter(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w600,
+                                  color: isToday
+                                      ? AppColors.primary
+                                      : AppColors.onSurfaceVariant
+                                          .withValues(alpha: 0.7),
+                                ),
                               ),
                             ),
-                            const SizedBox(height: 5),
+                            const SizedBox(height: 3),
                             // Bar
                             Stack(
                               alignment: Alignment.bottomCenter,

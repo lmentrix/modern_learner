@@ -2,76 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-
 import 'package:modern_learner_production/core/router/app_router.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 import 'package:modern_learner_production/features/home/domain/entities/achievement_entity.dart';
 import 'package:modern_learner_production/features/home/presentation/bloc/achievement_bloc.dart';
 
-// ── Rarity helpers ────────────────────────────────────────────────────────────
-
-enum _Rarity { common, rare, epic, legendary }
-
-_Rarity _rarityOf(AchievementEntity a) {
-  switch (a.id) {
-    case 'year_streak':
-    case 'xp_champion':
-    case 'number_one':
-    case 'scholar':
-      return _Rarity.legendary;
-    case 'century_streak':
-    case 'xp_legend':
-    case 'top_3':
-    case 'no_mistakes':
-      return _Rarity.epic;
-    case 'month_streak':
-    case 'xp_master':
-    case 'bookworm':
-    case 'top_10':
-    case 'speed_demon':
-      return _Rarity.rare;
-    default:
-      return _Rarity.common;
-  }
-}
-
-extension _RarityLabel on _Rarity {
-  String get label {
-    switch (this) {
-      case _Rarity.legendary:
-        return 'Legendary';
-      case _Rarity.epic:
-        return 'Epic';
-      case _Rarity.rare:
-        return 'Rare';
-      case _Rarity.common:
-        return 'Common';
-    }
-  }
-
-  Color get color {
-    switch (this) {
-      case _Rarity.legendary:
-        return const Color(0xFFFFD700);
-      case _Rarity.epic:
-        return const Color(0xFFB388FF);
-      case _Rarity.rare:
-        return const Color(0xFF4FC3F7);
-      case _Rarity.common:
-        return AppColors.onSurfaceVariant;
-    }
-  }
-}
-
 // ── Category meta ─────────────────────────────────────────────────────────────
 
 const _categoryMeta = {
-  'All':        ('🏅', AppColors.primary),
-  'Streaks':    ('🔥', Color(0xFFFF9500)),
+  'All': ('🏅', AppColors.primary),
+  'Streaks': ('🔥', Color(0xFFFF9500)),
   'Experience': ('⭐', Color(0xFFFFD700)),
-  'Learning':   ('📚', AppColors.primary),
-  'Social':     ('🤝', Color(0xFF4FC3F7)),
-  'Special':    ('🚀', Color(0xFF7E51FF)),
+  'Learning': ('📚', AppColors.primary),
+  'Special': ('🚀', Color(0xFF7E51FF)),
 };
 
 // ── Page ──────────────────────────────────────────────────────────────────────
@@ -88,7 +31,7 @@ class _AchievementsPageState extends State<AchievementsPage>
   final _scrollCtrl = ScrollController();
   late final TabController _tabCtrl;
 
-  static const _tabs = ['All', 'Streaks', 'Experience', 'Learning', 'Social', 'Special'];
+  static const _tabs = ['All', 'Streaks', 'Experience', 'Learning', 'Special'];
 
   @override
   void initState() {
@@ -161,14 +104,16 @@ class _AchievementsPageState extends State<AchievementsPage>
                     .toList(),
                 onTap: (a) => context.push(Routes.achievementDetail, extra: a),
               ),
-            ), 
+            ),
           ],
 
           // ── Category tabs ────────────────────────────────────────────────────
           const SliverToBoxAdapter(child: SizedBox(height: 28)),
           SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
-            sliver: SliverToBoxAdapter(child: _sectionLabel('BROWSE BY CATEGORY')),
+            sliver: SliverToBoxAdapter(
+              child: _sectionLabel('BROWSE BY CATEGORY'),
+            ),
           ),
           const SliverToBoxAdapter(child: SizedBox(height: 12)),
           SliverToBoxAdapter(
@@ -217,14 +162,14 @@ class _AchievementsPageState extends State<AchievementsPage>
   }
 
   Widget _sectionLabel(String text) => Text(
-        text,
-        style: GoogleFonts.inter(
-          fontSize: 11,
-          fontWeight: FontWeight.w800,
-          color: AppColors.onSurfaceVariant,
-          letterSpacing: 1.7,
-        ),
-      );
+    text,
+    style: GoogleFonts.inter(
+      fontSize: 11,
+      fontWeight: FontWeight.w800,
+      color: AppColors.onSurfaceVariant,
+      letterSpacing: 1.7,
+    ),
+  );
 }
 
 // ── Header ────────────────────────────────────────────────────────────────────
@@ -283,10 +228,14 @@ class _Header extends StatelessWidget {
                       vertical: 7,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.tertiaryContainer.withValues(alpha: 0.15),
+                      color: AppColors.tertiaryContainer.withValues(
+                        alpha: 0.15,
+                      ),
                       borderRadius: BorderRadius.circular(999),
                       border: Border.all(
-                        color: AppColors.tertiaryContainer.withValues(alpha: 0.35),
+                        color: AppColors.tertiaryContainer.withValues(
+                          alpha: 0.35,
+                        ),
                       ),
                     ),
                     child: Row(
@@ -444,17 +393,9 @@ class _HeroCard extends StatelessWidget {
           // Stats row
           Row(
             children: [
-              _StatChip(
-                emoji: '🔓',
-                label: 'Unlocked',
-                value: '$unlocked',
-              ),
+              _StatChip(emoji: '🔓', label: 'Unlocked', value: '$unlocked'),
               const SizedBox(width: 8),
-              _StatChip(
-                emoji: '🔒',
-                label: 'Locked',
-                value: '$locked',
-              ),
+              _StatChip(emoji: '🔒', label: 'Locked', value: '$locked'),
               const SizedBox(width: 8),
               _StatChip(
                 emoji: '📂',
@@ -519,10 +460,7 @@ class _StatChip extends StatelessWidget {
 // ── Recently unlocked row ─────────────────────────────────────────────────────
 
 class _RecentlyUnlockedRow extends StatelessWidget {
-  const _RecentlyUnlockedRow({
-    required this.achievements,
-    required this.onTap,
-  });
+  const _RecentlyUnlockedRow({required this.achievements, required this.onTap});
 
   final List<AchievementEntity> achievements;
   final void Function(AchievementEntity) onTap;
@@ -538,7 +476,7 @@ class _RecentlyUnlockedRow extends StatelessWidget {
         separatorBuilder: (_, __) => const SizedBox(width: 12),
         itemBuilder: (context, i) {
           final a = achievements[i];
-          final rarity = _rarityOf(a);
+          final tierColor = AchievementEntity.tierColor(a.currentLevel);
           return GestureDetector(
             onTap: () => onTap(a),
             child: Container(
@@ -549,17 +487,15 @@ class _RecentlyUnlockedRow extends StatelessWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    a.color.withValues(alpha: 0.22),
+                    tierColor.withValues(alpha: 0.22),
                     AppColors.surfaceContainerLow,
                   ],
                 ),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: a.color.withValues(alpha: 0.35),
-                ),
+                border: Border.all(color: tierColor.withValues(alpha: 0.35)),
                 boxShadow: [
                   BoxShadow(
-                    color: a.color.withValues(alpha: 0.18),
+                    color: tierColor.withValues(alpha: 0.18),
                     blurRadius: 16,
                     offset: const Offset(0, 4),
                   ),
@@ -568,34 +504,31 @@ class _RecentlyUnlockedRow extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Rarity pill
+                  // Tier pill
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 7,
                       vertical: 3,
                     ),
                     decoration: BoxDecoration(
-                      color: rarity.color.withValues(alpha: 0.15),
+                      color: tierColor.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(999),
                       border: Border.all(
-                        color: rarity.color.withValues(alpha: 0.4),
+                        color: tierColor.withValues(alpha: 0.4),
                       ),
                     ),
                     child: Text(
-                      rarity.label.toUpperCase(),
+                      '${AchievementEntity.tierName(a.currentLevel).toUpperCase()} ${AchievementEntity.tierRoman(a.currentLevel)}',
                       style: GoogleFonts.inter(
                         fontSize: 8,
                         fontWeight: FontWeight.w800,
-                        color: rarity.color,
+                        color: tierColor,
                         letterSpacing: 0.5,
                       ),
                     ),
                   ),
                   const Spacer(),
-                  Text(
-                    a.emoji,
-                    style: const TextStyle(fontSize: 30),
-                  ),
+                  Text(a.emoji, style: const TextStyle(fontSize: 30)),
                   const SizedBox(height: 8),
                   Text(
                     a.title,
@@ -631,10 +564,7 @@ class _RecentlyUnlockedRow extends StatelessWidget {
 // ── Category tab bar ──────────────────────────────────────────────────────────
 
 class _CategoryTabBar extends StatelessWidget {
-  const _CategoryTabBar({
-    required this.controller,
-    required this.tabs,
-  });
+  const _CategoryTabBar({required this.controller, required this.tabs});
 
   final TabController controller;
   final List<String> tabs;
@@ -679,10 +609,7 @@ class _CategoryTabBar extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       if (meta != null) ...[
-                        Text(
-                          meta.$1,
-                          style: const TextStyle(fontSize: 13),
-                        ),
+                        Text(meta.$1, style: const TextStyle(fontSize: 13)),
                         const SizedBox(width: 6),
                       ],
                       Text(
@@ -777,10 +704,7 @@ class _CategoryGroupHeader extends StatelessWidget {
 // ── Achievement card ──────────────────────────────────────────────────────────
 
 class _AchievementCard extends StatefulWidget {
-  const _AchievementCard({
-    required this.achievement,
-    required this.onTap,
-  });
+  const _AchievementCard({required this.achievement, required this.onTap});
 
   final AchievementEntity achievement;
   final VoidCallback onTap;
@@ -802,8 +726,10 @@ class _AchievementCardState extends State<_AchievementCard>
       duration: const Duration(milliseconds: 90),
       value: 1.0,
     );
-    _scale = Tween<double>(begin: 0.96, end: 1.0)
-        .animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
+    _scale = Tween<double>(
+      begin: 0.96,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
   }
 
   @override
@@ -817,7 +743,9 @@ class _AchievementCardState extends State<_AchievementCard>
     final a = widget.achievement;
     final isLocked = a.isLocked;
     final color = a.color;
-    final rarity = _rarityOf(a);
+    final tierColor = isLocked
+        ? AppColors.outlineVariant
+        : AchievementEntity.tierColor(a.currentLevel);
 
     return GestureDetector(
       onTap: widget.onTap,
@@ -829,7 +757,7 @@ class _AchievementCardState extends State<_AchievementCard>
         child: Container(
           decoration: BoxDecoration(
             gradient: isLocked
-                ? LinearGradient(
+                ? const LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
@@ -867,7 +795,7 @@ class _AchievementCardState extends State<_AchievementCard>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Top row: emoji icon + lock/check badge
+              // Top row: emoji icon + level pip dots
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -900,23 +828,44 @@ class _AchievementCardState extends State<_AchievementCard>
                     ),
                   ),
                   const Spacer(),
-                  Container(
-                    padding: const EdgeInsets.all(5),
-                    decoration: BoxDecoration(
-                      color: isLocked
-                          ? AppColors.surfaceContainerHighest
-                          : color.withValues(alpha: 0.16),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      isLocked
-                          ? Icons.lock_rounded
-                          : Icons.check_rounded,
-                      size: 12,
-                      color: isLocked
-                          ? AppColors.onSurfaceVariant.withValues(alpha: 0.40)
-                          : color,
-                    ),
+                  // 5 level pip dots
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: List.generate(5, (i) {
+                          final earned = i < a.currentLevel;
+                          return Container(
+                            width: 7,
+                            height: 7,
+                            margin: const EdgeInsets.only(left: 3),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: earned
+                                  ? AchievementEntity.tierColor(i + 1)
+                                  : AppColors.outlineVariant.withValues(
+                                      alpha: 0.25,
+                                    ),
+                            ),
+                          );
+                        }),
+                      ),
+                      if (!isLocked) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          a.isMaxLevel
+                              ? 'MAX'
+                              : AchievementEntity.tierName(a.currentLevel),
+                          style: GoogleFonts.inter(
+                            fontSize: 8,
+                            fontWeight: FontWeight.w800,
+                            color: tierColor,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ],
               ),
@@ -940,12 +889,9 @@ class _AchievementCardState extends State<_AchievementCard>
 
               const SizedBox(height: 5),
 
-              // Subtitle pill
+              // Current level requirement pill
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 7,
-                  vertical: 3,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                 decoration: BoxDecoration(
                   color: isLocked
                       ? AppColors.surfaceContainerHighest
@@ -953,13 +899,17 @@ class _AchievementCardState extends State<_AchievementCard>
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
-                  a.subtitle,
+                  isLocked
+                      ? a.levelRequirements[0]
+                      : a.isMaxLevel
+                      ? 'Diamond V · Max'
+                      : '${AchievementEntity.tierName(a.currentLevel)} ${AchievementEntity.tierRoman(a.currentLevel)}',
                   style: GoogleFonts.inter(
                     fontSize: 9,
                     fontWeight: FontWeight.w600,
                     color: isLocked
                         ? AppColors.onSurfaceVariant.withValues(alpha: 0.35)
-                        : color,
+                        : tierColor,
                     letterSpacing: 0.2,
                   ),
                   maxLines: 1,
@@ -967,35 +917,21 @@ class _AchievementCardState extends State<_AchievementCard>
                 ),
               ),
 
-              const SizedBox(height: 6),
-
-              // Rarity badge
-              Row(
-                children: [
-                  Container(
-                    width: 6,
-                    height: 6,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: isLocked
-                          ? AppColors.outlineVariant.withValues(alpha: 0.3)
-                          : rarity.color,
+              // Progress bar to next level (shown when a level is earned and not max)
+              if (!isLocked && !a.isMaxLevel) ...[
+                const SizedBox(height: 8),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(3),
+                  child: LinearProgressIndicator(
+                    value: a.progressToNextLevel,
+                    minHeight: 3,
+                    backgroundColor: color.withValues(alpha: 0.12),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      AchievementEntity.tierColor(a.currentLevel + 1),
                     ),
                   ),
-                  const SizedBox(width: 5),
-                  Text(
-                    rarity.label,
-                    style: GoogleFonts.inter(
-                      fontSize: 9,
-                      fontWeight: FontWeight.w600,
-                      color: isLocked
-                          ? AppColors.onSurfaceVariant.withValues(alpha: 0.3)
-                          : rarity.color,
-                      letterSpacing: 0.3,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ],
           ),
         ),
