@@ -34,3 +34,8 @@ final class AchievementProgressUpdated extends AchievementEvent {
 final class AchievementNewlyUnlockedAcknowledged extends AchievementEvent {
   const AchievementNewlyUnlockedAcknowledged();
 }
+
+/// Internal: clear all achievements on sign-out.
+class _AchievementSignedOut extends AchievementEvent {
+  const _AchievementSignedOut();
+}

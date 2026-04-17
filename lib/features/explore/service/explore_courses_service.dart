@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:modern_learner_production/core/supabase/supabase_service.dart';
 import 'package:modern_learner_production/features/progress/domain/entities/progress_course_selection.dart';
 import 'package:modern_learner_production/features/progress/service/user_courses_service.dart';
 
@@ -7,10 +9,25 @@ import 'package:modern_learner_production/features/progress/service/user_courses
 ///
 /// [courses] drives the Home page UI via [ValueNotifier]. All write operations
 /// are optimistically applied to [courses] first, then persisted via
-/// [UserCoursesService].
+/// [UserCoursesService]. Automatically loads/clears on auth state changes.
 class ExploreCoursesService {
-  ExploreCoursesService._();
+  ExploreCoursesService._() {
+    SupabaseService.authStateChanges.listen(_onAuthStateChange);
+  }
+
   static final ExploreCoursesService instance = ExploreCoursesService._();
+
+  void _onAuthStateChange(AuthState authState) {
+    switch (authState.event) {
+      case AuthChangeEvent.signedIn:
+      case AuthChangeEvent.initialSession:
+        loadCourses();
+      case AuthChangeEvent.signedOut:
+        courses.value = const [];
+      default:
+        break;
+    }
+  }
 
   final ValueNotifier<List<ProgressCourseSelection>> courses =
       ValueNotifier(const []);
