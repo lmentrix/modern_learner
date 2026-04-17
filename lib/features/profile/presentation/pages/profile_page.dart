@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:modern_learner_production/core/di/injection.dart';
+import 'package:modern_learner_production/core/router/app_router.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
+import 'package:modern_learner_production/features/home/domain/entities/achievement_entity.dart';
+import 'package:modern_learner_production/features/home/presentation/bloc/achievement_bloc.dart';
 import 'package:modern_learner_production/features/profile/presentation/bloc/profile_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:modern_learner_production/features/profile/presentation/widgets/achievement_badge.dart';
 import 'package:modern_learner_production/features/profile/presentation/widgets/edit_profile_sheet.dart';
 import 'package:modern_learner_production/features/profile/presentation/widgets/setting_item.dart';
 import 'package:modern_learner_production/features/profile/presentation/widgets/stats_card.dart';
@@ -867,13 +870,55 @@ class _ProfilePageState extends State<ProfilePage> {
             const SliverToBoxAdapter(child: SizedBox(height: 28)),
             SliverPadding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              sliver: SliverToBoxAdapter(child: _sectionLabel('ACHIEVEMENTS')),
+              sliver: SliverToBoxAdapter(
+                child: BlocBuilder<AchievementBloc, AchievementState>(
+                  builder: (context, state) {
+                    final unlocked = state.unlockedCount;
+                    final total = state.achievements.length;
+                    return Row(
+                      children: [
+                        _sectionLabel('ACHIEVEMENTS'),
+                        if (total > 0) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 7,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.14),
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: Text(
+                              '$unlocked/$total',
+                              style: GoogleFonts.inter(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ),
+                        ],
+                        const Spacer(),
+                        GestureDetector(
+                          onTap: () => context.push(Routes.achievements),
+                          child: Text(
+                            'View all',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
             ),
             const SliverToBoxAdapter(child: SizedBox(height: 14)),
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              sliver: SliverToBoxAdapter(child: _buildAchievements()),
-            ),
+            SliverToBoxAdapter(child: _buildAchievements()),
             const SliverToBoxAdapter(child: SizedBox(height: 28)),
             SliverPadding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -1144,23 +1189,38 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildAchievements() {
-    return SizedBox(
-      height: 140,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: _achievements.length,
-        separatorBuilder: (_, i) => const SizedBox(width: 12),
-        itemBuilder: (context, i) {
-          final a = _achievements[i];
-          return AchievementBadge(
-            emoji: a.emoji,
-            title: a.title,
-            subtitle: a.subtitle,
-            color: a.color,
-            isLocked: a.isLocked,
-          );
-        },
-      ),
+    return BlocBuilder<AchievementBloc, AchievementState>(
+      builder: (context, state) {
+        final unlocked =
+            state.achievements.where((a) => !a.isLocked).toList();
+
+        if (state.status == AchievementStatus.initial ||
+            state.status == AchievementStatus.loading) {
+          return _AchievementShimmer();
+        }
+
+        if (unlocked.isEmpty) {
+          return _AchievementEmptyState();
+        }
+
+        return SizedBox(
+          height: 148,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            itemCount: unlocked.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 12),
+            itemBuilder: (context, i) {
+              final a = unlocked[i];
+              return GestureDetector(
+                onTap: () =>
+                    context.push(Routes.achievementDetail, extra: a),
+                child: _ProfileAchievementBadge(achievement: a),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 
@@ -1177,49 +1237,166 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 }
 
-// ── Static data ──────────────────────────────────────────────────────────────
+// ── Profile achievement badge ─────────────────────────────────────────────────
 
-class _Achievement {
-  const _Achievement({
-    required this.emoji,
-    required this.title,
-    required this.subtitle,
-    required this.color,
-    this.isLocked = false,
-  });
-  final String emoji, title, subtitle;
-  final Color color;
-  final bool isLocked;
+class _ProfileAchievementBadge extends StatelessWidget {
+  const _ProfileAchievementBadge({required this.achievement});
+  final AchievementEntity achievement;
+
+  @override
+  Widget build(BuildContext context) {
+    final tierColor = AchievementEntity.tierColor(achievement.currentLevel);
+    return Container(
+      width: 112,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            tierColor.withValues(alpha: 0.22),
+            AppColors.surfaceContainerLow,
+          ],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: tierColor.withValues(alpha: 0.35), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: tierColor.withValues(alpha: 0.16),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Emoji icon
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: tierColor.withValues(alpha: 0.16),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Center(
+              child: Text(
+                achievement.emoji,
+                style: const TextStyle(fontSize: 26),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          // Title
+          Text(
+            achievement.title,
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: AppColors.onSurface,
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 4),
+          // Tier pill
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: tierColor.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+              '${AchievementEntity.tierName(achievement.currentLevel)} '
+              '${AchievementEntity.tierRoman(achievement.currentLevel)}',
+              style: GoogleFonts.inter(
+                fontSize: 9,
+                fontWeight: FontWeight.w700,
+                color: tierColor,
+                letterSpacing: 0.3,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-const _achievements = [
-  _Achievement(
-    emoji: '🔥',
-    title: 'Week Warrior',
-    subtitle: '7 day streak',
-    color: AppColors.primary,
-  ),
-  _Achievement(
-    emoji: '⭐',
-    title: 'Rising Star',
-    subtitle: 'Complete 25 lessons',
-    color: AppColors.tertiaryContainer,
-  ),
-  _Achievement(
-    emoji: '🎯',
-    title: 'On Track',
-    subtitle: '30 day streak',
-    color: AppColors.secondary,
-    isLocked: true,
-  ),
-  _Achievement(
-    emoji: '🏆',
-    title: 'Champion',
-    subtitle: 'Complete 100 lessons',
-    color: Color(0xFFFF9500),
-    isLocked: true,
-  ),
-];
+// ── Shimmer placeholder ───────────────────────────────────────────────────────
+
+class _AchievementShimmer extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 148,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        itemCount: 4,
+        separatorBuilder: (_, _) => const SizedBox(width: 12),
+        itemBuilder: (_, _) => Container(
+          width: 112,
+          decoration: BoxDecoration(
+            color: AppColors.surfaceContainerHigh.withValues(alpha: 0.42),
+            borderRadius: BorderRadius.circular(20),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Empty state ───────────────────────────────────────────────────────────────
+
+class _AchievementEmptyState extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: AppColors.outlineVariant.withValues(alpha: 0.18),
+          ),
+        ),
+        child: Row(
+          children: [
+            const Text('🏅', style: TextStyle(fontSize: 28)),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'No achievements yet',
+                    style: GoogleFonts.spaceGrotesk(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Complete lessons to start earning badges!',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 class _WeekDay {
   const _WeekDay({required this.name, required this.activity});
