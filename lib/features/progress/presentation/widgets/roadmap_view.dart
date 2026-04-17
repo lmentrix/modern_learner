@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:modern_learner_production/core/router/app_router.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
+import 'package:modern_learner_production/features/home/domain/entities/achievement_entity.dart';
+import 'package:modern_learner_production/features/home/presentation/bloc/achievement_bloc.dart';
 import 'package:modern_learner_production/features/progress/domain/entities/roadmap.dart';
 import 'package:modern_learner_production/features/progress/domain/entities/user_progress.dart';
 
@@ -68,6 +73,11 @@ class RoadmapView extends StatelessWidget {
         slivers: [
           // ── Stats bar ──────────────────────────────────────────────────────
           SliverToBoxAdapter(child: _StatsBar(progress: userProgress)),
+
+          // ── Achievements section ───────────────────────────────────────────
+          SliverToBoxAdapter(
+            child: _AchievementsSection(userProgress: userProgress),
+          ),
 
           // ── Roadmap hero header ────────────────────────────────────────────
           SliverToBoxAdapter(
@@ -1266,6 +1276,357 @@ class _TypeBadge extends StatelessWidget {
           color: color,
           letterSpacing: 0.3,
         ),
+      ),
+    );
+  }
+}
+
+// ── Achievements section ──────────────────────────────────────────────────────
+
+class _AchievementsSection extends StatelessWidget {
+  const _AchievementsSection({required this.userProgress});
+
+  final UserProgress userProgress;
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<AchievementBloc, AchievementState>(
+      builder: (context, state) {
+        if (state.status == AchievementStatus.initial) return const SizedBox.shrink();
+
+        final unlocked = state.achievements.where((a) => !a.isLocked).toList();
+        final locked = state.achievements.where((a) => a.isLocked).toList();
+        final nextMilestone = _nextMilestone(locked, userProgress);
+
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ── Section header ──────────────────────────────────────────────
+              Row(
+                children: [
+                  Text(
+                    'ACHIEVEMENTS',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.onSurfaceVariant,
+                      letterSpacing: 1.5,
+                    ),
+                  ),
+                  const Spacer(),
+                  GestureDetector(
+                    onTap: () => context.push(Routes.achievements),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '${unlocked.length}/${state.achievements.length}',
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                        const SizedBox(width: 3),
+                        const Icon(
+                          Icons.chevron_right_rounded,
+                          size: 16,
+                          color: AppColors.primary,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+
+              // ── Badges row ──────────────────────────────────────────────────
+              if (unlocked.isNotEmpty)
+                SizedBox(
+                  height: 64,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: unlocked.length,
+                    separatorBuilder: (_, _) => const SizedBox(width: 10),
+                    itemBuilder: (_, i) =>
+                        _AchievementBadge(achievement: unlocked[i]),
+                  ),
+                )
+              else
+                _EmptyBadgesHint(),
+
+              // ── Next milestone ──────────────────────────────────────────────
+              if (nextMilestone != null) ...[
+                const SizedBox(height: 12),
+                _NextMilestoneCard(
+                  achievement: nextMilestone.achievement,
+                  current: nextMilestone.current,
+                  target: nextMilestone.target,
+                  label: nextMilestone.label,
+                ),
+              ],
+              const SizedBox(height: 12),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  /// Returns the locked achievement the user is closest to earning.
+  _MilestoneData? _nextMilestone(
+    List<AchievementEntity> locked,
+    UserProgress progress,
+  ) {
+    _MilestoneData? best;
+    double bestFraction = -1;
+
+    for (final a in locked) {
+      final data = _milestoneFor(a, progress);
+      if (data == null) continue;
+      final fraction = (data.current / data.target).clamp(0.0, 1.0);
+      if (fraction > bestFraction) {
+        bestFraction = fraction;
+        best = data;
+      }
+    }
+    return best;
+  }
+
+  _MilestoneData? _milestoneFor(
+    AchievementEntity a,
+    UserProgress p,
+  ) {
+    final lessons = p.completedLessons.length;
+    switch (a.id) {
+      // Streaks
+      case 'week_streak':
+        return _MilestoneData(a, p.streak, 7, 'day streak');
+      case 'fortnight_streak':
+        return _MilestoneData(a, p.streak, 14, 'day streak');
+      case 'month_streak':
+        return _MilestoneData(a, p.streak, 30, 'day streak');
+      case 'century_streak':
+        return _MilestoneData(a, p.streak, 100, 'day streak');
+      case 'year_streak':
+        return _MilestoneData(a, p.streak, 365, 'day streak');
+      // XP
+      case 'first_xp':
+        return _MilestoneData(a, p.totalXp, 100, 'XP');
+      case 'xp_hunter':
+        return _MilestoneData(a, p.totalXp, 500, 'XP');
+      case 'xp_master':
+        return _MilestoneData(a, p.totalXp, 2000, 'XP');
+      case 'xp_legend':
+        return _MilestoneData(a, p.totalXp, 10000, 'XP');
+      case 'xp_champion':
+        return _MilestoneData(a, p.totalXp, 50000, 'XP');
+      // Lessons
+      case 'first_lesson':
+        return _MilestoneData(a, lessons, 1, 'lesson');
+      case 'quick_learner':
+        return null; // time-of-day tracking not shown
+      case 'perfectionist':
+        return _MilestoneData(a, lessons, 1, 'lesson');
+      case 'no_mistakes':
+        return _MilestoneData(a, lessons, 5, 'lessons');
+      case 'bookworm':
+        return _MilestoneData(a, lessons, 25, 'lessons');
+      case 'scholar':
+        return _MilestoneData(a, lessons, 50, 'lessons');
+      case 'century_learner':
+        return _MilestoneData(a, lessons, 100, 'lessons');
+      case 'speed_demon':
+        return _MilestoneData(a, lessons, 3, 'lessons');
+      default:
+        return null;
+    }
+  }
+}
+
+class _MilestoneData {
+  const _MilestoneData(this.achievement, this.current, this.target, this.label);
+  final AchievementEntity achievement;
+  final int current;
+  final int target;
+  final String label;
+}
+
+// ── Badge ─────────────────────────────────────────────────────────────────────
+
+class _AchievementBadge extends StatelessWidget {
+  const _AchievementBadge({required this.achievement});
+  final AchievementEntity achievement;
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = achievement.color;
+    return GestureDetector(
+      onTap: () => context.push(Routes.achievementDetail, extra: achievement),
+      child: Container(
+        width: 56,
+        height: 64,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              accent.withValues(alpha: 0.28),
+              accent.withValues(alpha: 0.10),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: accent.withValues(alpha: 0.40)),
+          boxShadow: [
+            BoxShadow(
+              color: accent.withValues(alpha: 0.22),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(achievement.emoji, style: const TextStyle(fontSize: 22)),
+            const SizedBox(height: 4),
+            Container(
+              width: 6,
+              height: 6,
+              decoration: BoxDecoration(
+                color: accent,
+                shape: BoxShape.circle,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptyBadgesHint extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 64,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColors.outlineVariant.withValues(alpha: 0.18),
+        ),
+      ),
+      child: Row(
+        children: [
+          const Text('🏅', style: TextStyle(fontSize: 22)),
+          const SizedBox(width: 12),
+          Text(
+            'Complete lessons to unlock achievements',
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              color: AppColors.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Next milestone card ───────────────────────────────────────────────────────
+
+class _NextMilestoneCard extends StatelessWidget {
+  const _NextMilestoneCard({
+    required this.achievement,
+    required this.current,
+    required this.target,
+    required this.label,
+  });
+
+  final AchievementEntity achievement;
+  final int current;
+  final int target;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = achievement.color;
+    final fraction = (current / target).clamp(0.0, 1.0);
+    final remaining = (target - current).clamp(0, target);
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: accent.withValues(alpha: 0.22)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(achievement.emoji, style: const TextStyle(fontSize: 20)),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'NEXT ACHIEVEMENT',
+                      style: GoogleFonts.inter(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.2,
+                        color: accent,
+                      ),
+                    ),
+                    Text(
+                      achievement.title,
+                      style: GoogleFonts.spaceGrotesk(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.onSurface,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Text(
+                '$current/$target $label',
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: fraction,
+              minHeight: 6,
+              backgroundColor: accent.withValues(alpha: 0.14),
+              valueColor: AlwaysStoppedAnimation<Color>(accent),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            remaining == 0
+                ? 'Achievement unlocked! 🎉'
+                : '$remaining more $label to unlock',
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              color: AppColors.onSurfaceVariant,
+            ),
+          ),
+        ],
       ),
     );
   }
