@@ -9,6 +9,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:modern_learner_production/core/constants/api_constants.dart';
 import 'package:modern_learner_production/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:modern_learner_production/features/home/presentation/bloc/achievement_bloc.dart';
+import 'package:modern_learner_production/features/home/service/lesson_refresh_notifier.dart';
 import 'package:modern_learner_production/features/profile/domain/repositories/profile_repository.dart';
 import 'package:modern_learner_production/features/profile/domain/usecases/get_profile_usecase.dart';
 import 'package:modern_learner_production/features/profile/domain/usecases/update_profile_usecase.dart';
@@ -24,6 +25,8 @@ import 'package:modern_learner_production/features/new_lesson/domain/usecases/ge
 import 'package:modern_learner_production/features/new_lesson/domain/usecases/get_lessons.dart';
 import 'package:modern_learner_production/features/new_lesson/domain/usecases/update_lesson.dart';
 import 'package:modern_learner_production/features/explore/service/explore_courses_service.dart';
+import 'package:modern_learner_production/features/lesson_detail/service/voice_lesson_generation_service.dart';
+import 'package:modern_learner_production/features/lesson_detail/service/voice_lesson_supabase_service.dart';
 import 'package:modern_learner_production/features/progress/service/chapter_content_service.dart';
 import 'package:modern_learner_production/features/progress/service/lesson_content_service.dart';
 import 'package:modern_learner_production/features/progress/service/progress_navigation_state.dart';
@@ -77,12 +80,13 @@ Future<void> configureDependencies() async {
   getIt.registerFactory(() => ProfileBloc(getIt(), getIt()));
 
   // ── Progress services ─────────────────────────────────────────────────────
-  getIt.registerLazySingleton<UserProgressService>(
-    () => UserProgressService(supabase: getIt<SupabaseClient>()),
+  getIt.registerSingleton<UserProgressService>(
+    UserProgressService(supabase: getIt<SupabaseClient>()),
   );
-  getIt.registerLazySingleton<UserCoursesService>(
-    () => UserCoursesService(supabase: getIt<SupabaseClient>()),
+  getIt.registerSingleton<UserCoursesService>(
+    UserCoursesService(supabase: getIt<SupabaseClient>()),
   );
+  getIt.registerLazySingleton(() => LessonRefreshNotifier());
 
   // ── Progress ──────────────────────────────────────────────────────────────
   getIt.registerSingletonAsync<SharedPreferences>(
@@ -148,18 +152,47 @@ Future<void> configureDependencies() async {
     dependsOn: [ProgressRepository],
   );
 
+  // ── Voice Lesson ──────────────────────────────────────────────────────────
+  getIt.registerSingleton<VoiceLessonSupabaseService>(
+    VoiceLessonSupabaseService(supabase: getIt<SupabaseClient>()),
+  );
+  getIt.registerSingletonAsync<VoiceLessonGenerationService>(
+    () async => VoiceLessonGenerationService(
+      dio: getIt<Dio>(),
+      prefs: await getIt.getAsync<SharedPreferences>(),
+    ),
+    dependsOn: [SharedPreferences],
+  );
+
   // ── New Lesson ────────────────────────────────────────────────────────────
-  getIt.registerLazySingleton<LessonRepository>(
-    () => LessonRepositoryImpl(
+  getIt.registerSingletonAsync<LessonRepository>(
+    () async => LessonRepositoryImpl(
       getIt<SupabaseClient>(),
       getIt<RoadmapGenerationService>(),
+      await getIt.getAsync<VoiceLessonGenerationService>(),
     ),
+    dependsOn: [RoadmapGenerationService, VoiceLessonGenerationService],
   );
-  getIt.registerLazySingleton(() => CreateLesson(getIt<LessonRepository>()));
-  getIt.registerLazySingleton(() => GetLessons(getIt<LessonRepository>()));
-  getIt.registerLazySingleton(() => GetLesson(getIt<LessonRepository>()));
-  getIt.registerLazySingleton(() => UpdateLesson(getIt<LessonRepository>()));
-  getIt.registerLazySingleton(() => DeleteLesson(getIt<LessonRepository>()));
+  getIt.registerSingletonAsync(
+    () async => CreateLesson(await getIt.getAsync<LessonRepository>()),
+    dependsOn: [LessonRepository],
+  );
+  getIt.registerSingletonAsync(
+    () async => GetLessons(await getIt.getAsync<LessonRepository>()),
+    dependsOn: [LessonRepository],
+  );
+  getIt.registerSingletonAsync(
+    () async => GetLesson(await getIt.getAsync<LessonRepository>()),
+    dependsOn: [LessonRepository],
+  );
+  getIt.registerSingletonAsync(
+    () async => UpdateLesson(await getIt.getAsync<LessonRepository>()),
+    dependsOn: [LessonRepository],
+  );
+  getIt.registerSingletonAsync(
+    () async => DeleteLesson(await getIt.getAsync<LessonRepository>()),
+    dependsOn: [LessonRepository],
+  );
 
   // ── Learning Subjects (Explore) ───────────────────────────────────────────
   getIt.registerLazySingleton<LearningSubjectLocalDatasource>(

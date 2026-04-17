@@ -110,30 +110,59 @@ class RoadmapGenerationService {
       return json;
     }
 
-    final response = await dio.post<Map<String, dynamic>>(
-      '${ApiConstants.baseUrl}${ApiConstants.lessonRoadmapGenerate}',
-      data: {
-        'lessonType': lessonType == 'school' ? 'school' : 'voice',
-        'topic': topic,
-        if (lessonType == 'school')
-          'subject': contentType
-        else
-          'language': contentType,
-        'level': level,
-        'nativeLanguage': nativeLanguage,
-      },
-    );
+    try {
+      final response = await dio.post<Map<String, dynamic>>(
+        '${ApiConstants.baseUrl}${ApiConstants.lessonRoadmapGenerate}',
+        data: {
+          'lessonType': lessonType == 'school' ? 'school' : 'voice',
+          'topic': topic,
+          if (lessonType == 'school')
+            'subject': contentType
+          else
+            'language': contentType,
+          'level': level,
+          'nativeLanguage': nativeLanguage,
+        },
+      );
 
-    final body = response.data!;
-    final roadmapJson = body['data'] as Map<String, dynamic>;
-    await cacheRoadmapJson(
-      roadmapJson,
-      topic: topic,
-      language: contentType,
-      level: level,
-      nativeLanguage: nativeLanguage,
-    );
-    return roadmapJson;
+      final body = response.data!;
+      final roadmapJson = body['data'] as Map<String, dynamic>;
+      await cacheRoadmapJson(
+        roadmapJson,
+        topic: topic,
+        language: contentType,
+        level: level,
+        nativeLanguage: nativeLanguage,
+      );
+      return roadmapJson;
+    } catch (_) {
+      // API unavailable — return a minimal stub so lesson creation still succeeds.
+      return _minimalLessonRoadmap(
+        lessonType: lessonType,
+        topic: topic,
+        contentType: contentType,
+        level: level,
+      );
+    }
+  }
+
+  /// Builds a minimal roadmap JSON used as a fallback when the AI API is unreachable.
+  Map<String, dynamic> _minimalLessonRoadmap({
+    required String lessonType,
+    required String topic,
+    required String contentType,
+    required String level,
+  }) {
+    return {
+      'id': 'offline_${DateTime.now().millisecondsSinceEpoch}',
+      'title': '$contentType – $topic',
+      'description': 'Generated offline. Reload to fetch AI content.',
+      'targetLanguage': contentType,
+      'level': level,
+      'totalXp': 0,
+      'estimatedHours': 0,
+      'chapters': [],
+    };
   }
 
   Future<Roadmap> generateRoadmap({
