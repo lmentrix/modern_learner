@@ -11,6 +11,7 @@ import 'package:modern_learner_production/features/progress/domain/repositories/
 import 'package:modern_learner_production/features/progress/service/chapter_content_service.dart';
 import 'package:modern_learner_production/features/progress/service/lesson_content_service.dart';
 import 'package:modern_learner_production/features/progress/service/roadmap_generation_service.dart';
+import 'package:modern_learner_production/features/progress/service/user_progress_service.dart';
 
 class ProgressRepositoryImpl implements ProgressRepository {
   ProgressRepositoryImpl({
@@ -18,14 +19,17 @@ class ProgressRepositoryImpl implements ProgressRepository {
     required this.roadmapService,
     required this.chapterContentService,
     required this.lessonContentService,
+    required this.userProgressService,
   });
 
   final SupabaseClient supabase;
   final RoadmapGenerationService roadmapService;
   final ChapterContentService chapterContentService;
   final LessonContentService lessonContentService;
+  final UserProgressService userProgressService;
 
   final _progressController = StreamController<UserProgress>.broadcast();
+  bool _initialized = false;
 
   UserProgress _userProgress = const UserProgress(
     totalXp: 0,
@@ -87,7 +91,10 @@ class ProgressRepositoryImpl implements ProgressRepository {
 
   @override
   Future<UserProgress> getUserProgress() async {
-    await Future.delayed(const Duration(milliseconds: 200));
+    if (!_initialized) {
+      _initialized = true;
+      await _loadFromSupabase();
+    }
     return _userProgress;
   }
 
@@ -98,6 +105,7 @@ class ProgressRepositoryImpl implements ProgressRepository {
       lessonProgress: {..._userProgress.lessonProgress, progressKey: 0.1},
     );
     _progressController.add(_userProgress);
+    _persistToSupabase();
   }
 
   @override
@@ -117,6 +125,7 @@ class ProgressRepositoryImpl implements ProgressRepository {
     );
     _evaluateAndApplyAchievements();
     _progressController.add(_userProgress);
+    _persistToSupabase();
   }
 
   @override
@@ -126,6 +135,7 @@ class ProgressRepositoryImpl implements ProgressRepository {
       lessonProgress: {..._userProgress.lessonProgress, progressKey: progress},
     );
     _progressController.add(_userProgress);
+    _persistToSupabase();
   }
 
   @override
@@ -201,7 +211,20 @@ class ProgressRepositoryImpl implements ProgressRepository {
     // Bootstrap achievements (e.g. early_adopter) on first load.
     _evaluateAndApplyAchievements();
     _progressController.add(_userProgress);
+    _persistToSupabase();
   }
+
+  // ── Supabase persistence ─────────────────────────────────────────────────────
+
+  Future<void> _loadFromSupabase() async {
+    final fetched = await userProgressService.fetchProgress();
+    if (fetched != null) _userProgress = fetched;
+  }
+
+  void _persistToSupabase() =>
+      userProgressService.saveProgress(_userProgress);
+
+  // ── Achievement evaluation ───────────────────────────────────────────────────
 
   /// Evaluates achievement levels against the current [_userProgress]
   /// and upgrades any achievement that has earned a higher level.

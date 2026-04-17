@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:modern_learner_production/core/constants/api_constants.dart';
+import 'package:modern_learner_production/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:modern_learner_production/features/home/presentation/bloc/achievement_bloc.dart';
 import 'package:modern_learner_production/features/profile/domain/repositories/profile_repository.dart';
 import 'package:modern_learner_production/features/profile/domain/usecases/get_profile_usecase.dart';
@@ -22,10 +23,13 @@ import 'package:modern_learner_production/features/new_lesson/domain/usecases/de
 import 'package:modern_learner_production/features/new_lesson/domain/usecases/get_lesson.dart';
 import 'package:modern_learner_production/features/new_lesson/domain/usecases/get_lessons.dart';
 import 'package:modern_learner_production/features/new_lesson/domain/usecases/update_lesson.dart';
+import 'package:modern_learner_production/features/explore/service/explore_courses_service.dart';
 import 'package:modern_learner_production/features/progress/service/chapter_content_service.dart';
 import 'package:modern_learner_production/features/progress/service/lesson_content_service.dart';
 import 'package:modern_learner_production/features/progress/service/progress_navigation_state.dart';
 import 'package:modern_learner_production/features/progress/service/roadmap_generation_service.dart';
+import 'package:modern_learner_production/features/progress/service/user_courses_service.dart';
+import 'package:modern_learner_production/features/progress/service/user_progress_service.dart';
 import 'package:modern_learner_production/features/progress/data/repositories/progress_repository_impl.dart';
 import 'package:modern_learner_production/features/progress/domain/repositories/progress_repository.dart';
 import 'package:modern_learner_production/core/network/network_info.dart';
@@ -56,6 +60,11 @@ Future<void> configureDependencies() async {
   getIt.registerLazySingleton<InternetConnection>(() => InternetConnection());
   getIt.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl(getIt()));
 
+  // ── Auth ──────────────────────────────────────────────────────────────────
+  // Eager singleton — constructed immediately so it is always available before
+  // App.build() runs, regardless of Dart's lazy-initialisation caching.
+  getIt.registerSingleton<AuthBloc>(AuthBloc());
+
   // ── Profile ───────────────────────────────────────────────────────────────
   getIt.registerLazySingleton<ProfileRemoteDataSource>(
     () => ProfileRemoteDataSourceImpl(getIt()),
@@ -66,6 +75,14 @@ Future<void> configureDependencies() async {
   getIt.registerLazySingleton(() => GetProfileUseCase(getIt()));
   getIt.registerLazySingleton(() => UpdateProfileUseCase(getIt()));
   getIt.registerFactory(() => ProfileBloc(getIt(), getIt()));
+
+  // ── Progress services ─────────────────────────────────────────────────────
+  getIt.registerLazySingleton<UserProgressService>(
+    () => UserProgressService(supabase: getIt<SupabaseClient>()),
+  );
+  getIt.registerLazySingleton<UserCoursesService>(
+    () => UserCoursesService(supabase: getIt<SupabaseClient>()),
+  );
 
   // ── Progress ──────────────────────────────────────────────────────────────
   getIt.registerSingletonAsync<SharedPreferences>(
@@ -108,6 +125,7 @@ Future<void> configureDependencies() async {
       roadmapService: await getIt.getAsync<RoadmapGenerationService>(),
       chapterContentService: await getIt.getAsync<ChapterContentService>(),
       lessonContentService: await getIt.getAsync<LessonContentService>(),
+      userProgressService: getIt<UserProgressService>(),
     ),
     dependsOn: [
       RoadmapGenerationService,
@@ -116,6 +134,9 @@ Future<void> configureDependencies() async {
     ],
   );
   getIt.registerLazySingleton(() => ProgressNavigationState());
+
+  // Wire UserCoursesService into the ExploreCoursesService singleton.
+  ExploreCoursesService.instance.injectRemote(getIt<UserCoursesService>());
 
   // ── Achievement ───────────────────────────────────────────────────────────
   // Registered AFTER ProgressRepository so dependsOn resolves correctly.
