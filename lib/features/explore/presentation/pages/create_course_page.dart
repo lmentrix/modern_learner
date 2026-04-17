@@ -91,6 +91,8 @@ class _CreateCoursePageState extends State<CreateCoursePage> {
   @override
   Widget build(BuildContext context) {
     final isTopic = widget.topic != null;
+    final w = MediaQuery.sizeOf(context).width;
+    final hPad = w < 360 ? 16.0 : w >= 600 ? 28.0 : 20.0;
 
     return Material(
       color: AppColors.surface,
@@ -105,7 +107,7 @@ class _CreateCoursePageState extends State<CreateCoursePage> {
             ),
           ),
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(20, 28, 20, 40),
+            padding: EdgeInsets.fromLTRB(hPad, 28, hPad, 40),
             sliver: SliverToBoxAdapter(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -222,6 +224,10 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     final displayEmoji = topic?.emoji ?? subject.emoji;
     final displayName = topic?.name ?? subject.name;
+    final w = MediaQuery.sizeOf(context).width;
+    final hPad = w < 360 ? 16.0 : w >= 600 ? 28.0 : 20.0;
+    final emojiSize = w < 360 ? 34.0 : w >= 600 ? 50.0 : 42.0;
+    final titleSize = w < 360 ? 20.0 : w >= 600 ? 32.0 : 26.0;
 
     return Stack(
       children: [
@@ -250,7 +256,7 @@ class _Header extends StatelessWidget {
           child: SafeArea(
             bottom: false,
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+              padding: EdgeInsets.fromLTRB(hPad, 12, hPad, 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
@@ -303,14 +309,14 @@ class _Header extends StatelessWidget {
                     children: [
                       Text(
                         displayEmoji,
-                        style: const TextStyle(fontSize: 42),
+                        style: TextStyle(fontSize: emojiSize),
                       ),
                       const SizedBox(width: 14),
                       Expanded(
                         child: Text(
                           displayName,
                           style: GoogleFonts.spaceGrotesk(
-                            fontSize: 26,
+                            fontSize: titleSize,
                             fontWeight: FontWeight.w800,
                             color: Colors.white,
                             height: 1.05,

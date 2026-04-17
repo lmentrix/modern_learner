@@ -95,6 +95,12 @@ class _AchievementsPageState extends State<AchievementsPage>
     super.initState();
     _tabCtrl = TabController(length: _tabs.length, vsync: this);
     _tabCtrl.addListener(_onTabChanged);
+    // Trigger a load after the first frame so context.read is safe.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<AchievementBloc>().add(const AchievementLoadRequested());
+      }
+    });
   }
 
   @override
@@ -106,24 +112,18 @@ class _AchievementsPageState extends State<AchievementsPage>
     super.dispose();
   }
 
-  late AchievementBloc _bloc;
-
   void _onTabChanged() {
     if (!_tabCtrl.indexIsChanging) return;
     final filter = _tabs[_tabCtrl.index];
-    _bloc.add(AchievementFilterChanged(filter == 'All' ? 'all' : filter));
+    final filterKey = filter == 'All' ? 'all' : filter;
+    // The singleton bloc is provided by MainLayout; access via context.
+    context.read<AchievementBloc>().add(AchievementFilterChanged(filterKey));
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) {
-        _bloc = AchievementBloc()..add(const AchievementLoadRequested());
-        return _bloc;
-      },
-      child: BlocBuilder<AchievementBloc, AchievementState>(
-        builder: (context, state) => _buildScaffold(context, state),
-      ),
+    return BlocBuilder<AchievementBloc, AchievementState>(
+      builder: (context, state) => _buildScaffold(context, state),
     );
   }
 
@@ -161,7 +161,7 @@ class _AchievementsPageState extends State<AchievementsPage>
                     .toList(),
                 onTap: (a) => context.push(Routes.achievementDetail, extra: a),
               ),
-            ),
+            ), 
           ],
 
           // ── Category tabs ────────────────────────────────────────────────────

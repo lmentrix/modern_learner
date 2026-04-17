@@ -1,17 +1,38 @@
+import 'dart:async';
+
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 import 'package:modern_learner_production/features/home/domain/entities/achievement_entity.dart';
+import 'package:modern_learner_production/features/progress/domain/entities/user_progress.dart';
+import 'package:modern_learner_production/features/progress/domain/repositories/progress_repository.dart';
 
 part 'achievement_event.dart';
 part 'achievement_state.dart';
 
 class AchievementBloc extends Bloc<AchievementEvent, AchievementState> {
-  AchievementBloc() : super(const AchievementState()) {
+  AchievementBloc({required ProgressRepository progressRepository})
+      : _progressRepository = progressRepository,
+        super(const AchievementState()) {
     on<AchievementLoadRequested>(_onLoadRequested);
     on<AchievementFilterChanged>(_onFilterChanged);
+    on<AchievementProgressUpdated>(_onProgressUpdated);
+    on<AchievementNewlyUnlockedAcknowledged>(_onAcknowledged);
+
+    _progressSub = _progressRepository
+        .getProgressStream()
+        .listen((p) => add(AchievementProgressUpdated(p)));
+  }
+
+  final ProgressRepository _progressRepository;
+  late final StreamSubscription<UserProgress> _progressSub;
+
+  @override
+  Future<void> close() {
+    _progressSub.cancel();
+    return super.close();
   }
 
   static const List<String> categoryOrder = [
@@ -278,14 +299,19 @@ class AchievementBloc extends Bloc<AchievementEvent, AchievementState> {
     ),
   ];
 
-  void _onLoadRequested(
+  // ── Handlers ──────────────────────────────────────────────────────────────
+
+  Future<void> _onLoadRequested(
     AchievementLoadRequested event,
     Emitter<AchievementState> emit,
-  ) {
+  ) async {
+    emit(state.copyWith(status: AchievementStatus.loading));
+    final progress = await _progressRepository.getUserProgress();
+    final list = _buildList(progress.unlockedAchievements.toSet());
     emit(state.copyWith(
       status: AchievementStatus.loaded,
-      achievements: allAchievements,
-      filtered: allAchievements,
+      achievements: list,
+      filtered: _applyFilter(list, state.selectedFilter),
     ));
   }
 
@@ -293,11 +319,71 @@ class AchievementBloc extends Bloc<AchievementEvent, AchievementState> {
     AchievementFilterChanged event,
     Emitter<AchievementState> emit,
   ) {
-    final filtered = switch (event.filter) {
-      'unlocked' => state.achievements.where((a) => !a.isLocked).toList(),
-      'locked' => state.achievements.where((a) => a.isLocked).toList(),
-      _ => List<AchievementEntity>.from(state.achievements),
+    emit(state.copyWith(
+      selectedFilter: event.filter,
+      filtered: _applyFilter(state.achievements, event.filter),
+    ));
+  }
+
+  void _onProgressUpdated(
+    AchievementProgressUpdated event,
+    Emitter<AchievementState> emit,
+  ) {
+    final unlockedIds = event.progress.unlockedAchievements.toSet();
+    final previouslyUnlockedIds =
+        state.achievements.where((a) => !a.isLocked).map((a) => a.id).toSet();
+
+    final newList = _buildList(unlockedIds);
+    final newlyUnlocked = newList
+        .where((a) => !a.isLocked && !previouslyUnlockedIds.contains(a.id))
+        .toList();
+
+    emit(state.copyWith(
+      status: AchievementStatus.loaded,
+      achievements: newList,
+      filtered: _applyFilter(newList, state.selectedFilter),
+      newlyUnlocked: [
+        ...state.newlyUnlocked,
+        ...newlyUnlocked,
+      ],
+    ));
+  }
+
+  void _onAcknowledged(
+    AchievementNewlyUnlockedAcknowledged event,
+    Emitter<AchievementState> emit,
+  ) {
+    emit(state.copyWith(newlyUnlocked: []));
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+
+  /// Rebuilds the full achievement list with [isLocked] computed from [unlockedIds].
+  List<AchievementEntity> _buildList(Set<String> unlockedIds) {
+    return allAchievements.map((a) {
+      final locked = !unlockedIds.contains(a.id);
+      if (locked == a.isLocked) return a;
+      return AchievementEntity(
+        id: a.id,
+        emoji: a.emoji,
+        title: a.title,
+        subtitle: a.subtitle,
+        description: a.description,
+        color: a.color,
+        category: a.category,
+        isLocked: locked,
+      );
+    }).toList();
+  }
+
+  List<AchievementEntity> _applyFilter(
+    List<AchievementEntity> list,
+    String filter,
+  ) {
+    return switch (filter) {
+      'unlocked' => list.where((a) => !a.isLocked).toList(),
+      'locked' => list.where((a) => a.isLocked).toList(),
+      _ => List<AchievementEntity>.from(list),
     };
-    emit(state.copyWith(selectedFilter: event.filter, filtered: filtered));
   }
 }

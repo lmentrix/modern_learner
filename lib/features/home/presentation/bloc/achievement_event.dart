@@ -19,3 +19,18 @@ final class AchievementFilterChanged extends AchievementEvent {
   @override
   List<Object?> get props => [filter];
 }
+
+/// Fired internally when the progress stream emits a new [UserProgress].
+final class AchievementProgressUpdated extends AchievementEvent {
+  const AchievementProgressUpdated(this.progress);
+
+  final UserProgress progress;
+
+  @override
+  List<Object?> get props => [progress];
+}
+
+/// Fired after the UI has displayed the newly unlocked achievements toast.
+final class AchievementNewlyUnlockedAcknowledged extends AchievementEvent {
+  const AchievementNewlyUnlockedAcknowledged();
+}

@@ -30,7 +30,9 @@ class ExplorePage extends StatelessWidget {
               const SliverToBoxAdapter(child: ExploreHeader()),
               const SliverToBoxAdapter(child: SizedBox(height: 24)),
               SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+                padding: EdgeInsets.symmetric(
+                  horizontal: MediaQuery.sizeOf(context).width >= 600 ? 28 : 20,
+                ),
                 sliver: SliverToBoxAdapter(
                   child: Text(
                     'LEARNING SUBJECTS · CURATED CATALOG',
@@ -45,12 +47,14 @@ class ExplorePage extends StatelessWidget {
               ),
               const SliverToBoxAdapter(child: SizedBox(height: 6)),
               SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+                padding: EdgeInsets.symmetric(
+                  horizontal: MediaQuery.sizeOf(context).width >= 600 ? 28 : 20,
+                ),
                 sliver: SliverToBoxAdapter(
                   child: Text(
                     'Browse comprehensive subjects across science, humanities, arts, and more.',
                     style: GoogleFonts.inter(
-                      fontSize: 13,
+                      fontSize: MediaQuery.sizeOf(context).width >= 600 ? 14 : 13,
                       height: 1.5,
                       color: AppColors.onSurfaceVariant,
                     ),

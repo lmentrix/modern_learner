@@ -24,6 +24,55 @@ class SubjectStatsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final w = MediaQuery.sizeOf(context).width;
+
+    // On very small screens, stack as 2×2 grid instead of 1×4 row
+    if (w < 360) {
+      return Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: SubjectStatCard(
+                  label: 'TOPICS',
+                  value: '${subject.topicCount}',
+                  accent: accent,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: SubjectStatCard(
+                  label: 'EST. TIME',
+                  value: '${_totalMinutes ~/ 60}h ${_totalMinutes % 60}m',
+                  accent: AppColors.secondary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: SubjectStatCard(
+                  label: 'BEGINNER',
+                  value: '$_beginnerCount',
+                  accent: AppColors.tertiary,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: SubjectStatCard(
+                  label: 'ADVANCED',
+                  value: '$_advancedCount',
+                  accent: const Color(0xFFFF8A65),
+                ),
+              ),
+            ],
+          ),
+        ],
+      );
+    }
+
     return Row(
       children: [
         Expanded(
@@ -76,6 +125,9 @@ class SubjectStatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final w = MediaQuery.sizeOf(context).width;
+    final valueSize = w < 380 ? 15.0 : w >= 600 ? 20.0 : 18.0;
+
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
       decoration: BoxDecoration(
@@ -88,7 +140,7 @@ class SubjectStatCard extends StatelessWidget {
           Text(
             value,
             style: GoogleFonts.spaceGrotesk(
-              fontSize: 18,
+              fontSize: valueSize,
               fontWeight: FontWeight.w700,
               color: AppColors.onSurface,
             ),

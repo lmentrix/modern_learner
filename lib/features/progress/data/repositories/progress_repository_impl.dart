@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:modern_learner_production/features/home/service/achievement_evaluator.dart';
 import 'package:modern_learner_production/features/progress/data/models/roadmap_model.dart';
 import 'package:modern_learner_production/features/progress/domain/entities/progress_course_selection.dart';
 import 'package:modern_learner_production/features/progress/domain/entities/roadmap.dart';
@@ -102,9 +103,10 @@ class ProgressRepositoryImpl implements ProgressRepository {
   @override
   Future<void> completeLesson(String lessonId) async {
     final progressKey = _progressKeyForCurrentRoadmap(lessonId);
+    final newXp = _userProgress.totalXp + 100;
     _userProgress = _userProgress.copyWith(
-      totalXp: _userProgress.totalXp + 100,
-      level: (_userProgress.totalXp + 100) ~/ 500 + 1,
+      totalXp: newXp,
+      level: newXp ~/ 500 + 1,
       gems: _userProgress.gems + 7,
       completedLessons: {
         ..._userProgress.completedLessons,
@@ -113,6 +115,7 @@ class ProgressRepositoryImpl implements ProgressRepository {
       lessonProgress: Map.from(_userProgress.lessonProgress)
         ..remove(progressKey),
     );
+    _evaluateAndApplyAchievements();
     _progressController.add(_userProgress);
   }
 
@@ -195,7 +198,25 @@ class ProgressRepositoryImpl implements ProgressRepository {
 
   void _activateRoadmap(String roadmapId) {
     _userProgress = _userProgress.copyWith(currentRoadmapId: roadmapId);
+    // Bootstrap achievements (e.g. early_adopter) on first load.
+    _evaluateAndApplyAchievements();
     _progressController.add(_userProgress);
+  }
+
+  /// Evaluates all achievement criteria against the current [_userProgress]
+  /// and merges any newly earned IDs into [_userProgress.unlockedAchievements].
+  void _evaluateAndApplyAchievements() {
+    final shouldUnlock = AchievementEvaluator.evaluate(_userProgress);
+    final alreadyUnlocked = _userProgress.unlockedAchievements.toSet();
+    final newlyUnlocked = shouldUnlock.difference(alreadyUnlocked);
+    if (newlyUnlocked.isNotEmpty) {
+      _userProgress = _userProgress.copyWith(
+        unlockedAchievements: [
+          ..._userProgress.unlockedAchievements,
+          ...newlyUnlocked,
+        ],
+      );
+    }
   }
 
   String _progressKey(String roadmapId, String lessonId) =>
