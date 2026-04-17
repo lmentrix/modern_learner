@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:modern_learner_production/core/di/injection.dart';
 import 'package:modern_learner_production/core/router/app_router.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
+import 'package:modern_learner_production/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:modern_learner_production/features/home/domain/entities/achievement_entity.dart';
 import 'package:modern_learner_production/features/home/presentation/bloc/achievement_bloc.dart';
 import 'package:modern_learner_production/features/profile/presentation/bloc/profile_bloc.dart';
@@ -813,7 +814,7 @@ class _ProfilePageState extends State<ProfilePage> {
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              Supabase.instance.client.auth.signOut();
+              context.read<AuthBloc>().add(const AuthSignOutRequested());
             },
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
             child: Text(
