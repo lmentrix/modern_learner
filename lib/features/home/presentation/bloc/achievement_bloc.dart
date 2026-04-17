@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:modern_learner_production/core/supabase/supabase_service.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 import 'package:modern_learner_production/features/home/domain/entities/achievement_entity.dart';
 import 'package:modern_learner_production/features/home/service/achievement_evaluator.dart';
@@ -21,18 +23,32 @@ class AchievementBloc extends Bloc<AchievementEvent, AchievementState> {
     on<AchievementFilterChanged>(_onFilterChanged);
     on<AchievementProgressUpdated>(_onProgressUpdated);
     on<AchievementNewlyUnlockedAcknowledged>(_onAcknowledged);
+    on<_AchievementSignedOut>(_onSignedOut);
 
     _progressSub = _progressRepository
         .getProgressStream()
         .listen((p) => add(AchievementProgressUpdated(p)));
+
+    // Reload from the repository whenever a user signs in so that the
+    // achievement list reflects the new user's data immediately.
+    _authSub = SupabaseService.authStateChanges.listen((s) {
+      if (s.event == AuthChangeEvent.signedIn ||
+          s.event == AuthChangeEvent.initialSession) {
+        add(const AchievementLoadRequested());
+      } else if (s.event == AuthChangeEvent.signedOut) {
+        add(const _AchievementSignedOut());
+      }
+    });
   }
 
   final ProgressRepository _progressRepository;
   late final StreamSubscription<UserProgress> _progressSub;
+  late final StreamSubscription<dynamic> _authSub;
 
   @override
   Future<void> close() {
     _progressSub.cancel();
+    _authSub.cancel();
     return super.close();
   }
 
@@ -336,6 +352,30 @@ class AchievementBloc extends Bloc<AchievementEvent, AchievementState> {
   ) {
     emit(state.copyWith(newlyUnlocked: []));
   }
+
+  void _onSignedOut(
+    _AchievementSignedOut event,
+    Emitter<AchievementState> emit,
+  ) {
+    final empty = _buildList(_emptyProgress);
+    emit(state.copyWith(
+      status: AchievementStatus.loaded,
+      achievements: empty,
+      filtered: _applyFilter(empty, state.selectedFilter),
+      newlyUnlocked: [],
+    ));
+  }
+
+  static const _emptyProgress = UserProgress(
+    totalXp: 0,
+    level: 1,
+    gems: 0,
+    streak: 0,
+    completedLessons: {},
+    lessonProgress: {},
+    completedChapters: {},
+    achievementLevels: {},
+  );
 
   // ── Helpers ───────────────────────────────────────────────────────────────
 

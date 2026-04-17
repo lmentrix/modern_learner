@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:modern_learner_production/core/supabase/supabase_service.dart';
 import 'package:modern_learner_production/features/home/service/achievement_evaluator.dart';
 import 'package:modern_learner_production/features/progress/data/models/roadmap_model.dart';
 import 'package:modern_learner_production/features/progress/domain/entities/progress_course_selection.dart';
@@ -20,7 +21,9 @@ class ProgressRepositoryImpl implements ProgressRepository {
     required this.chapterContentService,
     required this.lessonContentService,
     required this.userProgressService,
-  });
+  }) {
+    _authSub = SupabaseService.authStateChanges.listen(_onAuthStateChange);
+  }
 
   final SupabaseClient supabase;
   final RoadmapGenerationService roadmapService;
@@ -29,9 +32,10 @@ class ProgressRepositoryImpl implements ProgressRepository {
   final UserProgressService userProgressService;
 
   final _progressController = StreamController<UserProgress>.broadcast();
+  late final StreamSubscription<AuthState> _authSub;
   bool _initialized = false;
 
-  UserProgress _userProgress = const UserProgress(
+  static const _emptyProgress = UserProgress(
     totalXp: 0,
     level: 1,
     gems: 0,
@@ -42,6 +46,8 @@ class ProgressRepositoryImpl implements ProgressRepository {
     achievementLevels: {},
     currentRoadmapId: '',
   );
+
+  UserProgress _userProgress = _emptyProgress;
 
   @override
   Future<Roadmap> getRoadmap({ProgressCourseSelection? courseSelection}) async {
@@ -91,10 +97,9 @@ class ProgressRepositoryImpl implements ProgressRepository {
 
   @override
   Future<UserProgress> getUserProgress() async {
-    if (!_initialized) {
-      _initialized = true;
-      await _loadFromSupabase();
-    }
+    // Auth listener eagerly loads progress on sign-in, but fall back to
+    // fetching here in case getUserProgress is called before the stream fires.
+    if (!_initialized) await _loadAndEmit();
     return _userProgress;
   }
 
@@ -214,11 +219,38 @@ class ProgressRepositoryImpl implements ProgressRepository {
     _persistToSupabase();
   }
 
+  // ── Auth state handling ──────────────────────────────────────────────────────
+
+  void _onAuthStateChange(AuthState authState) {
+    switch (authState.event) {
+      case AuthChangeEvent.signedIn:
+      case AuthChangeEvent.initialSession:
+      case AuthChangeEvent.tokenRefreshed:
+        // Load the signed-in user's persisted progress.
+        _initialized = false;
+        _loadAndEmit();
+      case AuthChangeEvent.signedOut:
+        // Wipe in-memory state so the next user starts fresh.
+        _userProgress = _emptyProgress;
+        _initialized = false;
+        _progressController.add(_userProgress);
+      default:
+        break;
+    }
+  }
+
+  Future<void> _loadAndEmit() async {
+    await _loadFromSupabase();
+    _evaluateAndApplyAchievements();
+    _progressController.add(_userProgress);
+  }
+
   // ── Supabase persistence ─────────────────────────────────────────────────────
 
   Future<void> _loadFromSupabase() async {
     final fetched = await userProgressService.fetchProgress();
     if (fetched != null) _userProgress = fetched;
+    _initialized = true;
   }
 
   void _persistToSupabase() =>

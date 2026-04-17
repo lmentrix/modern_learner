@@ -38,7 +38,6 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _fetchLessons();
-    ExploreCoursesService.instance.loadCourses();
   }
 
   Future<void> _fetchLessons() async {
