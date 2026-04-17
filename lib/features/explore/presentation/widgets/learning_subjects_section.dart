@@ -28,11 +28,12 @@ class LearningSubjectsCategoryFilter extends StatelessWidget {
       builder: (context, state) {
         final active =
             state is LearningSubjectsLoaded ? state.activeCategory : null;
+        final hPad = MediaQuery.sizeOf(context).width >= 600 ? 28.0 : 20.0;
         return SizedBox(
           height: 38,
           child: ListView(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: EdgeInsets.symmetric(horizontal: hPad),
             children: _filters.entries.map((entry) {
               final isActive = active == entry.value;
               return Padding(
@@ -133,12 +134,17 @@ class _SubjectsLoadingSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final w = MediaQuery.sizeOf(context).width;
+    final cols = w >= 900 ? 4 : w >= 600 ? 3 : 2;
+    final hPad = w >= 600 ? 28.0 : 20.0;
+    final ratio = w >= 600 ? 0.88 : 0.85;
+
     return SliverPadding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: EdgeInsets.symmetric(horizontal: hPad),
       sliver: SliverGrid(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          childAspectRatio: 0.85,
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: cols,
+          childAspectRatio: ratio,
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
         ),
@@ -149,7 +155,7 @@ class _SubjectsLoadingSkeleton extends StatelessWidget {
               borderRadius: BorderRadius.circular(24),
             ),
           ),
-          childCount: 6,
+          childCount: cols * 2,
         ),
       ),
     );
@@ -201,12 +207,17 @@ class _SubjectsGridSliver extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final w = MediaQuery.sizeOf(context).width;
+    final cols = w >= 900 ? 4 : w >= 600 ? 3 : 2;
+    final hPad = w >= 600 ? 28.0 : 20.0;
+    final ratio = w >= 600 ? 0.88 : 0.85;
+
     return SliverPadding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: EdgeInsets.symmetric(horizontal: hPad),
       sliver: SliverGrid(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          childAspectRatio: 0.85,
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: cols,
+          childAspectRatio: ratio,
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
         ),

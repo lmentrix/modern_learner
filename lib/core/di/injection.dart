@@ -56,9 +56,6 @@ Future<void> configureDependencies() async {
   getIt.registerLazySingleton<InternetConnection>(() => InternetConnection());
   getIt.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl(getIt()));
 
-  // ── Achievement ───────────────────────────────────────────────────────────
-  getIt.registerFactory(() => AchievementBloc());
-
   // ── Profile ───────────────────────────────────────────────────────────────
   getIt.registerLazySingleton<ProfileRemoteDataSource>(
     () => ProfileRemoteDataSourceImpl(getIt()),
@@ -119,6 +116,16 @@ Future<void> configureDependencies() async {
     ],
   );
   getIt.registerLazySingleton(() => ProgressNavigationState());
+
+  // ── Achievement ───────────────────────────────────────────────────────────
+  // Registered AFTER ProgressRepository so dependsOn resolves correctly.
+  // Singleton (not factory) so the stream subscription persists app-wide.
+  getIt.registerSingletonAsync<AchievementBloc>(
+    () async => AchievementBloc(
+      progressRepository: await getIt.getAsync<ProgressRepository>(),
+    ),
+    dependsOn: [ProgressRepository],
+  );
 
   // ── New Lesson ────────────────────────────────────────────────────────────
   getIt.registerLazySingleton<LessonRepository>(

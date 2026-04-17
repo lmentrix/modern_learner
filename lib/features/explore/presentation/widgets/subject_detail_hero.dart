@@ -13,9 +13,13 @@ class SubjectDetailHero extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accent = subject.accentColor;
+    final w = MediaQuery.sizeOf(context).width;
+    final topInset = MediaQuery.paddingOf(context).top;
+    final baseHeight = w < 360 ? 280.0 : w >= 600 ? 380.0 : 320.0;
+    final heroHeight = baseHeight + topInset;
 
     return SizedBox(
-      height: 320,
+      height: heroHeight,
       child: Stack(
         children: [
           _HeroBackground(accent: accent),
@@ -184,16 +188,20 @@ class _SubjectTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final w = MediaQuery.sizeOf(context).width;
+    final emojiSize = w < 360 ? 40.0 : w >= 600 ? 56.0 : 48.0;
+    final titleSize = w < 360 ? 28.0 : w >= 600 ? 44.0 : 36.0;
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text(emoji, style: const TextStyle(fontSize: 48)),
+        Text(emoji, style: TextStyle(fontSize: emojiSize)),
         const SizedBox(width: 16),
         Expanded(
           child: Text(
             name,
             style: GoogleFonts.spaceGrotesk(
-              fontSize: 36,
+              fontSize: titleSize,
               fontWeight: FontWeight.w800,
               color: Colors.white,
               height: 1.0,

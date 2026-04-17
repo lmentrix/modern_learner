@@ -1,11 +1,15 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:modern_learner_production/core/router/app_router.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
+import 'package:modern_learner_production/features/home/domain/entities/achievement_entity.dart';
+import 'package:modern_learner_production/features/home/presentation/bloc/achievement_bloc.dart';
 import 'package:modern_learner_production/features/new_lesson/presentation/pages/new_lesson_page.dart';
 
 /// 全局主布局 - 包含唯一的底部导航栏
@@ -21,10 +25,32 @@ class MainLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: child,
-      bottomNavigationBar: _BottomNavigationBarWidget(currentIndex: currentIndex),
+    return BlocListener<AchievementBloc, AchievementState>(
+      listenWhen: (prev, curr) => curr.newlyUnlocked.isNotEmpty,
+      listener: (context, state) {
+        _showUnlockToast(context, state.newlyUnlocked.first);
+        context
+            .read<AchievementBloc>()
+            .add(const AchievementNewlyUnlockedAcknowledged());
+      },
+      child: Scaffold(
+        body: child,
+        bottomNavigationBar:
+            _BottomNavigationBarWidget(currentIndex: currentIndex),
+      ),
     );
+  }
+
+  void _showUnlockToast(BuildContext context, AchievementEntity achievement) {
+    final overlay = Overlay.of(context);
+    late OverlayEntry entry;
+    entry = OverlayEntry(
+      builder: (_) => _AchievementToast(
+        achievement: achievement,
+        onDismiss: () => entry.remove(),
+      ),
+    );
+    overlay.insert(entry);
   }
 }
 
@@ -172,6 +198,164 @@ class _NavItem extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ── Achievement unlock toast ──────────────────────────────────────────────────
+
+class _AchievementToast extends StatefulWidget {
+  const _AchievementToast({
+    required this.achievement,
+    required this.onDismiss,
+  });
+
+  final AchievementEntity achievement;
+  final VoidCallback onDismiss;
+
+  @override
+  State<_AchievementToast> createState() => _AchievementToastState();
+}
+
+class _AchievementToastState extends State<_AchievementToast>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<Offset> _slide;
+  late final Animation<double> _fade;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 380),
+    );
+    _slide = Tween<Offset>(
+      begin: const Offset(0, 1),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic));
+    _fade = CurvedAnimation(parent: _ctrl, curve: Curves.easeOut);
+
+    _ctrl.forward();
+    _timer = Timer(const Duration(seconds: 3), _dismiss);
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _dismiss() async {
+    if (!mounted) return;
+    await _ctrl.reverse();
+    widget.onDismiss();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = widget.achievement.color;
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
+    // Position above the bottom nav bar (~80dp) + safe area
+    final bottomOffset = bottomInset + 90.0;
+
+    return Positioned(
+      left: 16,
+      right: 16,
+      bottom: bottomOffset,
+      child: SlideTransition(
+        position: _slide,
+        child: FadeTransition(
+          opacity: _fade,
+          child: GestureDetector(
+            onTap: _dismiss,
+            child: Material(
+              color: Colors.transparent,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      accent.withValues(alpha: 0.95),
+                      accent.withValues(alpha: 0.75),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: accent.withValues(alpha: 0.40),
+                      blurRadius: 24,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 52,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.20),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Center(
+                        child: Text(
+                          widget.achievement.emoji,
+                          style: const TextStyle(fontSize: 26),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Achievement Unlocked!',
+                            style: GoogleFonts.inter(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 1.2,
+                              color: Colors.white.withValues(alpha: 0.80),
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            widget.achievement.title,
+                            style: GoogleFonts.spaceGrotesk(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                              height: 1.1,
+                            ),
+                          ),
+                          Text(
+                            widget.achievement.subtitle,
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              color: Colors.white.withValues(alpha: 0.75),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(
+                      Icons.close_rounded,
+                      size: 18,
+                      color: Colors.white.withValues(alpha: 0.60),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

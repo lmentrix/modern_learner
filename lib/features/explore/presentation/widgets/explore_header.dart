@@ -7,8 +7,13 @@ class ExploreHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final w = MediaQuery.sizeOf(context).width;
+    final hPad = w < 380 ? 16.0 : w >= 600 ? 28.0 : 20.0;
+    final titleSize = w < 360 ? 24.0 : w < 380 ? 28.0 : w >= 600 ? 38.0 : 32.0;
+    final bodySize = w < 360 ? 12.0 : w >= 600 ? 15.0 : 14.0;
+
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 30),
+      padding: EdgeInsets.fromLTRB(hPad, 20, hPad, 30),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
@@ -42,7 +47,7 @@ class ExploreHeader extends StatelessWidget {
           Text(
             'Browse research collections',
             style: GoogleFonts.spaceGrotesk(
-              fontSize: 32,
+              fontSize: titleSize,
               fontWeight: FontWeight.w700,
               color: AppColors.onSurface,
               height: 1.05,
@@ -52,7 +57,7 @@ class ExploreHeader extends StatelessWidget {
           Text(
             'Live subject feeds from OpenAlex with search and category filtering for language, school, and research learning.',
             style: GoogleFonts.inter(
-              fontSize: 14,
+              fontSize: bodySize,
               height: 1.6,
               color: AppColors.onSurfaceVariant,
             ),

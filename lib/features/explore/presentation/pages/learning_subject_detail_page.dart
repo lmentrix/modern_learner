@@ -26,6 +26,8 @@ class LearningSubjectDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accent = subject.accentColor;
+    final w = MediaQuery.sizeOf(context).width;
+    final hPad = w < 360 ? 16.0 : w >= 600 ? 28.0 : 20.0;
 
     return Material(
       color: AppColors.surface,
@@ -34,7 +36,7 @@ class LearningSubjectDetailPage extends StatelessWidget {
         slivers: [
           SliverToBoxAdapter(child: SubjectDetailHero(subject: subject)),
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+            padding: EdgeInsets.fromLTRB(hPad, 0, hPad, 0),
             sliver: SliverToBoxAdapter(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -90,7 +92,7 @@ class LearningSubjectDetailPage extends StatelessWidget {
             ),
           ),
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 60),
+            padding: EdgeInsets.fromLTRB(hPad, 0, hPad, 60),
             sliver: SliverList.separated(
               itemCount: subject.topics.length,
               separatorBuilder: (_, _2) => const SizedBox(height: 10),

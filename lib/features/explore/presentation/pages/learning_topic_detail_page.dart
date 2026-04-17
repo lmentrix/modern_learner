@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-
 import 'package:modern_learner_production/core/router/app_router.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 import 'package:modern_learner_production/features/explore/domain/entities/learning_subject.dart';
@@ -11,10 +10,7 @@ import 'package:modern_learner_production/features/progress/domain/entities/prog
 
 /// Passed via [GoRouterState.extra] when navigating to the topic detail route.
 class LearningTopicDetailArgs {
-  const LearningTopicDetailArgs({
-    required this.subject,
-    required this.topic,
-  });
+  const LearningTopicDetailArgs({required this.subject, required this.topic});
 
   final LearningSubject subject;
   final LearningTopic topic;
@@ -45,15 +41,23 @@ class LearningTopicDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accent = subject.accentColor;
+    final w = MediaQuery.sizeOf(context).width;
+    final hPad = w < 360
+        ? 16.0
+        : w >= 600
+        ? 28.0
+        : 20.0;
 
     return Material(
       color: AppColors.surface,
       child: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
-          SliverToBoxAdapter(child: _TopicHero(topic: topic, accent: accent)),
+          SliverToBoxAdapter(
+            child: _TopicHero(topic: topic, accent: accent),
+          ),
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),
+            padding: EdgeInsets.fromLTRB(hPad, 24, hPad, 40),
             sliver: SliverToBoxAdapter(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -108,9 +112,7 @@ class LearningTopicDetailPage extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: accent.withValues(alpha: 0.07),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: accent.withValues(alpha: 0.18),
-                      ),
+                      border: Border.all(color: accent.withValues(alpha: 0.18)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -241,8 +243,32 @@ class _TopicHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final w = MediaQuery.sizeOf(context).width;
+    final topInset = MediaQuery.paddingOf(context).top;
+    final baseHeight = w < 360
+        ? 220.0
+        : w >= 600
+        ? 320.0
+        : 260.0;
+    final heroHeight = baseHeight + topInset;
+    final emojiSize = w < 360
+        ? 42.0
+        : w >= 600
+        ? 60.0
+        : 52.0;
+    final titleSize = w < 360
+        ? 24.0
+        : w >= 600
+        ? 36.0
+        : 30.0;
+    final hPad = w < 360
+        ? 16.0
+        : w >= 600
+        ? 28.0
+        : 20.0;
+
     return SizedBox(
-      height: 260,
+      height: heroHeight,
       child: Stack(
         children: [
           // Background gradient
@@ -252,10 +278,7 @@ class _TopicHero extends StatelessWidget {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [
-                    accent.withValues(alpha: 0.28),
-                    AppColors.surface,
-                  ],
+                  colors: [accent.withValues(alpha: 0.28), AppColors.surface],
                 ),
               ),
             ),
@@ -277,7 +300,7 @@ class _TopicHero extends StatelessWidget {
           Positioned.fill(
             child: SafeArea(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+                padding: EdgeInsets.fromLTRB(hPad, 12, hPad, 20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -302,15 +325,12 @@ class _TopicHero extends StatelessWidget {
                       ),
                     ),
                     const Spacer(),
-                    Text(
-                      topic.emoji,
-                      style: const TextStyle(fontSize: 52),
-                    ),
+                    Text(topic.emoji, style: TextStyle(fontSize: emojiSize)),
                     const SizedBox(height: 10),
                     Text(
                       topic.name,
                       style: GoogleFonts.spaceGrotesk(
-                        fontSize: 30,
+                        fontSize: titleSize,
                         fontWeight: FontWeight.w800,
                         color: Colors.white,
                         height: 1.0,
