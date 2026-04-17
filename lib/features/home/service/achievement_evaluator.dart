@@ -13,6 +13,10 @@ abstract final class AchievementEvaluator {
     'level_legend': [2, 5, 10, 20, 50],
     'night_owl': [1, 3, 7, 15, 30],
     'pioneer': [1, 2, 5, 10, 20],
+    'gem_hoarder': [10, 50, 200, 750, 2000],
+    'early_bird': [1, 3, 7, 14, 30],
+    'study_days': [3, 7, 14, 30, 100],
+    'weekly_warrior': [5, 7, 10, 15, 20],
   };
 
   /// Returns the achieved level for each achievement given current [progress].
@@ -27,7 +31,11 @@ abstract final class AchievementEvaluator {
       'chapter_ace': progress.completedChapters.length,
       'level_legend': progress.level,
       'night_owl': _nightOwlCount(lessons),
-      'pioneer': progress.level, // 1 per level milestone
+      'pioneer': progress.level,
+      'gem_hoarder': progress.gems,
+      'early_bird': _earlyBirdCount(lessons),
+      'study_days': _uniqueStudyDays(lessons),
+      'weekly_warrior': _maxLessonsInSevenDays(lessons),
     };
 
     final result = <String, int>{};
@@ -62,6 +70,14 @@ abstract final class AchievementEvaluator {
         return _nightOwlCount(lessons);
       case 'pioneer':
         return progress.level;
+      case 'gem_hoarder':
+        return progress.gems;
+      case 'early_bird':
+        return _earlyBirdCount(progress.completedLessons);
+      case 'study_days':
+        return _uniqueStudyDays(progress.completedLessons);
+      case 'weekly_warrior':
+        return _maxLessonsInSevenDays(progress.completedLessons);
       default:
         return 0;
     }
@@ -91,4 +107,40 @@ abstract final class AchievementEvaluator {
 
   static int _nightOwlCount(Map<String, DateTime> lessons) =>
       lessons.values.where((dt) => dt.hour >= 0 && dt.hour < 5).length;
+
+  /// Lessons completed between 5 AM and 9 AM.
+  static int _earlyBirdCount(Map<String, DateTime> lessons) =>
+      lessons.values.where((dt) => dt.hour >= 5 && dt.hour < 9).length;
+
+  /// Number of distinct calendar days on which at least one lesson was completed.
+  static int _uniqueStudyDays(Map<String, DateTime> lessons) {
+    if (lessons.isEmpty) return 0;
+    final days = <String>{};
+    for (final dt in lessons.values) {
+      days.add(
+        '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}',
+      );
+    }
+    return days.length;
+  }
+
+  /// Maximum number of lessons completed within any rolling 7-day window.
+  static int _maxLessonsInSevenDays(Map<String, DateTime> lessons) {
+    if (lessons.isEmpty) return 0;
+    final sorted = lessons.values.toList()..sort();
+    var best = 0;
+    for (var i = 0; i < sorted.length; i++) {
+      final windowEnd = sorted[i].add(const Duration(days: 7));
+      var count = 0;
+      for (var j = i; j < sorted.length; j++) {
+        if (sorted[j].isBefore(windowEnd)) {
+          count++;
+        } else {
+          break;
+        }
+      }
+      if (count > best) best = count;
+    }
+    return best;
+  }
 }

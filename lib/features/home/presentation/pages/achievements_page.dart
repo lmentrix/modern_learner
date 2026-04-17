@@ -10,11 +10,13 @@ import 'package:modern_learner_production/features/home/presentation/bloc/achiev
 // ── Category meta ─────────────────────────────────────────────────────────────
 
 const _categoryMeta = {
-  'All': ('🏅', AppColors.primary),
-  'Streaks': ('🔥', Color(0xFFFF9500)),
+  'All':        ('🏅', AppColors.primary),
+  'Streaks':    ('🔥', Color(0xFFFF9500)),
   'Experience': ('⭐', Color(0xFFFFD700)),
-  'Learning': ('📚', AppColors.primary),
-  'Special': ('🚀', Color(0xFF7E51FF)),
+  'Learning':   ('📚', AppColors.primary),
+  'Mastery':    ('💎', Color(0xFF4FC3F7)),
+  'Dedication': ('📅', Color(0xFF26C6DA)),
+  'Special':    ('🚀', Color(0xFF7E51FF)),
 };
 
 // ── Page ──────────────────────────────────────────────────────────────────────
@@ -31,7 +33,15 @@ class _AchievementsPageState extends State<AchievementsPage>
   final _scrollCtrl = ScrollController();
   late final TabController _tabCtrl;
 
-  static const _tabs = ['All', 'Streaks', 'Experience', 'Learning', 'Special'];
+  static const _tabs = [
+    'All',
+    'Streaks',
+    'Experience',
+    'Learning',
+    'Mastery',
+    'Dedication',
+    'Special',
+  ];
 
   @override
   void initState() {

@@ -1418,9 +1418,30 @@ class _AchievementsSection extends StatelessWidget {
         return _MilestoneData(a, p.level, nextThreshold, nextRequirement);
       case 'pioneer':
         return _MilestoneData(a, p.level, nextThreshold, nextRequirement);
+      case 'gem_hoarder':
+        return _MilestoneData(a, p.gems, nextThreshold, nextRequirement);
+      case 'early_bird':
+        return null; // time-of-day; not shown inline
+      case 'study_days':
+        return _MilestoneData(
+            a, _uniqueStudyDays(p), nextThreshold, nextRequirement);
+      case 'weekly_warrior':
+        return _MilestoneData(
+            a, _maxDailyLessons(p), nextThreshold, nextRequirement);
       default:
         return null;
     }
+  }
+
+  int _uniqueStudyDays(UserProgress p) {
+    if (p.completedLessons.isEmpty) return 0;
+    final days = <String>{};
+    for (final dt in p.completedLessons.values) {
+      days.add(
+        '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}',
+      );
+    }
+    return days.length;
   }
 
   int _maxDailyLessons(UserProgress p) {

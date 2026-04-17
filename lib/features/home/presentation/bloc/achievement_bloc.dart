@@ -42,10 +42,12 @@ class AchievementBloc extends Bloc<AchievementEvent, AchievementState> {
     'Streaks',
     'Experience',
     'Learning',
+    'Mastery',
+    'Dedication',
     'Special',
   ];
 
-  // ── Achievement definitions (8 achievements × 5 levels) ──────────────────
+  // ── Achievement definitions (12 achievements × 5 levels) ─────────────────
 
   static const List<AchievementEntity> allAchievements = [
     // ── Streaks ──────────────────────────────────────────────────────────────
@@ -197,6 +199,82 @@ class AchievementBloc extends Bloc<AchievementEvent, AchievementState> {
         'Level 5',
         'Level 10',
         'Level 20',
+      ],
+    ),
+
+    // ── Mastery ───────────────────────────────────────────────────────────────
+    AchievementEntity(
+      id: 'gem_hoarder',
+      emoji: '💎',
+      title: 'Gem Hoarder',
+      description:
+          'Collect gems by completing lessons and chapters. '
+          'Stack up your treasure to reach the Diamond tier!',
+      color: Color(0xFF4FC3F7),
+      category: 'Mastery',
+      levelThresholds: [10, 50, 200, 750, 2000],
+      levelRequirements: [
+        '10 gems',
+        '50 gems',
+        '200 gems',
+        '750 gems',
+        '2,000 gems',
+      ],
+    ),
+    AchievementEntity(
+      id: 'early_bird',
+      emoji: '🌅',
+      title: 'Early Bird',
+      description:
+          'Complete lessons between 5 AM and 9 AM. '
+          'Rise with the sun and prove your morning dedication!',
+      color: Color(0xFFFFB347),
+      category: 'Mastery',
+      levelThresholds: [1, 3, 7, 14, 30],
+      levelRequirements: [
+        '1 early session',
+        '3 early sessions',
+        '7 early sessions',
+        '14 early sessions',
+        '30 early sessions',
+      ],
+    ),
+
+    // ── Dedication ────────────────────────────────────────────────────────────
+    AchievementEntity(
+      id: 'study_days',
+      emoji: '📅',
+      title: 'Consistent Scholar',
+      description:
+          'Show up for learning on as many different days as possible. '
+          'Consistency beats intensity — build a habit!',
+      color: Color(0xFF26C6DA),
+      category: 'Dedication',
+      levelThresholds: [3, 7, 14, 30, 100],
+      levelRequirements: [
+        '3 study days',
+        '7 study days',
+        '14 study days',
+        '30 study days',
+        '100 study days',
+      ],
+    ),
+    AchievementEntity(
+      id: 'weekly_warrior',
+      emoji: '🗓️',
+      title: 'Weekly Warrior',
+      description:
+          'Maximise your learning output in any rolling 7-day window. '
+          'Push your weekly best to claim the Diamond tier!',
+      color: Color(0xFFEC407A),
+      category: 'Dedication',
+      levelThresholds: [5, 7, 10, 15, 20],
+      levelRequirements: [
+        '5 lessons in a week',
+        '7 lessons in a week',
+        '10 lessons in a week',
+        '15 lessons in a week',
+        '20 lessons in a week',
       ],
     ),
   ];
