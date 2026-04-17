@@ -1,15 +1,21 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:modern_learner_production/features/lesson_detail/service/voice_lesson_generation_service.dart';
 import 'package:modern_learner_production/features/new_lesson/data/models/lesson_model.dart';
 import 'package:modern_learner_production/features/new_lesson/domain/entities/lesson.dart';
 import 'package:modern_learner_production/features/new_lesson/domain/repositories/lesson_repository.dart';
 import 'package:modern_learner_production/features/progress/service/roadmap_generation_service.dart';
 
 class LessonRepositoryImpl implements LessonRepository {
-  const LessonRepositoryImpl(this._supabase, this._roadmapService);
+  const LessonRepositoryImpl(
+    this._supabase,
+    this._roadmapService,
+    this._voiceLessonService,
+  );
 
   final SupabaseClient _supabase;
   final RoadmapGenerationService _roadmapService;
+  final VoiceLessonGenerationService _voiceLessonService;
 
   static const _table = 'lessons';
 
@@ -28,12 +34,15 @@ class LessonRepositoryImpl implements LessonRepository {
     required String title,
     Map<String, dynamic>? content,
   }) async {
+    final level = difficulty.toLowerCase();
     final nativeLanguage = await _getNativeLanguage();
+
+    // ── Roadmap generation (non-fatal: falls back to stub inside service) ───
     final roadmapJson = await _roadmapService.generateLessonRoadmapJson(
       lessonType: lessonType.name,
       topic: topic,
       contentType: contentType,
-      level: difficulty.toLowerCase(),
+      level: level,
       nativeLanguage: nativeLanguage,
     );
 
@@ -42,10 +51,27 @@ class LessonRepositoryImpl implements LessonRepository {
       'topic': topic,
       'roadmapLanguage': contentType,
       'nativeLanguage': nativeLanguage,
-      'level': difficulty.toLowerCase(),
+      'level': level,
       'roadmap': roadmapJson,
     };
 
+    // ── Voice lesson phrase/exercise generation (non-fatal: falls back internally) ──
+    if (lessonType == NewLessonType.language) {
+      try {
+        final voiceContent = await _voiceLessonService.generateContent(
+          topic: topic,
+          language: contentType,
+          level: level,
+          nativeLanguage: nativeLanguage,
+        );
+        generatedContent['voice_lesson'] = voiceContent;
+      } catch (_) {
+        // Voice content generation failed — lesson is still created; user can
+        // reload the lesson later to regenerate content.
+      }
+    }
+
+    // ── Persist to Supabase ──────────────────────────────────────────────────
     final payload = <String, dynamic>{
       'user_id': _userId,
       'lesson_type': lessonType.name,
@@ -56,9 +82,13 @@ class LessonRepositoryImpl implements LessonRepository {
       'content': generatedContent,
     };
 
-    final row = await _supabase.from(_table).insert(payload).select().single();
-
-    return LessonModel.fromJson(row);
+    try {
+      final row =
+          await _supabase.from(_table).insert(payload).select().single();
+      return LessonModel.fromJson(row);
+    } on PostgrestException catch (e) {
+      throw Exception(_friendlySupabaseError(e));
+    }
   }
 
   @override
@@ -116,6 +146,15 @@ class LessonRepositoryImpl implements LessonRepository {
   @override
   Future<void> deleteLesson(String id) async {
     await _supabase.from(_table).delete().eq('id', id).eq('user_id', _userId);
+  }
+
+  static String _friendlySupabaseError(PostgrestException e) {
+    final code = e.code ?? '';
+    if (code == '23505') return 'A lesson with this title already exists.';
+    if (code == '42501' || code == 'PGRST301') {
+      return 'Permission denied. Please sign in again.';
+    }
+    return 'Could not save the lesson. Please try again.';
   }
 
   Future<String> _getNativeLanguage() async {

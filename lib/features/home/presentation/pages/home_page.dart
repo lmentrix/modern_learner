@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -7,6 +6,7 @@ import 'package:modern_learner_production/core/di/injection.dart';
 import 'package:modern_learner_production/core/router/app_router.dart';
 import 'package:modern_learner_production/core/supabase/supabase_service.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
+import 'package:modern_learner_production/features/home/service/lesson_refresh_notifier.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:modern_learner_production/features/lesson_detail/presentation/pages/lesson_detail_page.dart'
     as lesson_detail;
@@ -28,25 +28,49 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   final _scrollCtrl = ScrollController();
 
+  LessonRefreshNotifier? _lessonRefreshNotifier;
+  RealtimeChannel? _lessonsChannel;
   List<_SupabaseLesson> _fetchedLessons = [];
   bool _isLoadingLessons = true;
 
   @override
   void initState() {
     super.initState();
-    _fetchLessons();
+    WidgetsBinding.instance.addObserver(this);
+    if (getIt.isRegistered<LessonRefreshNotifier>()) {
+      _lessonRefreshNotifier = getIt<LessonRefreshNotifier>()
+        ..addListener(_handleLessonsChanged);
+    }
+    _subscribeToLessonChanges();
+    _fetchLessons(showLoading: true);
   }
 
-  Future<void> _fetchLessons() async {
+  Future<void> _fetchLessons({bool showLoading = false}) async {
+    if (showLoading && mounted) {
+      setState(() => _isLoadingLessons = true);
+    }
+
+    final userId = SupabaseService.currentUser?.id;
+    if (userId == null) {
+      if (mounted) {
+        setState(() {
+          _fetchedLessons = [];
+          _isLoadingLessons = false;
+        });
+      }
+      return;
+    }
+
     try {
       final response = await SupabaseService.client
           .from('lessons')
           .select(
             'id, lesson_type, content_type, difficulty, title, status, content',
           )
+          .eq('user_id', userId)
           .neq('status', 'completed')
           .order('created_at', ascending: false);
 
@@ -60,6 +84,37 @@ class _HomePageState extends State<HomePage> {
       }
     } catch (_) {
       if (mounted) setState(() => _isLoadingLessons = false);
+    }
+  }
+
+  void _handleLessonsChanged() {
+    _fetchLessons();
+  }
+
+  void _subscribeToLessonChanges() {
+    final userId = SupabaseService.currentUser?.id;
+    if (userId == null) return;
+
+    _lessonsChannel = SupabaseService.client
+        .channel('public:lessons:user:$userId')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'lessons',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'user_id',
+            value: userId,
+          ),
+          callback: (_) => _fetchLessons(),
+        )
+        .subscribe();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _fetchLessons();
     }
   }
 
@@ -85,164 +140,175 @@ class _HomePageState extends State<HomePage> {
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (context) {
-          final supaUser = Supabase.instance.client.auth.currentUser;
-          final displayName = supaUser?.userMetadata?['name'] as String? ?? 'User';
-          final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : 'U';
+        final supaUser = Supabase.instance.client.auth.currentUser;
+        final displayName =
+            supaUser?.userMetadata?['name'] as String? ?? 'User';
+        final initial = displayName.isNotEmpty
+            ? displayName[0].toUpperCase()
+            : 'U';
 
-          return Container(
-            decoration: const BoxDecoration(
-              color: AppColors.surfaceContainerHigh,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-            ),
-            padding: EdgeInsets.only(
-              top: 12,
-              left: 24,
-              right: 24,
-              bottom: MediaQuery.of(context).padding.bottom + 24,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Handle
-                Container(
-                  width: 36,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: AppColors.outlineVariant.withValues(alpha: 0.4),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
+        return Container(
+          decoration: const BoxDecoration(
+            color: AppColors.surfaceContainerHigh,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          padding: EdgeInsets.only(
+            top: 12,
+            left: 24,
+            right: 24,
+            bottom: MediaQuery.of(context).padding.bottom + 24,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Handle
+              Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.outlineVariant.withValues(alpha: 0.4),
+                  borderRadius: BorderRadius.circular(2),
                 ),
-                const SizedBox(height: 20),
-                // Profile header
-                Row(
-                  children: [
-                    Container(
-                      width: 60,
-                      height: 60,
-                      decoration: const BoxDecoration(
-                        gradient: AppColors.primaryGradient,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                        child: Text(
-                          initial,
-                          style: GoogleFonts.spaceGrotesk(
-                            fontSize: 26,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                          ),
+              ),
+              const SizedBox(height: 20),
+              // Profile header
+              Row(
+                children: [
+                  Container(
+                    width: 60,
+                    height: 60,
+                    decoration: const BoxDecoration(
+                      gradient: AppColors.primaryGradient,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Text(
+                        initial,
+                        style: GoogleFonts.spaceGrotesk(
+                          fontSize: 26,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
                         ),
                       ),
                     ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            displayName,
-                            style: GoogleFonts.spaceGrotesk(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.onSurface,
-                            ),
-                          ),
-                          Text(
-                            'Advanced Learner · LVL 8',
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              color: AppColors.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                // Stats row
-                const Row(
-                  children: [
-                    Expanded(
-                      child: _QuickStat(
-                        emoji: '🔥',
-                        label: 'Streak',
-                        value: '14',
-                        subtitle: 'days',
-                      ),
-                    ),
-                    SizedBox(width: 12),
-                    Expanded(
-                      child: _QuickStat(
-                        emoji: '⭐',
-                        label: 'XP',
-                        value: '2.4K',
-                        subtitle: 'total',
-                      ),
-                    ),
-                    SizedBox(width: 12),
-                    Expanded(
-                      child: _QuickStat(
-                        emoji: '📚',
-                        label: 'Lessons',
-                        value: '47',
-                        subtitle: 'done',
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                // Quick actions
-                Text(
-                  'QUICK ACTIONS',
-                  style: GoogleFonts.inter(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.onSurfaceVariant,
-                    letterSpacing: 1.5,
                   ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          displayName,
+                          style: GoogleFonts.spaceGrotesk(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.onSurface,
+                          ),
+                        ),
+                        Text(
+                          'Advanced Learner · LVL 8',
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            color: AppColors.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              // Stats row
+              const Row(
+                children: [
+                  Expanded(
+                    child: _QuickStat(
+                      emoji: '🔥',
+                      label: 'Streak',
+                      value: '14',
+                      subtitle: 'days',
+                    ),
+                  ),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: _QuickStat(
+                      emoji: '⭐',
+                      label: 'XP',
+                      value: '2.4K',
+                      subtitle: 'total',
+                    ),
+                  ),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: _QuickStat(
+                      emoji: '📚',
+                      label: 'Lessons',
+                      value: '47',
+                      subtitle: 'done',
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              // Quick actions
+              Text(
+                'QUICK ACTIONS',
+                style: GoogleFonts.inter(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.onSurfaceVariant,
+                  letterSpacing: 1.5,
                 ),
-                const SizedBox(height: 12),
-                _QuickActionRow(
-                  icon: Icons.person_outline_rounded,
-                  label: 'View Profile',
-                  accentColor: AppColors.primary,
-                  onTap: () {
-                    final router = GoRouter.of(context);
-                    Navigator.of(context).pop();
-                    router.push(Routes.viewProfile);
-                  },
-                ),
-                const SizedBox(height: 8),
-                _QuickActionRow(
-                  icon: Icons.emoji_events_rounded,
-                  label: 'Achievements',
-                  accentColor: AppColors.tertiaryContainer,
-                  onTap: () {
-                    final router = GoRouter.of(context);
-                    Navigator.of(context).pop();
-                    router.push(Routes.achievements);
-                  },
-                ),
-                const SizedBox(height: 8),
-                _QuickActionRow(
-                  icon: Icons.settings_rounded,
-                  label: 'Settings',
-                  accentColor: AppColors.onSurfaceVariant,
-                  onTap: () {
-                    Navigator.pop(context);
-                    // Navigate to settings
-                  },
-                ),
-              ],
-            ),
-          );
-        },
+              ),
+              const SizedBox(height: 12),
+              _QuickActionRow(
+                icon: Icons.person_outline_rounded,
+                label: 'View Profile',
+                accentColor: AppColors.primary,
+                onTap: () {
+                  final router = GoRouter.of(context);
+                  Navigator.of(context).pop();
+                  router.push(Routes.viewProfile);
+                },
+              ),
+              const SizedBox(height: 8),
+              _QuickActionRow(
+                icon: Icons.emoji_events_rounded,
+                label: 'Achievements',
+                accentColor: AppColors.tertiaryContainer,
+                onTap: () {
+                  final router = GoRouter.of(context);
+                  Navigator.of(context).pop();
+                  router.push(Routes.achievements);
+                },
+              ),
+              const SizedBox(height: 8),
+              _QuickActionRow(
+                icon: Icons.settings_rounded,
+                label: 'Settings',
+                accentColor: AppColors.onSurfaceVariant,
+                onTap: () {
+                  Navigator.pop(context);
+                  // Navigate to settings
+                },
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
   void _openSupabaseLesson(_SupabaseLesson lesson) {
-    context.go(Routes.progress, extra: lesson.toCourseSelection());
+    if (lesson.lessonType == 'language') {
+      // Voice lesson — open with phrase/exercise player.
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => VoiceLessonPage(lessonId: lesson.id)),
+      );
+    } else {
+      context.go(Routes.progress, extra: lesson.toCourseSelection());
+    }
   }
 
   void _openVoiceLessonDetail(_VoiceLesson lesson) {
@@ -288,6 +354,12 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _lessonRefreshNotifier?.removeListener(_handleLessonsChanged);
+    final lessonsChannel = _lessonsChannel;
+    if (lessonsChannel != null) {
+      SupabaseService.client.removeChannel(lessonsChannel);
+    }
     _scrollCtrl.dispose();
     super.dispose();
   }
@@ -335,6 +407,19 @@ class _HomePageState extends State<HomePage> {
 
             const SliverToBoxAdapter(child: SizedBox(height: 32)),
 
+            // ── Quick start label ──────────────────────────────────────────
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              sliver: SliverToBoxAdapter(child: _sectionLabel('QUICK START')),
+            ),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 14)),
+
+            // ── Quick access to lesson pages ───────────────────────────────
+            SliverToBoxAdapter(child: _buildLessonQuickAccess()),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 32)),
+
             // ── My Courses (from Explore) ──────────────────────────────────
             SliverToBoxAdapter(child: _buildMyCourses()),
 
@@ -345,11 +430,6 @@ class _HomePageState extends State<HomePage> {
                 child: _sectionLabel('CONTINUE LEARNING'),
               ),
             ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 14)),
-
-            // ── Quick access to lesson pages ───────────────────────────────
-            SliverToBoxAdapter(child: _buildLessonQuickAccess()),
 
             const SliverToBoxAdapter(child: SizedBox(height: 14)),
 
@@ -445,107 +525,83 @@ class _HomePageState extends State<HomePage> {
     final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : 'U';
 
     return Container(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Color(0xFF0E1020), AppColors.surface],
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF0E1020), AppColors.surface],
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Good morning,',
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            color: AppColors.onSurfaceVariant,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          '$displayName 👋',
-                          style: GoogleFonts.spaceGrotesk(
-                            fontSize: 28,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.onSurface,
-                            height: 1.1,
-                          ),
-                        ),
-                        if (false) ...[
-                          const SizedBox(height: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 3,
-                            ),
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFFFFD700), Color(0xFFFF8C00)],
-                              ),
-                              borderRadius: BorderRadius.circular(100),
-                            ),
-                            child: Text(
-                              '★ VIP Member',
-                              style: GoogleFonts.inter(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: const Color(0xFF1A1028),
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                  // Avatar
-                  GestureDetector(
-                    onTap: () => _showProfileQuickView(),
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        gradient: AppColors.primaryGradient,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.primaryDim.withValues(alpha: 0.3),
-                            blurRadius: 16,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Center(
-                        child: Text(
-                          initial,
-                          style: GoogleFonts.spaceGrotesk(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                          ),
-                        ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Good morning,',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        color: AppColors.onSurfaceVariant,
                       ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 2),
+                    Text(
+                      '$displayName 👋',
+                      style: GoogleFonts.spaceGrotesk(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.onSurface,
+                        height: 1.1,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 16),
+              // Avatar
               GestureDetector(
-                onTap: () => _showStreakDetails(),
-                child: const StreakBadge(count: 14),
+                onTap: () => _showProfileQuickView(),
+                child: Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    gradient: AppColors.primaryGradient,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primaryDim.withValues(alpha: 0.3),
+                        blurRadius: 16,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Text(
+                      initial,
+                      style: GoogleFonts.spaceGrotesk(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
-        );
+          const SizedBox(height: 16),
+          GestureDetector(
+            onTap: () => _showStreakDetails(),
+            child: const StreakBadge(count: 14),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildVoiceLessons() {
@@ -641,9 +697,7 @@ class _ExploreCourseCard extends StatelessWidget {
           ],
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: AppColors.primary.withValues(alpha: 0.3),
-        ),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [

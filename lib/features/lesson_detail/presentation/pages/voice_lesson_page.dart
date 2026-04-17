@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:modern_learner_production/core/di/injection.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 import 'package:modern_learner_production/features/lesson_detail/presentation/bloc/voice_lesson_bloc.dart';
 import 'package:modern_learner_production/features/lesson_detail/presentation/widgets/voice_lesson_widgets.dart';
+import 'package:modern_learner_production/features/lesson_detail/service/voice_lesson_supabase_service.dart';
 
 class VoiceLessonPage extends StatefulWidget {
   const VoiceLessonPage({
@@ -28,7 +30,9 @@ class _VoiceLessonPageState extends State<VoiceLessonPage> {
   @override
   void initState() {
     super.initState();
-    _bloc = VoiceLessonBloc();
+    _bloc = VoiceLessonBloc(
+      supabaseService: getIt<VoiceLessonSupabaseService>(),
+    );
     _bloc.add(VoiceLessonLoadRequested(widget.lessonId));
   }
 

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:dio/dio.dart';
 import 'package:modern_learner_production/core/di/injection.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
+import 'package:modern_learner_production/features/home/service/lesson_refresh_notifier.dart';
+import 'package:modern_learner_production/features/lesson_detail/presentation/pages/voice_lesson_page.dart';
 import 'package:modern_learner_production/features/new_lesson/domain/entities/lesson.dart';
 import 'package:modern_learner_production/features/new_lesson/domain/usecases/create_lesson.dart';
 
@@ -105,7 +108,8 @@ class _NewLessonPageState extends State<NewLessonPage> {
                     _sectionLabel('TOPIC'),
                     const SizedBox(height: 12),
                     _buildTopicInput(
-                      hintText: 'e.g. Ordering food, travel greetings, daily small talk',
+                      hintText:
+                          'e.g. Ordering food, travel greetings, daily small talk',
                     ),
                   ] else ...[
                     _sectionLabel('SCHOOL SUBJECT'),
@@ -141,10 +145,7 @@ class _NewLessonPageState extends State<NewLessonPage> {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [
-            _typeAccent.withValues(alpha: 0.18),
-            AppColors.surface,
-          ],
+          colors: [_typeAccent.withValues(alpha: 0.18), AppColors.surface],
         ),
       ),
       child: SafeArea(
@@ -162,7 +163,9 @@ class _NewLessonPageState extends State<NewLessonPage> {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: AppColors.surfaceContainerHigh.withValues(alpha: 0.7),
+                    color: AppColors.surfaceContainerHigh.withValues(
+                      alpha: 0.7,
+                    ),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: AppColors.outlineVariant.withValues(alpha: 0.2),
@@ -179,7 +182,10 @@ class _NewLessonPageState extends State<NewLessonPage> {
               // Badge
               AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
                 decoration: BoxDecoration(
                   color: _typeAccent.withValues(alpha: 0.14),
                   borderRadius: BorderRadius.circular(999),
@@ -299,7 +305,9 @@ class _NewLessonPageState extends State<NewLessonPage> {
                 style: GoogleFonts.inter(
                   fontSize: 13,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                  color: isSelected ? AppColors.primary : AppColors.onSurfaceVariant,
+                  color: isSelected
+                      ? AppColors.primary
+                      : AppColors.onSurfaceVariant,
                 ),
               ),
             ],
@@ -339,7 +347,9 @@ class _NewLessonPageState extends State<NewLessonPage> {
                 style: GoogleFonts.inter(
                   fontSize: 11,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                  color: isSelected ? AppColors.secondary : AppColors.onSurfaceVariant,
+                  color: isSelected
+                      ? AppColors.secondary
+                      : AppColors.onSurfaceVariant,
                 ),
                 textAlign: TextAlign.center,
                 maxLines: 2,
@@ -376,8 +386,12 @@ class _NewLessonPageState extends State<NewLessonPage> {
                     d.$2,
                     style: GoogleFonts.inter(
                       fontSize: 12,
-                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
-                      color: isSelected ? AppColors.tertiary : AppColors.onSurfaceVariant,
+                      fontWeight: isSelected
+                          ? FontWeight.w700
+                          : FontWeight.w400,
+                      color: isSelected
+                          ? AppColors.tertiary
+                          : AppColors.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -453,7 +467,7 @@ class _NewLessonPageState extends State<NewLessonPage> {
                 ? LinearGradient(
                     colors: [_typeAccent, _typeAccent.withValues(alpha: 0.75)],
                   )
-                : LinearGradient(
+                : const LinearGradient(
                     colors: [
                       AppColors.surfaceContainerHigh,
                       AppColors.surfaceContainerHigh,
@@ -488,9 +502,7 @@ class _NewLessonPageState extends State<NewLessonPage> {
                       canAct
                           ? Icons.rocket_launch_rounded
                           : Icons.lock_outline_rounded,
-                      color: canAct
-                          ? Colors.white
-                          : AppColors.onSurfaceVariant,
+                      color: canAct ? Colors.white : AppColors.onSurfaceVariant,
                       size: 18,
                     ),
                     const SizedBox(width: 10),
@@ -498,8 +510,8 @@ class _NewLessonPageState extends State<NewLessonPage> {
                       canAct
                           ? 'Create $_selectedDifficulty Lesson'
                           : _lessonType == NewLessonType.language
-                              ? 'Choose a language and topic'
-                              : 'Choose a subject and topic',
+                          ? 'Choose a language and topic'
+                          : 'Choose a subject and topic',
                       style: GoogleFonts.spaceGrotesk(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
@@ -528,56 +540,109 @@ class _NewLessonPageState extends State<NewLessonPage> {
     setState(() => _isLoading = true);
 
     try {
-      await getIt<CreateLesson>().call(
+      final created = await getIt<CreateLesson>().call(
         lessonType: _lessonType,
         contentType: contentType,
         topic: topic,
         difficulty: _selectedDifficulty,
         title: title,
       );
+      if (getIt.isRegistered<LessonRefreshNotifier>()) {
+        getIt<LessonRefreshNotifier>().notifyLessonsChanged();
+      }
 
+      // For voice lessons, open the lesson immediately after creation.
+      if (_lessonType == NewLessonType.language) {
+        navigator.pop(true);
+        navigator.push(
+          MaterialPageRoute(
+            builder: (_) => VoiceLessonPage(lessonId: created.id),
+          ),
+        );
+      } else {
+        messenger.showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Text('✅', style: TextStyle(fontSize: 16)),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    '"$title" created!',
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.onSurface,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: AppColors.surfaceContainerHigh,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+            margin: const EdgeInsets.all(16),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+        navigator.pop(true);
+      }
+    } catch (e) {
       messenger.showSnackBar(
         SnackBar(
           content: Row(
             children: [
-              const Text('✅', style: TextStyle(fontSize: 16)),
+              const Text('❌', style: TextStyle(fontSize: 16)),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  '"$title" created!',
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.onSurface,
-                  ),
+                  _friendlyError(e),
+                  style: GoogleFonts.inter(fontSize: 13, color: Colors.white),
                 ),
               ),
             ],
           ),
-          backgroundColor: AppColors.surfaceContainerHigh,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          margin: const EdgeInsets.all(16),
-          duration: const Duration(seconds: 2),
-        ),
-      );
-      navigator.pop(true);
-    } catch (e) {
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(
-            'Failed: $e',
-            style: GoogleFonts.inter(fontSize: 13, color: Colors.white),
-          ),
           backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
           margin: const EdgeInsets.all(16),
+          duration: const Duration(seconds: 4),
         ),
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  static String _friendlyError(Object e) {
+    if (e is DioException) {
+      switch (e.type) {
+        case DioExceptionType.connectionTimeout:
+        case DioExceptionType.sendTimeout:
+        case DioExceptionType.receiveTimeout:
+          return 'Request timed out. Check your connection and try again.';
+        case DioExceptionType.connectionError:
+          return 'Could not reach the server. Check your internet connection.';
+        default:
+          final status = e.response?.statusCode;
+          if (status == 401 || status == 403) {
+            return 'Not authorised. Please sign out and sign back in.';
+          }
+          if (status != null && status >= 500) {
+            return 'Server error ($status). Please try again later.';
+          }
+      }
+    }
+    final msg = e.toString().replaceAll('Exception: ', '');
+    if (msg.contains('not authenticated') || msg.contains('sign in')) {
+      return 'You need to be signed in to create a lesson.';
+    }
+    if (msg.contains('already exists')) return msg;
+    return 'Something went wrong. Please try again.';
   }
 }
 

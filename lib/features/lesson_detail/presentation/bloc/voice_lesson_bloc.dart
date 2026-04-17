@@ -3,12 +3,15 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:modern_learner_production/features/lesson_detail/data/models/voice_lesson_model.dart';
 import 'package:modern_learner_production/features/lesson_detail/domain/entities/voice_lesson_entity.dart';
+import 'package:modern_learner_production/features/lesson_detail/service/voice_lesson_supabase_service.dart';
 
 part 'voice_lesson_event.dart';
 part 'voice_lesson_state.dart';
 
 class VoiceLessonBloc extends Bloc<VoiceLessonEvent, VoiceLessonState> {
-  VoiceLessonBloc() : super(const VoiceLessonState()) {
+  VoiceLessonBloc({VoiceLessonSupabaseService? supabaseService})
+      : _supabaseService = supabaseService,
+        super(const VoiceLessonState()) {
     on<VoiceLessonLoadRequested>(_onLoadRequested);
     on<VoiceLessonPlayToggled>(_onPlayToggled);
     on<VoiceLessonNextPhrase>(_onNextPhrase);
@@ -18,11 +21,34 @@ class VoiceLessonBloc extends Bloc<VoiceLessonEvent, VoiceLessonState> {
     on<VoiceLessonExercisesSubmitted>(_onExercisesSubmitted);
   }
 
-  void _onLoadRequested(
+  final VoiceLessonSupabaseService? _supabaseService;
+
+  Future<void> _onLoadRequested(
     VoiceLessonLoadRequested event,
     Emitter<VoiceLessonState> emit,
-  ) {
+  ) async {
     emit(state.copyWith(status: VoiceLessonStatus.loading));
+
+    // 1. Try loading from Supabase (user-created lessons have UUID ids).
+    if (_supabaseService != null) {
+      try {
+        final lesson =
+            await _supabaseService!.fetchByLessonId(event.lessonId);
+        if (lesson != null) {
+          emit(state.copyWith(
+            status: VoiceLessonStatus.loaded,
+            lesson: lesson,
+            currentPhraseIndex: 0,
+            isPlaying: false,
+            selectedAnswers: {},
+            exercisesSubmitted: false,
+          ));
+          return;
+        }
+      } catch (_) {}
+    }
+
+    // 2. Fall back to bundled static data (legacy / demo lessons).
     final lesson = VoiceLessonData.findById(event.lessonId);
     if (lesson == null) {
       emit(state.copyWith(status: VoiceLessonStatus.error));
