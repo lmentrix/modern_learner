@@ -29,6 +29,8 @@ abstract final class ApiConstants {
   // ── Endpoints ─────────────────────────────────────────────────────────────
   static const String lessonRoadmapGenerate = '/ai/lesson-roadmap/generate';
   static const String roadmapGenerate = '/ai/roadmap/generate';
+  static const String voiceCourseRoadmapGenerate =
+      '/ai/voice-course/roadmap/generate';
   static const String chapterContentGenerate = '/ai/chapter-content/generate';
   static const String lessonContentGenerate = '/ai/lesson-content/generate';
   static const String voiceLessonGenerate = '/ai/voice-lesson/generate';

@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:modern_learner_production/features/lesson_detail/domain/entities/voice_lesson_entity.dart';
 
 enum ChapterType {
   lesson,
@@ -23,7 +24,6 @@ enum LessonStatus {
 }
 
 class Roadmap extends Equatable {
-
   const Roadmap({
     required this.id,
     required this.title,
@@ -33,6 +33,8 @@ class Roadmap extends Equatable {
     required this.totalXp,
     required this.estimatedHours,
     required this.chapters,
+    this.aiGenerated = false,
+    this.voiceProfile,
   });
   final String id;
   final String title;
@@ -42,6 +44,8 @@ class Roadmap extends Equatable {
   final int totalXp;
   final int estimatedHours;
   final List<Chapter> chapters;
+  final bool aiGenerated;
+  final VoiceLessonVoiceProfile? voiceProfile;
 
   @override
   List<Object?> get props => [
@@ -53,11 +57,12 @@ class Roadmap extends Equatable {
         totalXp,
         estimatedHours,
         chapters,
+        aiGenerated,
+        voiceProfile,
       ];
 }
 
 class Chapter extends Equatable {
-
   const Chapter({
     required this.id,
     required this.chapterNumber,
@@ -70,6 +75,9 @@ class Chapter extends Equatable {
     required this.prerequisites,
     required this.skills,
     required this.lessons,
+    this.pronunciationFocus = '',
+    this.audioCues = const [],
+    this.speech,
   });
   final String id;
   final int chapterNumber;
@@ -82,6 +90,9 @@ class Chapter extends Equatable {
   final List<String> prerequisites; // Chapter IDs
   final List<String> skills;
   final List<Lesson> lessons;
+  final String pronunciationFocus;
+  final List<String> audioCues;
+  final VoiceSpeechAttributes? speech;
 
   @override
   List<Object?> get props => [
@@ -96,11 +107,13 @@ class Chapter extends Equatable {
         prerequisites,
         skills,
         lessons,
+        pronunciationFocus,
+        audioCues,
+        speech,
       ];
 }
 
 class Lesson extends Equatable {
-
   const Lesson({
     required this.id,
     required this.title,
@@ -108,6 +121,10 @@ class Lesson extends Equatable {
     required this.description,
     required this.xpReward,
     required this.status,
+    this.voiceType,
+    this.durationMinutes,
+    this.audioCues = const [],
+    this.speech,
   });
   final String id;
   final String title;
@@ -115,6 +132,10 @@ class Lesson extends Equatable {
   final String description;
   final int xpReward;
   final LessonStatus status;
+  final String? voiceType;
+  final int? durationMinutes;
+  final List<String> audioCues;
+  final VoiceSpeechAttributes? speech;
 
   Lesson copyWith({LessonStatus? status}) {
     return Lesson(
@@ -124,6 +145,10 @@ class Lesson extends Equatable {
       description: description,
       xpReward: xpReward,
       status: status ?? this.status,
+      voiceType: voiceType,
+      durationMinutes: durationMinutes,
+      audioCues: audioCues,
+      speech: speech,
     );
   }
 
@@ -135,5 +160,9 @@ class Lesson extends Equatable {
         description,
         xpReward,
         status,
+        voiceType,
+        durationMinutes,
+        audioCues,
+        speech,
       ];
 }

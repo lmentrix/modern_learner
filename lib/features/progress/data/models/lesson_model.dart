@@ -1,7 +1,7 @@
 import 'package:modern_learner_production/features/progress/domain/entities/roadmap.dart';
+import 'package:modern_learner_production/features/lesson_detail/domain/entities/voice_lesson_entity.dart';
 
 class LessonModel {
-
   LessonModel({
     required this.id,
     required this.title,
@@ -9,16 +9,41 @@ class LessonModel {
     required this.description,
     required this.xpReward,
     required this.status,
+    this.voiceType,
+    this.durationMinutes,
+    this.audioCues = const [],
+    this.speech,
   });
 
   factory LessonModel.fromJson(Map<String, dynamic> json) {
+    int? asInt(Object? value) {
+      if (value is int) return value;
+      if (value is num) return value.round();
+      return null;
+    }
+
     return LessonModel(
       id: json['id'] as String,
       title: json['title'] as String,
       type: json['type'] as String,
       description: json['description'] as String,
-      xpReward: json['xpReward'] as int,
+      xpReward: asInt(json['xpReward']) ?? 0,
       status: json['status'] as String? ?? 'locked',
+      voiceType:
+          json['voiceType'] as String? ?? json['voice_type'] as String?,
+      durationMinutes:
+          asInt(json['durationMinutes']) ?? asInt(json['duration_minutes']),
+      audioCues:
+          (json['audioCues'] as List<dynamic>? ??
+                  json['audio_cues'] as List<dynamic>? ??
+                  [])
+              .map((cue) => cue as String)
+              .toList(),
+      speech: ((json['speech'] as Map<String, dynamic>?) ?? const {}).isEmpty
+          ? null
+          : VoiceSpeechAttributes.fromJson(
+              json['speech'] as Map<String, dynamic>,
+            ),
     );
   }
   final String id;
@@ -27,6 +52,10 @@ class LessonModel {
   final String description;
   final int xpReward;
   final String status;
+  final String? voiceType;
+  final int? durationMinutes;
+  final List<String> audioCues;
+  final VoiceSpeechAttributes? speech;
 
   Map<String, dynamic> toJson() {
     return {
@@ -36,6 +65,10 @@ class LessonModel {
       'description': description,
       'xpReward': xpReward,
       'status': status,
+      if (voiceType != null) 'voice_type': voiceType,
+      if (durationMinutes != null) 'duration_minutes': durationMinutes,
+      'audio_cues': audioCues,
+      if (speech != null) 'speech': speech!.toJson(),
     };
   }
 
@@ -53,6 +86,10 @@ class LessonModel {
         (s) => s.name == status,
         orElse: () => LessonStatus.locked,
       ),
+      voiceType: voiceType,
+      durationMinutes: durationMinutes,
+      audioCues: audioCues,
+      speech: speech,
     );
   }
 
@@ -64,6 +101,10 @@ class LessonModel {
       description: lesson.description,
       xpReward: lesson.xpReward,
       status: lesson.status.name,
+      voiceType: lesson.voiceType,
+      durationMinutes: lesson.durationMinutes,
+      audioCues: lesson.audioCues,
+      speech: lesson.speech,
     );
   }
 }
