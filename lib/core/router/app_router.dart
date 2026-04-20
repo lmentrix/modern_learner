@@ -116,7 +116,6 @@ abstract final class AppRouter {
           );
         },
       ),
-
       // ── Shell (bottom nav) ────────────────────────────────────────────────
       ShellRoute(
         builder: (context, state, child) {

@@ -18,6 +18,7 @@ import 'package:modern_learner_production/features/progress/presentation/bloc/pr
 import 'package:modern_learner_production/features/progress/presentation/bloc/progress_event.dart';
 import 'package:modern_learner_production/features/progress/presentation/bloc/progress_state.dart';
 import 'package:modern_learner_production/features/progress/presentation/widgets/roadmap_view.dart';
+import 'package:modern_learner_production/features/explore/service/explore_courses_service.dart';
 import 'package:modern_learner_production/features/progress/service/progress_navigation_state.dart';
 
 class ProgressPage extends StatefulWidget {
@@ -52,10 +53,16 @@ class _ProgressPageState extends State<ProgressPage>
       startLesson: start.StartLesson(getIt()),
       regenerateRoadmap: regen.RegenerateRoadmap(getIt()),
     );
-    _bloc.add(LoadRoadmap(courseSelection: widget.initialCourseSelection));
+    _bloc.add(LoadRoadmap(courseSelection: _resolveCourse(widget.initialCourseSelection)));
 
     _navState = getIt<ProgressNavigationState>();
     _navState.addListener(_handleNavigationRequest);
+  }
+
+  ProgressCourseSelection? _resolveCourse(ProgressCourseSelection? explicit) {
+    if (explicit != null) return explicit;
+    final courses = ExploreCoursesService.instance.courses.value;
+    return courses.isNotEmpty ? courses.first : null;
   }
 
   @override
@@ -63,7 +70,7 @@ class _ProgressPageState extends State<ProgressPage>
     super.didUpdateWidget(oldWidget);
 
     if (oldWidget.initialCourseSelection != widget.initialCourseSelection) {
-      _bloc.add(LoadRoadmap(courseSelection: widget.initialCourseSelection));
+      _bloc.add(LoadRoadmap(courseSelection: _resolveCourse(widget.initialCourseSelection)));
     }
   }
 
@@ -101,7 +108,14 @@ class _ProgressPageState extends State<ProgressPage>
       value: _bloc,
       child: Container(
         color: AppColors.surface,
-        child: BlocBuilder<ProgressBloc, ProgressState>(
+        child: BlocConsumer<ProgressBloc, ProgressState>(
+          listener: (context, state) {
+            if (state.status == ProgressStatus.loaded &&
+                state.courseSelection != null) {
+              ExploreCoursesService.instance
+                  .markRoadmapGenerated(state.courseSelection!);
+            }
+          },
           builder: (context, state) {
             if (state.status == ProgressStatus.generating) {
               return _GeneratingView(shimmer: _shimmerController);
