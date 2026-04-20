@@ -27,6 +27,7 @@ import 'package:modern_learner_production/features/new_lesson/domain/usecases/up
 import 'package:modern_learner_production/features/explore/service/explore_courses_service.dart';
 import 'package:modern_learner_production/features/lesson_detail/service/voice_lesson_generation_service.dart';
 import 'package:modern_learner_production/features/lesson_detail/service/voice_lesson_supabase_service.dart';
+import 'package:modern_learner_production/features/lesson_detail/service/voice_lesson_tts_service.dart';
 import 'package:modern_learner_production/features/progress/service/chapter_content_service.dart';
 import 'package:modern_learner_production/features/progress/service/lesson_content_service.dart';
 import 'package:modern_learner_production/features/progress/service/progress_navigation_state.dart';
@@ -162,6 +163,9 @@ Future<void> configureDependencies() async {
       prefs: await getIt.getAsync<SharedPreferences>(),
     ),
     dependsOn: [SharedPreferences],
+  );
+  getIt.registerLazySingleton<VoiceLessonTtsService>(
+    () => VoiceLessonTtsService(dio: getIt<Dio>()),
   );
 
   // ── New Lesson ────────────────────────────────────────────────────────────
