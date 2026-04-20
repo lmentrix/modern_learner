@@ -10,13 +10,19 @@ class VoicePhraseCard extends StatelessWidget {
     super.key,
     required this.phrase,
     required this.accentColor,
+    required this.voiceProfile,
     this.isPlaying = false,
+    this.isLoading = false,
+    this.audioErrorMessage,
     this.onPlayTap,
   });
 
   final VoicePhrase phrase;
   final Color accentColor;
+  final VoiceLessonVoiceProfile voiceProfile;
   final bool isPlaying;
+  final bool isLoading;
+  final String? audioErrorMessage;
   final VoidCallback? onPlayTap;
 
   @override
@@ -46,10 +52,7 @@ class VoicePhraseCard extends StatelessWidget {
                   height: 48,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [
-                        accentColor,
-                        accentColor.withValues(alpha: 0.7),
-                      ],
+                      colors: [accentColor, accentColor.withValues(alpha: 0.7)],
                     ),
                     borderRadius: BorderRadius.circular(14),
                     boxShadow: [
@@ -61,7 +64,11 @@ class VoicePhraseCard extends StatelessWidget {
                     ],
                   ),
                   child: Icon(
-                    isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                    isLoading
+                        ? Icons.graphic_eq_rounded
+                        : isPlaying
+                        ? Icons.pause_rounded
+                        : Icons.play_arrow_rounded,
                     color: Colors.white,
                     size: 24,
                   ),
@@ -180,6 +187,100 @@ class VoicePhraseCard extends StatelessWidget {
               ],
             ),
           ),
+          if (phrase.audioCues.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            _CueSection(
+              title: 'AI Voice Cues',
+              accentColor: accentColor,
+              icon: Icons.multitrack_audio_rounded,
+              cues: phrase.audioCues,
+            ),
+          ],
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceContainerHigh,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.auto_awesome_rounded, size: 18, color: accentColor),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        voiceProfile.disclosure,
+                        style: GoogleFonts.inter(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.onSurfaceVariant,
+                          letterSpacing: 0.8,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${voiceProfile.voice} · ${voiceProfile.model}',
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.onSurface,
+                        ),
+                      ),
+                      if (voiceProfile.style.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          voiceProfile.style,
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            color: AppColors.onSurfaceVariant,
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (audioErrorMessage != null && audioErrorMessage!.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.error.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: AppColors.error.withValues(alpha: 0.18),
+                ),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(
+                    Icons.error_outline_rounded,
+                    size: 18,
+                    color: AppColors.error,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      audioErrorMessage!,
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        color: AppColors.onSurface,
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -209,7 +310,7 @@ class VoicePhraseSelector extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         itemCount: phrases.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 10),
+        separatorBuilder: (context, index) => const SizedBox(width: 10),
         itemBuilder: (context, index) {
           final isSelected = index == currentIndex;
           final phrase = phrases[index];
@@ -266,6 +367,170 @@ class VoicePhraseSelector extends StatelessWidget {
           );
         },
       ),
+    );
+  }
+}
+
+class VoiceLessonInsightCard extends StatelessWidget {
+  const VoiceLessonInsightCard({
+    super.key,
+    required this.lesson,
+    required this.accentColor,
+  });
+
+  final VoiceLessonEntity lesson;
+  final Color accentColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: accentColor.withValues(alpha: 0.14)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'AI Lesson Notes',
+            style: GoogleFonts.spaceGrotesk(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: AppColors.onSurface,
+            ),
+          ),
+          if (lesson.description.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Text(
+              lesson.description,
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                color: AppColors.onSurfaceVariant,
+                height: 1.5,
+              ),
+            ),
+          ],
+          if (lesson.practicePhrases.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            _CueSection(
+              title: 'Shadowing Phrases',
+              accentColor: accentColor,
+              icon: Icons.record_voice_over_rounded,
+              cues: lesson.practicePhrases.take(4).toList(),
+            ),
+          ],
+          if (lesson.pronunciationTips.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            ...lesson.pronunciationTips
+                .take(2)
+                .map(
+                  (tip) => Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: accentColor.withValues(alpha: 0.06),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            tip.category,
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: accentColor,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            tip.tip,
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              color: AppColors.onSurface,
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _CueSection extends StatelessWidget {
+  const _CueSection({
+    required this.title,
+    required this.accentColor,
+    required this.icon,
+    required this.cues,
+  });
+
+  final String title;
+  final Color accentColor;
+  final IconData icon;
+  final List<String> cues;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, size: 16, color: accentColor),
+            const SizedBox(width: 8),
+            Text(
+              title,
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: AppColors.onSurfaceVariant,
+                letterSpacing: 0.8,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: cues
+              .map(
+                (cue) => Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: accentColor.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(
+                      color: accentColor.withValues(alpha: 0.15),
+                    ),
+                  ),
+                  child: Text(
+                    cue,
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.onSurface,
+                    ),
+                  ),
+                ),
+              )
+              .toList(),
+        ),
+      ],
     );
   }
 }
@@ -347,8 +612,8 @@ class VoiceExerciseCard extends StatelessWidget {
           const SizedBox(height: 16),
           // Options
           ...exercise.options.asMap().entries.map(
-                (entry) => _buildOption(entry.key, entry.value),
-              ),
+            (entry) => _buildOption(entry.key, entry.value),
+          ),
         ],
       ),
     );
@@ -357,11 +622,11 @@ class VoiceExerciseCard extends StatelessWidget {
   Widget _buildOption(int index, String option) {
     final isSelected = selectedAnswer == index;
     final isCorrect = exercise.correctIndex == index;
-    
+
     Color borderColor;
     Color backgroundColor;
     Color textColor;
-    
+
     if (showResult) {
       if (isCorrect) {
         borderColor = AppColors.tertiary;
@@ -373,7 +638,9 @@ class VoiceExerciseCard extends StatelessWidget {
         textColor = AppColors.onSurface;
       } else {
         borderColor = AppColors.outlineVariant.withValues(alpha: 0.2);
-        backgroundColor = AppColors.surfaceContainerHighest.withValues(alpha: 0.3);
+        backgroundColor = AppColors.surfaceContainerHighest.withValues(
+          alpha: 0.3,
+        );
         textColor = AppColors.onSurfaceVariant;
       }
     } else {
@@ -438,11 +705,7 @@ class VoiceExerciseCard extends StatelessWidget {
                 size: 22,
               )
             else if (showResult && isSelected && !isCorrect)
-              const Icon(
-                Icons.error_rounded,
-                color: AppColors.error,
-                size: 22,
-              ),
+              const Icon(Icons.error_rounded, color: AppColors.error, size: 22),
           ],
         ),
       ),

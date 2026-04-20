@@ -4,15 +4,14 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'package:modern_learner_production/core/di/injection.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
+import 'package:modern_learner_production/features/lesson_detail/domain/entities/voice_lesson_entity.dart';
 import 'package:modern_learner_production/features/lesson_detail/presentation/bloc/voice_lesson_bloc.dart';
 import 'package:modern_learner_production/features/lesson_detail/presentation/widgets/voice_lesson_widgets.dart';
 import 'package:modern_learner_production/features/lesson_detail/service/voice_lesson_supabase_service.dart';
+import 'package:modern_learner_production/features/lesson_detail/service/voice_lesson_tts_service.dart';
 
 class VoiceLessonPage extends StatefulWidget {
-  const VoiceLessonPage({
-    super.key,
-    required this.lessonId,
-  });
+  const VoiceLessonPage({super.key, required this.lessonId});
 
   final String lessonId;
 
@@ -32,6 +31,7 @@ class _VoiceLessonPageState extends State<VoiceLessonPage> {
     super.initState();
     _bloc = VoiceLessonBloc(
       supabaseService: getIt<VoiceLessonSupabaseService>(),
+      ttsService: getIt<VoiceLessonTtsService>(),
     );
     _bloc.add(VoiceLessonLoadRequested(widget.lessonId));
   }
@@ -97,9 +97,11 @@ class _VoiceLessonPageState extends State<VoiceLessonPage> {
           }
 
           if (state.status == VoiceLessonStatus.error || state.lesson == null) {
-            return _ErrorView(onRetry: () {
-              _bloc.add(VoiceLessonLoadRequested(widget.lessonId));
-            });
+            return _ErrorView(
+              onRetry: () {
+                _bloc.add(VoiceLessonLoadRequested(widget.lessonId));
+              },
+            );
           }
 
           final lesson = state.lesson!;
@@ -115,7 +117,8 @@ class _VoiceLessonPageState extends State<VoiceLessonPage> {
                     height: 500,
                     child: PageView(
                       controller: _pageController,
-                      onPageChanged: (index) => setState(() => _currentTabIndex = index),
+                      onPageChanged: (index) =>
+                          setState(() => _currentTabIndex = index),
                       children: [
                         _buildPhrasesTab(state),
                         _buildExercisesTab(state),
@@ -133,7 +136,7 @@ class _VoiceLessonPageState extends State<VoiceLessonPage> {
     );
   }
 
-  Widget _buildAppBar(dynamic lesson) {
+  Widget _buildAppBar(VoiceLessonEntity lesson) {
     return SliverAppBar(
       expandedHeight: 180,
       pinned: true,
@@ -201,7 +204,10 @@ class _VoiceLessonPageState extends State<VoiceLessonPage> {
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Center(
-                      child: Text(lesson.emoji, style: const TextStyle(fontSize: 30)),
+                      child: Text(
+                        lesson.emoji,
+                        style: const TextStyle(fontSize: 30),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -229,6 +235,18 @@ class _VoiceLessonPageState extends State<VoiceLessonPage> {
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
+                        if (lesson.subtitle.isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            lesson.subtitle,
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              color: AppColors.onSurfaceVariant,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -249,9 +267,7 @@ class _VoiceLessonPageState extends State<VoiceLessonPage> {
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       child: Row(
         children: [
-          Expanded(
-            child: _buildTabItem('Phrases', lesson.phrases.length, 0),
-          ),
+          Expanded(child: _buildTabItem('Phrases', lesson.phrases.length, 0)),
           const SizedBox(width: 12),
           Expanded(
             child: _buildTabItem('Exercises', lesson.exercises.length, 1),
@@ -265,7 +281,7 @@ class _VoiceLessonPageState extends State<VoiceLessonPage> {
     final isSelected = _currentTabIndex == index;
     final lesson = _bloc.state.lesson;
     if (lesson == null) return const SizedBox.shrink();
-    
+
     final color = lesson.accentColor;
 
     return GestureDetector(
@@ -280,10 +296,14 @@ class _VoiceLessonPageState extends State<VoiceLessonPage> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected ? color.withValues(alpha: 0.15) : AppColors.surfaceContainerHigh,
+          color: isSelected
+              ? color.withValues(alpha: 0.15)
+              : AppColors.surfaceContainerHigh,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? color.withValues(alpha: 0.5) : Colors.transparent,
+            color: isSelected
+                ? color.withValues(alpha: 0.5)
+                : Colors.transparent,
             width: 2,
           ),
         ),
@@ -330,8 +350,18 @@ class _VoiceLessonPageState extends State<VoiceLessonPage> {
           phrase: state.lesson!.phrases[state.currentPhraseIndex],
           accentColor: state.lesson!.accentColor,
           isPlaying: state.isPlaying,
+          isLoading: state.isAudioLoading,
+          audioErrorMessage: state.audioErrorMessage,
+          voiceProfile: state.lesson!.voiceProfile,
           onPlayTap: () => _bloc.add(const VoiceLessonPlayToggled()),
         ),
+        if (state.lesson!.description.isNotEmpty ||
+            state.lesson!.practicePhrases.isNotEmpty ||
+            state.lesson!.pronunciationTips.isNotEmpty)
+          VoiceLessonInsightCard(
+            lesson: state.lesson!,
+            accentColor: state.lesson!.accentColor,
+          ),
         const SizedBox(height: 24),
         _buildNavigationButtons(state),
       ],
@@ -347,13 +377,19 @@ class _VoiceLessonPageState extends State<VoiceLessonPage> {
             child: SizedBox(
               height: 48,
               child: OutlinedButton(
-                onPressed: state.isFirstPhrase ? null : () {
-                  _bloc.add(const VoiceLessonPreviousPhrase());
-                },
+                onPressed: state.isFirstPhrase
+                    ? null
+                    : () {
+                        _bloc.add(const VoiceLessonPreviousPhrase());
+                      },
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.onSurface,
-                  side: BorderSide(color: AppColors.outlineVariant.withValues(alpha: 0.3)),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  side: BorderSide(
+                    color: AppColors.outlineVariant.withValues(alpha: 0.3),
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -374,12 +410,16 @@ class _VoiceLessonPageState extends State<VoiceLessonPage> {
             child: SizedBox(
               height: 48,
               child: FilledButton(
-                onPressed: state.isLastPhrase ? null : () {
-                  _bloc.add(const VoiceLessonNextPhrase());
-                },
+                onPressed: state.isLastPhrase
+                    ? null
+                    : () {
+                        _bloc.add(const VoiceLessonNextPhrase());
+                      },
                 style: FilledButton.styleFrom(
                   backgroundColor: state.lesson!.accentColor,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -430,77 +470,78 @@ class _VoiceLessonPageState extends State<VoiceLessonPage> {
     final canSubmit = state.allExercisesAnswered && !state.exercisesSubmitted;
 
     return Container(
-      padding: EdgeInsets.fromLTRB(20, 12, 20, MediaQuery.of(context).padding.bottom + 12),
+      padding: EdgeInsets.fromLTRB(
+        20,
+        12,
+        20,
+        MediaQuery.of(context).padding.bottom + 12,
+      ),
       decoration: BoxDecoration(
         color: AppColors.surface,
         border: Border(
-          top: BorderSide(color: AppColors.outlineVariant.withValues(alpha: 0.2), width: 1),
+          top: BorderSide(
+            color: AppColors.outlineVariant.withValues(alpha: 0.2),
+            width: 1,
+          ),
         ),
       ),
       child: Row(
         children: [
-          if (_currentTabIndex == 0) ...[
-            Expanded(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${state.currentPhraseIndex + 1}/${state.lesson!.phrases.length}',
-                    style: GoogleFonts.spaceGrotesk(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.onSurface,
-                    ),
-                  ),
-                  Text(
-                    'Phrase ${state.currentPhraseIndex + 1}',
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      color: AppColors.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-          if (_currentTabIndex == 1) ...[
-            Expanded(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    state.exercisesSubmitted
-                        ? 'Completed!'
-                        : '${state.selectedAnswers.length}/${state.lesson!.exercises.length}',
-                    style: GoogleFonts.spaceGrotesk(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.onSurface,
-                    ),
-                  ),
-                  Text(
-                    state.exercisesSubmitted ? 'Great job!' : 'exercises answered',
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      color: AppColors.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+          if (_currentTabIndex == 0)
+            _buildPhrasesStatus(state)
+          else
+            _buildExercisesStatus(state),
           const SizedBox(width: 16),
+          if (_currentTabIndex == 0)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: state.lesson!.accentColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    state.isAudioLoading
+                        ? Icons.graphic_eq_rounded
+                        : state.isPlaying
+                        ? Icons.pause_circle_filled_rounded
+                        : Icons.play_circle_fill_rounded,
+                    size: 18,
+                    color: state.lesson!.accentColor,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    state.isAudioLoading
+                        ? 'Generating voice'
+                        : state.isPlaying
+                        ? 'Playing'
+                        : 'Tap play',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: state.lesson!.accentColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           if (_currentTabIndex == 1)
             SizedBox(
               height: 50,
               child: FilledButton(
                 onPressed: canSubmit ? _submitExercises : null,
                 style: FilledButton.styleFrom(
-                  backgroundColor: canSubmit ? state.lesson!.accentColor : AppColors.surfaceContainerHighest,
-                  foregroundColor: canSubmit ? Colors.white : AppColors.onSurfaceVariant,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  backgroundColor: canSubmit
+                      ? state.lesson!.accentColor
+                      : AppColors.surfaceContainerHighest,
+                  foregroundColor: canSubmit
+                      ? Colors.white
+                      : AppColors.onSurfaceVariant,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                 ),
                 child: Row(
@@ -525,6 +566,60 @@ class _VoiceLessonPageState extends State<VoiceLessonPage> {
       ),
     );
   }
+
+  Widget _buildPhrasesStatus(VoiceLessonState state) {
+    return Expanded(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '${state.currentPhraseIndex + 1}/${state.lesson!.phrases.length}',
+            style: GoogleFonts.spaceGrotesk(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: AppColors.onSurface,
+            ),
+          ),
+          Text(
+            'Phrase ${state.currentPhraseIndex + 1}',
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              color: AppColors.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExercisesStatus(VoiceLessonState state) {
+    return Expanded(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            state.exercisesSubmitted
+                ? 'Completed!'
+                : '${state.selectedAnswers.length}/${state.lesson!.exercises.length}',
+            style: GoogleFonts.spaceGrotesk(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: AppColors.onSurface,
+            ),
+          ),
+          Text(
+            state.exercisesSubmitted ? 'Great job!' : 'exercises answered',
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              color: AppColors.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 // ── Loading View ──────────────────────────────────────────────────────────────
@@ -536,9 +631,7 @@ class _LoadingView extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Scaffold(
       backgroundColor: AppColors.surface,
-      body: Center(
-        child: CircularProgressIndicator(),
-      ),
+      body: Center(child: CircularProgressIndicator()),
     );
   }
 }
@@ -582,7 +675,10 @@ class _ErrorView extends StatelessWidget {
               child: FilledButton.icon(
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh_rounded),
-                label: Text('Retry', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+                label: Text(
+                  'Retry',
+                  style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                ),
               ),
             ),
           ],

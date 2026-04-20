@@ -16,7 +16,7 @@ class VoiceLessonGenerationService {
   final Dio dio;
   final SharedPreferences prefs;
 
-  static const _prefix = 'voice_lesson_v1_';
+  static const _prefix = 'voice_lesson_v2_';
 
   // ── Public API ─────────────────────────────────────────────────────────────
 
@@ -35,22 +35,18 @@ class VoiceLessonGenerationService {
 
     Map<String, dynamic> result;
     try {
-      final response = await dio.post(
+      final response = await dio.post<Map<String, dynamic>>(
         ApiConstants.voiceLessonGenerate,
         data: {
           'topic': topic,
           'language': language,
-          'level': level,
+          'difficulty': level,
           'nativeLanguage': nativeLanguage,
         },
       );
-      result = response.data as Map<String, dynamic>;
+      result = _unwrapPayload(response.data);
     } catch (_) {
-      result = _buildTemplate(
-        topic: topic,
-        language: language,
-        level: level,
-      );
+      result = _buildTemplate(topic: topic, language: language, level: level);
     }
 
     await prefs.setString(key, jsonEncode(result));
@@ -59,10 +55,15 @@ class VoiceLessonGenerationService {
 
   // ── Helpers ────────────────────────────────────────────────────────────────
 
-  String _cacheKey(String topic, String language, String level, String native) =>
-      '$_prefix${topic}_${language}_${level}_$native'
-          .toLowerCase()
-          .replaceAll(' ', '_');
+  String _cacheKey(
+    String topic,
+    String language,
+    String level,
+    String native,
+  ) => '$_prefix${topic}_${language}_${level}_$native'.toLowerCase().replaceAll(
+    ' ',
+    '_',
+  );
 
   /// Builds locally-generated template content when the AI API is unavailable.
   Map<String, dynamic> _buildTemplate({
@@ -72,6 +73,7 @@ class VoiceLessonGenerationService {
   }) {
     final color = _colorForLanguage(language);
     final emoji = _emojiForTopic(topic);
+    final voiceProfile = _buildVoiceProfile(language, level);
 
     final phrases = <Map<String, dynamic>>[
       {
@@ -81,13 +83,27 @@ class VoiceLessonGenerationService {
         'translation': 'Asking for help with $topic',
         'tip':
             'A polite opener when you need assistance. Works in almost any $topic situation.',
+        'audio_cues': ['gentle opening', 'slight pause after excuse me'],
+        'speech': _buildSpeech(
+          voiceProfile,
+          text: 'Excuse me, could you help me with $topic?',
+          instructions:
+              'Speak clearly and encouragingly. Gentle opening, slight pause after excuse me.',
+        ),
       },
       {
         'id': 'p2',
         'text': 'I\'d like to know more about this.',
         'phonetic': '/aɪd laɪk tə nəʊ mɔːr əˈbaʊt ðɪs/',
         'translation': 'Expressing curiosity about $topic',
-        'tip': 'Use this phrase to show genuine interest and keep the conversation going.',
+        'tip':
+            'Use this phrase to show genuine interest and keep the conversation going.',
+        'audio_cues': ['steady pace', 'warm curiosity'],
+        'speech': _buildSpeech(
+          voiceProfile,
+          text: 'I\'d like to know more about this.',
+          instructions: 'Use a warm, curious tone with steady pacing.',
+        ),
       },
       {
         'id': 'p3',
@@ -95,13 +111,27 @@ class VoiceLessonGenerationService {
         'phonetic': '/θæŋk juː səʊ mʌtʃ fər jɔːr help/',
         'translation': 'Showing gratitude after a $topic interaction',
         'tip': 'Always express gratitude. It leaves a positive impression.',
+        'audio_cues': ['smile in the voice', 'soft ending'],
+        'speech': _buildSpeech(
+          voiceProfile,
+          text: 'Thank you so much for your help.',
+          instructions: 'Sound grateful and warm with a soft ending.',
+        ),
       },
       {
         'id': 'p4',
         'text': 'Could you repeat that, please?',
         'phonetic': '/kʊd juː rɪˈpiːt ðæt pliːz/',
         'translation': 'Politely asking for clarification in $topic',
-        'tip': 'Never be afraid to ask for clarification — it shows you\'re engaged.',
+        'tip':
+            'Never be afraid to ask for clarification — it shows you\'re engaged.',
+        'audio_cues': ['rising intonation on repeat', 'polite finish'],
+        'speech': _buildSpeech(
+          voiceProfile,
+          text: 'Could you repeat that, please?',
+          instructions:
+              'Use polite rising intonation on repeat and a gentle finish.',
+        ),
       },
       {
         'id': 'p5',
@@ -109,6 +139,12 @@ class VoiceLessonGenerationService {
         'phonetic': '/ðæt saʊndz ɡreɪt aɪl traɪ ɪt/',
         'translation': 'Accepting a suggestion about $topic',
         'tip': 'Showing enthusiasm encourages more helpful conversation.',
+        'audio_cues': ['brighter energy', 'strong stress on great'],
+        'speech': _buildSpeech(
+          voiceProfile,
+          text: 'That sounds great, I\'ll try it!',
+          instructions: 'Use brighter energy and stress the word great.',
+        ),
       },
     ];
 
@@ -123,6 +159,13 @@ class VoiceLessonGenerationService {
           'I know everything about $topic.',
         ],
         'correct_index': 0,
+        'practice_prompt': 'Excuse me, could you help me with $topic?',
+        'audio_cues': ['clear opening', 'friendly tone'],
+        'speech': _buildSpeech(
+          voiceProfile,
+          text: 'Excuse me, could you help me with $topic?',
+          instructions: 'Friendly tone with clear pronunciation for learners.',
+        ),
       },
       {
         'id': 'ex2',
@@ -134,6 +177,13 @@ class VoiceLessonGenerationService {
           'I wasn\'t listening.',
         ],
         'correct_index': 1,
+        'practice_prompt': 'Could you repeat that, please?',
+        'audio_cues': ['gentle request', 'slight rise on repeat'],
+        'speech': _buildSpeech(
+          voiceProfile,
+          text: 'Could you repeat that, please?',
+          instructions: 'Make it sound polite with a small rise on repeat.',
+        ),
       },
       {
         'id': 'ex3',
@@ -146,20 +196,79 @@ class VoiceLessonGenerationService {
           'I expected better.',
         ],
         'correct_index': 2,
+        'practice_prompt': 'Thank you so much for your help.',
+        'audio_cues': ['warm delivery', 'soft closing'],
+        'speech': _buildSpeech(
+          voiceProfile,
+          text: 'Thank you so much for your help.',
+          instructions: 'Warm delivery with a soft closing tone.',
+        ),
       },
     ];
 
     return {
+      'title': '$topic Voice Lab',
       'subtitle': 'Essential $language phrases for $topic',
+      'description':
+          'AI-generated speaking prompts and quick checks for $topic.',
+      'topic': topic,
       'duration': '15 min',
       'emoji': emoji,
       // ignore: deprecated_member_use
       'accent_color': color.value,
       'level': level,
+      'ai_generated': true,
+      'voice_profile': voiceProfile,
       'phrases': phrases,
       'exercises': exercises,
+      'pronunciation_tips': [
+        {
+          'category': 'Rhythm',
+          'tip':
+              'Slow down slightly before the key request so each word stays clear.',
+          'examples': ['Excuse me', 'Could you repeat that'],
+        },
+        {
+          'category': 'Politeness',
+          'tip': 'Let your intonation soften at the end of polite requests.',
+          'examples': ['please', 'thank you'],
+        },
+      ],
+      'practice_phrases': phrases.map((phrase) => phrase['text']).toList(),
     };
   }
+
+  Map<String, dynamic> _unwrapPayload(Map<String, dynamic>? raw) {
+    if (raw == null) return <String, dynamic>{};
+    final nested = raw['data'];
+    if (nested is Map<String, dynamic>) {
+      return nested;
+    }
+    return raw;
+  }
+
+  Map<String, dynamic> _buildVoiceProfile(String language, String level) => {
+    'provider': 'qwen',
+    'disclosure': 'AI-generated voice',
+    'model': 'qwen3-tts-instruct-flash',
+    'voice': level.toLowerCase() == 'beginner' ? 'Serena' : 'Cherry',
+    'language_type': _languageTypeFor(language),
+    'style': 'Clear, encouraging, and easy to follow for language learners.',
+  };
+
+  Map<String, dynamic> _buildSpeech(
+    Map<String, dynamic> voiceProfile, {
+    required String text,
+    required String instructions,
+  }) => {
+    'provider': voiceProfile['provider'],
+    'model': voiceProfile['model'],
+    'voice': voiceProfile['voice'],
+    'language_type': voiceProfile['language_type'],
+    'text': text,
+    'instructions': instructions,
+    'optimize_instructions': true,
+  };
 
   static Color _colorForLanguage(String language) {
     switch (language.toLowerCase()) {
@@ -215,5 +324,32 @@ class VoiceLessonGenerationService {
       return '☕';
     }
     return '🎤';
+  }
+
+  static String _languageTypeFor(String language) {
+    switch (language.toLowerCase()) {
+      case 'mandarin':
+      case 'chinese':
+        return 'Chinese';
+      case 'spanish':
+        return 'Spanish';
+      case 'portuguese':
+        return 'Portuguese';
+      case 'french':
+        return 'French';
+      case 'german':
+        return 'German';
+      case 'italian':
+        return 'Italian';
+      case 'japanese':
+        return 'Japanese';
+      case 'korean':
+        return 'Korean';
+      case 'russian':
+        return 'Russian';
+      case 'english':
+      default:
+        return 'English';
+    }
   }
 }

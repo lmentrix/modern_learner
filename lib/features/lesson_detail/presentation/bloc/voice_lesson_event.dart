@@ -35,6 +35,20 @@ final class VoiceLessonPhraseSelected extends VoiceLessonEvent {
   List<Object?> get props => [index];
 }
 
+final class VoiceLessonPlaybackStateChanged extends VoiceLessonEvent {
+  const VoiceLessonPlaybackStateChanged(this.audioState);
+
+  final VoiceLessonAudioState audioState;
+
+  @override
+  List<Object?> get props => [
+    audioState.activeId,
+    audioState.isLoading,
+    audioState.isPlaying,
+    audioState.errorMessage,
+  ];
+}
+
 final class VoiceLessonAnswerSelected extends VoiceLessonEvent {
   const VoiceLessonAnswerSelected(this.exerciseId, this.answerIndex);
   final String exerciseId;
