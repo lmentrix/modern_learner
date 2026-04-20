@@ -8,6 +8,7 @@ class ProgressCourseSelection extends Equatable {
     required this.level,
     required this.nativeLanguage,
     this.roadmapJson,
+    this.roadmapGenerated = false,
   });
 
   final String title;
@@ -16,6 +17,19 @@ class ProgressCourseSelection extends Equatable {
   final String level;
   final String nativeLanguage;
   final Map<String, dynamic>? roadmapJson;
+  final bool roadmapGenerated;
+
+  ProgressCourseSelection copyWith({bool? roadmapGenerated}) {
+    return ProgressCourseSelection(
+      title: title,
+      topic: topic,
+      roadmapLanguage: roadmapLanguage,
+      level: level,
+      nativeLanguage: nativeLanguage,
+      roadmapJson: roadmapJson,
+      roadmapGenerated: roadmapGenerated ?? this.roadmapGenerated,
+    );
+  }
 
   @override
   List<Object?> get props => [
@@ -25,5 +39,6 @@ class ProgressCourseSelection extends Equatable {
     level,
     nativeLanguage,
     roadmapJson,
+    roadmapGenerated,
   ];
 }

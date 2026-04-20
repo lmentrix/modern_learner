@@ -62,4 +62,13 @@ class ExploreCoursesService {
         courses.value.where((c) => c != course).toList(growable: false);
     await _remote?.deleteCourse(course);
   }
+
+  void markRoadmapGenerated(ProgressCourseSelection course) {
+    courses.value = courses.value.map((c) {
+      if (c.title == course.title && c.topic == course.topic) {
+        return c.copyWith(roadmapGenerated: true);
+      }
+      return c;
+    }).toList(growable: false);
+  }
 }

@@ -96,7 +96,7 @@ class _BottomNavigationBarWidget extends StatelessWidget {
                     onTap: () => context.go(Routes.explore),
                   ),
                   _NavItem(
-                    icon: Icons.add_rounded,
+                    icon: Icons.mic_rounded,
                     label: 'New',
                     isActive: currentIndex == 2,
                     activeColor: AppColors.primary,

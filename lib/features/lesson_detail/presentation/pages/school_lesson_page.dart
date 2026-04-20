@@ -1,16 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
-
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 import 'package:modern_learner_production/features/lesson_detail/presentation/bloc/school_lesson_bloc.dart';
 import 'package:modern_learner_production/features/lesson_detail/presentation/widgets/school_lesson_widgets.dart';
 
 class SchoolLessonPage extends StatefulWidget {
-  const SchoolLessonPage({
-    super.key,
-    required this.lessonId,
-  });
+  const SchoolLessonPage({super.key, required this.lessonId});
 
   final String lessonId;
 
@@ -48,7 +44,9 @@ class _SchoolLessonPageState extends State<SchoolLessonPage> {
     final state = _bloc.state;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Score: ${state.score}/${state.lesson?.quiz.length ?? 0}'),
+        content: Text(
+          'Score: ${state.score}/${state.lesson?.quiz.length ?? 0}',
+        ),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         backgroundColor: AppColors.surfaceContainerHigh,
@@ -66,10 +64,13 @@ class _SchoolLessonPageState extends State<SchoolLessonPage> {
             return const _LoadingView();
           }
 
-          if (state.status == SchoolLessonStatus.error || state.lesson == null) {
-            return _ErrorView(onRetry: () {
-              _bloc.add(SchoolLessonLoadRequested(widget.lessonId));
-            });
+          if (state.status == SchoolLessonStatus.error ||
+              state.lesson == null) {
+            return _ErrorView(
+              onRetry: () {
+                _bloc.add(SchoolLessonLoadRequested(widget.lessonId));
+              },
+            );
           }
 
           final lesson = state.lesson!;
@@ -86,7 +87,8 @@ class _SchoolLessonPageState extends State<SchoolLessonPage> {
                   child: SizedBox(
                     height: MediaQuery.of(context).size.height - 280,
                     child: PageView(
-                      onPageChanged: (index) => setState(() => _currentTabIndex = index),
+                      onPageChanged: (index) =>
+                          setState(() => _currentTabIndex = index),
                       children: [
                         _buildSectionsTab(state),
                         _buildQuizTab(state),
@@ -172,7 +174,10 @@ class _SchoolLessonPageState extends State<SchoolLessonPage> {
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Center(
-                      child: Text(lesson.emoji, style: const TextStyle(fontSize: 30)),
+                      child: Text(
+                        lesson.emoji,
+                        style: const TextStyle(fontSize: 30),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -245,7 +250,9 @@ class _SchoolLessonPageState extends State<SchoolLessonPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: _bloc.state.lesson?.color.withValues(alpha: 0.15) ?? AppColors.surfaceContainerHigh,
+        color:
+            _bloc.state.lesson?.color.withValues(alpha: 0.15) ??
+            AppColors.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -274,13 +281,9 @@ class _SchoolLessonPageState extends State<SchoolLessonPage> {
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       child: Row(
         children: [
-          Expanded(
-            child: _buildTabItem('Sections', lesson.sections.length, 0),
-          ),
+          Expanded(child: _buildTabItem('Sections', lesson.sections.length, 0)),
           const SizedBox(width: 12),
-          Expanded(
-            child: _buildTabItem('Quiz', lesson.quiz.length, 1),
-          ),
+          Expanded(child: _buildTabItem('Quiz', lesson.quiz.length, 1)),
         ],
       ),
     );
@@ -290,7 +293,7 @@ class _SchoolLessonPageState extends State<SchoolLessonPage> {
     final isSelected = _currentTabIndex == index;
     final lesson = _bloc.state.lesson;
     if (lesson == null) return const SizedBox.shrink();
-    
+
     final color = lesson.color;
 
     return GestureDetector(
@@ -298,10 +301,14 @@ class _SchoolLessonPageState extends State<SchoolLessonPage> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected ? color.withValues(alpha: 0.15) : AppColors.surfaceContainerHigh,
+          color: isSelected
+              ? color.withValues(alpha: 0.15)
+              : AppColors.surfaceContainerHigh,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? color.withValues(alpha: 0.5) : Colors.transparent,
+            color: isSelected
+                ? color.withValues(alpha: 0.5)
+                : Colors.transparent,
             width: 2,
           ),
         ),
@@ -381,11 +388,19 @@ class _SchoolLessonPageState extends State<SchoolLessonPage> {
     final canSubmit = state.allAnswered && !state.quizSubmitted;
 
     return Container(
-      padding: EdgeInsets.fromLTRB(20, 12, 20, MediaQuery.of(context).padding.bottom + 12),
+      padding: EdgeInsets.fromLTRB(
+        20,
+        12,
+        20,
+        MediaQuery.of(context).padding.bottom + 12,
+      ),
       decoration: BoxDecoration(
         color: AppColors.surface,
         border: Border(
-          top: BorderSide(color: AppColors.outlineVariant.withValues(alpha: 0.2), width: 1),
+          top: BorderSide(
+            color: AppColors.outlineVariant.withValues(alpha: 0.2),
+            width: 1,
+          ),
         ),
       ),
       child: Row(
@@ -399,8 +414,8 @@ class _SchoolLessonPageState extends State<SchoolLessonPage> {
                   _currentTabIndex == 0
                       ? '${state.expandedSectionIds.length}/${state.lesson!.sections.length} sections'
                       : state.quizSubmitted
-                          ? 'Completed!'
-                          : '${state.selectedAnswers.length}/${state.lesson!.quiz.length}',
+                      ? 'Completed!'
+                      : '${state.selectedAnswers.length}/${state.lesson!.quiz.length}',
                   style: GoogleFonts.spaceGrotesk(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -411,8 +426,8 @@ class _SchoolLessonPageState extends State<SchoolLessonPage> {
                   _currentTabIndex == 0
                       ? 'sections expanded'
                       : state.quizSubmitted
-                          ? 'Great job!'
-                          : 'questions answered',
+                      ? 'Great job!'
+                      : 'questions answered',
                   style: GoogleFonts.inter(
                     fontSize: 11,
                     color: AppColors.onSurfaceVariant,
@@ -428,9 +443,15 @@ class _SchoolLessonPageState extends State<SchoolLessonPage> {
               child: FilledButton(
                 onPressed: canSubmit ? _submitQuiz : null,
                 style: FilledButton.styleFrom(
-                  backgroundColor: canSubmit ? state.lesson!.color : AppColors.surfaceContainerHighest,
-                  foregroundColor: canSubmit ? Colors.white : AppColors.onSurfaceVariant,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  backgroundColor: canSubmit
+                      ? state.lesson!.color
+                      : AppColors.surfaceContainerHighest,
+                  foregroundColor: canSubmit
+                      ? Colors.white
+                      : AppColors.onSurfaceVariant,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                 ),
                 child: Row(
@@ -464,9 +485,7 @@ class _LoadingView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.surface,
-      body: const Center(
-        child: CircularProgressIndicator(),
-      ),
+      body: const Center(child: CircularProgressIndicator()),
     );
   }
 }
@@ -510,7 +529,10 @@ class _ErrorView extends StatelessWidget {
               child: FilledButton.icon(
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh_rounded),
-                label: Text('Retry', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+                label: Text(
+                  'Retry',
+                  style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                ),
               ),
             ),
           ],
