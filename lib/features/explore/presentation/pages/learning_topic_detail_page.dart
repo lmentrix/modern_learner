@@ -30,7 +30,7 @@ class LearningTopicDetailPage extends StatelessWidget {
     final course = ProgressCourseSelection(
       title: subject.name,
       topic: topic.name,
-      roadmapLanguage: subject.name,
+      roadmapLanguage: topic.name,
       level: topic.difficulty.label.toLowerCase(),
       nativeLanguage: 'English',
     );
