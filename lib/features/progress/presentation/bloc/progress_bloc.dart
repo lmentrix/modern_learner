@@ -46,10 +46,11 @@ class ProgressBloc extends Bloc<ProgressEvent, ProgressState> {
   ) async {
     emit(state.copyWith(status: ProgressStatus.loading));
 
+    final courseSelection = event.useCurrentSelection
+        ? state.courseSelection
+        : event.courseSelection;
+
     try {
-      final courseSelection = event.useCurrentSelection
-          ? state.courseSelection
-          : event.courseSelection;
       final results = await Future.wait([
         getRoadmap(courseSelection: courseSelection),
         getUserProgress(),
@@ -76,6 +77,7 @@ class ProgressBloc extends Bloc<ProgressEvent, ProgressState> {
         state.copyWith(
           status: ProgressStatus.error,
           errorMessage: e.toString(),
+          courseSelection: courseSelection,
         ),
       );
     }
