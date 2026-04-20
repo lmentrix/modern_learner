@@ -69,18 +69,27 @@ class RoadmapGenerationService {
       return json;
     }
 
-    final response = await dio.post<Map<String, dynamic>>(
-      '${ApiConstants.baseUrl}${ApiConstants.roadmapGenerate}',
-      data: {
-        'topic': topic,
-        'language': language,
-        'level': level,
-        'nativeLanguage': nativeLanguage,
-      },
-    );
+    late final Map<String, dynamic> roadmapJson;
+    try {
+      roadmapJson = await _fetchVoiceRoadmap(
+        topic: topic,
+        language: language,
+        level: level,
+        nativeLanguage: nativeLanguage,
+      );
+    } catch (_) {
+      final response = await dio.post<Map<String, dynamic>>(
+        '${ApiConstants.baseUrl}${ApiConstants.roadmapGenerate}',
+        data: {
+          'topic': topic,
+          'language': language,
+          'level': level,
+          'nativeLanguage': nativeLanguage,
+        },
+      );
+      roadmapJson = _unwrapPayload(response.data);
+    }
 
-    final body = response.data!;
-    final roadmapJson = body['data'] as Map<String, dynamic>;
     await cacheRoadmapJson(
       roadmapJson,
       topic: topic,
@@ -111,22 +120,19 @@ class RoadmapGenerationService {
     }
 
     try {
-      final response = await dio.post<Map<String, dynamic>>(
-        '${ApiConstants.baseUrl}${ApiConstants.lessonRoadmapGenerate}',
-        data: {
-          'lessonType': lessonType == 'school' ? 'school' : 'voice',
-          'topic': topic,
-          if (lessonType == 'school')
-            'subject': contentType
-          else
-            'language': contentType,
-          'level': level,
-          'nativeLanguage': nativeLanguage,
-        },
-      );
-
-      final body = response.data!;
-      final roadmapJson = body['data'] as Map<String, dynamic>;
+      final roadmapJson = lessonType == 'school'
+          ? await _fetchLegacyLessonRoadmap(
+              topic: topic,
+              contentType: contentType,
+              level: level,
+              nativeLanguage: nativeLanguage,
+            )
+          : await _fetchVoiceRoadmap(
+              topic: topic,
+              language: contentType,
+              level: level,
+              nativeLanguage: nativeLanguage,
+            );
       await cacheRoadmapJson(
         roadmapJson,
         topic: topic,
@@ -178,6 +184,184 @@ class RoadmapGenerationService {
       nativeLanguage: nativeLanguage,
     );
     return RoadmapModel.fromJson(roadmapJson).toEntity();
+  }
+
+  Future<Map<String, dynamic>> _fetchVoiceRoadmap({
+    required String topic,
+    required String language,
+    required String level,
+    required String nativeLanguage,
+  }) async {
+    final response = await dio.post<Map<String, dynamic>>(
+      '${ApiConstants.baseUrl}${ApiConstants.voiceCourseRoadmapGenerate}',
+      data: {
+        'language': language,
+        'topic': topic,
+        'level': level,
+        'nativeLanguage': nativeLanguage,
+      },
+    );
+
+    return _normalizeVoiceRoadmap(
+      _unwrapPayload(response.data),
+      topic: topic,
+      language: language,
+      level: level,
+      nativeLanguage: nativeLanguage,
+    );
+  }
+
+  Future<Map<String, dynamic>> _fetchLegacyLessonRoadmap({
+    required String topic,
+    required String contentType,
+    required String level,
+    required String nativeLanguage,
+  }) async {
+    final response = await dio.post<Map<String, dynamic>>(
+      '${ApiConstants.baseUrl}${ApiConstants.lessonRoadmapGenerate}',
+      data: {
+        'lessonType': 'school',
+        'topic': topic,
+        'subject': contentType,
+        'level': level,
+        'nativeLanguage': nativeLanguage,
+      },
+    );
+
+    return _unwrapPayload(response.data);
+  }
+
+  Map<String, dynamic> _unwrapPayload(Map<String, dynamic>? raw) {
+    if (raw == null) return <String, dynamic>{};
+    final nested = raw['data'];
+    if (nested is Map<String, dynamic>) return nested;
+    return raw;
+  }
+
+  Map<String, dynamic> _normalizeVoiceRoadmap(
+    Map<String, dynamic> json, {
+    required String topic,
+    required String language,
+    required String level,
+    required String nativeLanguage,
+  }) {
+    final chapters = (json['chapters'] as List<dynamic>? ?? [])
+        .whereType<Map<String, dynamic>>()
+        .map((chapter) => _normalizeVoiceChapter(chapter))
+        .toList();
+
+    return {
+      'id': json['id'] as String? ?? 'voice_${DateTime.now().millisecondsSinceEpoch}',
+      'title': json['title'] as String? ?? '$language Voice Roadmap',
+      'description':
+          json['description'] as String? ??
+          'AI-generated voice-focused learning roadmap.',
+      'topic': json['topic'] as String? ?? topic,
+      'targetLanguage': json['targetLanguage'] as String? ?? language,
+      'nativeLanguage': json['nativeLanguage'] as String? ?? nativeLanguage,
+      'level': json['level'] as String? ?? level,
+      'totalXp': _asInt(json['totalXp']),
+      'estimatedHours': _asInt(json['estimatedHours']),
+      'ai_generated':
+          json['aiGenerated'] as bool? ?? json['ai_generated'] as bool? ?? true,
+      if (json['voiceProfile'] != null || json['voice_profile'] != null)
+        'voice_profile':
+            (json['voiceProfile'] as Map<String, dynamic>?) ??
+            (json['voice_profile'] as Map<String, dynamic>?),
+      'chapters': chapters,
+    };
+  }
+
+  Map<String, dynamic> _normalizeVoiceChapter(Map<String, dynamic> json) {
+    final lessons = (json['lessons'] as List<dynamic>? ?? [])
+        .whereType<Map<String, dynamic>>()
+        .map((lesson) => _normalizeVoiceLesson(lesson))
+        .toList();
+
+    return {
+      'id': json['id'] as String? ?? '',
+      'chapterNumber': _asInt(json['chapterNumber']),
+      'title': json['title'] as String? ?? '',
+      'description': json['description'] as String? ?? '',
+      'icon': json['icon'] as String? ?? '🎤',
+      'type': json['type'] as String? ?? 'lesson',
+      'xpReward': _asInt(json['xpReward']),
+      'gemReward': _asInt(json['gemReward']),
+      'prerequisites': (json['prerequisites'] as List<dynamic>? ?? [])
+          .map((value) => value as String)
+          .toList(),
+      'skills': (json['focusSkills'] as List<dynamic>? ??
+              json['skills'] as List<dynamic>? ??
+              [])
+          .map((value) => value as String)
+          .toList(),
+      'pronunciation_focus':
+          json['pronunciationFocus'] as String? ??
+          json['pronunciation_focus'] as String? ??
+          '',
+      'audio_cues': (json['audioCues'] as List<dynamic>? ??
+              json['audio_cues'] as List<dynamic>? ??
+              [])
+          .map((value) => value as String)
+          .toList(),
+      if (json['speech'] != null) 'speech': json['speech'],
+      'lessons': lessons,
+    };
+  }
+
+  Map<String, dynamic> _normalizeVoiceLesson(Map<String, dynamic> json) {
+    final originalType = json['type'] as String? ?? 'voice_exercise';
+
+    return {
+      'id': json['id'] as String? ?? '',
+      'title': json['title'] as String? ?? '',
+      'type': _mapVoiceLessonType(originalType),
+      'voice_type':
+          json['voiceType'] as String? ??
+          json['voice_type'] as String? ??
+          originalType,
+      'description': json['description'] as String? ?? '',
+      'xpReward': _asInt(json['xpReward']),
+      'duration_minutes':
+          _asNullableInt(json['durationMinutes']) ??
+          _asNullableInt(json['duration_minutes']),
+      'audio_cues': (json['audioCues'] as List<dynamic>? ??
+              json['audio_cues'] as List<dynamic>? ??
+              [])
+          .map((value) => value as String)
+          .toList(),
+      if (json['speech'] != null) 'speech': json['speech'],
+      'status': json['status'] as String? ?? 'locked',
+    };
+  }
+
+  String _mapVoiceLessonType(String type) {
+    switch (type) {
+      case 'pronunciation':
+      case 'voice_exercise':
+      case 'quiz':
+        return 'exercise';
+      case 'dialogue':
+        return 'conversation';
+      case 'reading':
+        return 'reading';
+      case 'vocabulary':
+        return 'vocabulary';
+      default:
+        return 'exercise';
+    }
+  }
+
+  int _asInt(Object? value) {
+    if (value is int) return value;
+    if (value is num) return value.round();
+    return 0;
+  }
+
+  int? _asNullableInt(Object? value) {
+    if (value is int) return value;
+    if (value is num) return value.round();
+    return null;
   }
 
   Future<void> clearCache({
