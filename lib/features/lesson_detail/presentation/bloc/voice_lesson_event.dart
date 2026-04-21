@@ -15,6 +15,10 @@ final class VoiceLessonLoadRequested extends VoiceLessonEvent {
   List<Object?> get props => [lessonId];
 }
 
+final class VoiceLessonPreloadAudioRequested extends VoiceLessonEvent {
+  const VoiceLessonPreloadAudioRequested();
+}
+
 final class VoiceLessonPlayToggled extends VoiceLessonEvent {
   const VoiceLessonPlayToggled();
 }

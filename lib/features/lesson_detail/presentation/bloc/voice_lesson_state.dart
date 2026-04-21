@@ -13,6 +13,7 @@ class VoiceLessonState extends Equatable {
     this.audioErrorMessage,
     this.selectedAnswers = const {},
     this.exercisesSubmitted = false,
+    this.preloadedAudioCount = 0,
   });
 
   final VoiceLessonStatus status;
@@ -24,6 +25,7 @@ class VoiceLessonState extends Equatable {
   final String? audioErrorMessage;
   final Map<String, int> selectedAnswers;
   final bool exercisesSubmitted;
+  final int preloadedAudioCount;
 
   bool get allExercisesAnswered =>
       lesson != null && selectedAnswers.length == lesson!.exercises.length;
@@ -33,6 +35,7 @@ class VoiceLessonState extends Equatable {
       lesson != null && currentPhraseIndex == lesson!.phrases.length - 1;
   bool get hasAudioError =>
       audioErrorMessage != null && audioErrorMessage!.isNotEmpty;
+  bool get hasPreloadedAudio => preloadedAudioCount > 0;
   VoicePhrase? get currentPhrase =>
       lesson == null ? null : lesson!.phrases[currentPhraseIndex];
 
@@ -47,6 +50,7 @@ class VoiceLessonState extends Equatable {
     audioErrorMessage,
     selectedAnswers,
     exercisesSubmitted,
+    preloadedAudioCount,
   ];
 
   VoiceLessonState copyWith({
@@ -60,6 +64,7 @@ class VoiceLessonState extends Equatable {
     bool clearAudioError = false,
     Map<String, int>? selectedAnswers,
     bool? exercisesSubmitted,
+    int? preloadedAudioCount,
   }) {
     return VoiceLessonState(
       status: status ?? this.status,
@@ -73,6 +78,7 @@ class VoiceLessonState extends Equatable {
           : audioErrorMessage ?? this.audioErrorMessage,
       selectedAnswers: selectedAnswers ?? this.selectedAnswers,
       exercisesSubmitted: exercisesSubmitted ?? this.exercisesSubmitted,
+      preloadedAudioCount: preloadedAudioCount ?? this.preloadedAudioCount,
     );
   }
 }

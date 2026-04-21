@@ -34,6 +34,8 @@ abstract final class ApiConstants {
   static const String chapterContentGenerate = '/ai/chapter-content/generate';
   static const String lessonContentGenerate = '/ai/lesson-content/generate';
   static const String voiceLessonGenerate = '/ai/voice-lesson/generate';
+  static const String voiceLessonGenerateWithAudio =
+      '/ai/voice-lesson/generate-with-audio';
   static const String voiceLessonTts = '/ai/voice-lesson/tts';
   static const String exploreSubjects = '/explore/subjects';
 }

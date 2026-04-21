@@ -34,6 +34,10 @@ class _VoiceLessonPageState extends State<VoiceLessonPage> {
       ttsService: getIt<VoiceLessonTtsService>(),
     );
     _bloc.add(VoiceLessonLoadRequested(widget.lessonId));
+    // Pre-load audio for all phrases and exercises after lesson loads
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _bloc.add(const VoiceLessonPreloadAudioRequested());
+    });
   }
 
   @override
@@ -507,6 +511,8 @@ class _VoiceLessonPageState extends State<VoiceLessonPage> {
                         ? Icons.graphic_eq_rounded
                         : state.isPlaying
                         ? Icons.pause_circle_filled_rounded
+                        : state.hasPreloadedAudio
+                        ? Icons.check_circle_outline_rounded
                         : Icons.play_circle_fill_rounded,
                     size: 18,
                     color: state.lesson!.accentColor,
@@ -514,7 +520,9 @@ class _VoiceLessonPageState extends State<VoiceLessonPage> {
                   const SizedBox(width: 8),
                   Text(
                     state.isAudioLoading
-                        ? 'Generating voice'
+                        ? 'Generating voices'
+                        : state.hasPreloadedAudio
+                        ? '${state.preloadedAudioCount} audio ready'
                         : state.isPlaying
                         ? 'Playing'
                         : 'Tap play',

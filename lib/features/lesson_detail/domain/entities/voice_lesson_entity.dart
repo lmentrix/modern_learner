@@ -18,6 +18,7 @@ class VoiceLessonEntity extends Equatable {
     this.description = '',
     this.aiGenerated = false,
     this.voiceProfile = const VoiceLessonVoiceProfile.defaultProfile(),
+    this.narratorTts = const LessonNarratorTts.empty(),
     this.pronunciationTips = const [],
     this.practicePhrases = const [],
   });
@@ -33,6 +34,7 @@ class VoiceLessonEntity extends Equatable {
   final String level;
   final bool aiGenerated;
   final VoiceLessonVoiceProfile voiceProfile;
+  final LessonNarratorTts narratorTts;
   final List<VoicePhrase> phrases;
   final List<VoiceExercise> exercises;
   final List<VoicePronunciationTip> pronunciationTips;
@@ -61,6 +63,11 @@ class VoiceLessonEntity extends Equatable {
     voiceProfile: VoiceLessonVoiceProfile.fromJson(
       (json['voiceProfile'] as Map<String, dynamic>?) ??
           (json['voice_profile'] as Map<String, dynamic>?) ??
+          const <String, dynamic>{},
+    ),
+    narratorTts: LessonNarratorTts.fromJson(
+      (json['narratorTts'] as Map<String, dynamic>?) ??
+          (json['narrator_tts'] as Map<String, dynamic>?) ??
           const <String, dynamic>{},
     ),
     phrases: (json['phrases'] as List<dynamic>? ?? [])
@@ -99,6 +106,7 @@ class VoiceLessonEntity extends Equatable {
     'level': level,
     'ai_generated': aiGenerated,
     'voice_profile': voiceProfile.toJson(),
+    'narrator_tts': narratorTts.toJson(),
     'phrases': phrases.map((p) => p.toJson()).toList(),
     'exercises': exercises.map((e) => e.toJson()).toList(),
     'pronunciation_tips': pronunciationTips.map((tip) => tip.toJson()).toList(),
@@ -117,6 +125,7 @@ class VoiceLessonEntity extends Equatable {
     emoji,
     aiGenerated,
     voiceProfile,
+    narratorTts,
   ];
 }
 
@@ -286,6 +295,7 @@ class VoicePhrase extends Equatable {
     required this.tip,
     this.audioCues = const [],
     this.speech,
+    this.tts,
   });
 
   final String id;
@@ -295,6 +305,7 @@ class VoicePhrase extends Equatable {
   final String tip;
   final List<String> audioCues;
   final VoiceSpeechAttributes? speech;
+  final QwenTtsAttributes? tts;
 
   factory VoicePhrase.fromJson(Map<String, dynamic> json) => VoicePhrase(
     id: json['id'] as String? ?? '',
@@ -313,6 +324,9 @@ class VoicePhrase extends Equatable {
         : VoiceSpeechAttributes.fromJson(
             json['speech'] as Map<String, dynamic>,
           ),
+    tts: ((json['tts'] as Map<String, dynamic>?) ?? const {}).isEmpty
+        ? null
+        : QwenTtsAttributes.fromJson(json['tts'] as Map<String, dynamic>),
   );
 
   Map<String, dynamic> toJson() => {
@@ -323,6 +337,7 @@ class VoicePhrase extends Equatable {
     'tip': tip,
     'audio_cues': audioCues,
     if (speech != null) 'speech': speech!.toJson(),
+    if (tts != null) 'tts': tts!.toJson(),
   };
 
   VoiceSpeechAttributes buildFallbackSpeech(
@@ -339,8 +354,25 @@ class VoicePhrase extends Equatable {
     );
   }
 
+  QwenTtsAttributes getTtsOrBuildFallback(VoiceLessonVoiceProfile voiceProfile) {
+    if (tts != null) return tts!;
+    
+    final notes = [
+      if (tip.isNotEmpty) tip,
+      if (audioCues.isNotEmpty) 'Delivery cues: ${audioCues.join(', ')}.',
+    ].join(' ');
+
+    return QwenTtsAttributes(
+      text: text,
+      voice: voiceProfile.voice,
+      languageType: voiceProfile.languageType,
+      instructions: notes.isEmpty ? null : notes,
+      optimizeInstructions: notes.isNotEmpty,
+    );
+  }
+
   @override
-  List<Object?> get props => [id, text, audioCues, speech];
+  List<Object?> get props => [id, text, audioCues, speech, tts];
 }
 
 class VoiceExercise extends Equatable {
@@ -352,6 +384,7 @@ class VoiceExercise extends Equatable {
     this.practicePrompt = '',
     this.audioCues = const [],
     this.speech,
+    this.tts,
   });
 
   final String id;
@@ -361,6 +394,7 @@ class VoiceExercise extends Equatable {
   final String practicePrompt;
   final List<String> audioCues;
   final VoiceSpeechAttributes? speech;
+  final QwenTtsAttributes? tts;
 
   factory VoiceExercise.fromJson(Map<String, dynamic> json) => VoiceExercise(
     id: json['id'] as String? ?? '',
@@ -385,6 +419,9 @@ class VoiceExercise extends Equatable {
         : VoiceSpeechAttributes.fromJson(
             json['speech'] as Map<String, dynamic>,
           ),
+    tts: ((json['tts'] as Map<String, dynamic>?) ?? const {}).isEmpty
+        ? null
+        : QwenTtsAttributes.fromJson(json['tts'] as Map<String, dynamic>),
   );
 
   Map<String, dynamic> toJson() => {
@@ -395,7 +432,24 @@ class VoiceExercise extends Equatable {
     'practice_prompt': practicePrompt,
     'audio_cues': audioCues,
     if (speech != null) 'speech': speech!.toJson(),
+    if (tts != null) 'tts': tts!.toJson(),
   };
+
+  QwenTtsAttributes getTtsOrBuildFallback(VoiceLessonVoiceProfile voiceProfile) {
+    if (tts != null) return tts!;
+    
+    final notes = [
+      if (audioCues.isNotEmpty) 'Delivery cues: ${audioCues.join(', ')}.',
+    ].join(' ');
+
+    return QwenTtsAttributes(
+      text: practicePrompt,
+      voice: voiceProfile.voice,
+      languageType: voiceProfile.languageType,
+      instructions: notes.isEmpty ? null : notes,
+      optimizeInstructions: notes.isNotEmpty,
+    );
+  }
 
   @override
   List<Object?> get props => [
@@ -405,6 +459,7 @@ class VoiceExercise extends Equatable {
     practicePrompt,
     audioCues,
     speech,
+    tts,
   ];
 }
 
@@ -436,4 +491,138 @@ class VoicePronunciationTip extends Equatable {
 
   @override
   List<Object?> get props => [category, tip, examples];
+}
+
+/// Qwen TTS attributes that can be directly passed to the TTS API.
+/// Matches the backend QwenTtsAttributes schema.
+class QwenTtsAttributes extends Equatable {
+  const QwenTtsAttributes({
+    required this.text,
+    required this.voice,
+    required this.languageType,
+    this.instructions,
+    this.optimizeInstructions = false,
+  });
+
+  final String text;
+  final String voice;
+  final String languageType;
+  final String? instructions;
+  final bool optimizeInstructions;
+
+  factory QwenTtsAttributes.fromJson(Map<String, dynamic> json) {
+    return QwenTtsAttributes(
+      text: json['text'] as String? ?? '',
+      voice: json['voice'] as String? ?? 'Cherry',
+      languageType:
+          json['languageType'] as String? ??
+          json['language_type'] as String? ??
+          'Auto',
+      instructions: json['instructions'] as String?,
+      optimizeInstructions:
+          json['optimizeInstructions'] as bool? ??
+          json['optimize_instructions'] as bool? ??
+          false,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'text': text,
+    'voice': voice,
+    'language_type': languageType,
+    if (instructions != null && instructions!.isNotEmpty)
+      'instructions': instructions,
+    if (optimizeInstructions) 'optimize_instructions': optimizeInstructions,
+  };
+
+  Map<String, dynamic> toRequestJson({String? model}) => {
+    'model': model ?? 'qwen3-tts-instruct-flash',
+    'voice': voice,
+    'text': text,
+    'language_type': languageType,
+    if (instructions != null && instructions!.isNotEmpty)
+      'instructions': instructions,
+    if (optimizeInstructions) 'optimize_instructions': optimizeInstructions,
+  };
+
+  @override
+  List<Object?> get props => [
+    text,
+    voice,
+    languageType,
+    instructions,
+    optimizeInstructions,
+  ];
+}
+
+/// Lesson-level narrator TTS configuration.
+/// Matches the backend LessonNarratorTts schema.
+class LessonNarratorTts extends Equatable {
+  const LessonNarratorTts({
+    required this.introText,
+    required this.voice,
+    required this.languageType,
+    required this.instructions,
+    this.optimizeInstructions = false,
+  });
+
+  const LessonNarratorTts.empty()
+    : introText = '',
+      voice = '',
+      languageType = '',
+      instructions = '',
+      optimizeInstructions = false;
+
+  final String introText;
+  final String voice;
+  final String languageType;
+  final String instructions;
+  final bool optimizeInstructions;
+
+  factory LessonNarratorTts.fromJson(Map<String, dynamic> json) {
+    if (json.isEmpty) {
+      return const LessonNarratorTts.empty();
+    }
+    return LessonNarratorTts(
+      introText: json['introText'] as String? ??
+          json['intro_text'] as String? ??
+          '',
+      voice: json['voice'] as String? ?? 'Cherry',
+      languageType:
+          json['languageType'] as String? ??
+          json['language_type'] as String? ??
+          'Auto',
+      instructions: json['instructions'] as String? ?? '',
+      optimizeInstructions:
+          json['optimizeInstructions'] as bool? ??
+          json['optimize_instructions'] as bool? ??
+          false,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'intro_text': introText,
+    'voice': voice,
+    'language_type': languageType,
+    'instructions': instructions,
+    if (optimizeInstructions) 'optimize_instructions': optimizeInstructions,
+  };
+
+  Map<String, dynamic> toRequestJson({String? model}) => {
+    'model': model ?? 'qwen3-tts-instruct-flash',
+    'voice': voice,
+    'text': introText,
+    'language_type': languageType,
+    if (instructions.isNotEmpty) 'instructions': instructions,
+    if (optimizeInstructions) 'optimize_instructions': optimizeInstructions,
+  };
+
+  @override
+  List<Object?> get props => [
+    introText,
+    voice,
+    languageType,
+    instructions,
+    optimizeInstructions,
+  ];
 }

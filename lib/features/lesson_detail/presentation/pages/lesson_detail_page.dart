@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
+import 'package:modern_learner_production/core/di/injection.dart';
 import 'package:modern_learner_production/features/exercise/presentation/pages/exercise_page.dart';
 import 'package:modern_learner_production/features/home/data/models/lesson_data.dart';
+import 'package:modern_learner_production/features/lesson_detail/service/voice_lesson_tts_service.dart';
+import 'package:modern_learner_production/features/lesson_detail/domain/entities/voice_lesson_entity.dart';
 
 enum LessonType { voice, school, continueLearning }
 
@@ -41,6 +44,49 @@ class LessonDetailPage extends StatefulWidget {
 }
 
 class _LessonDetailPageState extends State<LessonDetailPage> {
+  late final VoiceLessonTtsService _ttsService;
+  String? _playingVocabId;
+
+  @override
+  void initState() {
+    super.initState();
+    _ttsService = getIt<VoiceLessonTtsService>();
+  }
+
+  @override
+  void dispose() {
+    _ttsService.stop();
+    super.dispose();
+  }
+
+  void _playVocabularyAudio(VocabularyItem vocab) async {
+    final speech = vocab.speech;
+    if (speech == null) {
+      // Build fallback speech attributes if not provided
+      final fallbackSpeech = VoiceSpeechAttributes(
+        provider: 'qwen',
+        model: 'qwen3-tts-instruct-flash',
+        voice: 'Cherry',
+        languageType: 'Auto',
+        text: vocab.word,
+        instructions: 'Clear articulation, steady pace. Pronounce each syllable distinctly.',
+        optimizeInstructions: true,
+      );
+      await _ttsService.playPhrase(
+        playbackId: 'vocab_${vocab.word}',
+        speech: fallbackSpeech,
+      );
+    } else {
+      await _ttsService.playPhrase(
+        playbackId: 'vocab_${vocab.word}',
+        speech: speech,
+      );
+    }
+    setState(() {
+      _playingVocabId = vocab.word;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -431,13 +477,30 @@ class _LessonDetailPageState extends State<LessonDetailPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      vocab.word,
-                      style: GoogleFonts.spaceGrotesk(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: widget.accentColor,
-                      ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            vocab.word,
+                            style: GoogleFonts.spaceGrotesk(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: widget.accentColor,
+                            ),
+                          ),
+                        ),
+                        // Audio playback button
+                        IconButton(
+                          onPressed: () => _playVocabularyAudio(vocab),
+                          icon: Icon(
+                            _playingVocabId == vocab.word
+                                ? Icons.graphic_eq_rounded
+                                : Icons.volume_up_rounded,
+                            color: widget.accentColor,
+                          ),
+                          tooltip: 'Play pronunciation',
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 4),
                     Text(
