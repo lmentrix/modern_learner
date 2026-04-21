@@ -16,11 +16,12 @@ class VoiceLessonGenerationService {
   final Dio dio;
   final SharedPreferences prefs;
 
-  static const _prefix = 'voice_lesson_v2_';
+  static const _prefix = 'voice_lesson_v3_';
 
   // ── Public API ─────────────────────────────────────────────────────────────
 
   /// Returns a JSON map suitable for storing in `lessons.content.voice_lesson`.
+  /// This method generates lesson content WITH Qwen TTS parameters included.
   Future<Map<String, dynamic>> generateContent({
     required String topic,
     required String language,
@@ -53,6 +54,42 @@ class VoiceLessonGenerationService {
     return result;
   }
 
+  /// Generate voice lesson content WITH pre-generated audio from Qwen TTS.
+  /// 
+  /// This calls the backend's `generate-with-audio` endpoint which:
+  /// 1. Generates the structured lesson content via AI
+  /// 2. Synthesizes audio for all phrases and exercises using Qwen TTS
+  /// 3. Returns everything in one response
+  /// 
+  /// Returns a map containing both the lesson content and pre-generated audio.
+  Future<Map<String, dynamic>> generateContentWithAudio({
+    required String topic,
+    required String language,
+    required String level,
+    required String nativeLanguage,
+  }) async {
+    try {
+      final response = await dio.post<Map<String, dynamic>>(
+        ApiConstants.voiceLessonGenerateWithAudio,
+        data: {
+          'topic': topic,
+          'language': language,
+          'difficulty': level,
+          'nativeLanguage': nativeLanguage,
+        },
+      );
+      return _unwrapPayload(response.data);
+    } catch (e) {
+      // Fall back to content-only generation if audio generation fails
+      return generateContent(
+        topic: topic,
+        language: language,
+        level: level,
+        nativeLanguage: nativeLanguage,
+      );
+    }
+  }
+
   // ── Helpers ────────────────────────────────────────────────────────────────
 
   String _cacheKey(
@@ -66,6 +103,7 @@ class VoiceLessonGenerationService {
   );
 
   /// Builds locally-generated template content when the AI API is unavailable.
+  /// This template now includes Qwen TTS parameters for each phrase and exercise.
   Map<String, dynamic> _buildTemplate({
     required String topic,
     required String language,
@@ -74,6 +112,18 @@ class VoiceLessonGenerationService {
     final color = _colorForLanguage(language);
     final emoji = _emojiForTopic(topic);
     final voiceProfile = _buildVoiceProfile(language, level);
+    final languageType = _languageTypeFor(language);
+    final voice = level.toLowerCase() == 'beginner' ? 'Serena' : 'Cherry';
+
+    // Build narrator TTS
+    final narratorTts = {
+      'introText':
+          'Welcome to this $language lesson about $topic. Let\'s practice some useful phrases.',
+      'voice': voice,
+      'languageType': languageType,
+      'instructions': 'Warm, welcoming, and clear. Encouraging tone for learners.',
+      'optimizeInstructions': true,
+    };
 
     final phrases = <Map<String, dynamic>>[
       {
@@ -90,6 +140,14 @@ class VoiceLessonGenerationService {
           instructions:
               'Speak clearly and encouragingly. Gentle opening, slight pause after excuse me.',
         ),
+        'tts': {
+          'text': 'Excuse me, could you help me with $topic?',
+          'voice': voice,
+          'languageType': languageType,
+          'instructions':
+              'Gentle opening, slight pause after excuse me. Clear and encouraging for learners.',
+          'optimizeInstructions': true,
+        },
       },
       {
         'id': 'p2',
@@ -104,6 +162,13 @@ class VoiceLessonGenerationService {
           text: 'I\'d like to know more about this.',
           instructions: 'Use a warm, curious tone with steady pacing.',
         ),
+        'tts': {
+          'text': 'I\'d like to know more about this.',
+          'voice': voice,
+          'languageType': languageType,
+          'instructions': 'Warm, curious tone with steady pacing.',
+          'optimizeInstructions': true,
+        },
       },
       {
         'id': 'p3',
@@ -117,6 +182,13 @@ class VoiceLessonGenerationService {
           text: 'Thank you so much for your help.',
           instructions: 'Sound grateful and warm with a soft ending.',
         ),
+        'tts': {
+          'text': 'Thank you so much for your help.',
+          'voice': voice,
+          'languageType': languageType,
+          'instructions': 'Grateful and warm with a soft ending.',
+          'optimizeInstructions': true,
+        },
       },
       {
         'id': 'p4',
@@ -132,6 +204,14 @@ class VoiceLessonGenerationService {
           instructions:
               'Use polite rising intonation on repeat and a gentle finish.',
         ),
+        'tts': {
+          'text': 'Could you repeat that, please?',
+          'voice': voice,
+          'languageType': languageType,
+          'instructions':
+              'Polite rising intonation on repeat, gentle finish.',
+          'optimizeInstructions': true,
+        },
       },
       {
         'id': 'p5',
@@ -145,6 +225,13 @@ class VoiceLessonGenerationService {
           text: 'That sounds great, I\'ll try it!',
           instructions: 'Use brighter energy and stress the word great.',
         ),
+        'tts': {
+          'text': 'That sounds great, I\'ll try it!',
+          'voice': voice,
+          'languageType': languageType,
+          'instructions': 'Brighter energy, stress the word great.',
+          'optimizeInstructions': true,
+        },
       },
     ];
 
@@ -166,6 +253,13 @@ class VoiceLessonGenerationService {
           text: 'Excuse me, could you help me with $topic?',
           instructions: 'Friendly tone with clear pronunciation for learners.',
         ),
+        'tts': {
+          'text': 'Excuse me, could you help me with $topic?',
+          'voice': voice,
+          'languageType': languageType,
+          'instructions': 'Friendly tone, clear pronunciation for learners.',
+          'optimizeInstructions': true,
+        },
       },
       {
         'id': 'ex2',
@@ -184,6 +278,13 @@ class VoiceLessonGenerationService {
           text: 'Could you repeat that, please?',
           instructions: 'Make it sound polite with a small rise on repeat.',
         ),
+        'tts': {
+          'text': 'Could you repeat that, please?',
+          'voice': voice,
+          'languageType': languageType,
+          'instructions': 'Polite with a small rise on repeat.',
+          'optimizeInstructions': true,
+        },
       },
       {
         'id': 'ex3',
@@ -203,6 +304,13 @@ class VoiceLessonGenerationService {
           text: 'Thank you so much for your help.',
           instructions: 'Warm delivery with a soft closing tone.',
         ),
+        'tts': {
+          'text': 'Thank you so much for your help.',
+          'voice': voice,
+          'languageType': languageType,
+          'instructions': 'Warm delivery with soft closing tone.',
+          'optimizeInstructions': true,
+        },
       },
     ];
 
@@ -219,6 +327,7 @@ class VoiceLessonGenerationService {
       'level': level,
       'ai_generated': true,
       'voice_profile': voiceProfile,
+      'narrator_tts': narratorTts,
       'phrases': phrases,
       'exercises': exercises,
       'pronunciation_tips': [

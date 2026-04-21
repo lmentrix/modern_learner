@@ -1,3 +1,5 @@
+import 'package:modern_learner_production/features/lesson_detail/domain/entities/voice_lesson_entity.dart';
+
 /// Vocabulary item model
 class VocabularyItem {
 
@@ -9,6 +11,7 @@ class VocabularyItem {
     required this.exampleSentence,
     required this.exampleTranslation,
     required this.memoryTip,
+    this.speech,
   });
   final String word;
   final String pronunciation;
@@ -17,6 +20,33 @@ class VocabularyItem {
   final String exampleSentence;
   final String exampleTranslation;
   final String memoryTip;
+  final VoiceSpeechAttributes? speech;
+
+  factory VocabularyItem.fromJson(Map<String, dynamic> json) {
+    return VocabularyItem(
+      word: json['word'] as String? ?? '',
+      pronunciation: json['pronunciation'] as String? ?? '',
+      translation: json['translation'] as String? ?? '',
+      partOfSpeech: json['partOfSpeech'] as String? ?? json['part_of_speech'] as String? ?? '',
+      exampleSentence: json['exampleSentence'] as String? ?? json['example_sentence'] as String? ?? '',
+      exampleTranslation: json['exampleTranslation'] as String? ?? json['example_translation'] as String? ?? '',
+      memoryTip: json['memoryTip'] as String? ?? json['memory_tip'] as String? ?? '',
+      speech: json['speech'] != null
+          ? VoiceSpeechAttributes.fromJson(json['speech'] as Map<String, dynamic>)
+          : null,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'word': word,
+    'pronunciation': pronunciation,
+    'translation': translation,
+    'part_of_speech': partOfSpeech,
+    'example_sentence': exampleSentence,
+    'example_translation': exampleTranslation,
+    'memory_tip': memoryTip,
+    if (speech != null) 'speech': speech!.toJson(),
+  };
 }
 
 /// Practice exercise item

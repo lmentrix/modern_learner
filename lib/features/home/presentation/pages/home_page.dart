@@ -20,6 +20,7 @@ import 'package:modern_learner_production/features/home/presentation/widgets/voi
 import 'package:modern_learner_production/features/explore/service/explore_courses_service.dart';
 import 'package:modern_learner_production/features/progress/domain/entities/progress_course_selection.dart';
 import 'package:modern_learner_production/features/progress/service/progress_navigation_state.dart';
+import 'package:modern_learner_production/features/progress/service/user_courses_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -30,15 +31,17 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   final _scrollCtrl = ScrollController();
+  late final UserCoursesService _userCoursesService;
 
   LessonRefreshNotifier? _lessonRefreshNotifier;
   RealtimeChannel? _lessonsChannel;
   List<_SupabaseLesson> _fetchedLessons = [];
-  bool _isLoadingLessons = true;
+  bool _isLoadingLessons = false;
 
   @override
   void initState() {
     super.initState();
+    _userCoursesService = getIt<UserCoursesService>();
     WidgetsBinding.instance.addObserver(this);
     if (getIt.isRegistered<LessonRefreshNotifier>()) {
       _lessonRefreshNotifier = getIt<LessonRefreshNotifier>()
@@ -311,6 +314,107 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     }
   }
 
+  void _showDeleteConfirmation(ProgressCourseSelection course) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.surfaceContainerHigh,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.red.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                Icons.delete_outline_rounded,
+                color: Colors.red,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Delete Course?',
+                style: GoogleFonts.spaceGrotesk(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.onSurface,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          'Are you sure you want to delete "${course.topic}"?\n\nThis will remove the course from your continue learning list, but your progress will be saved if you create it again.',
+          style: GoogleFonts.inter(
+            fontSize: 14,
+            color: AppColors.onSurfaceVariant,
+            height: 1.5,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            ),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.onSurfaceVariant,
+              ),
+            ),
+          ),
+          FilledButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await _deleteCourse(course);
+            },
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            ),
+            child: Text(
+              'Delete',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _deleteCourse(ProgressCourseSelection course) async {
+    await _userCoursesService.deleteCourse(course);
+    // The course list will automatically refresh via ExploreCoursesService
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Deleted "${course.topic}"'),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          backgroundColor: AppColors.surfaceContainerHigh,
+          action: SnackBarAction(
+            label: 'Undo',
+            textColor: AppColors.primary,
+            onPressed: () async {
+              await _userCoursesService.upsertCourse(course);
+            },
+          ),
+        ),
+      );
+    }
+  }
+
   void _openVoiceLessonDetail(_VoiceLesson lesson) {
     Navigator.push(
       context,
@@ -498,20 +602,23 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                 .map(
                   (course) => Padding(
                     padding: const EdgeInsets.only(bottom: 12),
-                    child: LessonCard(
-                      emoji: '🎓',
-                      title: course.topic,
-                      chapter: course.title,
-                      duration: course.level,
-                      progress: 0.0,
-                      accentColor: AppColors.primary,
-                      isNew: !course.roadmapGenerated,
-                      lessonType: course.roadmapGenerated
-                          ? (course.title == 'Languages'
-                              ? 'language'
-                              : 'school')
-                          : null,
-                      onTap: () => context.go(Routes.progress, extra: course),
+                    child: GestureDetector(
+                      onLongPress: () => _showDeleteConfirmation(course),
+                      child: LessonCard(
+                        emoji: '🎓',
+                        title: course.topic,
+                        chapter: course.title,
+                        duration: course.level,
+                        progress: 0.0,
+                        accentColor: AppColors.primary,
+                        isNew: !course.roadmapGenerated,
+                        lessonType: course.roadmapGenerated
+                            ? (course.title == 'Languages'
+                                ? 'language'
+                                : 'school')
+                            : null,
+                        onTap: () => context.go(Routes.progress, extra: course),
+                      ),
                     ),
                   ),
                 )
