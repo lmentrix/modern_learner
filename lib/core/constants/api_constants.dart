@@ -4,6 +4,15 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 abstract final class ApiConstants {
   static String get baseUrl {
     final raw = dotenv.env['BASE_URL'] ?? '';
+    return _normalizeBaseUrl(raw);
+  }
+
+  static String get roadmapBaseUrl {
+    final raw = dotenv.env['ROADMAP_BASE_URL'] ?? baseUrl;
+    return _normalizeBaseUrl(raw);
+  }
+
+  static String _normalizeBaseUrl(String raw) {
     if (raw.isEmpty || kIsWeb) return raw;
 
     final uri = Uri.tryParse(raw);
@@ -18,6 +27,14 @@ abstract final class ApiConstants {
     return raw;
   }
 
+  static String _joinUrl(String base, String path) {
+    if (base.isEmpty) return path;
+    final normalizedBase = base.endsWith('/')
+        ? base.substring(0, base.length - 1)
+        : base;
+    return '$normalizedBase$path';
+  }
+
   static String get supabaseUrl => dotenv.env['SUPABASE_URL'] ?? '';
   static String get supabasePublishableKey =>
       dotenv.env['PUBLISHABLE_KEY'] ?? '';
@@ -27,12 +44,20 @@ abstract final class ApiConstants {
   static const Duration sendTimeout = Duration(seconds: 30);
 
   // ── Endpoints ─────────────────────────────────────────────────────────────
-  static const String lessonRoadmapGenerate = '/ai/lesson-roadmap/generate';
-  static const String roadmapGenerate = '/ai/roadmap/generate';
-  static const String voiceCourseRoadmapGenerate =
-      '/ai/voice-course/roadmap/generate';
-  static const String chapterContentGenerate = '/ai/chapter-content/generate';
-  static const String lessonContentGenerate = '/ai/lesson-content/generate';
+  // FastAPI roadmap routes live under their own base URL. Per
+  // `fastapi_backend/README.md`, that base should include `/api/v1`.
+  static String get structuredRoadmapGenerate =>
+      _joinUrl(roadmapBaseUrl, '/structured-roadmap/generate');
+  static String get voiceRoadmapGenerate =>
+      _joinUrl(roadmapBaseUrl, '/voice-roadmap/generate');
+  static String get structuredChapterContentGenerate =>
+      _joinUrl(roadmapBaseUrl, '/structured-roadmap/chapter-content/generate');
+  static String get voiceChapterContentGenerate =>
+      _joinUrl(roadmapBaseUrl, '/voice-roadmap/chapter-content/generate');
+  static String get structuredLessonContentGenerate =>
+      _joinUrl(roadmapBaseUrl, '/structured-roadmap/lesson-content/generate');
+  static String get voiceLessonContentGenerate =>
+      _joinUrl(roadmapBaseUrl, '/voice-roadmap/lesson-content/generate');
   static const String voiceLessonGenerate = '/ai/voice-lesson/generate';
   static const String voiceLessonGenerateWithAudio =
       '/ai/voice-lesson/generate-with-audio';

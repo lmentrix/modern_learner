@@ -41,8 +41,7 @@ class LearningSubjectLocalDatasourceImpl
         LearningTopicModel(
           id: 'math-calculus',
           name: 'Calculus',
-          description:
-              'Derivatives, integrals, and the mathematics of change.',
+          description: 'Derivatives, integrals, and the mathematics of change.',
           emoji: '📈',
           difficulty: DifficultyLevel.intermediate,
           estimatedMinutes: 60,
@@ -223,8 +222,7 @@ class LearningSubjectLocalDatasourceImpl
         LearningTopicModel(
           id: 'physics-optics',
           name: 'Optics & Waves',
-          description:
-              'Light, lenses, diffraction, and wave behavior.',
+          description: 'Light, lenses, diffraction, and wave behavior.',
           emoji: '🔭',
           difficulty: DifficultyLevel.intermediate,
           estimatedMinutes: 45,
@@ -325,8 +323,7 @@ class LearningSubjectLocalDatasourceImpl
         LearningTopicModel(
           id: 'bio-genetics',
           name: 'Genetics & Genomics',
-          description:
-              'DNA, inheritance, mutation, and the human genome.',
+          description: 'DNA, inheritance, mutation, and the human genome.',
           emoji: '🧬',
           difficulty: DifficultyLevel.intermediate,
           estimatedMinutes: 55,
@@ -361,8 +358,7 @@ class LearningSubjectLocalDatasourceImpl
         LearningTopicModel(
           id: 'bio-microbiology',
           name: 'Microbiology',
-          description:
-              'Bacteria, viruses, fungi, and microscopic life.',
+          description: 'Bacteria, viruses, fungi, and microscopic life.',
           emoji: '🦠',
           difficulty: DifficultyLevel.intermediate,
           estimatedMinutes: 50,
@@ -385,8 +381,7 @@ class LearningSubjectLocalDatasourceImpl
         LearningTopicModel(
           id: 'eng-civil',
           name: 'Civil Engineering',
-          description:
-              'Structures, bridges, roads, and infrastructure design.',
+          description: 'Structures, bridges, roads, and infrastructure design.',
           emoji: '🏗️',
           difficulty: DifficultyLevel.intermediate,
           estimatedMinutes: 50,
@@ -403,8 +398,7 @@ class LearningSubjectLocalDatasourceImpl
         LearningTopicModel(
           id: 'eng-electrical',
           name: 'Electrical Engineering',
-          description:
-              'Circuits, signals, power systems, and electronics.',
+          description: 'Circuits, signals, power systems, and electronics.',
           emoji: '⚡',
           difficulty: DifficultyLevel.intermediate,
           estimatedMinutes: 55,
@@ -481,8 +475,7 @@ class LearningSubjectLocalDatasourceImpl
         LearningTopicModel(
           id: 'hist-world-wars',
           name: 'World Wars',
-          description:
-              'WWI, WWII, causes, battles, and global consequences.',
+          description: 'WWI, WWII, causes, battles, and global consequences.',
           emoji: '🕊️',
           difficulty: DifficultyLevel.intermediate,
           estimatedMinutes: 55,
@@ -541,8 +534,7 @@ class LearningSubjectLocalDatasourceImpl
         LearningTopicModel(
           id: 'phil-epistemology',
           name: 'Epistemology',
-          description:
-              'The nature, sources, and limits of human knowledge.',
+          description: 'The nature, sources, and limits of human knowledge.',
           emoji: '💭',
           difficulty: DifficultyLevel.intermediate,
           estimatedMinutes: 50,
@@ -628,8 +620,7 @@ class LearningSubjectLocalDatasourceImpl
         LearningTopicModel(
           id: 'lit-world',
           name: 'World Literature',
-          description:
-              'Voices from Africa, Asia, Latin America, and beyond.',
+          description: 'Voices from Africa, Asia, Latin America, and beyond.',
           emoji: '🌍',
           difficulty: DifficultyLevel.intermediate,
           estimatedMinutes: 50,
@@ -1007,8 +998,7 @@ class LearningSubjectLocalDatasourceImpl
   @override
   Future<List<LearningSubjectModel>> getByCategory(
     SubjectCategory category,
-  ) async =>
-      _catalog.where((s) => s.categoryEnum == category).toList();
+  ) async => _catalog.where((s) => s.categoryEnum == category).toList();
 
   @override
   Future<List<LearningSubjectModel>> search(String query) async {

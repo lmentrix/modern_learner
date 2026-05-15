@@ -1,9 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:modern_learner_production/core/models/progress_course_selection.dart';
 import 'package:modern_learner_production/core/supabase/supabase_service.dart';
-import 'package:modern_learner_production/features/progress/domain/entities/progress_course_selection.dart';
-import 'package:modern_learner_production/features/progress/service/user_courses_service.dart';
+import 'package:modern_learner_production/features/explore/service/user_courses_service.dart';
 
 /// Holds courses created from the Explore page and mirrors them to Supabase.
 ///
@@ -29,8 +29,9 @@ class ExploreCoursesService {
     }
   }
 
-  final ValueNotifier<List<ProgressCourseSelection>> courses =
-      ValueNotifier(const []);
+  final ValueNotifier<List<ProgressCourseSelection>> courses = ValueNotifier(
+    const [],
+  );
 
   /// Injected after DI is ready. Safe to call before injection — Supabase
   /// operations simply no-op when [_remote] is null.
@@ -58,17 +59,27 @@ class ExploreCoursesService {
   }
 
   Future<void> removeCourse(ProgressCourseSelection course) async {
-    courses.value =
-        courses.value.where((c) => c != course).toList(growable: false);
+    courses.value = courses.value
+        .where((c) => c != course)
+        .toList(growable: false);
     await _remote?.deleteCourse(course);
   }
 
+  Future<List<ProgressCourseSelection>> removeAllCourses() async {
+    final previous = List<ProgressCourseSelection>.from(courses.value);
+    courses.value = const [];
+    await _remote?.deleteAllCourses();
+    return previous;
+  }
+
   void markRoadmapGenerated(ProgressCourseSelection course) {
-    courses.value = courses.value.map((c) {
-      if (c.title == course.title && c.topic == course.topic) {
-        return c.copyWith(roadmapGenerated: true);
-      }
-      return c;
-    }).toList(growable: false);
+    courses.value = courses.value
+        .map((c) {
+          if (c.title == course.title && c.topic == course.topic) {
+            return c.copyWith(roadmapGenerated: true);
+          }
+          return c;
+        })
+        .toList(growable: false);
   }
 }

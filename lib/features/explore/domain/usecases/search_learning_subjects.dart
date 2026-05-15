@@ -6,6 +6,5 @@ class SearchLearningSubjects {
 
   final LearningSubjectRepository _repository;
 
-  Future<List<LearningSubject>> call(String query) =>
-      _repository.search(query);
+  Future<List<LearningSubject>> call(String query) => _repository.search(query);
 }
