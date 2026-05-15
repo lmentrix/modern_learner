@@ -7,18 +7,19 @@ import 'package:modern_learner_production/core/supabase/supabase_service.dart';
 import 'package:modern_learner_production/features/app/presentation/widgets/main_layout.dart';
 import 'package:modern_learner_production/features/auth/presentation/pages/login_page.dart';
 import 'package:modern_learner_production/features/auth/presentation/pages/signup_page.dart';
+import 'package:modern_learner_production/features/explore/data/create_course_args.dart';
 import 'package:modern_learner_production/features/explore/domain/entities/learning_subject.dart';
-import 'package:modern_learner_production/features/explore/presentation/pages/create_course_page.dart';
-import 'package:modern_learner_production/features/explore/presentation/pages/explore_page.dart';
-import 'package:modern_learner_production/features/explore/presentation/pages/learning_subject_detail_page.dart';
-import 'package:modern_learner_production/features/home/domain/entities/achievement_entity.dart';
-import 'package:modern_learner_production/features/home/presentation/pages/achievements_detail.dart';
-import 'package:modern_learner_production/features/home/presentation/pages/achievements_page.dart';
-import 'package:modern_learner_production/features/home/presentation/pages/home_page.dart';
-import 'package:modern_learner_production/features/home/presentation/pages/view_profile_page.dart';
-import 'package:modern_learner_production/features/profile/presentation/pages/profile_page.dart';
-import 'package:modern_learner_production/features/progress/domain/entities/progress_course_selection.dart';
-import 'package:modern_learner_production/features/progress/presentation/pages/progress_page.dart';
+import 'package:modern_learner_production/features/explore/view/pages/create_course_page.dart';
+import 'package:modern_learner_production/features/explore/view/pages/explore_page.dart';
+import 'package:modern_learner_production/features/explore/view/pages/learning_subject_detail_page.dart';
+import 'package:modern_learner_production/features/home/data/achievement_entity.dart';
+import 'package:modern_learner_production/features/home/view/pages/achievements_detail.dart';
+import 'package:modern_learner_production/features/home/view/pages/achievements_page.dart';
+import 'package:modern_learner_production/features/home/view/pages/home_page.dart';
+import 'package:modern_learner_production/features/home/view/pages/view_profile_page.dart';
+import 'package:modern_learner_production/features/profile/view/pages/profile_page.dart';
+import 'package:modern_learner_production/core/models/progress_course_selection.dart';
+import 'package:modern_learner_production/features/progress/view/progress_page.dart';
 
 // ── Route paths ──────────────────────────────────────────────────────────────
 
@@ -48,8 +49,9 @@ abstract final class Routes {
 abstract final class AppRouter {
   static final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
-  static final _authRefresh =
-      _GoRouterRefreshStream(SupabaseService.authStateChanges);
+  static final _authRefresh = _GoRouterRefreshStream(
+    SupabaseService.authStateChanges,
+  );
 
   static final router = GoRouter(
     navigatorKey: _rootNavigatorKey,
@@ -140,7 +142,7 @@ abstract final class AppRouter {
           ),
           GoRoute(
             path: Routes.progress,
-            builder: (context, state) => ProgressPage(
+            builder: (context, state) => ProgressViewPage(
               initialCourseSelection: state.extra is ProgressCourseSelection
                   ? state.extra as ProgressCourseSelection
                   : null,
@@ -151,21 +153,21 @@ abstract final class AppRouter {
     ],
   );
 
-  static CustomTransitionPage<void> _slideUp(LocalKey key, Widget child) =>
-      CustomTransitionPage<void>(
-        key: key,
-        child: child,
-        transitionsBuilder: (context, animation, secondaryAnimation, child) =>
-            SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(0, 1),
-                end: Offset.zero,
-              ).animate(
+  static CustomTransitionPage<void> _slideUp(
+    LocalKey key,
+    Widget child,
+  ) => CustomTransitionPage<void>(
+    key: key,
+    child: child,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+        SlideTransition(
+          position: Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
+              .animate(
                 CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
               ),
-              child: child,
-            ),
-      );
+          child: child,
+        ),
+  );
 }
 
 // ── Auth refresh notifier ─────────────────────────────────────────────────────

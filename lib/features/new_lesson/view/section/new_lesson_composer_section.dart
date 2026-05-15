@@ -1,0 +1,97 @@
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
+import 'package:modern_learner_production/core/models/progress_course_selection.dart';
+import 'package:modern_learner_production/core/router/app_router.dart';
+import 'package:modern_learner_production/core/theme/app_colors.dart';
+import 'package:modern_learner_production/features/explore/service/explore_courses_service.dart';
+import 'package:modern_learner_production/features/new_lesson/data/new_lesson_page_data.dart';
+import 'package:modern_learner_production/features/new_lesson/view/section/new_lesson_action_section.dart';
+import 'package:modern_learner_production/features/new_lesson/view/section/new_lesson_difficulty_section.dart';
+import 'package:modern_learner_production/features/new_lesson/view/section/new_lesson_header_section.dart';
+import 'package:modern_learner_production/features/new_lesson/view/section/new_lesson_language_section.dart';
+import 'package:modern_learner_production/features/new_lesson/view/section/new_lesson_preview_section.dart';
+
+class NewLessonComposerSection extends StatefulWidget {
+  const NewLessonComposerSection({super.key});
+
+  @override
+  State<NewLessonComposerSection> createState() =>
+      _NewLessonComposerSectionState();
+}
+
+class _NewLessonComposerSectionState extends State<NewLessonComposerSection> {
+  String? _selectedLanguage;
+  String _selectedDifficulty = 'Beginner';
+
+  bool get _canStart => _selectedLanguage != null;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.surface,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          NewLessonHeaderSection(onClose: () => Navigator.of(context).pop()),
+          Expanded(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  NewLessonPreviewSection(
+                    selectedLanguage: _selectedLanguage,
+                    selectedDifficulty: _selectedDifficulty,
+                  ),
+                  const SizedBox(height: 28),
+                  NewLessonLanguageSection(
+                    options: NewLessonPageData.languages,
+                    selectedLanguage: _selectedLanguage,
+                    onLanguageSelected: (value) {
+                      setState(() => _selectedLanguage = value);
+                    },
+                  ),
+                  const SizedBox(height: 28),
+                  NewLessonDifficultySection(
+                    options: NewLessonPageData.difficulties,
+                    selectedDifficulty: _selectedDifficulty,
+                    onDifficultySelected: (value) {
+                      setState(() => _selectedDifficulty = value);
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+          NewLessonActionSection(
+            canStart: _canStart,
+            selectedLanguage: _selectedLanguage,
+            selectedDifficulty: _selectedDifficulty,
+            onStart: () => _onStart(context),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _onStart(BuildContext context) {
+    final router = GoRouter.of(context);
+    final navigator = Navigator.of(context);
+
+    final course = ProgressCourseSelection(
+      title: _selectedLanguage!,
+      topic: _selectedLanguage!,
+      roadmapLanguage: _selectedLanguage!,
+      level: _selectedDifficulty.toLowerCase(),
+      nativeLanguage: 'English',
+      courseType: ProgressCourseType.voice,
+    );
+
+    ExploreCoursesService.instance.addCourse(course);
+
+    navigator.pop();
+    router.go(Routes.progress, extra: course);
+  }
+}
