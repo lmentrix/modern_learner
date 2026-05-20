@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 class ProgressModuleStep {
   const ProgressModuleStep({
     required this.id,
+    required this.chapterNumber,
     required this.icon,
     required this.eyebrow,
     required this.title,
@@ -16,6 +17,7 @@ class ProgressModuleStep {
   });
 
   final String id;
+  final int chapterNumber;
   final String icon;
   final String eyebrow;
   final String title;

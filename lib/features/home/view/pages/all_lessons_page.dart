@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:modern_learner_production/core/router/app_router.dart';
-import 'package:modern_learner_production/core/supabase/supabase_service.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 import 'package:modern_learner_production/features/exercise/models/exercise.dart';
 import 'package:modern_learner_production/features/exercise/pages/exercise_page.dart';
@@ -23,51 +22,7 @@ class AllLessonsPage extends StatefulWidget {
 }
 
 class _AllLessonsPageState extends State<AllLessonsPage> {
-  List<AllLessonsLesson> _lessons = [];
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchLessons();
-  }
-
-  Future<void> _fetchLessons() async {
-    final userId = SupabaseService.currentUser?.id;
-    if (userId == null) {
-      if (mounted) setState(() => _isLoading = false);
-      return;
-    }
-
-    try {
-      final response = await SupabaseService.client
-          .from('lessons')
-          .select(
-            'id, lesson_type, content_type, difficulty, title, status, content',
-          )
-          .eq('user_id', userId)
-          .order('created_at', ascending: false);
-
-      final isVoice = widget.filter == LessonFilter.voice;
-      final all = (response as List)
-          .map((e) => AllLessonsLesson.fromMap(e as Map<String, dynamic>))
-          .where(
-            (l) => isVoice
-                ? l.lessonType == 'language'
-                : l.lessonType != 'language',
-          )
-          .toList();
-
-      if (mounted) {
-        setState(() {
-          _lessons = all;
-          _isLoading = false;
-        });
-      }
-    } catch (_) {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
+  final List<AllLessonsLesson> _lessons = [];
 
   void _openLesson(AllLessonsLesson lesson) {
     if (lesson.lessonType == 'language') {
@@ -109,11 +64,7 @@ class _AllLessonsPageState extends State<AllLessonsPage> {
                 onBackTap: () => Navigator.pop(context),
               ),
             ),
-            if (_isLoading)
-              const SliverFillRemaining(
-                child: Center(child: CircularProgressIndicator()),
-              )
-            else if (_lessons.isEmpty)
+            if (_lessons.isEmpty)
               const SliverFillRemaining(child: AllLessonsEmptyStateSection())
             else ...[
               SliverPadding(
@@ -129,21 +80,21 @@ class _AllLessonsPageState extends State<AllLessonsPage> {
                   itemCount: _lessons.length,
                   separatorBuilder: (_, _) => const SizedBox(height: 12),
                   itemBuilder: (context, i) {
-                    final l = _lessons[i];
+                    final lesson = _lessons[i];
                     return LessonCard(
-                      emoji: l.emoji,
-                      title: l.title,
-                      chapter: l.subtitle,
-                      duration: l.duration,
-                      progress: l.progress,
+                      emoji: lesson.emoji,
+                      title: lesson.title,
+                      chapter: lesson.subtitle,
+                      duration: lesson.duration,
+                      progress: lesson.progress,
                       accentColor: widget.filter == LessonFilter.voice
                           ? AppColors.primary
                           : AppColors.secondary,
-                      isNew: l.status == 'draft',
+                      isNew: lesson.status == 'draft',
                       lessonType: widget.filter == LessonFilter.voice
                           ? 'language'
                           : 'school',
-                      onTap: () => _openLesson(l),
+                      onTap: () => _openLesson(lesson),
                     );
                   },
                 ),

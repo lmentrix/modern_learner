@@ -1,12 +1,8 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:modern_learner_production/core/supabase/supabase_service.dart';
+import 'package:modern_learner_production/core/models/progress_course_selection.dart';
 import 'package:modern_learner_production/features/app/presentation/widgets/main_layout.dart';
-import 'package:modern_learner_production/features/auth/presentation/pages/login_page.dart';
-import 'package:modern_learner_production/features/auth/presentation/pages/signup_page.dart';
 import 'package:modern_learner_production/features/explore/data/create_course_args.dart';
 import 'package:modern_learner_production/features/explore/domain/entities/learning_subject.dart';
 import 'package:modern_learner_production/features/explore/view/pages/create_course_page.dart';
@@ -18,67 +14,29 @@ import 'package:modern_learner_production/features/home/view/pages/achievements_
 import 'package:modern_learner_production/features/home/view/pages/home_page.dart';
 import 'package:modern_learner_production/features/home/view/pages/view_profile_page.dart';
 import 'package:modern_learner_production/features/profile/view/pages/profile_page.dart';
-import 'package:modern_learner_production/core/models/progress_course_selection.dart';
 import 'package:modern_learner_production/features/progress/view/progress_page.dart';
 
-// ── Route paths ──────────────────────────────────────────────────────────────
-
 abstract final class Routes {
-  // Auth
-  static const login = '/login';
-  static const signup = '/signup';
-
-  // Shell (bottom nav)
   static const home = '/';
   static const explore = '/explore';
   static const progress = '/progress';
   static const profile = '/profile';
 
-  // Full-screen (no bottom nav)
   static const viewProfile = '/view-profile';
   static const achievements = '/achievements';
   static const achievementDetail = '/achievement-detail';
   static const learningSubjectDetail = '/learning-subject-detail';
   static const createCourse = '/create-course';
-
-  static const _publicRoutes = {login, signup};
 }
-
-// ── Router ───────────────────────────────────────────────────────────────────
 
 abstract final class AppRouter {
   static final _rootNavigatorKey = GlobalKey<NavigatorState>();
-
-  static final _authRefresh = _GoRouterRefreshStream(
-    SupabaseService.authStateChanges,
-  );
 
   static final router = GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: Routes.home,
     debugLogDiagnostics: false,
-    refreshListenable: _authRefresh,
-    redirect: (context, state) {
-      final signedIn = SupabaseService.isSignedIn;
-      final onPublic = Routes._publicRoutes.contains(state.matchedLocation);
-      if (!signedIn && !onPublic) return Routes.login;
-      if (signedIn && onPublic) return Routes.home;
-      return null;
-    },
     routes: [
-      // ── Auth ──────────────────────────────────────────────────────────────
-      GoRoute(
-        path: Routes.login,
-        parentNavigatorKey: _rootNavigatorKey,
-        builder: (context, state) => const LoginPage(),
-      ),
-      GoRoute(
-        path: Routes.signup,
-        parentNavigatorKey: _rootNavigatorKey,
-        builder: (context, state) => const SignupPage(),
-      ),
-
-      // ── Full-screen (no bottom nav) ────────────────────────────────────────
       GoRoute(
         path: Routes.viewProfile,
         parentNavigatorKey: _rootNavigatorKey,
@@ -118,10 +76,9 @@ abstract final class AppRouter {
           );
         },
       ),
-      // ── Shell (bottom nav) ────────────────────────────────────────────────
       ShellRoute(
         builder: (context, state, child) {
-          int idx = 0;
+          var idx = 0;
           if (state.matchedLocation == Routes.explore) idx = 1;
           if (state.matchedLocation == Routes.progress) idx = 3;
           if (state.matchedLocation == Routes.profile) idx = 4;
@@ -168,23 +125,4 @@ abstract final class AppRouter {
           child: child,
         ),
   );
-}
-
-// ── Auth refresh notifier ─────────────────────────────────────────────────────
-
-/// Converts any [Stream] into a [ChangeNotifier] for GoRouter's
-/// [refreshListenable]. Notifies listeners on every stream event so the
-/// redirect guard re-evaluates when the auth state changes.
-class _GoRouterRefreshStream extends ChangeNotifier {
-  _GoRouterRefreshStream(Stream<dynamic> stream) {
-    _sub = stream.listen((_) => notifyListeners());
-  }
-
-  late final StreamSubscription<dynamic> _sub;
-
-  @override
-  void dispose() {
-    _sub.cancel();
-    super.dispose();
-  }
 }

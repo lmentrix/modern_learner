@@ -52,9 +52,9 @@ abstract final class ProfilePageData {
 
   static const faqs = <ProfileFaqItem>[
     ProfileFaqItem(
-      question: 'How do I reset my password?',
+      question: 'How is my profile saved?',
       answer:
-          'Go to the login screen and tap "Forgot Password". We will send a reset link to your registered email address.',
+          'Profile changes are stored on this device, so your name and preferences stay available the next time you open the app.',
     ),
     ProfileFaqItem(
       question: 'How does the streak system work?',

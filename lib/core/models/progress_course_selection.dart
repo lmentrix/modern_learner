@@ -44,6 +44,7 @@ class ProgressCourseSelection extends Equatable {
   final ProgressCourseType courseType;
 
   ProgressCourseSelection copyWith({
+    Map<String, dynamic>? roadmapJson,
     bool? roadmapGenerated,
     ProgressCourseType? courseType,
   }) {
@@ -53,7 +54,7 @@ class ProgressCourseSelection extends Equatable {
       roadmapLanguage: roadmapLanguage,
       level: level,
       nativeLanguage: nativeLanguage,
-      roadmapJson: roadmapJson,
+      roadmapJson: roadmapJson ?? this.roadmapJson,
       roadmapGenerated: roadmapGenerated ?? this.roadmapGenerated,
       courseType: courseType ?? this.courseType,
     );

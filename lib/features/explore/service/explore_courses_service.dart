@@ -1,85 +1,79 @@
 import 'package:flutter/foundation.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:modern_learner_production/core/models/progress_course_selection.dart';
-import 'package:modern_learner_production/core/supabase/supabase_service.dart';
 import 'package:modern_learner_production/features/explore/service/user_courses_service.dart';
 
-/// Holds courses created from the Explore page and mirrors them to Supabase.
-///
-/// [courses] drives the Home page UI via [ValueNotifier]. All write operations
-/// are optimistically applied to [courses] first, then persisted via
-/// [UserCoursesService]. Automatically loads/clears on auth state changes.
+/// Holds courses created from the Explore page and mirrors them to local
+/// storage.
 class ExploreCoursesService {
-  ExploreCoursesService._() {
-    SupabaseService.authStateChanges.listen(_onAuthStateChange);
-  }
+  ExploreCoursesService._();
 
   static final ExploreCoursesService instance = ExploreCoursesService._();
-
-  void _onAuthStateChange(AuthState authState) {
-    switch (authState.event) {
-      case AuthChangeEvent.signedIn:
-      case AuthChangeEvent.initialSession:
-        loadCourses();
-      case AuthChangeEvent.signedOut:
-        courses.value = const [];
-      default:
-        break;
-    }
-  }
 
   final ValueNotifier<List<ProgressCourseSelection>> courses = ValueNotifier(
     const [],
   );
 
-  /// Injected after DI is ready. Safe to call before injection — Supabase
-  /// operations simply no-op when [_remote] is null.
-  UserCoursesService? _remote;
+  UserCoursesService? _storage;
 
-  void injectRemote(UserCoursesService service) => _remote = service;
+  void injectRemote(UserCoursesService service) => _storage = service;
 
-  // ── Public API ─────────────────────────────────────────────────────────────
-
-  /// Loads persisted courses from Supabase. Call once when the user is ready.
   Future<void> loadCourses() async {
-    final fetched = await _remote?.fetchCourses() ?? [];
-    if (fetched.isNotEmpty) courses.value = fetched;
+    courses.value = await _storage?.fetchCourses() ?? const [];
   }
 
   Future<void> addCourse(ProgressCourseSelection course) async {
     final current = courses.value;
-    final duplicate = current.any(
-      (c) => c.title == course.title && c.topic == course.topic,
-    );
+    final duplicate = current.any((c) => _matches(c, course));
     if (duplicate) return;
 
-    courses.value = [course, ...current]; // optimistic
-    await _remote?.upsertCourse(course);
+    courses.value = [course, ...current];
+    await _storage?.upsertCourse(course);
+  }
+
+  Future<void> updateCourse(ProgressCourseSelection course) async {
+    final current = List<ProgressCourseSelection>.from(courses.value);
+    final index = current.indexWhere((saved) => _matches(saved, course));
+
+    if (index >= 0) {
+      current[index] = course;
+    } else {
+      current.insert(0, course);
+    }
+
+    courses.value = current;
+    await _storage?.upsertCourse(course);
   }
 
   Future<void> removeCourse(ProgressCourseSelection course) async {
     courses.value = courses.value
         .where((c) => c != course)
         .toList(growable: false);
-    await _remote?.deleteCourse(course);
+    await _storage?.deleteCourse(course);
   }
 
   Future<List<ProgressCourseSelection>> removeAllCourses() async {
     final previous = List<ProgressCourseSelection>.from(courses.value);
     courses.value = const [];
-    await _remote?.deleteAllCourses();
+    await _storage?.deleteAllCourses();
     return previous;
   }
 
   void markRoadmapGenerated(ProgressCourseSelection course) {
     courses.value = courses.value
         .map((c) {
-          if (c.title == course.title && c.topic == course.topic) {
+          if (_matches(c, course)) {
             return c.copyWith(roadmapGenerated: true);
           }
           return c;
         })
         .toList(growable: false);
+  }
+
+  bool _matches(ProgressCourseSelection left, ProgressCourseSelection right) {
+    return left.title == right.title &&
+        left.topic == right.topic &&
+        left.level == right.level &&
+        left.nativeLanguage == right.nativeLanguage;
   }
 }

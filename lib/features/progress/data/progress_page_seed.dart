@@ -162,6 +162,7 @@ List<ProgressModuleStep> _buildModuleSteps({
     final chapter = chapters[index];
     final lessons = _mapList(chapter['lessons']);
     final lessonCount = lessons.length;
+    final chapterNumber = _chapterNumberFor(chapter, index);
     final progress = index < currentIndex
         ? 1.0
         : index == currentIndex
@@ -171,11 +172,11 @@ List<ProgressModuleStep> _buildModuleSteps({
         : 0.0;
 
     return ProgressModuleStep(
-      id: (chapter['id'] ?? 'chapter_$index').toString(),
+      id: _chapterIdFor(chapter, index),
+      chapterNumber: chapterNumber,
       icon: (chapter['icon'] ?? _defaultIconForCourse(course.courseType))
           .toString(),
-      eyebrow:
-          'CHAPTER ${((chapter['chapterNumber'] as num?)?.toInt() ?? index + 1).toString().padLeft(2, '0')}',
+      eyebrow: 'CHAPTER ${chapterNumber.toString().padLeft(2, '0')}',
       title: _stringValue(chapter['title'], fallback: 'Untitled chapter'),
       detail: _stringValue(
         chapter['description'],
@@ -243,9 +244,10 @@ List<ProgressModuleStep> _fallbackModuleSteps({
 
   return List<ProgressModuleStep>.generate(titles.length, (index) {
     return ProgressModuleStep(
-      id: 'module_${index + 1}',
+      id: 'chapter_${index + 1}',
+      chapterNumber: index + 1,
       icon: _fallbackIcons(course.courseType)[index],
-      eyebrow: 'MODULE ${(index + 1).toString().padLeft(2, '0')}',
+      eyebrow: 'CHAPTER ${(index + 1).toString().padLeft(2, '0')}',
       title: titles[index],
       detail: details[index],
       progress: index < currentIndex
@@ -279,7 +281,8 @@ int _resolveCurrentIndex({
   }
 
   final index = chapters.indexWhere(
-    (chapter) => chapter['id']?.toString() == selectedChapterId,
+    (chapter) =>
+        _chapterIdFor(chapter, chapters.indexOf(chapter)) == selectedChapterId,
   );
   if (index >= 0) {
     return index;
@@ -385,6 +388,25 @@ String _durationLabel(
 String _stringValue(Object? raw, {required String fallback}) {
   final value = raw?.toString().trim() ?? '';
   return value.isEmpty ? fallback : value;
+}
+
+int _chapterNumberFor(Map<String, dynamic> chapter, int index) {
+  final raw = chapter['chapter_number'] ?? chapter['chapterNumber'];
+  if (raw is int && raw > 0) {
+    return raw;
+  }
+  if (raw is num && raw > 0) {
+    return raw.toInt();
+  }
+  return index + 1;
+}
+
+String _chapterIdFor(Map<String, dynamic> chapter, int index) {
+  final rawId = chapter['id']?.toString().trim();
+  if (rawId != null && rawId.isNotEmpty) {
+    return rawId;
+  }
+  return 'chapter_${_chapterNumberFor(chapter, index)}';
 }
 
 String _defaultIconForCourse(ProgressCourseType courseType) {

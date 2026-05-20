@@ -12,12 +12,10 @@ class ProfileAccountSheetSection extends StatelessWidget {
     super.key,
     required this.identity,
     required this.onEditProfileTap,
-    required this.onSignOutTap,
   });
 
   final ProfileIdentity identity;
   final VoidCallback onEditProfileTap;
-  final VoidCallback onSignOutTap;
 
   @override
   Widget build(BuildContext context) {
@@ -120,25 +118,6 @@ class ProfileAccountSheetSection extends StatelessWidget {
                 ),
               ),
               child: const Text('Edit Profile'),
-            ),
-          ),
-          const SizedBox(height: 10),
-          SizedBox(
-            width: double.infinity,
-            height: 48,
-            child: TextButton(
-              onPressed: onSignOutTap,
-              style: TextButton.styleFrom(
-                foregroundColor: AppColors.error,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                textStyle: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              child: const Text('Sign Out'),
             ),
           ),
         ],

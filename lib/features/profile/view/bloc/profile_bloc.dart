@@ -1,26 +1,25 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
+import 'package:modern_learner_production/core/profile/local_profile_service.dart';
 import 'package:modern_learner_production/features/profile/data/profile_entity.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'profile_event.dart';
 part 'profile_state.dart';
 
 class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
-  ProfileBloc() : super(const ProfileState()) {
+  ProfileBloc(this._localProfileService) : super(const ProfileState()) {
     on<ProfileLoadRequested>(_onLoadRequested);
     on<ProfileUpdateRequested>(_onUpdateRequested);
   }
 
+  final LocalProfileService _localProfileService;
+
   ProfileEntity _currentProfile() {
-    final user = Supabase.instance.client.auth.currentUser;
-    final displayName = user?.userMetadata?['name'] as String? ?? 'User';
-    final email = user?.email ?? '';
-    final avatarUrl = user?.userMetadata?['avatar_url'] as String?;
+    final identity = _localProfileService.currentIdentity;
     return ProfileEntity(
-      displayName: displayName,
-      email: email,
-      avatarUrl: avatarUrl,
+      displayName: identity.displayName,
+      email: identity.email,
     );
   }
 
@@ -43,6 +42,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     Emitter<ProfileState> emit,
   ) async {
     emit(state.copyWith(status: ProfileStatus.loading));
+    await _localProfileService.updateProfile(displayName: event.name);
     emit(
       state.copyWith(
         status: ProfileStatus.success,

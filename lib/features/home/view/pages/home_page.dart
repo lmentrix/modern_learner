@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import 'package:modern_learner_production/core/di/injection.dart';
 import 'package:modern_learner_production/core/models/progress_course_selection.dart';
+import 'package:modern_learner_production/core/profile/local_profile_service.dart';
 import 'package:modern_learner_production/core/router/app_router.dart';
 import 'package:modern_learner_production/core/state/progress_navigation_state.dart';
-import 'package:modern_learner_production/core/supabase/supabase_service.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 import 'package:modern_learner_production/features/exercise/models/exercise.dart';
 import 'package:modern_learner_production/features/exercise/pages/exercise_page.dart';
@@ -24,7 +25,7 @@ import 'package:modern_learner_production/features/home/view/widgets/home_sectio
 import 'package:modern_learner_production/features/home/view/widgets/lesson_card.dart';
 import 'package:modern_learner_production/features/home/view/widgets/progress_overview_card.dart';
 import 'package:modern_learner_production/features/home/view/widgets/streak_details_dialog.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:modern_learner_production/features/profile/data/profile_identity.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -33,87 +34,17 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
+class _HomePageState extends State<HomePage> {
   final _scrollCtrl = ScrollController();
+  final _profileService = getIt<LocalProfileService>();
   late final UserCoursesService _userCoursesService;
 
-  RealtimeChannel? _lessonsChannel;
-  List<HomeSupabaseLesson> _fetchedLessons = [];
-  bool _isLoadingLessons = false;
+  final List<HomeSupabaseLesson> _fetchedLessons = [];
 
   @override
   void initState() {
     super.initState();
     _userCoursesService = getIt<UserCoursesService>();
-    WidgetsBinding.instance.addObserver(this);
-    _subscribeToLessonChanges();
-    _fetchLessons(showLoading: true);
-  }
-
-  Future<void> _fetchLessons({bool showLoading = false}) async {
-    if (showLoading && mounted) {
-      setState(() => _isLoadingLessons = true);
-    }
-
-    final userId = SupabaseService.currentUser?.id;
-    if (userId == null) {
-      if (mounted) {
-        setState(() {
-          _fetchedLessons = [];
-          _isLoadingLessons = false;
-        });
-      }
-      return;
-    }
-
-    try {
-      final response = await SupabaseService.client
-          .from('lessons')
-          .select(
-            'id, lesson_type, content_type, difficulty, title, status, content',
-          )
-          .eq('user_id', userId)
-          .neq('status', 'completed')
-          .order('created_at', ascending: false);
-
-      if (mounted) {
-        setState(() {
-          _fetchedLessons = (response as List)
-              .map((e) => HomeSupabaseLesson.fromMap(e as Map<String, dynamic>))
-              .toList();
-          _isLoadingLessons = false;
-        });
-      }
-    } catch (_) {
-      if (mounted) setState(() => _isLoadingLessons = false);
-    }
-  }
-
-  void _subscribeToLessonChanges() {
-    final userId = SupabaseService.currentUser?.id;
-    if (userId == null) return;
-
-    _lessonsChannel = SupabaseService.client
-        .channel('public:lessons:user:$userId')
-        .onPostgresChanges(
-          event: PostgresChangeEvent.all,
-          schema: 'public',
-          table: 'lessons',
-          filter: PostgresChangeFilter(
-            type: PostgresChangeFilterType.eq,
-            column: 'user_id',
-            value: userId,
-          ),
-          callback: (_) => _fetchLessons(),
-        )
-        .subscribe();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      _fetchLessons();
-    }
   }
 
   void _showStreakDetails() {
@@ -124,11 +55,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   }
 
   void _navigateToProgress() {
-    // Set the navigation state to scroll to current chapter
     final navState = getIt<ProgressNavigationState>();
     navState.navigateToChapter('current');
-
-    // Navigate to progress page
     context.go(Routes.progress);
   }
 
@@ -138,9 +66,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (context) {
-        final supaUser = Supabase.instance.client.auth.currentUser;
-        final displayName =
-            supaUser?.userMetadata?['name'] as String? ?? 'User';
+        final displayName = _profileService.currentIdentity.displayName;
 
         return HomeProfileSheet(
           displayName: displayName,
@@ -156,7 +82,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
           },
           onSettingsTap: () {
             Navigator.pop(context);
-            // Navigate to settings
           },
         );
       },
@@ -275,8 +200,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   }
 
   Future<void> _deleteCourse(ProgressCourseSelection course) async {
-    await _userCoursesService.deleteCourse(course);
-    // The course list will automatically refresh via ExploreCoursesService
+    await ExploreCoursesService.instance.removeCourse(course);
     if (mounted) {
       final messengerState = ScaffoldMessenger.of(context);
       messengerState.showSnackBar(
@@ -293,11 +217,11 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
             textColor: AppColors.primary,
             onPressed: () async {
               await _userCoursesService.upsertCourse(course);
+              await ExploreCoursesService.instance.loadCourses();
             },
           ),
         ),
       );
-      // Auto-dismiss after 2 seconds even if action wasn't tapped
       Future.delayed(const Duration(seconds: 2), () {
         if (messengerState.mounted) {
           messengerState.hideCurrentSnackBar();
@@ -355,147 +279,116 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    final lessonsChannel = _lessonsChannel;
-    if (lessonsChannel != null) {
-      SupabaseService.client.removeChannel(lessonsChannel);
-    }
     _scrollCtrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final supaUser = Supabase.instance.client.auth.currentUser;
-    final displayName = supaUser?.userMetadata?['name'] as String? ?? 'User';
-
-    return Container(
-      color: AppColors.surface,
-      child: SafeArea(
-        child: CustomScrollView(
-          controller: _scrollCtrl,
-          physics: const BouncingScrollPhysics(),
-          slivers: [
-            // ── Header ──────────────────────────────────────────────────────
-            SliverToBoxAdapter(
-              child: HomeHeader(
-                displayName: displayName,
-                onAvatarTap: _showProfileQuickView,
-                onStreakTap: _showStreakDetails,
-              ),
-            ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 24)),
-
-            // ── Progress overview ──────────────────────────────────────────
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              sliver: SliverToBoxAdapter(
-                child: ProgressOverviewCard(
-                  level: 8,
-                  xp: 2400,
-                  xpToNext: 3000,
-                  progress: 0.73,
-                  onTap: _navigateToProgress,
+    return ValueListenableBuilder<ProfileIdentity>(
+      valueListenable: _profileService.identityListenable,
+      builder: (context, identity, _) {
+        return Container(
+          color: AppColors.surface,
+          child: SafeArea(
+            child: CustomScrollView(
+              controller: _scrollCtrl,
+              physics: const BouncingScrollPhysics(),
+              slivers: [
+                SliverToBoxAdapter(
+                  child: HomeHeader(
+                    displayName: identity.displayName,
+                    onAvatarTap: _showProfileQuickView,
+                    onStreakTap: _showStreakDetails,
+                  ),
                 ),
-              ),
-            ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 32)),
-
-            // ── Quick start label ──────────────────────────────────────────
-            const SliverPadding(
-              padding: EdgeInsets.symmetric(horizontal: 20),
-              sliver: SliverToBoxAdapter(
-                child: HomeSectionLabel(text: 'QUICK START'),
-              ),
-            ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 14)),
-
-            // ── Quick access to lesson pages ───────────────────────────────
-            SliverToBoxAdapter(
-              child: HomeLessonQuickAccess(
-                onVoiceLessonTap: _openVoiceLessonPage,
-                onSchoolLessonTap: _openSchoolLessonPage,
-              ),
-            ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 32)),
-
-            // ── Continue learning label ────────────────────────────────────
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              sliver: SliverToBoxAdapter(
-                child: HomeContinueLearningHeaderSection(
-                  onDeleteAllTap: _showDeleteAllConfirmation,
+                const SliverToBoxAdapter(child: SizedBox(height: 24)),
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  sliver: SliverToBoxAdapter(
+                    child: ProgressOverviewCard(
+                      level: 8,
+                      xp: 2400,
+                      xpToNext: 3000,
+                      progress: 0.73,
+                      onTap: _navigateToProgress,
+                    ),
+                  ),
                 ),
-              ),
-            ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 14)),
-
-            // ── Explore courses ────────────────────────────────────────────
-            SliverToBoxAdapter(
-              child: HomeCourseList(
-                onCourseTap: (course) =>
-                    context.go(Routes.progress, extra: course),
-                onCourseLongPress: _showDeleteConfirmation,
-              ),
-            ),
-
-            // ── Lesson cards ───────────────────────────────────────────────
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              sliver: _isLoadingLessons
-                  ? const SliverToBoxAdapter(
-                      child: Center(
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(vertical: 24),
-                          child: CircularProgressIndicator(),
-                        ),
-                      ),
-                    )
-                  : _fetchedLessons.isEmpty
-                  ? SliverToBoxAdapter(
-                      child: Center(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 24),
-                          child: Text(
-                            'No lessons yet. Start creating!',
-                            style: GoogleFonts.inter(
-                              fontSize: 14,
-                              color: AppColors.onSurfaceVariant,
+                const SliverToBoxAdapter(child: SizedBox(height: 32)),
+                const SliverPadding(
+                  padding: EdgeInsets.symmetric(horizontal: 20),
+                  sliver: SliverToBoxAdapter(
+                    child: HomeSectionLabel(text: 'QUICK START'),
+                  ),
+                ),
+                const SliverToBoxAdapter(child: SizedBox(height: 14)),
+                SliverToBoxAdapter(
+                  child: HomeLessonQuickAccess(
+                    onVoiceLessonTap: _openVoiceLessonPage,
+                    onSchoolLessonTap: _openSchoolLessonPage,
+                  ),
+                ),
+                const SliverToBoxAdapter(child: SizedBox(height: 32)),
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  sliver: SliverToBoxAdapter(
+                    child: HomeContinueLearningHeaderSection(
+                      onDeleteAllTap: _showDeleteAllConfirmation,
+                    ),
+                  ),
+                ),
+                const SliverToBoxAdapter(child: SizedBox(height: 14)),
+                SliverToBoxAdapter(
+                  child: HomeCourseList(
+                    onCourseTap: (course) =>
+                        context.go(Routes.progress, extra: course),
+                    onCourseLongPress: _showDeleteConfirmation,
+                  ),
+                ),
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  sliver: _fetchedLessons.isEmpty
+                      ? SliverToBoxAdapter(
+                          child: Center(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 24),
+                              child: Text(
+                                'No lessons yet. Start creating!',
+                                style: GoogleFonts.inter(
+                                  fontSize: 14,
+                                  color: AppColors.onSurfaceVariant,
+                                ),
+                              ),
                             ),
                           ),
+                        )
+                      : SliverList.separated(
+                          itemCount: _fetchedLessons.length,
+                          separatorBuilder: (_, _) =>
+                              const SizedBox(height: 12),
+                          itemBuilder: (context, i) {
+                            final lesson = _fetchedLessons[i];
+                            return LessonCard(
+                              emoji: lesson.emoji,
+                              title: lesson.title,
+                              chapter: lesson.subtitle,
+                              duration: lesson.duration,
+                              progress: lesson.progress,
+                              accentColor: lesson.color,
+                              isNew: lesson.status == 'draft',
+                              lessonType: lesson.lessonType,
+                              onTap: () => _openSupabaseLesson(lesson),
+                            );
+                          },
                         ),
-                      ),
-                    )
-                  : SliverList.separated(
-                      itemCount: _fetchedLessons.length,
-                      separatorBuilder: (_, _) => const SizedBox(height: 12),
-                      itemBuilder: (context, i) {
-                        final l = _fetchedLessons[i];
-                        return LessonCard(
-                          emoji: l.emoji,
-                          title: l.title,
-                          chapter: l.subtitle,
-                          duration: l.duration,
-                          progress: l.progress,
-                          accentColor: l.color,
-                          isNew: l.status == 'draft',
-                          lessonType: l.lessonType,
-                          onTap: () => _openSupabaseLesson(l),
-                        );
-                      },
-                    ),
+                ),
+                const SliverToBoxAdapter(child: SizedBox(height: 100)),
+              ],
             ),
-
-            // Add padding for bottom navigation bar
-            const SliverToBoxAdapter(child: SizedBox(height: 100)),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

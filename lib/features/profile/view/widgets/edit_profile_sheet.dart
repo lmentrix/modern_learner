@@ -261,7 +261,7 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'EMAIL',
+          'PROFILE',
           style: GoogleFonts.inter(
             fontSize: 10,
             fontWeight: FontWeight.w700,
@@ -293,7 +293,7 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
               vertical: 14,
             ),
             suffixIcon: const Icon(
-              Icons.lock_outline,
+              Icons.smartphone_rounded,
               size: 18,
               color: AppColors.onSurfaceVariant,
             ),
@@ -301,7 +301,7 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
         ),
         const SizedBox(height: 8),
         Text(
-          'Email cannot be changed',
+          'Profile details are stored on this device.',
           style: GoogleFonts.inter(
             fontSize: 11,
             color: AppColors.onSurfaceVariant,
