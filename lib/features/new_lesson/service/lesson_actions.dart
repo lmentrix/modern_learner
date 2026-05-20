@@ -8,6 +8,8 @@ Future<AddLesson> addLessonService({
   required String title,
   required Map<String, dynamic> content,
   required LessonType lessonType,
+  required String contentType,
+  String difficulty = 'Beginner',
   LessonStatus status = LessonStatus.draft,
 }) async {
   final row = await supabase
@@ -16,7 +18,9 @@ Future<AddLesson> addLessonService({
         'user_id': userId,
         'title': title,
         'content': content,
-        'lesson_type': lessonType.name,
+        'lesson_type': lessonTypeToDb(lessonType),
+        'content_type': contentType,
+        'difficulty': difficulty,
         'status': status.name,
       })
       .select()
@@ -47,6 +51,8 @@ Future<AddLesson> updateLessonService({
   String? title,
   Map<String, dynamic>? content,
   LessonType? lessonType,
+  String? contentType,
+  String? difficulty,
   LessonStatus? status,
 }) async {
   final row = await supabase
@@ -54,7 +60,9 @@ Future<AddLesson> updateLessonService({
       .update({
         if (title != null) 'title': title,
         if (content != null) 'content': content,
-        if (lessonType != null) 'lesson_type': lessonType.name,
+        if (lessonType != null) 'lesson_type': lessonTypeToDb(lessonType),
+        if (contentType != null) 'content_type': contentType,
+        if (difficulty != null) 'difficulty': difficulty,
         if (status != null) 'status': status.name,
         'updated_at': DateTime.now().toIso8601String(),
       })
