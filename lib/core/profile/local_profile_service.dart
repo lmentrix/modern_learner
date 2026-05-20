@@ -58,9 +58,7 @@ class LocalProfileService {
 
   static String _sanitize(String? value, {required String fallback}) {
     final trimmed = value?.trim();
-    if (trimmed == null || trimmed.isEmpty) {
-      return fallback;
-    }
+    if (trimmed == null || trimmed.isEmpty) return fallback;
     return trimmed;
   }
 }

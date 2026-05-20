@@ -1,19 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-
 import 'package:modern_learner_production/core/di/injection.dart';
 import 'package:modern_learner_production/core/models/progress_course_selection.dart';
 import 'package:modern_learner_production/core/profile/local_profile_service.dart';
 import 'package:modern_learner_production/core/router/app_router.dart';
 import 'package:modern_learner_production/core/state/progress_navigation_state.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
-import 'package:modern_learner_production/features/exercise/models/exercise.dart';
-import 'package:modern_learner_production/features/exercise/pages/exercise_page.dart';
+import 'package:modern_learner_production/features/auth/service/auth_service.dart';
 import 'package:modern_learner_production/features/explore/service/explore_courses_service.dart';
 import 'package:modern_learner_production/features/explore/service/user_courses_service.dart';
 import 'package:modern_learner_production/features/home/data/home_lesson_filter.dart';
-import 'package:modern_learner_production/features/home/data/home_supabase_lesson.dart';
 import 'package:modern_learner_production/features/home/view/pages/all_lessons_page.dart';
 import 'package:modern_learner_production/features/home/view/section/home_continue_learning_header_section.dart';
 import 'package:modern_learner_production/features/home/view/widgets/home_course_list.dart';
@@ -25,6 +22,8 @@ import 'package:modern_learner_production/features/home/view/widgets/home_sectio
 import 'package:modern_learner_production/features/home/view/widgets/lesson_card.dart';
 import 'package:modern_learner_production/features/home/view/widgets/progress_overview_card.dart';
 import 'package:modern_learner_production/features/home/view/widgets/streak_details_dialog.dart';
+import 'package:modern_learner_production/features/new_lesson/model/lesson_actions_model.dart';
+import 'package:modern_learner_production/features/new_lesson/service/lesson_actions.dart';
 import 'package:modern_learner_production/features/profile/data/profile_identity.dart';
 
 class HomePage extends StatefulWidget {
@@ -39,12 +38,28 @@ class _HomePageState extends State<HomePage> {
   final _profileService = getIt<LocalProfileService>();
   late final UserCoursesService _userCoursesService;
 
-  final List<HomeSupabaseLesson> _fetchedLessons = [];
+  List<AddLesson> _fetchedLessons = [];
+  bool _lessonsLoading = true;
 
   @override
   void initState() {
     super.initState();
     _userCoursesService = getIt<UserCoursesService>();
+    _fetchLessons();
+  }
+
+  Future<void> _fetchLessons() async {
+    final userId = AuthService.instance.currentUser?.id;
+    if (userId == null) {
+      if (mounted) setState(() => _lessonsLoading = false);
+      return;
+    }
+    try {
+      final lessons = await getLessonsService(userId: userId);
+      if (mounted) setState(() => _fetchedLessons = lessons);
+    } finally {
+      if (mounted) setState(() => _lessonsLoading = false);
+    }
   }
 
   void _showStreakDetails() {
@@ -86,25 +101,6 @@ class _HomePageState extends State<HomePage> {
         );
       },
     );
-  }
-
-  void _openSupabaseLesson(HomeSupabaseLesson lesson) {
-    if (lesson.lessonType == 'language') {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => ExercisePage(
-            lessonType: LessonType.voice,
-            title: lesson.title,
-            sectionTitle: lesson.subtitle,
-            accentColor: lesson.color,
-            emoji: lesson.emoji,
-          ),
-        ),
-      );
-    } else {
-      context.go(Routes.progress, extra: lesson.toCourseSelection());
-    }
   }
 
   void _showDeleteConfirmation(ProgressCourseSelection course) {
@@ -348,11 +344,18 @@ class _HomePageState extends State<HomePage> {
                 ),
                 SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
-                  sliver: _fetchedLessons.isEmpty
-                      ? SliverToBoxAdapter(
-                          child: Center(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 24),
+                  sliver: SliverToBoxAdapter(
+                    child: _lessonsLoading
+                        ? const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 24),
+                            child: Center(
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          )
+                        : _fetchedLessons.isEmpty
+                        ? Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 24),
+                            child: Center(
                               child: Text(
                                 'No lessons yet. Start creating!',
                                 style: GoogleFonts.inter(
@@ -361,27 +364,54 @@ class _HomePageState extends State<HomePage> {
                                 ),
                               ),
                             ),
+                          )
+                        : ListView.separated(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: _fetchedLessons.length,
+                            separatorBuilder: (_, _) =>
+                                const SizedBox(height: 12),
+                            itemBuilder: (context, i) {
+                              final lesson = _fetchedLessons[i];
+                              const accentColors = [
+                                Color(0xFFB1A0FF),
+                                Color(0xFF929BFA),
+                                Color(0xFF7E51FF),
+                                Color(0xFFB1FFCE),
+                              ];
+                              const emojis = [
+                                '📚',
+                                '🎯',
+                                '✏️',
+                                '🧠',
+                                '🚀',
+                                '💡',
+                              ];
+                              final accent =
+                                  accentColors[i % accentColors.length];
+                              final emoji = emojis[i % emojis.length];
+                              return LessonCard(
+                                emoji: emoji,
+                                title: lesson.title.isEmpty
+                                    ? 'Untitled Lesson'
+                                    : lesson.title,
+                                chapter:
+                                    lesson.lessonType.name[0].toUpperCase() +
+                                    lesson.lessonType.name.substring(1),
+                                duration: lesson.status.name,
+                                progress:
+                                    lesson.status == LessonStatus.completed
+                                    ? 1.0
+                                    : lesson.status == LessonStatus.active
+                                    ? 0.5
+                                    : 0.0,
+                                accentColor: accent,
+                                isNew: lesson.status == LessonStatus.draft,
+                                lessonType: lesson.lessonType.name,
+                              );
+                            },
                           ),
-                        )
-                      : SliverList.separated(
-                          itemCount: _fetchedLessons.length,
-                          separatorBuilder: (_, _) =>
-                              const SizedBox(height: 12),
-                          itemBuilder: (context, i) {
-                            final lesson = _fetchedLessons[i];
-                            return LessonCard(
-                              emoji: lesson.emoji,
-                              title: lesson.title,
-                              chapter: lesson.subtitle,
-                              duration: lesson.duration,
-                              progress: lesson.progress,
-                              accentColor: lesson.color,
-                              isNew: lesson.status == 'draft',
-                              lessonType: lesson.lessonType,
-                              onTap: () => _openSupabaseLesson(lesson),
-                            );
-                          },
-                        ),
+                  ),
                 ),
                 const SliverToBoxAdapter(child: SizedBox(height: 100)),
               ],
