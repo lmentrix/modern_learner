@@ -1,82 +1,105 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'dart:convert';
+
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:modern_learner_production/core/models/progress_course_selection.dart';
-import 'package:modern_learner_production/features/explore/data/models/progress_course_model.dart';
 
-/// Handles Supabase persistence for the `user_courses` table.
-///
-/// All methods are safe to call when unauthenticated — they no-op or return
-/// empty lists without throwing.
 class UserCoursesService {
-  const UserCoursesService({required this.supabase});
+  const UserCoursesService({required SharedPreferences sharedPreferences})
+    : _sharedPreferences = sharedPreferences;
 
-  final SupabaseClient supabase;
+  static const _storageKey = 'local_progress_courses';
 
-  String? get _uid => supabase.auth.currentUser?.id;
+  final SharedPreferences _sharedPreferences;
 
-  // ── Read ───────────────────────────────────────────────────────────────────
-
-  /// Returns all courses persisted for the current user, newest first.
   Future<List<ProgressCourseSelection>> fetchCourses() async {
-    final uid = _uid;
-    if (uid == null) return [];
-    try {
-      final rows = await supabase
-          .from('user_courses')
-          .select()
-          .eq('user_id', uid)
-          .order('created_at', ascending: false);
-      return (rows as List)
-          .map(
-            (r) => ProgressCourseModel.fromRow(
-              r as Map<String, dynamic>,
-            ).toEntity(),
-          )
-          .toList();
-    } catch (_) {
+    return _readCourses();
+  }
+
+  Future<void> upsertCourse(ProgressCourseSelection course) async {
+    final courses = await _readCourses();
+    final index = courses.indexWhere((saved) => _matches(saved, course));
+
+    if (index >= 0) {
+      courses[index] = course;
+    } else {
+      courses.insert(0, course);
+    }
+
+    await _writeCourses(courses);
+  }
+
+  Future<void> deleteCourse(ProgressCourseSelection course) async {
+    final courses = await _readCourses();
+    courses.removeWhere((saved) => _matches(saved, course));
+    await _writeCourses(courses);
+  }
+
+  Future<void> deleteAllCourses() async {
+    await _sharedPreferences.remove(_storageKey);
+  }
+
+  Future<List<ProgressCourseSelection>> _readCourses() async {
+    final raw = _sharedPreferences.getString(_storageKey);
+    if (raw == null || raw.isEmpty) {
       return [];
     }
+
+    final decoded = jsonDecode(raw);
+    if (decoded is! List) {
+      return [];
+    }
+
+    return decoded
+        .whereType<Map<String, dynamic>>()
+        .map(_courseFromJson)
+        .toList(growable: true);
   }
 
-  // ── Write ──────────────────────────────────────────────────────────────────
-
-  /// Upserts [course] for the current user.
-  /// Conflict key: `user_id, title, topic, level, native_language`.
-  Future<void> upsertCourse(ProgressCourseSelection course) async {
-    final uid = _uid;
-    if (uid == null) return;
-    try {
-      await supabase
-          .from('user_courses')
-          .upsert(
-            ProgressCourseModel.fromEntity(course).toRow(uid),
-            onConflict: 'user_id,title,topic,level,native_language',
-          );
-    } catch (_) {}
+  Future<void> _writeCourses(List<ProgressCourseSelection> courses) async {
+    final payload = courses.map(_courseToJson).toList(growable: false);
+    await _sharedPreferences.setString(_storageKey, jsonEncode(payload));
   }
 
-  /// Deletes [course] belonging to the current user.
-  Future<void> deleteCourse(ProgressCourseSelection course) async {
-    final uid = _uid;
-    if (uid == null) return;
-    try {
-      await supabase
-          .from('user_courses')
-          .delete()
-          .eq('user_id', uid)
-          .eq('title', course.title)
-          .eq('topic', course.topic)
-          .eq('level', course.level)
-          .eq('native_language', course.nativeLanguage);
-    } catch (_) {}
+  Map<String, dynamic> _courseToJson(ProgressCourseSelection course) {
+    return {
+      'title': course.title,
+      'topic': course.topic,
+      'roadmapLanguage': course.roadmapLanguage,
+      'level': course.level,
+      'nativeLanguage': course.nativeLanguage,
+      'roadmapJson': course.roadmapJson,
+      'roadmapGenerated': course.roadmapGenerated,
+      'courseType': course.courseType.name,
+    };
   }
 
-  /// Deletes all courses belonging to the current user.
-  Future<void> deleteAllCourses() async {
-    final uid = _uid;
-    if (uid == null) return;
-    try {
-      await supabase.from('user_courses').delete().eq('user_id', uid);
-    } catch (_) {}
+  ProgressCourseSelection _courseFromJson(Map<String, dynamic> json) {
+    return ProgressCourseSelection(
+      title: json['title'] as String? ?? '',
+      topic: json['topic'] as String? ?? '',
+      roadmapLanguage: json['roadmapLanguage'] as String? ?? '',
+      level: json['level'] as String? ?? '',
+      nativeLanguage: json['nativeLanguage'] as String? ?? '',
+      roadmapJson: json['roadmapJson'] is Map
+          ? Map<String, dynamic>.from(json['roadmapJson'] as Map)
+          : null,
+      roadmapGenerated: json['roadmapGenerated'] as bool? ?? false,
+      courseType: _courseTypeFromName(json['courseType'] as String?),
+    );
+  }
+
+  ProgressCourseType _courseTypeFromName(String? name) {
+    return ProgressCourseType.values.firstWhere(
+      (value) => value.name == name,
+      orElse: () => ProgressCourseType.school,
+    );
+  }
+
+  bool _matches(ProgressCourseSelection left, ProgressCourseSelection right) {
+    return left.title == right.title &&
+        left.topic == right.topic &&
+        left.level == right.level &&
+        left.nativeLanguage == right.nativeLanguage;
   }
 }

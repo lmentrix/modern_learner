@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:modern_learner_production/core/di/injection.dart';
+import 'package:modern_learner_production/core/profile/local_profile_service.dart';
 import 'package:modern_learner_production/core/router/app_router.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
-import 'package:modern_learner_production/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:modern_learner_production/features/home/data/achievement_entity.dart';
 import 'package:modern_learner_production/features/home/data/home_achievement_data.dart';
 import 'package:modern_learner_production/features/profile/data/profile_identity.dart';
@@ -23,11 +22,9 @@ import 'package:modern_learner_production/features/profile/view/section/profile_
 import 'package:modern_learner_production/features/profile/view/section/profile_notifications_sheet_section.dart';
 import 'package:modern_learner_production/features/profile/view/section/profile_privacy_sheet_section.dart';
 import 'package:modern_learner_production/features/profile/view/section/profile_settings_section.dart';
-import 'package:modern_learner_production/features/profile/view/section/profile_sign_out_section.dart';
 import 'package:modern_learner_production/features/profile/view/section/profile_stats_section.dart';
 import 'package:modern_learner_production/features/profile/view/section/profile_version_footer_section.dart';
 import 'package:modern_learner_production/features/profile/view/widgets/edit_profile_sheet.dart';
-import 'package:modern_learner_production/features/profile/view/widgets/profile_sign_out_dialog.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -38,6 +35,7 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   final _scrollController = ScrollController();
+  final _profileService = getIt<LocalProfileService>();
   late final AchievementState _achievementState;
   ProfilePreferences _preferences = const ProfilePreferences();
 
@@ -53,15 +51,8 @@ class _ProfilePageState extends State<ProfilePage> {
     super.dispose();
   }
 
-  ProfileIdentity get _identity {
-    final user = Supabase.instance.client.auth.currentUser;
-    final displayName = user?.userMetadata?['name'] as String? ?? 'User';
-    final email = user?.email ?? '';
-    return ProfileIdentity(displayName: displayName, email: email);
-  }
-
   void _showAccountSheet() {
-    final identity = _identity;
+    final identity = _profileService.currentIdentity;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -71,10 +62,6 @@ class _ProfilePageState extends State<ProfilePage> {
         onEditProfileTap: () {
           Navigator.pop(context);
           _showEditProfileSheet();
-        },
-        onSignOutTap: () {
-          Navigator.pop(context);
-          _showSignOutDialog();
         },
       ),
     );
@@ -144,23 +131,8 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  void _showSignOutDialog() {
-    showDialog(
-      context: context,
-      builder: (dialogContext) => ProfileSignOutDialog(
-        onCancel: () => Navigator.pop(dialogContext),
-        onConfirm: () {
-          Navigator.pop(dialogContext);
-          context.read<AuthBloc>().add(const AuthSignOutRequested());
-        },
-      ),
-    );
-  }
-
   void _showEditProfileSheet() {
-    final user = Supabase.instance.client.auth.currentUser;
-    final name = user?.userMetadata?['name'] as String? ?? '';
-    final email = user?.email ?? '';
+    final identity = _profileService.currentIdentity;
 
     showModalBottomSheet(
       context: context,
@@ -168,7 +140,10 @@ class _ProfilePageState extends State<ProfilePage> {
       isScrollControlled: true,
       builder: (context) => BlocProvider(
         create: (_) => getIt<ProfileBloc>()..add(const ProfileLoadRequested()),
-        child: EditProfileSheet(currentName: name, currentEmail: email),
+        child: EditProfileSheet(
+          currentName: identity.displayName,
+          currentEmail: identity.email,
+        ),
       ),
     );
   }
@@ -179,79 +154,75 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    final identity = _identity;
-
-    return Container(
-      color: AppColors.surface,
-      child: SafeArea(
-        child: CustomScrollView(
-          controller: _scrollController,
-          physics: const BouncingScrollPhysics(),
-          slivers: [
-            SliverToBoxAdapter(
-              child: ProfileHeaderSection(
-                identity: identity,
-                onEditTap: _showAccountSheet,
-              ),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: 20)),
-            const SliverPadding(
-              padding: ProfilePageConstants.pagePadding,
-              sliver: SliverToBoxAdapter(child: ProfileStatsSection()),
-            ),
-            const SliverToBoxAdapter(
-              child: SizedBox(height: ProfilePageConstants.sectionSpacing),
-            ),
-            SliverPadding(
-              padding: ProfilePageConstants.pagePadding,
-              sliver: SliverToBoxAdapter(
-                child: ProfileAchievementsSection(
-                  achievementState: _achievementState,
-                  onViewAllTap: () => context.push(Routes.achievements),
-                  onAchievementTap: _openAchievementDetail,
+    return ValueListenableBuilder<ProfileIdentity>(
+      valueListenable: _profileService.identityListenable,
+      builder: (context, identity, _) {
+        return Container(
+          color: AppColors.surface,
+          child: SafeArea(
+            child: CustomScrollView(
+              controller: _scrollController,
+              physics: const BouncingScrollPhysics(),
+              slivers: [
+                SliverToBoxAdapter(
+                  child: ProfileHeaderSection(
+                    identity: identity,
+                    onEditTap: _showAccountSheet,
+                  ),
                 ),
-              ),
-            ),
-            const SliverToBoxAdapter(
-              child: SizedBox(height: ProfilePageConstants.sectionSpacing),
-            ),
-            const SliverPadding(
-              padding: ProfilePageConstants.pagePadding,
-              sliver: SliverToBoxAdapter(child: ProfileActivitySection()),
-            ),
-            const SliverToBoxAdapter(
-              child: SizedBox(height: ProfilePageConstants.sectionSpacing),
-            ),
-            SliverPadding(
-              padding: ProfilePageConstants.pagePadding,
-              sliver: SliverToBoxAdapter(
-                child: ProfileSettingsSection(
-                  identity: identity,
-                  preferences: _preferences,
-                  onAccountTap: _showAccountSheet,
-                  onNotificationsTap: _showNotificationsSheet,
-                  onAppearanceTap: _showAppearanceSheet,
-                  onLanguageTap: _showLanguageSheet,
-                  onPrivacyTap: _showPrivacySheet,
-                  onHelpTap: _showHelpSheet,
+                const SliverToBoxAdapter(child: SizedBox(height: 20)),
+                const SliverPadding(
+                  padding: ProfilePageConstants.pagePadding,
+                  sliver: SliverToBoxAdapter(child: ProfileStatsSection()),
                 ),
-              ),
+                const SliverToBoxAdapter(
+                  child: SizedBox(height: ProfilePageConstants.sectionSpacing),
+                ),
+                SliverPadding(
+                  padding: ProfilePageConstants.pagePadding,
+                  sliver: SliverToBoxAdapter(
+                    child: ProfileAchievementsSection(
+                      achievementState: _achievementState,
+                      onViewAllTap: () => context.push(Routes.achievements),
+                      onAchievementTap: _openAchievementDetail,
+                    ),
+                  ),
+                ),
+                const SliverToBoxAdapter(
+                  child: SizedBox(height: ProfilePageConstants.sectionSpacing),
+                ),
+                const SliverPadding(
+                  padding: ProfilePageConstants.pagePadding,
+                  sliver: SliverToBoxAdapter(child: ProfileActivitySection()),
+                ),
+                const SliverToBoxAdapter(
+                  child: SizedBox(height: ProfilePageConstants.sectionSpacing),
+                ),
+                SliverPadding(
+                  padding: ProfilePageConstants.pagePadding,
+                  sliver: SliverToBoxAdapter(
+                    child: ProfileSettingsSection(
+                      identity: identity,
+                      preferences: _preferences,
+                      onAccountTap: _showAccountSheet,
+                      onNotificationsTap: _showNotificationsSheet,
+                      onAppearanceTap: _showAppearanceSheet,
+                      onLanguageTap: _showLanguageSheet,
+                      onPrivacyTap: _showPrivacySheet,
+                      onHelpTap: _showHelpSheet,
+                    ),
+                  ),
+                ),
+                const SliverToBoxAdapter(child: SizedBox(height: 20)),
+                const SliverToBoxAdapter(
+                  child: Center(child: ProfileVersionFooterSection()),
+                ),
+                const SliverToBoxAdapter(child: SizedBox(height: 100)),
+              ],
             ),
-            const SliverToBoxAdapter(child: SizedBox(height: 20)),
-            SliverPadding(
-              padding: ProfilePageConstants.pagePadding,
-              sliver: SliverToBoxAdapter(
-                child: ProfileSignOutSection(onTap: _showSignOutDialog),
-              ),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: 16)),
-            const SliverToBoxAdapter(
-              child: Center(child: ProfileVersionFooterSection()),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: 100)),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
