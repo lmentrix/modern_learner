@@ -2,8 +2,13 @@ enum LessonType { school, voice }
 
 enum LessonStatus { draft, active, completed }
 
+// DB stores 'language' for voice lessons, 'school' for school lessons
+String lessonTypeToDb(LessonType type) =>
+    type == LessonType.voice ? 'language' : 'school';
+
 LessonType _lessonTypeFromString(String? value) => switch (value) {
-  'voice' => LessonType.voice,
+  'language' => LessonType.voice,
+  'school' => LessonType.school,
   _ => LessonType.school,
 };
 
@@ -20,6 +25,8 @@ class AddLesson {
     required this.title,
     required this.content,
     required this.lessonType,
+    required this.contentType,
+    required this.difficulty,
     required this.status,
     required this.createdAt,
     required this.updatedAt,
@@ -33,6 +40,8 @@ class AddLesson {
         ? Map<String, dynamic>.from(row['content'] as Map)
         : const {},
     lessonType: _lessonTypeFromString(row['lesson_type'] as String?),
+    contentType: row['content_type'] as String? ?? '',
+    difficulty: row['difficulty'] as String? ?? 'Beginner',
     status: _lessonStatusFromString(row['status'] as String?),
     createdAt: DateTime.parse(row['created_at'] as String),
     updatedAt: DateTime.parse(row['updated_at'] as String),
@@ -42,7 +51,9 @@ class AddLesson {
     'user_id': userId,
     'title': title,
     'content': content,
-    'lesson_type': lessonType.name,
+    'lesson_type': lessonTypeToDb(lessonType),
+    'content_type': contentType,
+    'difficulty': difficulty,
     'status': status.name,
   };
 
@@ -51,6 +62,8 @@ class AddLesson {
   final String title;
   final Map<String, dynamic> content;
   final LessonType lessonType;
+  final String contentType;
+  final String difficulty;
   final LessonStatus status;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -59,6 +72,8 @@ class AddLesson {
     String? title,
     Map<String, dynamic>? content,
     LessonType? lessonType,
+    String? contentType,
+    String? difficulty,
     LessonStatus? status,
   }) => AddLesson(
     id: id,
@@ -66,6 +81,8 @@ class AddLesson {
     title: title ?? this.title,
     content: content ?? this.content,
     lessonType: lessonType ?? this.lessonType,
+    contentType: contentType ?? this.contentType,
+    difficulty: difficulty ?? this.difficulty,
     status: status ?? this.status,
     createdAt: createdAt,
     updatedAt: DateTime.now(),
