@@ -1,6 +1,6 @@
 name: modern_learner_production
 description: "Modern Learner — a professional Flutter BLoC application."
-publish_to: 'none'
+publish_to: "none"
 version: 1.0.0+1
 
 environment:
@@ -51,7 +51,7 @@ dependencies:
   logger: ^2.5.0
 
   # ── Backend ────────────────────────────────────────────────────────────────
-  supabase_flutter: ^2.8.4
+  supabase_flutter: ^2.12.4
 
   # ── Environment ────────────────────────────────────────────────────────────
   flutter_dotenv: ^5.2.1
