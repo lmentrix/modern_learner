@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:modern_learner_production/core/supabase/supabase_service.dart';
 import 'package:modern_learner_production/features/new_lesson/model/lesson_actions_model.dart';
 
@@ -30,11 +31,18 @@ Future<AddLesson> addLessonService({
 }
 
 Future<List<AddLesson>> getLessonsService({required String userId}) async {
+  debugPrint('[getLessonsService] fetching for userId: $userId');
+
   final rows = await supabase
       .from(_table)
-      .select()
+      .select(
+        'id, user_id, title, content, lesson_type, content_type, '
+        'difficulty, status, created_at, updated_at',
+      )
       .eq('user_id', userId)
       .order('created_at', ascending: false);
+
+  debugPrint('[getLessonsService] got ${rows.length} rows');
 
   return rows.map(AddLesson.fromRow).toList();
 }
@@ -75,4 +83,8 @@ Future<AddLesson> updateLessonService({
 
 Future<void> deleteLessonService({required String id}) async {
   await supabase.from(_table).delete().eq('id', id);
+}
+
+Future<void> deleteAllLessonsService({required String userId}) async {
+  await supabase.from(_table).delete().eq('user_id', userId);
 }

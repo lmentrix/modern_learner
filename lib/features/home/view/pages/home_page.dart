@@ -9,7 +9,6 @@ import 'package:modern_learner_production/core/state/progress_navigation_state.d
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 import 'package:modern_learner_production/features/auth/service/auth_service.dart';
 import 'package:modern_learner_production/features/explore/service/explore_courses_service.dart';
-import 'package:modern_learner_production/features/explore/service/user_courses_service.dart';
 import 'package:modern_learner_production/features/home/data/home_lesson_filter.dart';
 import 'package:modern_learner_production/features/home/view/pages/all_lessons_page.dart';
 import 'package:modern_learner_production/features/home/view/section/home_continue_learning_header_section.dart';
@@ -36,15 +35,12 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final _scrollCtrl = ScrollController();
   final _profileService = getIt<LocalProfileService>();
-  late final UserCoursesService _userCoursesService;
-
   List<AddLesson> _fetchedLessons = [];
   bool _lessonsLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _userCoursesService = getIt<UserCoursesService>();
     _fetchLessons();
   }
 
@@ -177,6 +173,7 @@ class _HomePageState extends State<HomePage> {
             onPressed: () async {
               Navigator.pop(dialogContext);
               await _deleteAllCourses();
+              await _deleteAllLessons();
             },
             style: FilledButton.styleFrom(
               backgroundColor: Colors.red,
@@ -197,62 +194,21 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _deleteCourse(ProgressCourseSelection course) async {
     await ExploreCoursesService.instance.removeCourse(course);
-    if (mounted) {
-      final messengerState = ScaffoldMessenger.of(context);
-      messengerState.showSnackBar(
-        SnackBar(
-          content: Text('Deleted "${course.topic}"'),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          backgroundColor: AppColors.surfaceContainerHigh,
-          duration: const Duration(seconds: 2),
-          action: SnackBarAction(
-            label: 'Undo',
-            textColor: AppColors.primary,
-            onPressed: () async {
-              await _userCoursesService.upsertCourse(course);
-              await ExploreCoursesService.instance.loadCourses();
-            },
-          ),
-        ),
-      );
-      Future.delayed(const Duration(seconds: 2), () {
-        if (messengerState.mounted) {
-          messengerState.hideCurrentSnackBar();
-        }
-      });
-    }
   }
 
   Future<void> _deleteAllCourses() async {
-    final deletedCourses = await ExploreCoursesService.instance
-        .removeAllCourses();
-    if (deletedCourses.isEmpty || !mounted) return;
+    await ExploreCoursesService.instance.removeAllCourses();
+  }
 
-    final messengerState = ScaffoldMessenger.of(context);
-    messengerState.showSnackBar(
-      SnackBar(
-        content: Text(
-          'Deleted ${deletedCourses.length} course${deletedCourses.length == 1 ? '' : 's'}',
-        ),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        backgroundColor: AppColors.surfaceContainerHigh,
-        duration: const Duration(seconds: 3),
-        action: SnackBarAction(
-          label: 'Undo',
-          textColor: AppColors.primary,
-          onPressed: () async {
-            for (final course in deletedCourses) {
-              await _userCoursesService.upsertCourse(course);
-            }
-            await ExploreCoursesService.instance.loadCourses();
-          },
-        ),
-      ),
-    );
+  Future<void> _deleteAllLessons() async {
+    final userId = AuthService.instance.currentUser?.id;
+    if (userId == null) return;
+    try {
+      await deleteAllLessonsService(userId: userId);
+      if (mounted) setState(() => _fetchedLessons = []);
+    } catch (e) {
+      debugPrint('[HomePage] deleteAllLessons failed: $e');
+    }
   }
 
   void _openVoiceLessonPage() {

@@ -43,21 +43,19 @@ class ProgressJourneySection extends StatelessWidget {
           title: 'Where the next lift happens',
           subtitle:
               'Each chapter is sequenced to feel directional: what is done, what is active, and what unlocks next.',
+          accentColor: AppColors.tertiary,
         ),
         const SizedBox(height: 18),
         Column(
-          children: data.moduleSteps
-              .map(
-                (step) => Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: ProgressModuleTile(
-                    step: step,
-                    isSelected: step.id == selectedChapterId,
-                    onTap: () => onChapterTap(step),
-                  ),
-                ),
-              )
-              .toList(),
+          children: [
+            for (int i = 0; i < data.moduleSteps.length; i++)
+              ProgressModuleTile(
+                step: data.moduleSteps[i],
+                isSelected: data.moduleSteps[i].id == selectedChapterId,
+                isLast: i == data.moduleSteps.length - 1,
+                onTap: () => onChapterTap(data.moduleSteps[i]),
+              ),
+          ],
         ),
         const SizedBox(height: 10),
         AnimatedSwitcher(
@@ -157,11 +155,25 @@ class _ChapterSubcontentPanel extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainer,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            selectedStep!.toneColor.withValues(alpha: 0.08),
+            AppColors.surfaceContainer,
+          ],
+        ),
         borderRadius: BorderRadius.circular(28),
         border: Border.all(
-          color: selectedStep!.toneColor.withValues(alpha: 0.22),
+          color: selectedStep!.toneColor.withValues(alpha: 0.30),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: selectedStep!.toneColor.withValues(alpha: 0.10),
+            blurRadius: 22,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -198,7 +210,9 @@ class _ChapterSubcontentPanel extends StatelessWidget {
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: metaChips.map(_MetaChip.new).toList(),
+            children: metaChips
+                .map((c) => _MetaChip(c, color: selectedStep!.toneColor))
+                .toList(),
           ),
           if ((response?.message ?? '').trim().isNotEmpty) ...[
             const SizedBox(height: 18),
@@ -233,8 +247,25 @@ class _SubcontentCard extends StatelessWidget {
 
   final ChapterSubcontentItemModel item;
 
+  static Color _typeColor(String type) {
+    switch (type.toLowerCase()) {
+      case 'lesson':
+        return AppColors.primary;
+      case 'practice':
+        return AppColors.secondary;
+      case 'quiz':
+      case 'review':
+        return const Color(0xFFFF9500);
+      case 'speaking':
+        return const Color(0xFF26C6DA);
+      default:
+        return AppColors.tertiary;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final typeColor = _typeColor(item.subcontentType);
     final metaChips = <String>[
       'Block ${item.subcontentNumber}',
       _titleCase(item.subcontentType),
@@ -243,116 +274,138 @@ class _SubcontentCard extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLow,
         borderRadius: BorderRadius.circular(22),
         border: Border.all(
-          color: AppColors.outlineVariant.withValues(alpha: 0.18),
+          color: typeColor.withValues(alpha: 0.20),
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: metaChips.map(_MetaChip.new).toList(),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            item.title,
-            style: GoogleFonts.spaceGrotesk(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: AppColors.onSurface,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            item.summary,
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              color: AppColors.onSurfaceVariant,
-              height: 1.55,
-            ),
-          ),
-          if (item.focusSkills.isNotEmpty) ...[
-            const SizedBox(height: 14),
-            const _SectionLabel(label: 'Focus skills'),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: item.focusSkills.map(_TagChip.new).toList(),
-            ),
-          ],
-          if (item.objectives.isNotEmpty) ...[
-            const SizedBox(height: 14),
-            const _SectionLabel(label: 'Objectives'),
-            const SizedBox(height: 8),
-            Column(
-              children: item.objectives
-                  .map((objective) => _BulletLine(text: objective))
-                  .toList(),
-            ),
-          ],
-          if (item.activities.isNotEmpty) ...[
-            const SizedBox(height: 14),
-            const _SectionLabel(label: 'Activities'),
-            const SizedBox(height: 8),
-            Column(
-              children: item.activities
-                  .map((activity) => _BulletLine(text: activity))
-                  .toList(),
-            ),
-          ],
-          if (item.sourceLessons.isNotEmpty) ...[
-            const SizedBox(height: 14),
-            const _SectionLabel(label: 'Source lessons'),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: item.sourceLessons.map(_TagChip.new).toList(),
-            ),
-          ],
-          if ((item.teachingNote ?? '').trim().isNotEmpty) ...[
-            const SizedBox(height: 14),
-            const _SectionLabel(label: 'Teaching note'),
-            const SizedBox(height: 6),
-            Text(
-              item.teachingNote!,
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                color: AppColors.onSurfaceVariant,
-                height: 1.5,
+          // colored type indicator line at top
+          Container(
+            height: 3,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [typeColor, typeColor.withValues(alpha: 0.25)],
+              ),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(22),
+                topRight: Radius.circular(22),
               ),
             ),
-          ],
-          if ((item.speakingFocus ?? '').trim().isNotEmpty) ...[
-            const SizedBox(height: 14),
-            const _SectionLabel(label: 'Speaking focus'),
-            const SizedBox(height: 6),
-            Text(
-              item.speakingFocus!,
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                color: AppColors.onSurfaceVariant,
-                height: 1.5,
-              ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: metaChips
+                      .map((chip) => _MetaChip(chip, color: typeColor))
+                      .toList(),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  item.title,
+                  style: GoogleFonts.spaceGrotesk(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  item.summary,
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    color: AppColors.onSurfaceVariant,
+                    height: 1.55,
+                  ),
+                ),
+                if (item.focusSkills.isNotEmpty) ...[
+                  const SizedBox(height: 14),
+                  const _SectionLabel(label: 'Focus skills'),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: item.focusSkills.map(_TagChip.new).toList(),
+                  ),
+                ],
+                if (item.objectives.isNotEmpty) ...[
+                  const SizedBox(height: 14),
+                  const _SectionLabel(label: 'Objectives'),
+                  const SizedBox(height: 8),
+                  Column(
+                    children: item.objectives
+                        .map((objective) => _BulletLine(text: objective))
+                        .toList(),
+                  ),
+                ],
+                if (item.activities.isNotEmpty) ...[
+                  const SizedBox(height: 14),
+                  const _SectionLabel(label: 'Activities'),
+                  const SizedBox(height: 8),
+                  Column(
+                    children: item.activities
+                        .map((activity) => _BulletLine(text: activity))
+                        .toList(),
+                  ),
+                ],
+                if (item.sourceLessons.isNotEmpty) ...[
+                  const SizedBox(height: 14),
+                  const _SectionLabel(label: 'Source lessons'),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: item.sourceLessons.map(_TagChip.new).toList(),
+                  ),
+                ],
+                if ((item.teachingNote ?? '').trim().isNotEmpty) ...[
+                  const SizedBox(height: 14),
+                  const _SectionLabel(label: 'Teaching note'),
+                  const SizedBox(height: 6),
+                  Text(
+                    item.teachingNote!,
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      color: AppColors.onSurfaceVariant,
+                      height: 1.5,
+                    ),
+                  ),
+                ],
+                if ((item.speakingFocus ?? '').trim().isNotEmpty) ...[
+                  const SizedBox(height: 14),
+                  const _SectionLabel(label: 'Speaking focus'),
+                  const SizedBox(height: 6),
+                  Text(
+                    item.speakingFocus!,
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      color: AppColors.onSurfaceVariant,
+                      height: 1.5,
+                    ),
+                  ),
+                ],
+                if (item.audioCues.isNotEmpty) ...[
+                  const SizedBox(height: 14),
+                  const _SectionLabel(label: 'Audio cues'),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: item.audioCues.map(_TagChip.new).toList(),
+                  ),
+                ],
+              ],
             ),
-          ],
-          if (item.audioCues.isNotEmpty) ...[
-            const SizedBox(height: 14),
-            const _SectionLabel(label: 'Audio cues'),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: item.audioCues.map(_TagChip.new).toList(),
-            ),
-          ],
+          ),
         ],
       ),
     );
@@ -382,62 +435,104 @@ class _PanelStatusCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppColors.surfaceContainer,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: AppColors.outlineVariant.withValues(alpha: 0.2),
-        ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (showSpinner)
-            SizedBox(
-              width: 22,
-              height: 22,
-              child: CircularProgressIndicator(
-                strokeWidth: 2.2,
-                valueColor: AlwaysStoppedAnimation<Color>(iconColor),
-              ),
-            )
-          else
-            Icon(icon, color: iconColor, size: 22),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: GoogleFonts.spaceGrotesk(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.onSurface,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  body,
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    color: AppColors.onSurfaceVariant,
-                    height: 1.5,
-                  ),
-                ),
-                if (actionLabel != null && onAction != null) ...[
-                  const SizedBox(height: 12),
-                  TextButton.icon(
-                    onPressed: onAction,
-                    icon: const Icon(Icons.refresh_rounded, size: 16),
-                    label: Text(actionLabel!),
-                  ),
-                ],
-              ],
-            ),
+        border: Border.all(color: iconColor.withValues(alpha: 0.22)),
+        boxShadow: [
+          BoxShadow(
+            color: iconColor.withValues(alpha: 0.06),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
           ),
         ],
+      ),
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // colored left accent stripe
+            Container(
+              width: 4,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [iconColor, iconColor.withValues(alpha: 0.18)],
+                ),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  bottomLeft: Radius.circular(24),
+                ),
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // icon box
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: iconColor.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: iconColor.withValues(alpha: 0.20),
+                        ),
+                      ),
+                      child: showSpinner
+                          ? Padding(
+                              padding: const EdgeInsets.all(11),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.2,
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(iconColor),
+                              ),
+                            )
+                          : Icon(icon, color: iconColor, size: 22),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            style: GoogleFonts.spaceGrotesk(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.onSurface,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            body,
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              color: AppColors.onSurfaceVariant,
+                              height: 1.5,
+                            ),
+                          ),
+                          if (actionLabel != null && onAction != null) ...[
+                            const SizedBox(height: 12),
+                            TextButton.icon(
+                              onPressed: onAction,
+                              icon: const Icon(Icons.refresh_rounded, size: 16),
+                              label: Text(actionLabel!),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -501,24 +596,31 @@ class _BulletLine extends StatelessWidget {
 }
 
 class _MetaChip extends StatelessWidget {
-  const _MetaChip(this.label);
+  const _MetaChip(this.label, {this.color});
 
   final String label;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
+    final c = color;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerHighest,
+        color: c != null
+            ? c.withValues(alpha: 0.12)
+            : AppColors.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(999),
+        border: c != null
+            ? Border.all(color: c.withValues(alpha: 0.22))
+            : null,
       ),
       child: Text(
         label,
         style: GoogleFonts.inter(
           fontSize: 11,
           fontWeight: FontWeight.w700,
-          color: AppColors.onSurface,
+          color: c ?? AppColors.onSurface,
         ),
       ),
     );
