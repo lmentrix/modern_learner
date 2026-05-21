@@ -12,37 +12,68 @@ class ProgressMetricTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            item.toneColor.withValues(alpha: 0.10),
+            AppColors.surfaceContainerLow,
+          ],
+        ),
         borderRadius: BorderRadius.circular(22),
         border: Border.all(
-          color: AppColors.outlineVariant.withValues(alpha: 0.16),
+          color: item.toneColor.withValues(alpha: 0.22),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: item.toneColor.withValues(alpha: 0.08),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 42,
-            height: 42,
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
-              color: item.toneColor.withValues(alpha: 0.14),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  item.toneColor.withValues(alpha: 0.24),
+                  item.toneColor.withValues(alpha: 0.10),
+                ],
+              ),
               borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: item.toneColor.withValues(alpha: 0.20),
+              ),
             ),
-            child: Icon(item.icon, color: item.toneColor, size: 21),
+            child: Icon(item.icon, color: item.toneColor, size: 22),
           ),
           const Spacer(),
-          Text(
-            item.value,
-            style: GoogleFonts.spaceGrotesk(
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
-              color: AppColors.onSurface,
-              height: 1.0,
+          TweenAnimationBuilder<double>(
+            tween: Tween<double>(begin: 0.85, end: 1.0),
+            duration: const Duration(milliseconds: 500),
+            curve: Curves.easeOutBack,
+            builder: (context, scale, child) =>
+                Transform.scale(alignment: Alignment.centerLeft, scale: scale, child: child),
+            child: Text(
+              item.value,
+              style: GoogleFonts.spaceGrotesk(
+                fontSize: 26,
+                fontWeight: FontWeight.w800,
+                color: AppColors.onSurface,
+                height: 1.0,
+              ),
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 5),
           Text(
             item.label,
             style: GoogleFonts.inter(
@@ -51,11 +82,11 @@ class ProgressMetricTile extends StatelessWidget {
               color: AppColors.onSurface,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 3),
           Text(
             item.detail,
             style: GoogleFonts.inter(
-              fontSize: 12,
+              fontSize: 11,
               color: AppColors.onSurfaceVariant,
               height: 1.45,
             ),
