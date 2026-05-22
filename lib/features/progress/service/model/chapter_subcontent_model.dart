@@ -8,6 +8,7 @@ class ChapterSubcontentGenerateRequestModel {
     this.roadmapCacheKey,
     required this.chapterNumber,
     this.model,
+    this.roadmapJson,
   });
 
   factory ChapterSubcontentGenerateRequestModel.fromJson(
@@ -22,6 +23,9 @@ class ChapterSubcontentGenerateRequestModel {
       chapterNumber:
           _readInt(json, const ['chapter_number', 'chapterNumber']) ?? 1,
       model: _readString(json, const ['model']),
+      roadmapJson: json['roadmap_json'] is Map
+          ? Map<String, dynamic>.from(json['roadmap_json'] as Map)
+          : null,
     );
   }
 
@@ -29,11 +33,14 @@ class ChapterSubcontentGenerateRequestModel {
   final String? roadmapCacheKey;
   final int chapterNumber;
   final String? model;
+  // Sent inline so the backend can reconstruct the roadmap if it's not in its store.
+  final Map<String, dynamic>? roadmapJson;
 
   Map<String, dynamic> toJson({required String resolvedRoadmapId}) => {
     'roadmap_id': resolvedRoadmapId,
     'chapter_number': chapterNumber,
     if (model != null && model!.trim().isNotEmpty) 'model': model,
+    if (roadmapJson != null) 'roadmap_json': roadmapJson,
   };
 
   String toRawJson({required String resolvedRoadmapId}) =>
