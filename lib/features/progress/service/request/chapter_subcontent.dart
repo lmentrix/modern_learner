@@ -27,18 +27,10 @@ Future<ChapterSubcontentResponseModel> fetchChapterSubcontent(
   final activeClient = client ?? http.Client();
 
   try {
-    final response = await activeClient
-        .post(
-          _buildChapterSubcontentUri(),
-          headers: const {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-          body: jsonEncode(
-            request.toJson(resolvedRoadmapId: resolvedRoadmapId),
-          ),
-        )
-        .timeout(ApiConstants.receiveTimeout);
+    final response = await _postChapterSubcontent(
+      activeClient,
+      request.toJson(resolvedRoadmapId: resolvedRoadmapId),
+    );
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw ChapterSubcontentRequestException(
@@ -79,7 +71,55 @@ Future<ChapterSubcontentResponseModel> fetchChapterSubcontent(
   }
 }
 
+Future<http.Response> _postChapterSubcontent(
+  http.Client client,
+  Map<String, dynamic> body,
+) async {
+  Object? lastConnectionError;
+  final uris = _chapterSubcontentUris();
+
+  for (var index = 0; index < uris.length; index++) {
+    final uri = uris[index];
+    final isLast = index == uris.length - 1;
+    try {
+      final response = await client
+          .post(
+            uri,
+            headers: const {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: jsonEncode(body),
+          )
+          .timeout(ApiConstants.receiveTimeout);
+
+      if (response.statusCode == 404 && !isLast) {
+        continue;
+      }
+      return response;
+    } on SocketException catch (error) {
+      lastConnectionError = error;
+      if (isLast) rethrow;
+    } on HttpException catch (error) {
+      lastConnectionError = error;
+      if (isLast) rethrow;
+    } on http.ClientException catch (error) {
+      lastConnectionError = error;
+      if (isLast) rethrow;
+    }
+  }
+
+  throw ChapterSubcontentRequestException(
+    'Could not reach the FastAPI chapter subcontent API. '
+    'Last error: $lastConnectionError',
+  );
+}
+
 Uri _buildChapterSubcontentUri() {
+  return _chapterSubcontentUris().first;
+}
+
+List<Uri> _chapterSubcontentUris() {
   final configuredBaseUrl = ApiConstants.roadmapBaseUrl.trim();
   final baseUrl = configuredBaseUrl.isEmpty
       ? _fallbackRoadmapBaseUrl
@@ -97,7 +137,12 @@ Uri _buildChapterSubcontentUri() {
       ? configuredUrl
       : '$normalizedBaseUrl/openrouter/chapter-subcontent/generate';
 
-  return Uri.parse(endpointUrl);
+  final primary = Uri.parse(endpointUrl);
+  final fallback = Uri.parse(
+    '$_fallbackRoadmapBaseUrl/openrouter/chapter-subcontent/generate',
+  );
+  if (primary == fallback) return [primary];
+  return [primary, fallback];
 }
 
 String _extractErrorMessage(http.Response response) {

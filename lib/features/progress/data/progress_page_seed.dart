@@ -10,7 +10,7 @@ import 'package:modern_learner_production/features/progress/data/progress_week_d
 
 ProgressPageData buildProgressPageData({
   required ProgressCourseSelection course,
-  String? selectedChapterId,
+  int unlockedChapterLimit = 1,
 }) {
   final levelFactor = _levelFactor(course.level);
   final roadmap = _extractBaseRoadmapPayload(course.roadmapJson);
@@ -20,7 +20,7 @@ ProgressPageData buildProgressPageData({
     roadmap: roadmap,
     levelFactor: levelFactor,
     accentColor: accentColor,
-    selectedChapterId: selectedChapterId,
+    unlockedChapterLimit: unlockedChapterLimit,
   );
   final totalLessons = _totalLessons(roadmap, moduleSteps.length);
   final masteredLessons = _estimateMasteredLessons(totalLessons, levelFactor);
@@ -134,7 +134,7 @@ List<ProgressModuleStep> _buildModuleSteps({
   required Map<String, dynamic> roadmap,
   required double levelFactor,
   required Color accentColor,
-  required String? selectedChapterId,
+  required int unlockedChapterLimit,
 }) {
   final chapters = _mapList(roadmap['chapters']);
   if (chapters.isEmpty) {
@@ -142,15 +142,11 @@ List<ProgressModuleStep> _buildModuleSteps({
       course: course,
       levelFactor: levelFactor,
       accentColor: accentColor,
-      selectedChapterId: selectedChapterId,
+      unlockedChapterLimit: unlockedChapterLimit,
     );
   }
 
-  final currentIndex = _resolveCurrentIndex(
-    chapters: chapters,
-    selectedChapterId: selectedChapterId,
-    levelFactor: levelFactor,
-  );
+  final currentIndex = (unlockedChapterLimit - 1).clamp(0, chapters.length - 1);
   final tones = <Color>[
     accentColor,
     AppColors.secondary,
@@ -167,8 +163,6 @@ List<ProgressModuleStep> _buildModuleSteps({
         ? 1.0
         : index == currentIndex
         ? (0.42 + levelFactor * 0.28).clamp(0.42, 0.88)
-        : index == currentIndex + 1
-        ? 0.14
         : 0.0;
 
     return ProgressModuleStep(
@@ -193,7 +187,7 @@ List<ProgressModuleStep> _buildModuleSteps({
       lessonCountLabel: '$lessonCount lessons',
       toneColor: tones[index % tones.length],
       isCurrent: index == currentIndex,
-      isLocked: index > currentIndex + 1,
+      isLocked: index > currentIndex,
     );
   });
 }
@@ -202,7 +196,7 @@ List<ProgressModuleStep> _fallbackModuleSteps({
   required ProgressCourseSelection course,
   required double levelFactor,
   required Color accentColor,
-  required String? selectedChapterId,
+  required int unlockedChapterLimit,
 }) {
   final titles = course.courseType == ProgressCourseType.voice
       ? [
@@ -230,11 +224,7 @@ List<ProgressModuleStep> _fallbackModuleSteps({
           'Handle more complex problems without losing clarity.',
           'Consolidate the full topic with mixed review and challenge work.',
         ];
-  final currentIndex = selectedChapterId == 'current'
-      ? 1
-      : selectedChapterId == 'module_2'
-      ? 1
-      : 0;
+  final currentIndex = (unlockedChapterLimit - 1).clamp(0, titles.length - 1);
   final tones = <Color>[
     accentColor,
     AppColors.secondary,
@@ -254,47 +244,15 @@ List<ProgressModuleStep> _fallbackModuleSteps({
           ? 1.0
           : index == currentIndex
           ? (0.40 + levelFactor * 0.30).clamp(0.40, 0.90)
-          : index == currentIndex + 1
-          ? 0.18
           : 0.0,
       durationLabel: '${50 + index * 15} min',
       lessonCountLabel:
           '${course.courseType == ProgressCourseType.voice ? 4 + index : 3 + index} lessons',
       toneColor: tones[index % tones.length],
       isCurrent: index == currentIndex,
-      isLocked: index > currentIndex + 1,
+      isLocked: index > currentIndex,
     );
   });
-}
-
-int _resolveCurrentIndex({
-  required List<Map<String, dynamic>> chapters,
-  required String? selectedChapterId,
-  required double levelFactor,
-}) {
-  if ((selectedChapterId ?? '').trim().isEmpty) {
-    return _defaultCurrentIndex(chapters.length, levelFactor);
-  }
-
-  if (selectedChapterId == 'current') {
-    return _defaultCurrentIndex(chapters.length, levelFactor);
-  }
-
-  final index = chapters.indexWhere(
-    (chapter) =>
-        _chapterIdFor(chapter, chapters.indexOf(chapter)) == selectedChapterId,
-  );
-  if (index >= 0) {
-    return index;
-  }
-
-  return _defaultCurrentIndex(chapters.length, levelFactor);
-}
-
-int _defaultCurrentIndex(int count, double levelFactor) {
-  if (count <= 1) return 0;
-  final projected = (count * (0.28 + levelFactor * 0.34)).floor();
-  return projected.clamp(0, count - 1);
 }
 
 int _totalLessons(Map<String, dynamic> roadmap, int fallbackModuleCount) {

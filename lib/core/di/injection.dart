@@ -16,6 +16,9 @@ import 'package:modern_learner_production/features/explore/domain/usecases/searc
 import 'package:modern_learner_production/features/explore/service/explore_courses_service.dart';
 import 'package:modern_learner_production/features/explore/service/user_courses_service.dart';
 import 'package:modern_learner_production/features/explore/view/bloc/learning_subjects_bloc.dart';
+import 'package:modern_learner_production/features/profile/data/achievement_repository.dart';
+import 'package:modern_learner_production/features/profile/data/local_achievement_repository.dart';
+import 'package:modern_learner_production/features/profile/view/bloc/profile_achievement_bloc.dart';
 import 'package:modern_learner_production/features/profile/view/bloc/profile_bloc.dart';
 
 final getIt = GetIt.instance;
@@ -38,6 +41,11 @@ Future<void> configureDependencies() async {
     LocalProfileService(sharedPreferences: sharedPreferences),
   );
   getIt.registerFactory(() => ProfileBloc(getIt()));
+
+  getIt.registerLazySingleton<AchievementRepository>(
+    () => const LocalAchievementRepository(),
+  );
+  getIt.registerFactory(() => ProfileAchievementBloc(getIt()));
 
   getIt.registerSingleton<UserCoursesService>(
     UserCoursesService(sharedPreferences: sharedPreferences),

@@ -18,6 +18,8 @@ import 'package:modern_learner_production/features/home/view/pages/achievements_
 import 'package:modern_learner_production/features/home/view/pages/home_page.dart';
 import 'package:modern_learner_production/features/home/view/pages/view_profile_page.dart';
 import 'package:modern_learner_production/features/profile/view/pages/profile_page.dart';
+import 'package:modern_learner_production/features/progress/service/request/exercise_request.dart';
+import 'package:modern_learner_production/features/progress/view/chapter_exercise_page.dart';
 import 'package:modern_learner_production/features/progress/view/progress_page.dart';
 
 abstract final class Routes {
@@ -33,6 +35,7 @@ abstract final class Routes {
   static const achievementDetail = '/achievement-detail';
   static const learningSubjectDetail = '/learning-subject-detail';
   static const createCourse = '/create-course';
+  static const chapterExercise = '/chapter-exercise';
 
   static const _publicRoutes = {login, signup};
   static bool isPublic(String location) => _publicRoutes.contains(location);
@@ -110,6 +113,14 @@ abstract final class AppRouter {
             CreateCoursePage(subject: args.subject, topic: args.topic),
           );
         },
+      ),
+      GoRoute(
+        path: Routes.chapterExercise,
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) => _slideUp(
+          state.pageKey,
+          ChapterExercisePage(args: state.extra as ChapterExercisePageArgs),
+        ),
       ),
 
       // ── Shell (bottom nav) ──────────────────────────────────────────────────

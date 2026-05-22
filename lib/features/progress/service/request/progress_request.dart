@@ -15,16 +15,7 @@ Future<RoadmapResponseModel> fetchProgress(
   final activeClient = client ?? http.Client();
 
   try {
-    final response = await activeClient
-        .post(
-          _buildRoadmapGenerateUri(),
-          headers: const {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-          body: jsonEncode(request.toJson()),
-        )
-        .timeout(ApiConstants.receiveTimeout);
+    final response = await _postRoadmapGenerate(activeClient, request.toJson());
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw RoadmapRequestException(
@@ -78,7 +69,54 @@ Future<RoadmapResponseModel> fetchProgress(
   }
 }
 
+Future<http.Response> _postRoadmapGenerate(
+  http.Client client,
+  Map<String, dynamic> body,
+) async {
+  Object? lastConnectionError;
+  final uris = _roadmapGenerateUris();
+
+  for (var index = 0; index < uris.length; index++) {
+    final uri = uris[index];
+    final isLast = index == uris.length - 1;
+    try {
+      final response = await client
+          .post(
+            uri,
+            headers: const {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: jsonEncode(body),
+          )
+          .timeout(ApiConstants.receiveTimeout);
+
+      if (response.statusCode == 404 && !isLast) {
+        continue;
+      }
+      return response;
+    } on SocketException catch (error) {
+      lastConnectionError = error;
+      if (isLast) rethrow;
+    } on HttpException catch (error) {
+      lastConnectionError = error;
+      if (isLast) rethrow;
+    } on http.ClientException catch (error) {
+      lastConnectionError = error;
+      if (isLast) rethrow;
+    }
+  }
+
+  throw RoadmapRequestException(
+    'Could not reach the FastAPI roadmap API. Last error: $lastConnectionError',
+  );
+}
+
 Uri _buildRoadmapGenerateUri() {
+  return _roadmapGenerateUris().first;
+}
+
+List<Uri> _roadmapGenerateUris() {
   final configuredBaseUrl = ApiConstants.roadmapBaseUrl.trim();
   final baseUrl = configuredBaseUrl.isEmpty
       ? _fallbackRoadmapBaseUrl
@@ -96,7 +134,12 @@ Uri _buildRoadmapGenerateUri() {
       ? configuredOpenRouterUrl
       : '$normalizedBaseUrl/openrouter/roadmaps/generate';
 
-  return Uri.parse(openRouterUrl);
+  final primary = Uri.parse(openRouterUrl);
+  final fallback = Uri.parse(
+    '$_fallbackRoadmapBaseUrl/openrouter/roadmaps/generate',
+  );
+  if (primary == fallback) return [primary];
+  return [primary, fallback];
 }
 
 String _extractErrorMessage(http.Response response) {

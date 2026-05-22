@@ -10,6 +10,7 @@ import 'package:modern_learner_production/features/home/data/achievement_entity.
 import 'package:modern_learner_production/features/home/data/home_achievement_data.dart';
 import 'package:modern_learner_production/features/profile/data/profile_identity.dart';
 import 'package:modern_learner_production/features/profile/data/profile_page_constants.dart';
+import 'package:modern_learner_production/features/profile/view/bloc/profile_achievement_bloc.dart';
 import 'package:modern_learner_production/features/profile/data/profile_preferences.dart';
 import 'package:modern_learner_production/features/profile/view/bloc/profile_bloc.dart';
 import 'package:modern_learner_production/features/profile/view/section/profile_account_sheet_section.dart';
@@ -36,18 +37,20 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   final _scrollController = ScrollController();
   final _profileService = getIt<LocalProfileService>();
-  late final AchievementState _achievementState;
+  final ProfileAchievementBloc _achievementBloc =
+      getIt<ProfileAchievementBloc>();
   ProfilePreferences _preferences = const ProfilePreferences();
 
   @override
   void initState() {
     super.initState();
-    _achievementState = buildAchievementState();
+    _achievementBloc.add(const ProfileAchievementLoadRequested());
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
+    _achievementBloc.close();
     super.dispose();
   }
 
@@ -154,75 +157,81 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<ProfileIdentity>(
-      valueListenable: _profileService.identityListenable,
-      builder: (context, identity, _) {
-        return Container(
-          color: AppColors.surface,
-          child: SafeArea(
-            child: CustomScrollView(
-              controller: _scrollController,
-              physics: const BouncingScrollPhysics(),
-              slivers: [
-                SliverToBoxAdapter(
-                  child: ProfileHeaderSection(
-                    identity: identity,
-                    onEditTap: _showAccountSheet,
-                  ),
-                ),
-                const SliverToBoxAdapter(child: SizedBox(height: 20)),
-                const SliverPadding(
-                  padding: ProfilePageConstants.pagePadding,
-                  sliver: SliverToBoxAdapter(child: ProfileStatsSection()),
-                ),
-                const SliverToBoxAdapter(
-                  child: SizedBox(height: ProfilePageConstants.sectionSpacing),
-                ),
-                SliverPadding(
-                  padding: ProfilePageConstants.pagePadding,
-                  sliver: SliverToBoxAdapter(
-                    child: ProfileAchievementsSection(
-                      achievementState: _achievementState,
-                      onViewAllTap: () => context.push(Routes.achievements),
-                      onAchievementTap: _openAchievementDetail,
-                    ),
-                  ),
-                ),
-                const SliverToBoxAdapter(
-                  child: SizedBox(height: ProfilePageConstants.sectionSpacing),
-                ),
-                const SliverPadding(
-                  padding: ProfilePageConstants.pagePadding,
-                  sliver: SliverToBoxAdapter(child: ProfileActivitySection()),
-                ),
-                const SliverToBoxAdapter(
-                  child: SizedBox(height: ProfilePageConstants.sectionSpacing),
-                ),
-                SliverPadding(
-                  padding: ProfilePageConstants.pagePadding,
-                  sliver: SliverToBoxAdapter(
-                    child: ProfileSettingsSection(
+    return BlocProvider.value(
+      value: _achievementBloc,
+      child: ValueListenableBuilder<ProfileIdentity>(
+        valueListenable: _profileService.identityListenable,
+        builder: (context, identity, _) {
+          return Container(
+            color: AppColors.surface,
+            child: SafeArea(
+              child: CustomScrollView(
+                controller: _scrollController,
+                physics: const BouncingScrollPhysics(),
+                slivers: [
+                  SliverToBoxAdapter(
+                    child: ProfileHeaderSection(
                       identity: identity,
-                      preferences: _preferences,
-                      onAccountTap: _showAccountSheet,
-                      onNotificationsTap: _showNotificationsSheet,
-                      onAppearanceTap: _showAppearanceSheet,
-                      onLanguageTap: _showLanguageSheet,
-                      onPrivacyTap: _showPrivacySheet,
-                      onHelpTap: _showHelpSheet,
+                      onEditTap: _showAccountSheet,
                     ),
                   ),
-                ),
-                const SliverToBoxAdapter(child: SizedBox(height: 20)),
-                const SliverToBoxAdapter(
-                  child: Center(child: ProfileVersionFooterSection()),
-                ),
-                const SliverToBoxAdapter(child: SizedBox(height: 100)),
-              ],
+                  const SliverToBoxAdapter(child: SizedBox(height: 20)),
+                  const SliverPadding(
+                    padding: ProfilePageConstants.pagePadding,
+                    sliver: SliverToBoxAdapter(child: ProfileStatsSection()),
+                  ),
+                  const SliverToBoxAdapter(
+                    child: SizedBox(height: ProfilePageConstants.sectionSpacing),
+                  ),
+                  SliverPadding(
+                    padding: ProfilePageConstants.pagePadding,
+                    sliver: SliverToBoxAdapter(
+                      child: BlocBuilder<ProfileAchievementBloc, AchievementState>(
+                        builder: (context, achievementState) =>
+                            ProfileAchievementsSection(
+                          achievementState: achievementState,
+                          onViewAllTap: () => context.push(Routes.achievements),
+                          onAchievementTap: _openAchievementDetail,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SliverToBoxAdapter(
+                    child: SizedBox(height: ProfilePageConstants.sectionSpacing),
+                  ),
+                  const SliverPadding(
+                    padding: ProfilePageConstants.pagePadding,
+                    sliver: SliverToBoxAdapter(child: ProfileActivitySection()),
+                  ),
+                  const SliverToBoxAdapter(
+                    child: SizedBox(height: ProfilePageConstants.sectionSpacing),
+                  ),
+                  SliverPadding(
+                    padding: ProfilePageConstants.pagePadding,
+                    sliver: SliverToBoxAdapter(
+                      child: ProfileSettingsSection(
+                        identity: identity,
+                        preferences: _preferences,
+                        onAccountTap: _showAccountSheet,
+                        onNotificationsTap: _showNotificationsSheet,
+                        onAppearanceTap: _showAppearanceSheet,
+                        onLanguageTap: _showLanguageSheet,
+                        onPrivacyTap: _showPrivacySheet,
+                        onHelpTap: _showHelpSheet,
+                      ),
+                    ),
+                  ),
+                  const SliverToBoxAdapter(child: SizedBox(height: 20)),
+                  const SliverToBoxAdapter(
+                    child: Center(child: ProfileVersionFooterSection()),
+                  ),
+                  const SliverToBoxAdapter(child: SizedBox(height: 100)),
+                ],
+              ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }
