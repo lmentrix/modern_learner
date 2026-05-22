@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:modern_learner_production/core/di/injection.dart';
 import 'package:modern_learner_production/core/models/progress_course_selection.dart';
+import 'package:modern_learner_production/core/router/app_router.dart';
 import 'package:modern_learner_production/core/state/progress_navigation_state.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 import 'package:modern_learner_production/features/explore/service/explore_courses_service.dart';
+import 'package:modern_learner_production/features/progress/bloc/xp_bloc.dart';
 import 'package:modern_learner_production/features/progress/data/progress_module_step.dart';
 import 'package:modern_learner_production/features/progress/data/progress_page_constants.dart';
 import 'package:modern_learner_production/features/progress/data/progress_page_seed.dart';
@@ -11,7 +15,10 @@ import 'package:modern_learner_production/features/progress/service/cache/roadma
 import 'package:modern_learner_production/features/progress/service/model/chapter_subcontent_model.dart';
 import 'package:modern_learner_production/features/progress/service/model/roadmap_model.dart';
 import 'package:modern_learner_production/features/progress/service/request/chapter_subcontent.dart';
+import 'package:modern_learner_production/features/progress/service/request/exercise_request.dart';
+import 'package:modern_learner_production/features/progress/service/request/progress_request.dart';
 import 'package:modern_learner_production/features/progress/view/section/progress_empty_state_section.dart';
+import 'package:modern_learner_production/features/progress/view/section/progress_header.dart';
 import 'package:modern_learner_production/features/progress/view/section/progress_journey_section.dart';
 
 class ProgressViewPage extends StatefulWidget {
@@ -24,6 +31,14 @@ class ProgressViewPage extends StatefulWidget {
 }
 
 class _ProgressViewPageState extends State<ProgressViewPage> {
+  final XpBloc _xpBloc = XpBloc();
+
+  @override
+  void dispose() {
+    _xpBloc.close();
+    super.dispose();
+  }
+
   bool _isLoadingChapterSubcontent = false;
   String? _chapterSubcontentError;
   String? _selectedCourseKey;
@@ -32,74 +47,93 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
   int _chapterSubcontentRequestToken = 0;
   final Map<String, ChapterSubcontentResponseModel> _chapterSubcontentCache =
       <String, ChapterSubcontentResponseModel>{};
+  final Map<String, int> _unlockedChapterLimitByCourse = <String, int>{};
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<List<ProgressCourseSelection>>(
-      valueListenable: ExploreCoursesService.instance.courses,
-      builder: (context, courses, child) {
-        final selectedCourse = _resolveSelectedCourse(courses);
+    return BlocProvider.value(
+      value: _xpBloc,
+      child: ValueListenableBuilder<List<ProgressCourseSelection>>(
+        valueListenable: ExploreCoursesService.instance.courses,
+        builder: (context, courses, child) {
+          final selectedCourse = _resolveSelectedCourse(courses);
 
-        if (selectedCourse == null) {
-          return const Material(
-            color: AppColors.surface,
-            child: ProgressEmptyStateSection(),
+          if (selectedCourse == null) {
+            return const Material(
+              color: AppColors.surface,
+              child: ProgressEmptyStateSection(),
+            );
+          }
+
+          _syncSelectedCourse(selectedCourse);
+
+          final navState = getIt<ProgressNavigationState>();
+          final pageData = buildProgressPageData(
+            course: selectedCourse,
+            unlockedChapterLimit: _unlockedChapterLimit(selectedCourse),
           );
-        }
+          if (navState.hasSelection) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (navState.hasSelection) {
+                navState.clearSelection();
+              }
+            });
+          }
 
-        _syncSelectedCourse(selectedCourse);
-
-        final navState = getIt<ProgressNavigationState>();
-        final pageData = buildProgressPageData(
-          course: selectedCourse,
-          selectedChapterId: navState.selectedChapterId,
-        );
-        if (navState.hasSelection) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (navState.hasSelection) {
-              navState.clearSelection();
-            }
-          });
-        }
-
-        return Material(
-          color: AppColors.surface,
-          child: CustomScrollView(
-            physics: const BouncingScrollPhysics(),
-            slivers: [
-              const SliverToBoxAdapter(
-                child: SizedBox(height: ProgressPageConstants.sectionSpacing),
-              ),
-              SliverPadding(
-                padding: ProgressPageConstants.pagePadding,
-                sliver: SliverToBoxAdapter(
-                  child: ProgressJourneySection(
-                    data: pageData,
-                    selectedChapterId: _selectedChapterId,
-                    onChapterTap: (step) =>
-                        _handleChapterTap(selectedCourse, step),
-                    chapterSubcontentResponse: _chapterSubcontentResponse,
-                    isLoadingChapterSubcontent: _isLoadingChapterSubcontent,
-                    chapterSubcontentError: _chapterSubcontentError,
-                    onRetryTap: _selectedChapterId == null
-                        ? null
-                        : () {
-                            final step = pageData.moduleSteps
-                                .where((s) => s.id == _selectedChapterId)
-                                .cast<ProgressModuleStep?>()
-                                .firstOrNull;
-                            if (step != null) {
-                              _retryChapterFetch(selectedCourse, step);
-                            }
-                          },
+          return Material(
+            color: AppColors.surface,
+            child: CustomScrollView(
+              physics: const BouncingScrollPhysics(),
+              slivers: [
+                const SliverToBoxAdapter(
+                  child: SizedBox(height: ProgressPageConstants.sectionSpacing),
+                ),
+                SliverPadding(
+                  padding: ProgressPageConstants.pagePadding,
+                  sliver: SliverToBoxAdapter(
+                    child: ProgressHeaderSection(data: pageData),
                   ),
                 ),
-              ),
-              const SliverToBoxAdapter(child: SizedBox(height: 110)),
-            ],
-          ),
-        );
-      },
+
+                const SliverToBoxAdapter(
+                  child: SizedBox(height: ProgressPageConstants.sectionSpacing),
+                ),
+                SliverPadding(
+                  padding: ProgressPageConstants.pagePadding,
+                  sliver: SliverToBoxAdapter(
+                    child: ProgressJourneySection(
+                      data: pageData,
+                      selectedChapterId: _selectedChapterId,
+                      onChapterTap: (step) =>
+                          _handleChapterTap(selectedCourse, step),
+                      chapterSubcontentResponse: _chapterSubcontentResponse,
+                      isLoadingChapterSubcontent: _isLoadingChapterSubcontent,
+                      chapterSubcontentError: _chapterSubcontentError,
+                      onRetryTap: _selectedChapterId == null
+                          ? null
+                          : () {
+                              final step = pageData.moduleSteps
+                                  .where((s) => s.id == _selectedChapterId)
+                                  .cast<ProgressModuleStep?>()
+                                  .firstOrNull;
+                              if (step != null) {
+                                _retryChapterFetch(selectedCourse, step);
+                              }
+                            },
+                      onSubcontentTap: (item) => _openChapterExercise(
+                        selectedCourse,
+                        item,
+                        pageData.moduleSteps,
+                      ),
+                    ),
+                  ),
+                ),
+                const SliverToBoxAdapter(child: SizedBox(height: 110)),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -187,15 +221,8 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
     final requestToken = ++_chapterSubcontentRequestToken;
 
     try {
-      final roadmapResponse = _extractRoadmapResponse(course.roadmapJson);
-      if (roadmapResponse == null) {
-        throw StateError('No roadmap available for this course.');
-      }
-      final roadmapJson = course.roadmapJson?['roadmap'] is Map
-          ? Map<String, dynamic>.from(
-              course.roadmapJson!['roadmap'] as Map,
-            )
-          : null;
+      final roadmapResponse = await _resolveOrGenerateRoadmap(course);
+      final roadmapJson = roadmapResponse.roadmap.toJson();
 
       final response = await fetchChapterSubcontent(
         ChapterSubcontentGenerateRequestModel(
@@ -230,6 +257,98 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
     }
   }
 
+  Future<RoadmapResponseModel> _resolveOrGenerateRoadmap(
+    ProgressCourseSelection course,
+  ) async {
+    final existingResponse = _extractRoadmapResponse(course.roadmapJson);
+    if (existingResponse != null) {
+      return existingResponse;
+    }
+
+    final generatedResponse = await fetchProgress(
+      RoadmapGenerateRequestModel(
+        roadmapMode: course.courseType == ProgressCourseType.voice
+            ? 'voice'
+            : 'school',
+        topic: course.topic,
+        language: course.roadmapLanguage,
+        level: course.level,
+        nativeLanguage: course.nativeLanguage,
+      ),
+    );
+
+    final updatedCourse = course.copyWith(
+      roadmapJson: generatedResponse.toJson(),
+      roadmapGenerated: true,
+    );
+    await ExploreCoursesService.instance.updateCourse(updatedCourse);
+
+    return generatedResponse;
+  }
+
+  Future<void> _openChapterExercise(
+    ProgressCourseSelection course,
+    ChapterSubcontentItemModel item,
+    List<ProgressModuleStep> steps,
+  ) async {
+    final response = _chapterSubcontentResponse;
+    final chapterSubcontentId = response?.chapterSubcontent.id;
+    if (chapterSubcontentId == null || chapterSubcontentId.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Generate the chapter build before opening exercises.'),
+        ),
+      );
+      return;
+    }
+    final activeResponse = response!;
+
+    final selectedStep = steps
+        .where((step) => step.id == _selectedChapterId)
+        .firstOrNull;
+    final accentColor = selectedStep?.toneColor ?? AppColors.primary;
+    final chapterNumber =
+        selectedStep?.chapterNumber ??
+        activeResponse.chapterSubcontent.chapterNumber;
+
+    final completion = await context.push<ChapterExerciseCompletionResult>(
+      Routes.chapterExercise,
+      extra: ChapterExercisePageArgs(
+        chapterSubcontentId: chapterSubcontentId,
+        chapterNumber: chapterNumber,
+        subcontentNumber: item.subcontentNumber,
+        chapterTitle: activeResponse.chapterSubcontent.chapterTitle,
+        subcontentTitle: item.title,
+        accentColorValue: accentColor.toARGB32(),
+        model: activeResponse.model,
+      ),
+    );
+
+    if (!mounted || completion == null) {
+      return;
+    }
+
+    _xpBloc.add(XpEarned(XpBloc.xpPerExercise));
+    _markChapterComplete(course, completion.chapterNumber);
+  }
+
+  int _unlockedChapterLimit(ProgressCourseSelection course) {
+    return _unlockedChapterLimitByCourse[_courseKey(course)] ?? 1;
+  }
+
+  void _markChapterComplete(ProgressCourseSelection course, int chapterNumber) {
+    final courseKey = _courseKey(course);
+    final currentLimit = _unlockedChapterLimitByCourse[courseKey] ?? 1;
+    final nextLimit = chapterNumber + 1;
+    if (nextLimit <= currentLimit) {
+      return;
+    }
+
+    setState(() {
+      _unlockedChapterLimitByCourse[courseKey] = nextLimit;
+    });
+  }
+
   bool _matchesCourse(
     ProgressCourseSelection left,
     ProgressCourseSelection right,
@@ -262,7 +381,10 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
       );
 
   // Key includes the backend chapter_number so each chapter gets its own cache slot.
-  String _chapterCacheKey(ProgressCourseSelection course, ProgressModuleStep step) {
+  String _chapterCacheKey(
+    ProgressCourseSelection course,
+    ProgressModuleStep step,
+  ) {
     return '${_courseKey(course)}::ch${step.chapterNumber}::${step.id}';
   }
 

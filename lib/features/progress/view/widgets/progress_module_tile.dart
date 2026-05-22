@@ -16,6 +16,7 @@ class ProgressModuleTile extends StatefulWidget {
     this.isLoadingSubcontent = false,
     this.subcontentError,
     this.onRetrySubcontent,
+    this.onSubcontentTap,
   });
 
   final ProgressModuleStep step;
@@ -26,6 +27,7 @@ class ProgressModuleTile extends StatefulWidget {
   final bool isLoadingSubcontent;
   final String? subcontentError;
   final VoidCallback? onRetrySubcontent;
+  final ValueChanged<ChapterSubcontentItemModel>? onSubcontentTap;
 
   @override
   State<ProgressModuleTile> createState() => _ProgressModuleTileState();
@@ -147,6 +149,7 @@ class _ProgressModuleTileState extends State<ProgressModuleTile>
                             isLoading: widget.isLoadingSubcontent,
                             errorMessage: widget.subcontentError,
                             onRetry: widget.onRetrySubcontent,
+                            onSubcontentTap: widget.onSubcontentTap,
                           )
                         : const SizedBox.shrink(),
                   ),
@@ -496,6 +499,7 @@ class _SubcontentPanel extends StatelessWidget {
     required this.isLoading,
     required this.errorMessage,
     required this.onRetry,
+    required this.onSubcontentTap,
   });
 
   final ProgressModuleStep step;
@@ -503,6 +507,7 @@ class _SubcontentPanel extends StatelessWidget {
   final bool isLoading;
   final String? errorMessage;
   final VoidCallback? onRetry;
+  final ValueChanged<ChapterSubcontentItemModel>? onSubcontentTap;
 
   @override
   Widget build(BuildContext context) {
@@ -536,6 +541,9 @@ class _SubcontentPanel extends StatelessWidget {
             child: _SubcontentRow(
               item: payload.subcontents[i],
               accent: step.toneColor,
+              onTap: onSubcontentTap == null
+                  ? null
+                  : () => onSubcontentTap!(payload.subcontents[i]),
             ),
           ),
       ],
@@ -633,10 +641,15 @@ class _ErrorRow extends StatelessWidget {
 // ── Subcontent row (title + duration badge) ───────────────────────────────────
 
 class _SubcontentRow extends StatelessWidget {
-  const _SubcontentRow({required this.item, required this.accent});
+  const _SubcontentRow({
+    required this.item,
+    required this.accent,
+    required this.onTap,
+  });
 
   final ChapterSubcontentItemModel item;
   final Color accent;
+  final VoidCallback? onTap;
 
   static Color _typeColor(String type) {
     switch (type.toLowerCase()) {
@@ -662,78 +675,92 @@ class _SubcontentRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final typeColor = _typeColor(item.subcontentType);
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainer,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: typeColor.withValues(alpha: 0.18)),
-      ),
-      child: Row(
-        children: [
-          // number dot
-          Container(
-            width: 22,
-            height: 22,
-            decoration: BoxDecoration(
-              color: typeColor.withValues(alpha: 0.14),
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Text(
-                '${item.subcontentNumber}',
-                style: GoogleFonts.spaceGrotesk(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
-                  color: typeColor,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceContainer,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: typeColor.withValues(alpha: 0.18)),
+          ),
+          child: Row(
+            children: [
+              // number dot
+              Container(
+                width: 22,
+                height: 22,
+                decoration: BoxDecoration(
+                  color: typeColor.withValues(alpha: 0.14),
+                  shape: BoxShape.circle,
                 ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          // title
-          Expanded(
-            child: Text(
-              item.title,
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: AppColors.onSurface,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          const SizedBox(width: 10),
-          // duration badge
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: accent.withValues(alpha: 0.10),
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.schedule_rounded, size: 10, color: accent),
-                const SizedBox(width: 3),
-                Text(
-                  '${item.estimatedMinutes} min',
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: accent,
+                child: Center(
+                  child: Text(
+                    '${item.subcontentNumber}',
+                    style: GoogleFonts.spaceGrotesk(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: typeColor,
+                    ),
                   ),
                 ),
+              ),
+              const SizedBox(width: 10),
+              // title
+              Expanded(
+                child: Text(
+                  item.title,
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.onSurface,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 10),
+              // duration badge
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.schedule_rounded, size: 10, color: accent),
+                    const SizedBox(width: 3),
+                    Text(
+                      '${item.estimatedMinutes} min',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: accent,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (onTap != null) ...[
+                const SizedBox(width: 8),
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 12,
+                  color: typeColor,
+                ),
               ],
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 }
-
 // ── Small helpers ─────────────────────────────────────────────────────────────
 
 class _DetailChip extends StatelessWidget {

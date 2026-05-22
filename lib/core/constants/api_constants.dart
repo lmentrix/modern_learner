@@ -54,6 +54,8 @@ abstract final class ApiConstants {
       _joinUrl(roadmapBaseUrl, '/openrouter/roadmaps/generate');
   static String get openRouterChapterSubcontentGenerate =>
       _joinUrl(roadmapBaseUrl, '/openrouter/chapter-subcontent/generate');
+  static String get openRouterChapterDetailGenerate =>
+      _joinUrl(roadmapBaseUrl, '/openrouter/chapter-detail/generate');
   static String get structuredChapterContentGenerate =>
       _joinUrl(roadmapBaseUrl, '/structured-roadmap/chapter-content/generate');
   static String get voiceChapterContentGenerate =>
