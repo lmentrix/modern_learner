@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 import 'package:modern_learner_production/features/progress/data/progress_module_step.dart';
+import 'package:modern_learner_production/features/progress/service/model/chapter_subcontent_model.dart';
 
 class ProgressModuleTile extends StatefulWidget {
   const ProgressModuleTile({
@@ -11,12 +12,20 @@ class ProgressModuleTile extends StatefulWidget {
     this.onTap,
     this.isSelected = false,
     this.isLast = false,
+    this.chapterSubcontentResponse,
+    this.isLoadingSubcontent = false,
+    this.subcontentError,
+    this.onRetrySubcontent,
   });
 
   final ProgressModuleStep step;
   final VoidCallback? onTap;
   final bool isSelected;
   final bool isLast;
+  final ChapterSubcontentResponseModel? chapterSubcontentResponse;
+  final bool isLoadingSubcontent;
+  final String? subcontentError;
+  final VoidCallback? onRetrySubcontent;
 
   @override
   State<ProgressModuleTile> createState() => _ProgressModuleTileState();
@@ -80,7 +89,7 @@ class _ProgressModuleTileState extends State<ProgressModuleTile>
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Timeline rail ─────────────────────────────────────────────────
+          // ── Timeline rail ───────────────────────────────────────────────
           SizedBox(
             width: 48,
             child: Column(
@@ -112,17 +121,36 @@ class _ProgressModuleTileState extends State<ProgressModuleTile>
               ],
             ),
           ),
-          // ── Card content ──────────────────────────────────────────────────
+          // ── Card + subcontent panel ─────────────────────────────────────
           Expanded(
             child: Padding(
               padding: EdgeInsets.only(
                 left: 10,
                 bottom: widget.isLast ? 0 : 12,
               ),
-              child: _TileCard(
-                step: step,
-                isSelected: isSelected,
-                onTap: step.isLocked ? null : widget.onTap,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _TileCard(
+                    step: step,
+                    isSelected: isSelected,
+                    onTap: step.isLocked ? null : widget.onTap,
+                  ),
+                  // ── subcontent panel (outside card) ─────────────────────
+                  AnimatedSize(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOutCubic,
+                    child: isSelected
+                        ? _SubcontentPanel(
+                            step: step,
+                            response: widget.chapterSubcontentResponse,
+                            isLoading: widget.isLoadingSubcontent,
+                            errorMessage: widget.subcontentError,
+                            onRetry: widget.onRetrySubcontent,
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+                ],
               ),
             ),
           ),
@@ -170,7 +198,6 @@ class _StepNode extends StatelessWidget {
                 BoxShadow(
                   color: step.toneColor.withValues(alpha: 0.35),
                   blurRadius: 12,
-                  spreadRadius: 0,
                 ),
               ]
             : null,
@@ -198,10 +225,8 @@ class _StepNode extends StatelessWidget {
     if (pulseAnimation != null) {
       node = AnimatedBuilder(
         animation: pulseAnimation!,
-        builder: (context, child) => Transform.scale(
-          scale: pulseAnimation!.value,
-          child: child,
-        ),
+        builder: (context, child) =>
+            Transform.scale(scale: pulseAnimation!.value, child: child),
         child: node,
       );
     }
@@ -232,7 +257,7 @@ class _TileCard extends StatelessWidget {
         : AppColors.outlineVariant.withValues(alpha: 0.12);
 
     final bgColor = isSelected
-        ? step.toneColor.withValues(alpha: 0.07)
+        ? step.toneColor.withValues(alpha: 0.06)
         : AppColors.surfaceContainerLow;
 
     final statusLabel = step.isLocked
@@ -252,9 +277,8 @@ class _TileCard extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(20),
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 260),
+          duration: const Duration(milliseconds: 280),
           curve: Curves.easeOutCubic,
-          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: bgColor,
             borderRadius: BorderRadius.circular(20),
@@ -265,141 +289,143 @@ class _TileCard extends StatelessWidget {
             boxShadow: isSelected
                 ? [
                     BoxShadow(
-                      color: step.toneColor.withValues(alpha: 0.12),
-                      blurRadius: 20,
+                      color: step.toneColor.withValues(alpha: 0.14),
+                      blurRadius: 24,
                       offset: const Offset(0, 8),
                     ),
                   ]
                 : null,
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ── header row ───────────────────────────────────────────────
-              Row(
-                children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: step.toneColor.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Center(
-                      child: Text(
-                        step.icon,
-                        style: const TextStyle(fontSize: 18),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── header row ─────────────────────────────────────────────
+                Row(
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: step.toneColor.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Center(
+                        child: Text(
+                          step.icon,
+                          style: const TextStyle(fontSize: 18),
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            step.eyebrow,
+                            style: GoogleFonts.inter(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.onSurfaceVariant,
+                              letterSpacing: 1.2,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            step.title,
+                            style: GoogleFonts.spaceGrotesk(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.onSurface,
+                              height: 1.1,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Text(
-                          step.eyebrow,
-                          style: GoogleFonts.inter(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.onSurfaceVariant,
-                            letterSpacing: 1.2,
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 9,
+                            vertical: 5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: statusColor.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            statusLabel,
+                            style: GoogleFonts.inter(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: statusColor,
+                            ),
                           ),
                         ),
-                        const SizedBox(height: 3),
-                        Text(
-                          step.title,
-                          style: GoogleFonts.spaceGrotesk(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.onSurface,
-                            height: 1.1,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+                        const SizedBox(height: 6),
+                        Icon(
+                          isSelected
+                              ? Icons.keyboard_arrow_up_rounded
+                              : Icons.keyboard_arrow_down_rounded,
+                          color: step.isLocked
+                              ? AppColors.onSurfaceVariant
+                              : step.toneColor,
+                          size: 18,
                         ),
                       ],
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 9,
-                          vertical: 5,
-                        ),
-                        decoration: BoxDecoration(
-                          color: statusColor.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: Text(
-                          statusLabel,
-                          style: GoogleFonts.inter(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            color: statusColor,
+                  ],
+                ),
+                // ── progress bar ────────────────────────────────────────────
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(999),
+                        child: LinearProgressIndicator(
+                          value: step.progress,
+                          minHeight: 5,
+                          backgroundColor: AppColors.surfaceContainerHighest,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            step.isLocked
+                                ? AppColors.onSurfaceVariant
+                                    .withValues(alpha: 0.3)
+                                : step.toneColor,
                           ),
                         ),
                       ),
-                      const SizedBox(height: 6),
-                      Icon(
-                        isSelected
-                            ? Icons.keyboard_arrow_up_rounded
-                            : Icons.keyboard_arrow_down_rounded,
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      '${(step.progress * 100).round()}%',
+                      style: GoogleFonts.spaceGrotesk(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
                         color: step.isLocked
                             ? AppColors.onSurfaceVariant
-                            : step.toneColor,
-                        size: 18,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              // ── progress bar ─────────────────────────────────────────────
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(999),
-                      child: LinearProgressIndicator(
-                        value: step.progress,
-                        minHeight: 5,
-                        backgroundColor:
-                            AppColors.surfaceContainerHighest,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          step.isLocked
-                              ? AppColors.onSurfaceVariant
-                                  .withValues(alpha: 0.3)
-                              : step.toneColor,
-                        ),
+                            : AppColors.onSurface,
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 10),
-                  Text(
-                    '${(step.progress * 100).round()}%',
-                    style: GoogleFonts.spaceGrotesk(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: step.isLocked
-                          ? AppColors.onSurfaceVariant
-                          : AppColors.onSurface,
-                    ),
-                  ),
-                ],
-              ),
-              // ── expanded detail ───────────────────────────────────────────
-              AnimatedSize(
-                duration: const Duration(milliseconds: 280),
-                curve: Curves.easeOutCubic,
-                child: isSelected
-                    ? _ExpandedDetail(step: step)
-                    : const SizedBox.shrink(),
-              ),
-            ],
+                  ],
+                ),
+                // ── expanded detail ─────────────────────────────────────────
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 280),
+                  curve: Curves.easeOutCubic,
+                  child: isSelected
+                      ? _ExpandedDetail(step: step)
+                      : const SizedBox.shrink(),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -460,6 +486,255 @@ class _ExpandedDetail extends StatelessWidget {
     );
   }
 }
+
+// ── Subcontent Panel (outside card) ───────────────────────────────────────────
+
+class _SubcontentPanel extends StatelessWidget {
+  const _SubcontentPanel({
+    required this.step,
+    required this.response,
+    required this.isLoading,
+    required this.errorMessage,
+    required this.onRetry,
+  });
+
+  final ProgressModuleStep step;
+  final ChapterSubcontentResponseModel? response;
+  final bool isLoading;
+  final String? errorMessage;
+  final VoidCallback? onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: _buildBody(),
+    );
+  }
+
+  Widget _buildBody() {
+    if (isLoading) {
+      return _LoadingRow(step: step);
+    }
+    if (errorMessage != null) {
+      return _ErrorRow(step: step, message: errorMessage!, onRetry: onRetry);
+    }
+    final payload = response?.chapterSubcontent;
+    if (payload == null) {
+      return _ErrorRow(
+        step: step,
+        message: 'Could not load the chapter build.',
+        onRetry: onRetry,
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (int i = 0; i < payload.subcontents.length; i++)
+          Padding(
+            padding: EdgeInsets.only(bottom: i < payload.subcontents.length - 1 ? 6 : 0),
+            child: _SubcontentRow(
+              item: payload.subcontents[i],
+              accent: step.toneColor,
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+// ── Loading row ───────────────────────────────────────────────────────────────
+
+class _LoadingRow extends StatelessWidget {
+  const _LoadingRow({required this.step});
+
+  final ProgressModuleStep step;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 14,
+            height: 14,
+            child: CircularProgressIndicator(
+              strokeWidth: 1.8,
+              valueColor: AlwaysStoppedAnimation<Color>(step.toneColor),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Text(
+            'Generating chapter ${step.chapterNumber} build…',
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              color: AppColors.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Error row ─────────────────────────────────────────────────────────────────
+
+class _ErrorRow extends StatelessWidget {
+  const _ErrorRow({
+    required this.step,
+    required this.message,
+    required this.onRetry,
+  });
+
+  final ProgressModuleStep step;
+  final String message;
+  final VoidCallback? onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+      child: Row(
+        children: [
+          const Icon(Icons.error_outline_rounded, size: 14, color: AppColors.error),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              message,
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                color: AppColors.onSurfaceVariant,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          if (onRetry != null) ...[
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: onRetry,
+              child: Text(
+                'Retry',
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: step.toneColor,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// ── Subcontent row (title + duration badge) ───────────────────────────────────
+
+class _SubcontentRow extends StatelessWidget {
+  const _SubcontentRow({required this.item, required this.accent});
+
+  final ChapterSubcontentItemModel item;
+  final Color accent;
+
+  static Color _typeColor(String type) {
+    switch (type.toLowerCase()) {
+      case 'lesson':
+      case 'foundation':
+        return AppColors.primary;
+      case 'practice':
+      case 'guided_practice':
+        return AppColors.secondary;
+      case 'quiz':
+      case 'review':
+        return const Color(0xFFFF9500);
+      case 'speaking':
+        return const Color(0xFF26C6DA);
+      case 'chapter_checkpoint':
+        return const Color(0xFF9C27B0);
+      default:
+        return AppColors.tertiary;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final typeColor = _typeColor(item.subcontentType);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainer,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: typeColor.withValues(alpha: 0.18)),
+      ),
+      child: Row(
+        children: [
+          // number dot
+          Container(
+            width: 22,
+            height: 22,
+            decoration: BoxDecoration(
+              color: typeColor.withValues(alpha: 0.14),
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Text(
+                '${item.subcontentNumber}',
+                style: GoogleFonts.spaceGrotesk(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  color: typeColor,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          // title
+          Expanded(
+            child: Text(
+              item.title,
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppColors.onSurface,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const SizedBox(width: 10),
+          // duration badge
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.schedule_rounded, size: 10, color: accent),
+                const SizedBox(width: 3),
+                Text(
+                  '${item.estimatedMinutes} min',
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: accent,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Small helpers ─────────────────────────────────────────────────────────────
 
 class _DetailChip extends StatelessWidget {
   const _DetailChip({

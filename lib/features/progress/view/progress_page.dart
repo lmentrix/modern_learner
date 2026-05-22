@@ -1,21 +1,18 @@
 import 'package:flutter/material.dart';
-
 import 'package:modern_learner_production/core/di/injection.dart';
 import 'package:modern_learner_production/core/models/progress_course_selection.dart';
 import 'package:modern_learner_production/core/state/progress_navigation_state.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 import 'package:modern_learner_production/features/explore/service/explore_courses_service.dart';
+import 'package:modern_learner_production/features/progress/data/progress_module_step.dart';
 import 'package:modern_learner_production/features/progress/data/progress_page_constants.dart';
 import 'package:modern_learner_production/features/progress/data/progress_page_seed.dart';
-import 'package:modern_learner_production/features/progress/data/progress_module_step.dart';
 import 'package:modern_learner_production/features/progress/service/cache/roadmap_id_cache.dart';
 import 'package:modern_learner_production/features/progress/service/model/chapter_subcontent_model.dart';
 import 'package:modern_learner_production/features/progress/service/model/roadmap_model.dart';
 import 'package:modern_learner_production/features/progress/service/request/chapter_subcontent.dart';
 import 'package:modern_learner_production/features/progress/view/section/progress_empty_state_section.dart';
-import 'package:modern_learner_production/features/progress/view/section/progress_header_section.dart';
 import 'package:modern_learner_production/features/progress/view/section/progress_journey_section.dart';
-import 'package:modern_learner_production/features/progress/view/section/progress_weekly_section.dart';
 
 class ProgressViewPage extends StatefulWidget {
   const ProgressViewPage({super.key, this.initialCourseSelection});
@@ -70,16 +67,6 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
           child: CustomScrollView(
             physics: const BouncingScrollPhysics(),
             slivers: [
-              SliverToBoxAdapter(child: ProgressHeaderSection(data: pageData)),
-              const SliverToBoxAdapter(
-                child: SizedBox(height: ProgressPageConstants.sectionSpacing),
-              ),
-              SliverPadding(
-                padding: ProgressPageConstants.pagePadding,
-                sliver: SliverToBoxAdapter(
-                  child: ProgressWeeklySection(data: pageData),
-                ),
-              ),
               const SliverToBoxAdapter(
                 child: SizedBox(height: ProgressPageConstants.sectionSpacing),
               ),
@@ -89,22 +76,21 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
                   child: ProgressJourneySection(
                     data: pageData,
                     selectedChapterId: _selectedChapterId,
+                    onChapterTap: (step) =>
+                        _handleChapterTap(selectedCourse, step),
                     chapterSubcontentResponse: _chapterSubcontentResponse,
                     isLoadingChapterSubcontent: _isLoadingChapterSubcontent,
                     chapterSubcontentError: _chapterSubcontentError,
-                    onChapterTap: (step) =>
-                        _handleChapterTap(selectedCourse, step),
                     onRetryTap: _selectedChapterId == null
                         ? null
                         : () {
-                            final selectedStep = pageData.moduleSteps
-                                .where((step) => step.id == _selectedChapterId)
+                            final step = pageData.moduleSteps
+                                .where((s) => s.id == _selectedChapterId)
                                 .cast<ProgressModuleStep?>()
                                 .firstOrNull;
-                            if (selectedStep == null) {
-                              return;
+                            if (step != null) {
+                              _retryChapterFetch(selectedCourse, step);
                             }
-                            _handleChapterTap(selectedCourse, selectedStep);
                           },
                   ),
                 ),
@@ -154,7 +140,13 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
       return;
     }
 
-    final cacheEntryKey = _chapterCacheKey(course, step.id);
+    // Tap the active chapter again → collapse the subcontent panel.
+    if (_selectedChapterId == step.id) {
+      setState(() => _resetChapterSubcontentState(clearCache: false));
+      return;
+    }
+
+    final cacheEntryKey = _chapterCacheKey(course, step);
     final cachedResponse = _chapterSubcontentCache[cacheEntryKey];
 
     setState(() {
@@ -168,6 +160,30 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
       return;
     }
 
+    await _fetchSubcontent(course, step);
+  }
+
+  Future<void> _retryChapterFetch(
+    ProgressCourseSelection course,
+    ProgressModuleStep step,
+  ) async {
+    final cacheKey = _chapterCacheKey(course, step);
+    _chapterSubcontentCache.remove(cacheKey);
+
+    setState(() {
+      _chapterSubcontentError = null;
+      _chapterSubcontentResponse = null;
+      _isLoadingChapterSubcontent = true;
+    });
+
+    await _fetchSubcontent(course, step);
+  }
+
+  Future<void> _fetchSubcontent(
+    ProgressCourseSelection course,
+    ProgressModuleStep step,
+  ) async {
+    final cacheEntryKey = _chapterCacheKey(course, step);
     final requestToken = ++_chapterSubcontentRequestToken;
 
     try {
@@ -175,12 +191,19 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
       if (roadmapResponse == null) {
         throw StateError('No roadmap available for this course.');
       }
+      final roadmapJson = course.roadmapJson?['roadmap'] is Map
+          ? Map<String, dynamic>.from(
+              course.roadmapJson!['roadmap'] as Map,
+            )
+          : null;
+
       final response = await fetchChapterSubcontent(
         ChapterSubcontentGenerateRequestModel(
           roadmapId: roadmapResponse.roadmap.id,
           roadmapCacheKey: _roadmapCacheKey(course),
           chapterNumber: step.chapterNumber,
           model: roadmapResponse.model,
+          roadmapJson: roadmapJson,
         ),
       );
 
@@ -238,8 +261,9 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
         nativeLanguage: course.nativeLanguage,
       );
 
-  String _chapterCacheKey(ProgressCourseSelection course, String chapterId) {
-    return '${_courseKey(course)}::$chapterId';
+  // Key includes the backend chapter_number so each chapter gets its own cache slot.
+  String _chapterCacheKey(ProgressCourseSelection course, ProgressModuleStep step) {
+    return '${_courseKey(course)}::ch${step.chapterNumber}::${step.id}';
   }
 
   void _resetChapterSubcontentState({required bool clearCache}) {
@@ -265,4 +289,3 @@ RoadmapResponseModel? _extractRoadmapResponse(Map<String, dynamic>? raw) {
     return null;
   }
 }
-
