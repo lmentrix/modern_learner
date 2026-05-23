@@ -161,7 +161,7 @@ List<ProgressModuleStep> _buildModuleSteps({
     final chapterNumber = _chapterNumberFor(chapter, index);
     final progress = index < currentIndex
         ? 1.0
-        : index == currentIndex
+        : (index == currentIndex && currentIndex > 0)
         ? (0.42 + levelFactor * 0.28).clamp(0.42, 0.88)
         : 0.0;
 
@@ -242,7 +242,7 @@ List<ProgressModuleStep> _fallbackModuleSteps({
       detail: details[index],
       progress: index < currentIndex
           ? 1.0
-          : index == currentIndex
+          : (index == currentIndex && currentIndex > 0)
           ? (0.40 + levelFactor * 0.30).clamp(0.40, 0.90)
           : 0.0,
       durationLabel: '${50 + index * 15} min',

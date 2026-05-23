@@ -20,6 +20,8 @@ import 'package:modern_learner_production/features/profile/data/achievement_repo
 import 'package:modern_learner_production/features/profile/data/local_achievement_repository.dart';
 import 'package:modern_learner_production/features/profile/view/bloc/profile_achievement_bloc.dart';
 import 'package:modern_learner_production/features/profile/view/bloc/profile_bloc.dart';
+import 'package:modern_learner_production/features/progress/bloc/xp_bloc.dart';
+import 'package:modern_learner_production/features/progress/service/course_xp_service.dart';
 
 final getIt = GetIt.instance;
 
@@ -39,6 +41,10 @@ Future<void> configureDependencies() async {
 
   getIt.registerSingleton<LocalProfileService>(
     LocalProfileService(sharedPreferences: sharedPreferences),
+  );
+  CourseXpService.instance.inject(sharedPreferences);
+  getIt.registerFactoryParam<XpBloc, String, void>(
+    (courseKey, _) => XpBloc(courseKey: courseKey),
   );
   getIt.registerFactory(() => ProfileBloc(getIt()));
 

@@ -13,6 +13,7 @@ class ProfileAchievementBloc
   ProfileAchievementBloc(this._repository) : super(const AchievementState()) {
     on<ProfileAchievementLoadRequested>(_onLoadRequested);
     on<ProfileAchievementFilterChanged>(_onFilterChanged);
+    on<ProfileAchievementXpUpdated>(_onXpUpdated);
   }
 
   final AchievementRepository _repository;
@@ -47,5 +48,33 @@ class ProfileAchievementBloc
         filtered: filterAchievements(state.achievements, event.filter),
       ),
     );
+  }
+
+  void _onXpUpdated(
+    ProfileAchievementXpUpdated event,
+    Emitter<AchievementState> emit,
+  ) {
+    if (state.status != AchievementStatus.loaded) return;
+
+    final updated = state.achievements.map((a) {
+      if (a.id != 'xp_collector') return a;
+      return a.copyWith(
+        currentProgress: event.totalXp,
+        currentLevel: _levelFor(event.totalXp, a.levelThresholds),
+      );
+    }).toList();
+
+    emit(state.copyWith(
+      achievements: updated,
+      filtered: filterAchievements(updated, state.selectedFilter),
+    ));
+  }
+
+  static int _levelFor(int value, List<int> thresholds) {
+    var level = 0;
+    for (var i = 0; i < thresholds.length; i++) {
+      if (value >= thresholds[i]) level = i + 1;
+    }
+    return level;
   }
 }

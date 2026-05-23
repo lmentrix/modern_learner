@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import 'package:modern_learner_production/core/models/progress_course_selection.dart';
 import 'package:modern_learner_production/features/explore/service/user_courses_service.dart';
+import 'package:modern_learner_production/features/progress/service/course_xp_service.dart';
 
 /// Holds courses created from the Explore page and mirrors them to local
 /// storage.
@@ -27,6 +28,7 @@ class ExploreCoursesService {
     final duplicate = current.any((c) => _matches(c, course));
     if (duplicate) return;
 
+    CourseXpService.instance.resetCourse(progressCourseXpKey(course));
     courses.value = [course, ...current];
     await _storage?.upsertCourse(course);
   }
@@ -46,6 +48,7 @@ class ExploreCoursesService {
   }
 
   Future<void> removeCourse(ProgressCourseSelection course) async {
+    CourseXpService.instance.resetCourse(progressCourseXpKey(course));
     courses.value = courses.value
         .where((c) => c != course)
         .toList(growable: false);

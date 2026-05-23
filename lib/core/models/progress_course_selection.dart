@@ -43,6 +43,9 @@ class ProgressCourseSelection extends Equatable {
   final bool roadmapGenerated;
   final ProgressCourseType courseType;
 
+  String get xpKey =>
+      [title, topic, level, nativeLanguage, courseType.name].join('::');
+
   ProgressCourseSelection copyWith({
     Map<String, dynamic>? roadmapJson,
     bool? roadmapGenerated,
@@ -71,4 +74,14 @@ class ProgressCourseSelection extends Equatable {
     roadmapGenerated,
     courseType,
   ];
+}
+
+String progressCourseXpKey(ProgressCourseSelection course) {
+  return [
+    course.title,
+    course.topic,
+    course.level,
+    course.nativeLanguage,
+    course.courseType.name,
+  ].join('::');
 }
