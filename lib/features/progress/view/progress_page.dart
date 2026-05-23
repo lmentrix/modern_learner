@@ -8,6 +8,7 @@ import 'package:modern_learner_production/core/state/progress_navigation_state.d
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 import 'package:modern_learner_production/features/explore/service/explore_courses_service.dart';
 import 'package:modern_learner_production/features/progress/bloc/xp_bloc.dart';
+import 'package:modern_learner_production/features/progress/service/course_xp_service.dart';
 import 'package:modern_learner_production/features/progress/data/progress_module_step.dart';
 import 'package:modern_learner_production/features/progress/data/progress_page_constants.dart';
 import 'package:modern_learner_production/features/progress/data/progress_page_seed.dart';
@@ -31,13 +32,7 @@ class ProgressViewPage extends StatefulWidget {
 }
 
 class _ProgressViewPageState extends State<ProgressViewPage> {
-  final XpBloc _xpBloc = XpBloc();
-
-  @override
-  void dispose() {
-    _xpBloc.close();
-    super.dispose();
-  }
+  final Map<String, XpBloc> _xpBlocByCourse = {};
 
   bool _isLoadingChapterSubcontent = false;
   String? _chapterSubcontentError;
@@ -50,37 +45,50 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
   final Map<String, int> _unlockedChapterLimitByCourse = <String, int>{};
 
   @override
+  void dispose() {
+    for (final bloc in _xpBlocByCourse.values) {
+      bloc.close();
+    }
+    super.dispose();
+  }
+
+  XpBloc _xpBlocFor(ProgressCourseSelection course) {
+    final key = _courseKey(course);
+    return _xpBlocByCourse.putIfAbsent(key, () => getIt<XpBloc>(param1: key));
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return BlocProvider.value(
-      value: _xpBloc,
-      child: ValueListenableBuilder<List<ProgressCourseSelection>>(
-        valueListenable: ExploreCoursesService.instance.courses,
-        builder: (context, courses, child) {
-          final selectedCourse = _resolveSelectedCourse(courses);
+    return ValueListenableBuilder<List<ProgressCourseSelection>>(
+      valueListenable: ExploreCoursesService.instance.courses,
+      builder: (context, courses, child) {
+        final selectedCourse = _resolveSelectedCourse(courses);
 
-          if (selectedCourse == null) {
-            return const Material(
-              color: AppColors.surface,
-              child: ProgressEmptyStateSection(),
-            );
-          }
-
-          _syncSelectedCourse(selectedCourse);
-
-          final navState = getIt<ProgressNavigationState>();
-          final pageData = buildProgressPageData(
-            course: selectedCourse,
-            unlockedChapterLimit: _unlockedChapterLimit(selectedCourse),
+        if (selectedCourse == null) {
+          return const Material(
+            color: AppColors.surface,
+            child: ProgressEmptyStateSection(),
           );
-          if (navState.hasSelection) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (navState.hasSelection) {
-                navState.clearSelection();
-              }
-            });
-          }
+        }
 
-          return Material(
+        _syncSelectedCourse(selectedCourse);
+
+        final navState = getIt<ProgressNavigationState>();
+        final pageData = buildProgressPageData(
+          course: selectedCourse,
+          unlockedChapterLimit: _unlockedChapterLimit(selectedCourse),
+        );
+        if (navState.hasSelection) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (navState.hasSelection) {
+              navState.clearSelection();
+            }
+          });
+        }
+
+        return BlocProvider.value(
+          value: _xpBlocFor(selectedCourse),
+          child: Material(
             color: AppColors.surface,
             child: CustomScrollView(
               physics: const BouncingScrollPhysics(),
@@ -131,9 +139,9 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
                 const SliverToBoxAdapter(child: SizedBox(height: 110)),
               ],
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -328,25 +336,28 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
       return;
     }
 
-    _xpBloc.add(XpEarned(XpBloc.xpPerExercise));
+    _xpBlocFor(course).add(XpEarned(XpBloc.xpPerExercise));
     _markChapterComplete(course, completion.chapterNumber);
   }
 
   int _unlockedChapterLimit(ProgressCourseSelection course) {
-    return _unlockedChapterLimitByCourse[_courseKey(course)] ?? 1;
+    final key = _courseKey(course);
+    return _unlockedChapterLimitByCourse.putIfAbsent(
+      key,
+      () => CourseXpService.instance.dataFor(key).chaptersUnlocked,
+    );
   }
 
   void _markChapterComplete(ProgressCourseSelection course, int chapterNumber) {
     final courseKey = _courseKey(course);
     final currentLimit = _unlockedChapterLimitByCourse[courseKey] ?? 1;
     final nextLimit = chapterNumber + 1;
-    if (nextLimit <= currentLimit) {
-      return;
-    }
+    if (nextLimit <= currentLimit) return;
 
     setState(() {
       _unlockedChapterLimitByCourse[courseKey] = nextLimit;
     });
+    CourseXpService.instance.updateUnlockedLimit(courseKey, nextLimit);
   }
 
   bool _matchesCourse(
@@ -359,15 +370,8 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
         left.nativeLanguage == right.nativeLanguage;
   }
 
-  String _courseKey(ProgressCourseSelection course) {
-    return [
-      course.title,
-      course.topic,
-      course.level,
-      course.nativeLanguage,
-      course.courseType.name,
-    ].join('::');
-  }
+  String _courseKey(ProgressCourseSelection course) =>
+      progressCourseXpKey(course);
 
   String _roadmapCacheKey(ProgressCourseSelection course) =>
       RoadmapIdCache.buildRoadmapCacheKey(

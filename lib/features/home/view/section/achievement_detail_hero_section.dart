@@ -103,9 +103,12 @@ class AchievementDetailHeroSection extends StatelessWidget {
                 child: Center(
                   child: Opacity(
                     opacity: isLocked ? 0.35 : 1.0,
-                    child: Text(
-                      achievement.emoji,
-                      style: const TextStyle(fontSize: 54),
+                    child: Icon(
+                      isLocked ? Icons.lock_rounded : _iconFor(achievement),
+                      size: 54,
+                      color: isLocked
+                          ? AppColors.onSurfaceVariant
+                          : displayColor,
                     ),
                   ),
                 ),
@@ -163,5 +166,23 @@ class AchievementDetailHeroSection extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  IconData _iconFor(AchievementEntity achievement) {
+    if (achievement.id.contains('chapter')) return Icons.menu_book_rounded;
+    if (achievement.id.contains('exercise')) {
+      return Icons.fitness_center_rounded;
+    }
+    if (achievement.id.contains('dedicated')) return Icons.school_rounded;
+    if (achievement.category == 'Experience') return Icons.star_rounded;
+    if (achievement.category == 'Learning') return Icons.auto_stories_rounded;
+    if (achievement.category == 'Mastery') return Icons.diamond_rounded;
+    if (achievement.category == 'Dedication') {
+      return Icons.event_available_rounded;
+    }
+    if (achievement.category == 'Streaks') {
+      return Icons.local_fire_department_rounded;
+    }
+    return Icons.emoji_events_rounded;
   }
 }

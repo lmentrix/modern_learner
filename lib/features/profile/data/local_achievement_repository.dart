@@ -32,10 +32,64 @@ class LocalAchievementRepository implements AchievementRepository {
   // ---------------------------------------------------------------------------
 
   List<AchievementEntity> _templatesFor(String? courseId) {
-    if (courseId != null && _courseTemplates.containsKey(courseId)) {
+    if (courseId == null) return _globalTemplates;
+    if (_courseTemplates.containsKey(courseId)) {
       return _courseTemplates[courseId]!;
     }
-    return _globalTemplates;
+    return _generateCourseTemplates(courseId);
+  }
+
+  static List<AchievementEntity> _generateCourseTemplates(String courseId) {
+    return [
+      AchievementEntity(
+        id: '${courseId}_chapter_starter',
+        emoji: '📖',
+        title: 'Chapter Starter',
+        description: 'Complete chapters in this course to climb the tiers.',
+        color: const Color(0xFF0F766E),
+        category: 'Learning',
+        levelThresholds: const [1, 3, 5, 10, 20],
+        levelRequirements: const [
+          '1 chapter',
+          '3 chapters',
+          '5 chapters',
+          '10 chapters',
+          '20 chapters',
+        ],
+      ),
+      AchievementEntity(
+        id: '${courseId}_exercise_champion',
+        emoji: '💪',
+        title: 'Exercise Champion',
+        description: 'Finish exercises in this course to prove your mastery.',
+        color: const Color(0xFF7E51FF),
+        category: 'Learning',
+        levelThresholds: const [1, 5, 15, 30, 60],
+        levelRequirements: const [
+          '1 exercise',
+          '5 exercises',
+          '15 exercises',
+          '30 exercises',
+          '60 exercises',
+        ],
+      ),
+      AchievementEntity(
+        id: '${courseId}_dedicated_learner',
+        emoji: '🎓',
+        title: 'Dedicated Learner',
+        description: 'Keep coming back to this course day after day.',
+        color: const Color(0xFF26C6DA),
+        category: 'Dedication',
+        levelThresholds: const [1, 3, 7, 14, 30],
+        levelRequirements: const [
+          '1 session',
+          '3 sessions',
+          '7 sessions',
+          '14 sessions',
+          '30 sessions',
+        ],
+      ),
+    ];
   }
 
   static int _levelFor(int value, List<int> thresholds) {

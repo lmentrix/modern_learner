@@ -11,31 +11,40 @@ class ProfileAchievementBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tierColor = AchievementEntity.tierColor(achievement.currentLevel);
+    final isLocked = achievement.isLocked;
+    final tierColor = isLocked
+        ? AppColors.onSurfaceVariant
+        : AchievementEntity.tierColor(achievement.currentLevel);
+
     return Container(
-      width: 112,
-      padding: const EdgeInsets.all(14),
+      width: 124,
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            tierColor.withValues(alpha: 0.22),
-            AppColors.surfaceContainerLow,
-          ],
-        ),
+        color: isLocked ? AppColors.surfaceContainerLow : null,
+        gradient: isLocked
+            ? null
+            : LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  tierColor.withValues(alpha: 0.22),
+                  AppColors.surfaceContainerLow,
+                ],
+              ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: tierColor.withValues(alpha: 0.35),
-          width: 1.5,
+          color: tierColor.withValues(alpha: isLocked ? 0.18 : 0.35),
+          width: isLocked ? 1 : 1.5,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: tierColor.withValues(alpha: 0.16),
-            blurRadius: 14,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        boxShadow: isLocked
+            ? null
+            : [
+                BoxShadow(
+                  color: tierColor.withValues(alpha: 0.16),
+                  blurRadius: 14,
+                  offset: const Offset(0, 4),
+                ),
+              ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -48,23 +57,31 @@ class ProfileAchievementBadge extends StatelessWidget {
               borderRadius: BorderRadius.circular(14),
             ),
             child: Center(
-              child: Text(
-                achievement.emoji,
-                style: const TextStyle(fontSize: 26),
+              child: Icon(
+                isLocked ? Icons.lock_rounded : _iconFor(achievement),
+                size: 26,
+                color: tierColor,
               ),
             ),
           ),
           const SizedBox(height: 8),
-          Text(
-            achievement.title,
-            style: GoogleFonts.inter(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: AppColors.onSurface,
+          Expanded(
+            child: Center(
+              child: Text(
+                achievement.title,
+                style: GoogleFonts.inter(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w700,
+                  color: isLocked
+                      ? AppColors.onSurfaceVariant
+                      : AppColors.onSurface,
+                  height: 1.1,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 4),
           Container(
@@ -74,8 +91,10 @@ class ProfileAchievementBadge extends StatelessWidget {
               borderRadius: BorderRadius.circular(999),
             ),
             child: Text(
-              '${AchievementEntity.tierName(achievement.currentLevel)} '
-              '${AchievementEntity.tierRoman(achievement.currentLevel)}',
+              isLocked
+                  ? 'Unavailable'
+                  : '${AchievementEntity.tierName(achievement.currentLevel)} '
+                        '${AchievementEntity.tierRoman(achievement.currentLevel)}',
               style: GoogleFonts.inter(
                 fontSize: 9,
                 fontWeight: FontWeight.w700,
@@ -87,5 +106,23 @@ class ProfileAchievementBadge extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  IconData _iconFor(AchievementEntity achievement) {
+    if (achievement.id.contains('chapter')) return Icons.menu_book_rounded;
+    if (achievement.id.contains('exercise')) {
+      return Icons.fitness_center_rounded;
+    }
+    if (achievement.id.contains('dedicated')) return Icons.school_rounded;
+    if (achievement.category == 'Experience') return Icons.star_rounded;
+    if (achievement.category == 'Learning') return Icons.auto_stories_rounded;
+    if (achievement.category == 'Mastery') return Icons.diamond_rounded;
+    if (achievement.category == 'Dedication') {
+      return Icons.event_available_rounded;
+    }
+    if (achievement.category == 'Streaks') {
+      return Icons.local_fire_department_rounded;
+    }
+    return Icons.emoji_events_rounded;
   }
 }

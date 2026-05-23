@@ -23,3 +23,13 @@ final class ProfileAchievementFilterChanged extends ProfileAchievementEvent {
   @override
   List<Object?> get props => [filter];
 }
+
+/// Sync live XP from XpBloc so the xp_collector achievement reflects real progress.
+final class ProfileAchievementXpUpdated extends ProfileAchievementEvent {
+  const ProfileAchievementXpUpdated(this.totalXp);
+
+  final int totalXp;
+
+  @override
+  List<Object?> get props => [totalXp];
+}
