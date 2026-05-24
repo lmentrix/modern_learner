@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:modern_learner_production/core/theme/app_colors.dart';
-import 'package:modern_learner_production/features/profile/data/profile_page_data.dart';
+import 'package:modern_learner_production/features/profile/data/learning_activity_summary.dart';
+import 'package:modern_learner_production/features/profile/service/learning_activity_service.dart';
 import 'package:modern_learner_production/features/profile/view/widgets/profile_footer_stat.dart';
 
 class ProfileActivityChart extends StatefulWidget {
@@ -12,84 +13,67 @@ class ProfileActivityChart extends StatefulWidget {
   State<ProfileActivityChart> createState() => _ProfileActivityChartState();
 }
 
-class _ProfileActivityChartState extends State<ProfileActivityChart>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  late final List<Animation<double>> _barAnimations;
-  late final List<Animation<int>> _countAnimations;
-
-  static const _maxBarHeight = 72.0;
-  static const _todayIndex = 4;
+class _ProfileActivityChartState extends State<ProfileActivityChart> {
+  Future<LearningActivitySummary>? _summaryFuture;
 
   @override
   void initState() {
     super.initState();
-
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1400),
-    );
-
-    const weekDays = ProfilePageData.weekDays;
-    final maxActivity = weekDays
-        .map((day) => day.minutes)
-        .reduce((left, right) => left > right ? left : right);
-
-    _barAnimations = List.generate(weekDays.length, (index) {
-      final start = (index * 0.08).clamp(0.0, 0.7);
-      final end = (start + 0.55).clamp(0.0, 1.0);
-      return Tween<double>(
-        begin: 0,
-        end: (weekDays[index].minutes / maxActivity) * _maxBarHeight,
-      ).animate(
-        CurvedAnimation(
-          parent: _controller,
-          curve: Interval(start, end, curve: Curves.easeOutCubic),
-        ),
-      );
-    });
-
-    _countAnimations = List.generate(weekDays.length, (index) {
-      final start = (index * 0.08).clamp(0.0, 0.7);
-      final end = (start + 0.55).clamp(0.0, 1.0);
-      return IntTween(begin: 0, end: weekDays[index].minutes).animate(
-        CurvedAnimation(
-          parent: _controller,
-          curve: Interval(start, end, curve: Curves.easeOut),
-        ),
-      );
-    });
-
-    _controller.forward();
+    _summaryFuture = _loadSummary();
   }
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  int get _totalMinutes =>
-      ProfilePageData.weekDays.fold(0, (sum, day) => sum + day.minutes);
-
-  String get _totalFormatted {
-    final hours = _totalMinutes ~/ 60;
-    final minutes = _totalMinutes % 60;
-    return hours > 0 ? '${hours}h ${minutes}m' : '${minutes}m';
+  Future<LearningActivitySummary> _loadSummary() async {
+    await LearningActivityService.instance.flushPending();
+    return LearningActivityService.instance.fetchCurrentWeek();
   }
 
   @override
   Widget build(BuildContext context) {
-    const weekDays = ProfilePageData.weekDays;
+    final summaryFuture = _summaryFuture ??= _loadSummary();
 
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        return FadeTransition(
-          opacity: CurvedAnimation(
-            parent: _controller,
-            curve: const Interval(0.0, 0.35, curve: Curves.easeIn),
-          ),
+    return FutureBuilder<LearningActivitySummary>(
+      future: summaryFuture,
+      builder: (context, snapshot) {
+        final summary =
+            snapshot.data ?? LearningActivitySummary.emptyForCurrentWeek();
+
+        return _ActivityCard(
+          summary: summary,
+          isLoading: snapshot.connectionState == ConnectionState.waiting,
+          onRefresh: () {
+            setState(() => _summaryFuture = _loadSummary());
+          },
+        );
+      },
+    );
+  }
+}
+
+class _ActivityCard extends StatelessWidget {
+  const _ActivityCard({
+    required this.summary,
+    required this.isLoading,
+    required this.onRefresh,
+  });
+
+  final LearningActivitySummary summary;
+  final bool isLoading;
+  final VoidCallback onRefresh;
+
+  static const _maxBarHeight = 72.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final days = summary.days;
+    final maxActivity = summary.bestDayMinutes > 0 ? summary.bestDayMinutes : 1;
+
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 800),
+      curve: Curves.easeOutCubic,
+      builder: (context, progress, child) {
+        return Opacity(
+          opacity: progress,
           child: Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
@@ -127,6 +111,16 @@ class _ProfileActivityChartState extends State<ProfileActivityChart>
                         ],
                       ),
                     ),
+                    IconButton(
+                      visualDensity: VisualDensity.compact,
+                      tooltip: 'Refresh',
+                      onPressed: isLoading ? null : onRefresh,
+                      icon: const Icon(
+                        Icons.refresh_rounded,
+                        color: AppColors.onSurfaceVariant,
+                        size: 18,
+                      ),
+                    ),
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 12,
@@ -140,7 +134,7 @@ class _ProfileActivityChartState extends State<ProfileActivityChart>
                         ),
                       ),
                       child: Text(
-                        _totalFormatted,
+                        summary.totalFormatted,
                         style: GoogleFonts.spaceGrotesk(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
@@ -155,18 +149,16 @@ class _ProfileActivityChartState extends State<ProfileActivityChart>
                   height: _maxBarHeight + 52,
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.end,
-                    children: List.generate(weekDays.length, (index) {
-                      final day = weekDays[index];
-                      final isToday = index == _todayIndex;
+                    children: List.generate(days.length, (index) {
+                      final day = days[index];
+                      final isToday = index == summary.todayIndex;
                       final isMax =
-                          day.minutes ==
-                          weekDays
-                              .map((item) => item.minutes)
-                              .reduce(
-                                (left, right) => left > right ? left : right,
-                              );
-                      final barHeight = _barAnimations[index].value;
-                      final count = _countAnimations[index].value;
+                          day.minutes > 0 &&
+                          day.minutes == summary.bestDayMinutes;
+                      final barHeight =
+                          (day.minutes / maxActivity) * _maxBarHeight;
+                      final animatedHeight = barHeight * progress;
+                      final count = (day.minutes * progress).round();
 
                       return Expanded(
                         child: Column(
@@ -196,7 +188,7 @@ class _ProfileActivityChartState extends State<ProfileActivityChart>
                                     bottom: 0,
                                     child: Container(
                                       width: 28,
-                                      height: barHeight,
+                                      height: animatedHeight,
                                       decoration: BoxDecoration(
                                         borderRadius: BorderRadius.circular(6),
                                         boxShadow: [
@@ -213,7 +205,10 @@ class _ProfileActivityChartState extends State<ProfileActivityChart>
                                   ),
                                 Container(
                                   width: 22,
-                                  height: barHeight.clamp(4.0, _maxBarHeight),
+                                  height: animatedHeight.clamp(
+                                    4.0,
+                                    _maxBarHeight,
+                                  ),
                                   decoration: BoxDecoration(
                                     gradient: isToday || isMax
                                         ? const LinearGradient(
@@ -284,22 +279,25 @@ class _ProfileActivityChartState extends State<ProfileActivityChart>
                   children: [
                     ProfileFooterStat(
                       label: 'Best day',
-                      value: '${weekDays[_todayIndex].minutes}m',
+                      value: LearningActivitySummary.formatMinutes(
+                        summary.bestDayMinutes,
+                      ),
                       icon: Icons.local_fire_department_rounded,
                       color: const Color(0xFFFF9500),
                     ),
                     const SizedBox(width: 8),
                     ProfileFooterStat(
                       label: 'Daily avg',
-                      value: '${(_totalMinutes / weekDays.length).round()}m',
+                      value: LearningActivitySummary.formatMinutes(
+                        summary.dailyAverageMinutes,
+                      ),
                       icon: Icons.trending_up_rounded,
                       color: AppColors.primary,
                     ),
                     const SizedBox(width: 8),
                     ProfileFooterStat(
                       label: 'Days active',
-                      value:
-                          '${weekDays.where((day) => day.minutes > 0).length}/7',
+                      value: '${summary.daysActive}/7',
                       icon: Icons.calendar_today_rounded,
                       color: AppColors.secondary,
                     ),

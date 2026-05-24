@@ -9,7 +9,6 @@ class UserProgress extends Equatable {
     required this.completedLessons,
     required this.lessonProgress,
     required this.completedChapters,
-    required this.achievementLevels,
     this.currentRoadmapId,
   });
 
@@ -21,18 +20,15 @@ class UserProgress extends Equatable {
       completedLessons = const {},
       lessonProgress = const {},
       completedChapters = const {},
-      achievementLevels = const {},
       currentRoadmapId = null;
 
   final int totalXp;
   final int level;
   final int gems;
   final int streak;
-  final Map<String, DateTime> completedLessons; // lessonId -> completionDate
-  final Map<String, double> lessonProgress; // lessonId -> 0.0 to 1.0
-  final Map<String, DateTime> completedChapters; // chapterId -> completionDate
-  /// Maps achievement ID → highest earned level (1–5). Absent key = level 0.
-  final Map<String, int> achievementLevels;
+  final Map<String, DateTime> completedLessons;
+  final Map<String, double> lessonProgress;
+  final Map<String, DateTime> completedChapters;
   final String? currentRoadmapId;
 
   UserProgress copyWith({
@@ -43,7 +39,6 @@ class UserProgress extends Equatable {
     Map<String, DateTime>? completedLessons,
     Map<String, double>? lessonProgress,
     Map<String, DateTime>? completedChapters,
-    Map<String, int>? achievementLevels,
     String? currentRoadmapId,
   }) {
     return UserProgress(
@@ -54,21 +49,19 @@ class UserProgress extends Equatable {
       completedLessons: completedLessons ?? Map.from(this.completedLessons),
       lessonProgress: lessonProgress ?? Map.from(this.lessonProgress),
       completedChapters: completedChapters ?? Map.from(this.completedChapters),
-      achievementLevels: achievementLevels ?? Map.from(this.achievementLevels),
       currentRoadmapId: currentRoadmapId ?? this.currentRoadmapId,
     );
   }
 
   @override
   List<Object?> get props => [
-        totalXp,
-        level,
-        gems,
-        streak,
-        completedLessons,
-        lessonProgress,
-        completedChapters,
-        achievementLevels,
-        currentRoadmapId,
-      ];
+    totalXp,
+    level,
+    gems,
+    streak,
+    completedLessons,
+    lessonProgress,
+    completedChapters,
+    currentRoadmapId,
+  ];
 }

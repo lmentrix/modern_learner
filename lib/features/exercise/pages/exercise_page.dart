@@ -10,6 +10,7 @@ import 'package:modern_learner_production/features/exercise/widgets/exercise_foo
 import 'package:modern_learner_production/features/exercise/widgets/exercise_header.dart';
 import 'package:modern_learner_production/features/exercise/widgets/exercise_progress_bar.dart';
 import 'package:modern_learner_production/features/exercise/widgets/exercise_question_card.dart';
+import 'package:modern_learner_production/features/profile/view/widgets/learning_activity_scope.dart';
 
 class ExercisePage extends StatefulWidget {
   const ExercisePage({
@@ -115,52 +116,54 @@ class _ExercisePageState extends State<ExercisePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.surface,
-      body: SafeArea(
-        child: Column(
-          children: [
-            ExerciseHeader(
-              title: widget.title,
-              sectionTitle: widget.sectionTitle,
-              accentColor: widget.accentColor,
-              correctAnswers: _correctAnswers,
-              onClose: () => Navigator.pop(context),
-            ),
-            ExerciseProgressBar(
-              currentIndex: _currentExerciseIndex,
-              totalExercises: _exercises.length,
-              accentColor: widget.accentColor,
-            ),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ExerciseQuestionCard(
-                      exercise: _currentExercise,
-                      accentColor: widget.accentColor,
-                      emoji: widget.emoji,
-                    ),
-                    const SizedBox(height: 24),
-                    ExerciseAnswerSection(
-                      exercise: _currentExercise,
-                      accentColor: widget.accentColor,
-                      selectedAnswer: _selectedAnswer,
-                      answered: _answered,
-                      isCorrect: _isCorrect,
-                      onCheckAnswer: _checkAnswer,
-                    ),
-                  ],
+      body: LearningActivityScope(
+        child: SafeArea(
+          child: Column(
+            children: [
+              ExerciseHeader(
+                title: widget.title,
+                sectionTitle: widget.sectionTitle,
+                accentColor: widget.accentColor,
+                correctAnswers: _correctAnswers,
+                onClose: () => Navigator.pop(context),
+              ),
+              ExerciseProgressBar(
+                currentIndex: _currentExerciseIndex,
+                totalExercises: _exercises.length,
+                accentColor: widget.accentColor,
+              ),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ExerciseQuestionCard(
+                        exercise: _currentExercise,
+                        accentColor: widget.accentColor,
+                        emoji: widget.emoji,
+                      ),
+                      const SizedBox(height: 24),
+                      ExerciseAnswerSection(
+                        exercise: _currentExercise,
+                        accentColor: widget.accentColor,
+                        selectedAnswer: _selectedAnswer,
+                        answered: _answered,
+                        isCorrect: _isCorrect,
+                        onCheckAnswer: _checkAnswer,
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            ExerciseFooter(
-              answered: _answered,
-              accentColor: widget.accentColor,
-              isLastExercise: _currentExerciseIndex >= _exercises.length - 1,
-              onNext: _nextExercise,
-            ),
-          ],
+              ExerciseFooter(
+                answered: _answered,
+                accentColor: widget.accentColor,
+                isLastExercise: _currentExerciseIndex >= _exercises.length - 1,
+                onNext: _nextExercise,
+              ),
+            ],
+          ),
         ),
       ),
     );

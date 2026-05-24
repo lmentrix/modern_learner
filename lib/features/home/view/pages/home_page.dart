@@ -86,11 +86,6 @@ class _HomePageState extends State<HomePage> {
             Navigator.of(context).pop();
             router.push(Routes.viewProfile);
           },
-          onAchievementsTap: () {
-            final router = GoRouter.of(context);
-            Navigator.of(context).pop();
-            router.push(Routes.achievements);
-          },
           onSettingsTap: () {
             Navigator.pop(context);
           },

@@ -6,9 +6,7 @@ import 'package:modern_learner_production/core/profile/local_profile_service.dar
 import 'package:modern_learner_production/core/router/app_router.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 import 'package:modern_learner_production/features/home/view/section/view_profile_actions_section.dart';
-import 'package:modern_learner_production/features/home/view/section/view_profile_achievements_section.dart';
 import 'package:modern_learner_production/features/home/view/section/view_profile_hero_section.dart';
-import 'package:modern_learner_production/features/home/view/section/view_profile_section_header_section.dart';
 import 'package:modern_learner_production/features/home/view/section/view_profile_stats_section.dart';
 import 'package:modern_learner_production/features/profile/data/profile_identity.dart';
 
@@ -46,31 +44,10 @@ class ViewProfilePage extends StatelessWidget {
                 SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   sliver: SliverToBoxAdapter(
-                    child: ViewProfileSectionHeaderSection(
-                      label: 'ACHIEVEMENTS',
-                      onSeeAll: () {
-                        Navigator.of(context).pop();
-                        GoRouter.of(context).push(Routes.achievements);
-                      },
-                    ),
-                  ),
-                ),
-                const SliverToBoxAdapter(child: SizedBox(height: 14)),
-                const SliverToBoxAdapter(
-                  child: ViewProfileAchievementsSection(),
-                ),
-                const SliverToBoxAdapter(child: SizedBox(height: 28)),
-                SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  sliver: SliverToBoxAdapter(
                     child: ViewProfileActionsSection(
                       onManageProfileTap: () {
                         Navigator.pop(context);
                         context.go(Routes.profile);
-                      },
-                      onViewAchievementsTap: () {
-                        Navigator.pop(context);
-                        GoRouter.of(context).push(Routes.achievements);
                       },
                     ),
                   ),

@@ -11,13 +11,11 @@ class HomeProfileSheet extends StatelessWidget {
     super.key,
     required this.displayName,
     required this.onProfileTap,
-    required this.onAchievementsTap,
     required this.onSettingsTap,
   });
 
   final String displayName;
   final VoidCallback onProfileTap;
-  final VoidCallback onAchievementsTap;
   final VoidCallback onSettingsTap;
 
   String get _initial =>
@@ -144,13 +142,6 @@ class HomeProfileSheet extends StatelessWidget {
             label: 'View Profile',
             accentColor: AppColors.primary,
             onTap: onProfileTap,
-          ),
-          const SizedBox(height: 8),
-          HomeProfileQuickActionRow(
-            icon: Icons.emoji_events_rounded,
-            label: 'Achievements',
-            accentColor: AppColors.tertiaryContainer,
-            onTap: onAchievementsTap,
           ),
           const SizedBox(height: 8),
           HomeProfileQuickActionRow(

@@ -15,7 +15,6 @@ class _NotificationsPageState extends State<NotificationsPage> {
   bool _dailyReminder = true;
   bool _weeklyReport = true;
   bool _newLessons = false;
-  bool _achievements = true;
   bool _socialUpdates = false;
 
   @override
@@ -51,7 +50,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
             SliverPadding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               sliver: SliverList.separated(
-                itemCount: 5,
+                itemCount: _notificationItems.length,
                 separatorBuilder: (_, _) => const SizedBox(height: 8),
                 itemBuilder: (context, i) {
                   final item = _notificationItems[i];
@@ -129,8 +128,6 @@ class _NotificationsPageState extends State<NotificationsPage> {
       case 2:
         return _newLessons;
       case 3:
-        return _achievements;
-      case 4:
         return _socialUpdates;
       default:
         return false;
@@ -150,9 +147,6 @@ class _NotificationsPageState extends State<NotificationsPage> {
           _newLessons = value;
           break;
         case 3:
-          _achievements = value;
-          break;
-        case 4:
           _socialUpdates = value;
           break;
       }
@@ -433,12 +427,6 @@ const _notificationItems = [
     title: 'New Lessons',
     subtitle: 'When new lessons are added',
     color: AppColors.tertiaryContainer,
-  ),
-  _NotificationItem(
-    icon: Icons.emoji_events_rounded,
-    title: 'Achievements',
-    subtitle: 'When you earn a badge',
-    color: Color(0xFFFF9500),
   ),
   _NotificationItem(
     icon: Icons.people_outline_rounded,
