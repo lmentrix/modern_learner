@@ -90,18 +90,6 @@ class _ProfileNotificationsSheetSectionState
               _updatePreferences(_preferences.copyWith(weeklyDigest: value));
             },
           ),
-          const ProfileSheetDivider(),
-          ProfileToggleRow(
-            emoji: '🏆',
-            label: 'Achievement Alerts',
-            description: 'Celebrate when you earn badges',
-            value: _preferences.achievementAlerts,
-            onChanged: (value) {
-              _updatePreferences(
-                _preferences.copyWith(achievementAlerts: value),
-              );
-            },
-          ),
         ],
       ),
     );

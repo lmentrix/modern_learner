@@ -12,9 +12,6 @@ import 'package:modern_learner_production/features/explore/domain/entities/learn
 import 'package:modern_learner_production/features/explore/view/pages/create_course_page.dart';
 import 'package:modern_learner_production/features/explore/view/pages/explore_page.dart';
 import 'package:modern_learner_production/features/explore/view/pages/learning_subject_detail_page.dart';
-import 'package:modern_learner_production/features/home/data/achievement_entity.dart';
-import 'package:modern_learner_production/features/home/view/pages/achievements_detail.dart';
-import 'package:modern_learner_production/features/home/view/pages/achievements_page.dart';
 import 'package:modern_learner_production/features/home/view/pages/home_page.dart';
 import 'package:modern_learner_production/features/home/view/pages/view_profile_page.dart';
 import 'package:modern_learner_production/features/profile/view/pages/profile_page.dart';
@@ -31,8 +28,6 @@ abstract final class Routes {
   static const profile = '/profile';
 
   static const viewProfile = '/view-profile';
-  static const achievements = '/achievements';
-  static const achievementDetail = '/achievement-detail';
   static const learningSubjectDetail = '/learning-subject-detail';
   static const createCourse = '/create-course';
   static const chapterExercise = '/chapter-exercise';
@@ -80,20 +75,6 @@ abstract final class AppRouter {
         parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) =>
             _slideUp(state.pageKey, const ViewProfilePage()),
-      ),
-      GoRoute(
-        path: Routes.achievements,
-        parentNavigatorKey: _rootNavigatorKey,
-        pageBuilder: (context, state) =>
-            _slideUp(state.pageKey, const AchievementsPage()),
-      ),
-      GoRoute(
-        path: Routes.achievementDetail,
-        parentNavigatorKey: _rootNavigatorKey,
-        pageBuilder: (context, state) => _slideUp(
-          state.pageKey,
-          AchievementsDetailPage(achievement: state.extra as AchievementEntity),
-        ),
       ),
       GoRoute(
         path: Routes.learningSubjectDetail,
@@ -158,19 +139,19 @@ abstract final class AppRouter {
     ],
   );
 
-  static CustomTransitionPage<void> _slideUp(LocalKey key, Widget child) =>
-      CustomTransitionPage<void>(
-        key: key,
-        child: child,
-        transitionsBuilder: (context, animation, secondaryAnimation, child) =>
-            SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(0, 1),
-                end: Offset.zero,
-              ).animate(
+  static CustomTransitionPage<void> _slideUp(
+    LocalKey key,
+    Widget child,
+  ) => CustomTransitionPage<void>(
+    key: key,
+    child: child,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+        SlideTransition(
+          position: Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
+              .animate(
                 CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
               ),
-              child: child,
-            ),
-      );
+          child: child,
+        ),
+  );
 }
