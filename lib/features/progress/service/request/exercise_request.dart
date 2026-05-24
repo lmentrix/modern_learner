@@ -485,10 +485,21 @@ class ChapterExerciseCompletionResult {
   const ChapterExerciseCompletionResult({
     required this.chapterNumber,
     required this.subcontentNumber,
+    required this.score,
+    required this.totalQuestions,
   });
 
   final int chapterNumber;
   final int subcontentNumber;
+  final int score;
+  final int totalQuestions;
+
+  int get mistakesCount => (totalQuestions - score).clamp(0, totalQuestions);
+
+  int get scorePercent {
+    if (totalQuestions <= 0) return 0;
+    return ((score / totalQuestions) * 100).round();
+  }
 }
 
 class ChapterExerciseRequestException implements Exception {

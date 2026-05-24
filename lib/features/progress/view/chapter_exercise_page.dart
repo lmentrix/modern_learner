@@ -28,6 +28,8 @@ class _ChapterExercisePageState extends State<ChapterExercisePage> {
       <String, TextEditingController>{};
   String? _activeMatchKey;
   bool _checked = false;
+  int _lastScore = 0;
+  int _lastTotal = 0;
 
   Color get _accentColor => Color(widget.args.accentColorValue);
 
@@ -84,6 +86,8 @@ class _ChapterExercisePageState extends State<ChapterExercisePage> {
       ChapterExerciseCompletionResult(
         chapterNumber: widget.args.chapterNumber,
         subcontentNumber: widget.args.subcontentNumber,
+        score: _lastScore,
+        totalQuestions: _lastTotal,
       ),
     );
   }
@@ -126,6 +130,8 @@ class _ChapterExercisePageState extends State<ChapterExercisePage> {
               final detail = response.chapterDetail;
               final score = _score(detail);
               final total = _totalScoredItems(detail);
+              _lastScore = score;
+              _lastTotal = total;
 
               return CustomScrollView(
                 physics: const BouncingScrollPhysics(),

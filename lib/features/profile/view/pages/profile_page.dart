@@ -3,16 +3,20 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:modern_learner_production/core/di/injection.dart';
 import 'package:modern_learner_production/core/profile/local_profile_service.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
+import 'package:modern_learner_production/features/achievemenet/bloc/achievement_bloc.dart';
+import 'package:modern_learner_production/features/achievemenet/service/achievement_service.dart';
 import 'package:modern_learner_production/features/profile/data/profile_identity.dart';
 import 'package:modern_learner_production/features/profile/data/profile_page_constants.dart';
 import 'package:modern_learner_production/features/profile/data/profile_preferences.dart';
 import 'package:modern_learner_production/features/profile/view/bloc/profile_bloc.dart';
 import 'package:modern_learner_production/features/profile/view/section/profile_account_sheet_section.dart';
+import 'package:modern_learner_production/features/profile/view/section/profile_achievements_section.dart';
 import 'package:modern_learner_production/features/profile/view/section/profile_activity_section.dart';
 import 'package:modern_learner_production/features/profile/view/section/profile_appearance_sheet_section.dart';
 import 'package:modern_learner_production/features/profile/view/section/profile_header_section.dart';
 import 'package:modern_learner_production/features/profile/view/section/profile_help_sheet_section.dart';
 import 'package:modern_learner_production/features/profile/view/section/profile_language_sheet_section.dart';
+import 'package:modern_learner_production/features/profile/view/section/profile_locked_achievements_section.dart';
 import 'package:modern_learner_production/features/profile/view/section/profile_notifications_sheet_section.dart';
 import 'package:modern_learner_production/features/profile/view/section/profile_privacy_sheet_section.dart';
 import 'package:modern_learner_production/features/profile/view/section/profile_settings_section.dart';
@@ -157,6 +161,26 @@ class _ProfilePageState extends State<ProfilePage> {
                 const SliverPadding(
                   padding: ProfilePageConstants.pagePadding,
                   sliver: SliverToBoxAdapter(child: ProfileStatsSection()),
+                ),
+                const SliverToBoxAdapter(
+                  child: SizedBox(height: ProfilePageConstants.sectionSpacing),
+                ),
+                SliverPadding(
+                  padding: ProfilePageConstants.pagePadding,
+                  sliver: SliverToBoxAdapter(
+                    child: BlocProvider(
+                      create: (_) =>
+                          AchievementBloc(const AchievementService())
+                            ..add(const AchievementsLoadRequested()),
+                      child: const Column(
+                        children: [
+                          ProfileLockedAchievementsSection(),
+                          SizedBox(height: ProfilePageConstants.sectionSpacing),
+                          ProfileAchievementsSection(),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
                 const SliverToBoxAdapter(
                   child: SizedBox(height: ProfilePageConstants.sectionSpacing),
