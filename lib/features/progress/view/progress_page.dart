@@ -6,6 +6,7 @@ import 'package:modern_learner_production/core/models/progress_course_selection.
 import 'package:modern_learner_production/core/router/app_router.dart';
 import 'package:modern_learner_production/core/state/progress_navigation_state.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
+import 'package:modern_learner_production/features/achievemenet/service/achievement_progress_tracker.dart';
 import 'package:modern_learner_production/features/explore/service/explore_courses_service.dart';
 import 'package:modern_learner_production/features/profile/view/widgets/learning_activity_scope.dart';
 import 'package:modern_learner_production/features/progress/bloc/xp_bloc.dart';
@@ -344,6 +345,14 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
     }
 
     _xpBlocFor(course).add(XpEarned(XpBloc.xpPerExercise));
+    try {
+      await const AchievementProgressTracker().trackChapterExerciseCompleted(
+        result: completion,
+        xpEarned: XpBloc.xpPerExercise,
+        totalChapters: steps.length,
+        isVoiceLesson: course.courseType == ProgressCourseType.voice,
+      );
+    } catch (_) {}
     _markChapterComplete(course, completion.chapterNumber);
   }
 
