@@ -7,6 +7,7 @@ import 'package:modern_learner_production/features/progress/data/progress_module
 import 'package:modern_learner_production/features/progress/data/progress_page_data.dart';
 import 'package:modern_learner_production/features/progress/data/progress_stat_item.dart';
 import 'package:modern_learner_production/features/progress/data/progress_week_day.dart';
+import 'package:modern_learner_production/features/progress/service/course_xp_service.dart';
 
 ProgressPageData buildProgressPageData({
   required ProgressCourseSelection course,
@@ -35,6 +36,13 @@ ProgressPageData buildProgressPageData({
     (step) => step.isCurrent,
     orElse: () => moduleSteps.first,
   );
+  final courseXp = CourseXpService.instance.dataFor(
+    progressCourseXpKey(course),
+  );
+  final chapterXp = moduleSteps.fold<int>(
+    0,
+    (sum, step) => sum + (step.progress * 200).round(),
+  );
 
   final snapshot = ProgressCourseSnapshot(
     completion: completion.clamp(0.18, 0.94),
@@ -55,8 +63,9 @@ ProgressPageData buildProgressPageData({
     course: course,
     snapshot: snapshot,
     statItems: _buildStatItems(
-      snapshot: snapshot,
-      moduleCount: moduleSteps.length,
+      chapterXp: chapterXp,
+      exerciseXp: courseXp.exerciseXp,
+      exercisesCompleted: courseXp.exercisesCompleted,
       accentColor: accentColor,
     ),
     weekDays: _buildWeekDays(
@@ -69,39 +78,40 @@ ProgressPageData buildProgressPageData({
 }
 
 List<ProgressStatItem> _buildStatItems({
-  required ProgressCourseSnapshot snapshot,
-  required int moduleCount,
+  required int chapterXp,
+  required int exerciseXp,
+  required int exercisesCompleted,
   required Color accentColor,
 }) {
+  final courseXp = chapterXp + exerciseXp;
   return [
     ProgressStatItem(
-      icon: Icons.local_fire_department_rounded,
-      label: 'Current streak',
-      value: '${snapshot.streakDays} days',
-      detail: 'Your longest run this month',
-      toneColor: const Color(0xFFFF9F43),
-    ),
-    ProgressStatItem(
-      icon: Icons.auto_graph_rounded,
-      label: 'Completion',
-      value: '${(snapshot.completion * 100).round()}%',
-      detail:
-          '${snapshot.masteredLessons}/${snapshot.totalLessons} lessons done',
+      icon: Icons.bolt_rounded,
+      label: 'Course XP',
+      value: '$courseXp XP',
+      detail: 'XP earned in this course',
       toneColor: accentColor,
     ),
     ProgressStatItem(
-      icon: Icons.schedule_rounded,
-      label: 'Deep work',
-      value: '${snapshot.totalHours} hrs',
-      detail: 'Estimated invested across the roadmap',
-      toneColor: AppColors.tertiary,
+      icon: Icons.layers_rounded,
+      label: 'Chapter XP',
+      value: '$chapterXp XP',
+      detail: 'XP from chapter progress',
+      toneColor: AppColors.secondary,
     ),
     ProgressStatItem(
-      icon: Icons.layers_rounded,
-      label: 'Active chapters',
-      value: '$moduleCount',
-      detail: 'Sequenced modules in this track',
-      toneColor: AppColors.secondary,
+      icon: Icons.fitness_center_rounded,
+      label: 'Exercise XP',
+      value: '$exerciseXp XP',
+      detail: 'XP from practice work',
+      toneColor: const Color(0xFFFF9F43),
+    ),
+    ProgressStatItem(
+      icon: Icons.check_circle_outline_rounded,
+      label: 'Practice count',
+      value: '$exercisesCompleted',
+      detail: 'Exercises completed here',
+      toneColor: AppColors.tertiary,
     ),
   ];
 }
@@ -159,11 +169,7 @@ List<ProgressModuleStep> _buildModuleSteps({
     final lessons = _mapList(chapter['lessons']);
     final lessonCount = lessons.length;
     final chapterNumber = _chapterNumberFor(chapter, index);
-    final progress = index < currentIndex
-        ? 1.0
-        : (index == currentIndex && currentIndex > 0)
-        ? (0.42 + levelFactor * 0.28).clamp(0.42, 0.88)
-        : 0.0;
+    final progress = index < currentIndex ? 1.0 : 0.0;
 
     return ProgressModuleStep(
       id: _chapterIdFor(chapter, index),
@@ -240,11 +246,7 @@ List<ProgressModuleStep> _fallbackModuleSteps({
       eyebrow: 'CHAPTER ${(index + 1).toString().padLeft(2, '0')}',
       title: titles[index],
       detail: details[index],
-      progress: index < currentIndex
-          ? 1.0
-          : (index == currentIndex && currentIndex > 0)
-          ? (0.40 + levelFactor * 0.30).clamp(0.40, 0.90)
-          : 0.0,
+      progress: index < currentIndex ? 1.0 : 0.0,
       durationLabel: '${50 + index * 15} min',
       lessonCountLabel:
           '${course.courseType == ProgressCourseType.voice ? 4 + index : 3 + index} lessons',

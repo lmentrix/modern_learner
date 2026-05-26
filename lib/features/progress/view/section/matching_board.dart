@@ -4,6 +4,7 @@ import 'package:modern_learner_production/features/progress/view/helpers/exercis
 import 'package:modern_learner_production/features/progress/view/widgets/match_choice_chip.dart';
 import 'package:modern_learner_production/features/progress/view/widgets/match_prompt_card.dart';
 import 'package:modern_learner_production/features/progress/view/widgets/exercise_label.dart';
+import 'package:modern_learner_production/features/progress/view/widgets/exercise_result_note.dart';
 
 class MatchingBoard extends StatelessWidget {
   const MatchingBoard({
@@ -12,22 +13,26 @@ class MatchingBoard extends StatelessWidget {
     required this.pairs,
     required this.accentColor,
     required this.checked,
+    required this.checkedMatchKeys,
     required this.matchingAnswers,
     required this.activeMatchKey,
     required this.onLeftSelected,
     required this.onRightSelected,
     required this.onMatchCleared,
+    required this.onMatchChecked,
   });
 
   final int groupIndex;
   final List<ChapterExerciseMatchingPairModel> pairs;
   final Color accentColor;
   final bool checked;
+  final Set<String> checkedMatchKeys;
   final Map<String, String> matchingAnswers;
   final String? activeMatchKey;
   final ValueChanged<String> onLeftSelected;
   final ValueChanged<String> onRightSelected;
   final ValueChanged<String> onMatchCleared;
+  final ValueChanged<String> onMatchChecked;
 
   @override
   Widget build(BuildContext context) {
@@ -44,17 +49,46 @@ class MatchingBoard extends StatelessWidget {
           final selectedAnswer = matchingAnswers[key];
           final isActive = activeMatchKey == key;
           final isCorrect = selectedAnswer == pair.rightItem;
+          final isChecked = checked || checkedMatchKeys.contains(key);
           return Padding(
             padding: const EdgeInsets.only(bottom: 10),
-            child: MatchPromptCard(
-              label: pair.leftItem,
-              selectedAnswer: selectedAnswer,
-              checked: checked,
-              isActive: isActive,
-              isCorrect: isCorrect,
-              accentColor: accentColor,
-              onTap: () => onLeftSelected(key),
-              onClear: selectedAnswer == null ? null : () => onMatchCleared(key),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                MatchPromptCard(
+                  label: pair.leftItem,
+                  selectedAnswer: selectedAnswer,
+                  checked: isChecked,
+                  isActive: isActive,
+                  isCorrect: isCorrect,
+                  accentColor: accentColor,
+                  onTap: () => onLeftSelected(key),
+                  onClear: selectedAnswer == null
+                      ? null
+                      : () => onMatchCleared(key),
+                ),
+                const SizedBox(height: 6),
+                OutlinedButton.icon(
+                  onPressed: () => onMatchChecked(key),
+                  icon: const Icon(Icons.fact_check_rounded, size: 16),
+                  label: const Text('Check'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: accentColor,
+                    side: BorderSide(
+                      color: accentColor.withValues(alpha: 0.35),
+                    ),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+                if (isChecked && !isCorrect) ...[
+                  const SizedBox(height: 8),
+                  ExerciseResultNote(
+                    isCorrect: false,
+                    answer: pair.rightItem,
+                    explanation: 'Match this prompt with the shown answer.',
+                  ),
+                ],
+              ],
             ),
           );
         }),

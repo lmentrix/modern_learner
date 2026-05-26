@@ -8,6 +8,8 @@ class SchoolExerciseBody extends StatelessWidget {
     required this.detail,
     required this.accentColor,
     required this.checked,
+    required this.checkedQuestionKeys,
+    required this.checkedMatchKeys,
     required this.selectedAnswers,
     required this.matchingAnswers,
     required this.activeMatchKey,
@@ -16,11 +18,15 @@ class SchoolExerciseBody extends StatelessWidget {
     required this.onMatchLeftSelected,
     required this.onMatchRightSelected,
     required this.onMatchCleared,
+    required this.onQuestionChecked,
+    required this.onMatchChecked,
   });
 
   final ChapterExerciseDetailModel detail;
   final Color accentColor;
   final bool checked;
+  final Set<String> checkedQuestionKeys;
+  final Set<String> checkedMatchKeys;
   final Map<String, String> selectedAnswers;
   final Map<String, String> matchingAnswers;
   final String? activeMatchKey;
@@ -29,6 +35,8 @@ class SchoolExerciseBody extends StatelessWidget {
   final ValueChanged<String> onMatchLeftSelected;
   final ValueChanged<String> onMatchRightSelected;
   final ValueChanged<String> onMatchCleared;
+  final ValueChanged<String> onQuestionChecked;
+  final ValueChanged<String> onMatchChecked;
 
   @override
   Widget build(BuildContext context) {
@@ -48,6 +56,8 @@ class SchoolExerciseBody extends StatelessWidget {
               group: detail.exerciseGroups[groupIndex],
               accentColor: accentColor,
               checked: checked,
+              checkedQuestionKeys: checkedQuestionKeys,
+              checkedMatchKeys: checkedMatchKeys,
               selectedAnswers: selectedAnswers,
               matchingAnswers: matchingAnswers,
               activeMatchKey: activeMatchKey,
@@ -56,6 +66,8 @@ class SchoolExerciseBody extends StatelessWidget {
               onMatchLeftSelected: onMatchLeftSelected,
               onMatchRightSelected: onMatchRightSelected,
               onMatchCleared: onMatchCleared,
+              onQuestionChecked: onQuestionChecked,
+              onMatchChecked: onMatchChecked,
             ),
           ),
       ],

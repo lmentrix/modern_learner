@@ -26,6 +26,9 @@ class _ChapterExercisePageState extends State<ChapterExercisePage> {
   final Map<String, String> _matchingAnswers = <String, String>{};
   final Map<String, TextEditingController> _textControllers =
       <String, TextEditingController>{};
+  final Set<String> _checkedQuestionKeys = <String>{};
+  final Set<String> _checkedMatchKeys = <String>{};
+  final Set<String> _checkedVoiceStepKeys = <String>{};
   String? _activeMatchKey;
   bool _checked = false;
   int _lastScore = 0;
@@ -62,6 +65,9 @@ class _ChapterExercisePageState extends State<ChapterExercisePage> {
       _checked = false;
       _selectedAnswers.clear();
       _matchingAnswers.clear();
+      _checkedQuestionKeys.clear();
+      _checkedMatchKeys.clear();
+      _checkedVoiceStepKeys.clear();
       _activeMatchKey = null;
       for (final controller in _textControllers.values) {
         controller.clear();
@@ -168,11 +174,19 @@ class _ChapterExercisePageState extends State<ChapterExercisePage> {
                           ? VoiceExerciseBody(
                               detail: detail,
                               accentColor: _accentColor,
+                              checkedVoiceStepKeys: _checkedVoiceStepKeys,
+                              onVoiceStepChecked: (key) {
+                                setState(() {
+                                  _checkedVoiceStepKeys.add(key);
+                                });
+                              },
                             )
                           : SchoolExerciseBody(
                               detail: detail,
                               accentColor: _accentColor,
                               checked: _checked,
+                              checkedQuestionKeys: _checkedQuestionKeys,
+                              checkedMatchKeys: _checkedMatchKeys,
                               selectedAnswers: _selectedAnswers,
                               matchingAnswers: _matchingAnswers,
                               activeMatchKey: _activeMatchKey,
@@ -181,6 +195,7 @@ class _ChapterExercisePageState extends State<ChapterExercisePage> {
                                 setState(() {
                                   _selectedAnswers[key] = answer;
                                   _checked = false;
+                                  _checkedQuestionKeys.remove(key);
                                 });
                               },
                               onMatchLeftSelected: (key) {
@@ -202,15 +217,27 @@ class _ChapterExercisePageState extends State<ChapterExercisePage> {
                                   _matchingAnswers[activeKey] = answer;
                                   _activeMatchKey = null;
                                   _checked = false;
+                                  _checkedMatchKeys.remove(activeKey);
                                 });
                               },
                               onMatchCleared: (key) {
                                 setState(() {
                                   _matchingAnswers.remove(key);
+                                  _checkedMatchKeys.remove(key);
                                   if (_activeMatchKey == key) {
                                     _activeMatchKey = null;
                                   }
                                   _checked = false;
+                                });
+                              },
+                              onQuestionChecked: (key) {
+                                setState(() {
+                                  _checkedQuestionKeys.add(key);
+                                });
+                              },
+                              onMatchChecked: (key) {
+                                setState(() {
+                                  _checkedMatchKeys.add(key);
                                 });
                               },
                             ),
