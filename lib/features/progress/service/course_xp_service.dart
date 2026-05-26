@@ -110,6 +110,9 @@ class CourseXpService {
     );
   }
 
+  Map<String, ValueNotifier<CourseXpData>> get courseNotifiers =>
+      Map.unmodifiable(_notifiers);
+
   ValueNotifier<CourseXpData> notifierFor(String courseKey) {
     final notifier = _notifiers.putIfAbsent(
       courseKey,

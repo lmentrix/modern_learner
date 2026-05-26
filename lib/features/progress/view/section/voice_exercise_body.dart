@@ -13,10 +13,14 @@ class VoiceExerciseBody extends StatelessWidget {
     super.key,
     required this.detail,
     required this.accentColor,
+    required this.checkedVoiceStepKeys,
+    required this.onVoiceStepChecked,
   });
 
   final ChapterExerciseDetailModel detail;
   final Color accentColor;
+  final Set<String> checkedVoiceStepKeys;
+  final ValueChanged<String> onVoiceStepChecked;
 
   @override
   Widget build(BuildContext context) {
@@ -39,9 +43,15 @@ class VoiceExerciseBody extends StatelessWidget {
                   ),
                 ),
               const SizedBox(height: 14),
-              ...detail.practiceSteps.map(
-                (step) => VoiceStepRow(step: step, accentColor: accentColor),
-              ),
+              ...detail.practiceSteps.map((step) {
+                final key = 'voice_step_${step.stepNumber}';
+                return VoiceStepRow(
+                  step: step,
+                  accentColor: accentColor,
+                  checked: checkedVoiceStepKeys.contains(key),
+                  onChecked: () => onVoiceStepChecked(key),
+                );
+              }),
             ],
           ),
         ),

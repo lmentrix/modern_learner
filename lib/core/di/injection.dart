@@ -1,8 +1,6 @@
 import 'package:get_it/get_it.dart';
 import 'package:injectable/injectable.dart';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
 import 'package:modern_learner_production/core/di/injection.config.dart';
 import 'package:modern_learner_production/core/network/network_info.dart';
 import 'package:modern_learner_production/core/profile/local_profile_service.dart';
@@ -16,11 +14,10 @@ import 'package:modern_learner_production/features/explore/domain/usecases/searc
 import 'package:modern_learner_production/features/explore/service/explore_courses_service.dart';
 import 'package:modern_learner_production/features/explore/service/user_courses_service.dart';
 import 'package:modern_learner_production/features/explore/view/bloc/learning_subjects_bloc.dart';
-import 'package:modern_learner_production/features/achievemenet/bloc/achievement_bloc.dart';
-import 'package:modern_learner_production/features/achievemenet/service/achievement_service.dart';
 import 'package:modern_learner_production/features/profile/view/bloc/profile_bloc.dart';
 import 'package:modern_learner_production/features/progress/bloc/xp_bloc.dart';
 import 'package:modern_learner_production/features/progress/service/course_xp_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 final getIt = GetIt.instance;
 
@@ -46,10 +43,6 @@ Future<void> configureDependencies() async {
     (courseKey, _) => XpBloc(courseKey: courseKey),
   );
   getIt.registerFactory(() => ProfileBloc(getIt()));
-  getIt.registerLazySingleton<AchievementService>(
-    () => const AchievementService(),
-  );
-  getIt.registerFactory(() => AchievementBloc(getIt()));
 
   getIt.registerSingleton<UserCoursesService>(
     UserCoursesService(sharedPreferences: sharedPreferences),

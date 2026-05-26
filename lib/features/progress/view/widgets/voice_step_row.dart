@@ -6,10 +6,18 @@ import 'package:modern_learner_production/features/progress/view/widgets/exercis
 import 'package:modern_learner_production/features/progress/view/widgets/exercise_small_note.dart';
 
 class VoiceStepRow extends StatelessWidget {
-  const VoiceStepRow({super.key, required this.step, required this.accentColor});
+  const VoiceStepRow({
+    super.key,
+    required this.step,
+    required this.accentColor,
+    required this.checked,
+    required this.onChecked,
+  });
 
   final VoicePracticeStepModel step;
   final Color accentColor;
+  final bool checked;
+  final VoidCallback onChecked;
 
   @override
   Widget build(BuildContext context) {
@@ -40,6 +48,27 @@ class VoiceStepRow extends StatelessWidget {
             icon: Icons.tips_and_updates_rounded,
             text: step.coachingTip,
           ),
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerRight,
+            child: OutlinedButton.icon(
+              onPressed: onChecked,
+              icon: const Icon(Icons.fact_check_rounded, size: 16),
+              label: const Text('Check'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: accentColor,
+                side: BorderSide(color: accentColor.withValues(alpha: 0.35)),
+                visualDensity: VisualDensity.compact,
+              ),
+            ),
+          ),
+          if (checked) ...[
+            const SizedBox(height: 8),
+            ExerciseSmallNote(
+              icon: Icons.check_circle_outline_rounded,
+              text: 'Target response: ${step.prompt}',
+            ),
+          ],
         ],
       ),
     );

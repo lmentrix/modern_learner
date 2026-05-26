@@ -22,11 +22,24 @@ class ProgressXpBar extends StatelessWidget {
   static const int _xpPerChapter = 200;
 
   static const List<int> _thresholds = [
-    0, 500, 1200, 2200, 3500, 5000, 7000, 10000,
+    0,
+    500,
+    1200,
+    2200,
+    3500,
+    5000,
+    7000,
+    10000,
   ];
   static const List<String> _rankTitles = [
-    'Starter', 'Explorer', 'Practitioner', 'Achiever',
-    'Expert', 'Master', 'Legend', 'Grandmaster',
+    'Starter',
+    'Explorer',
+    'Practitioner',
+    'Achiever',
+    'Expert',
+    'Master',
+    'Legend',
+    'Grandmaster',
   ];
 
   _LevelData _levelData(int xp) {
@@ -76,200 +89,190 @@ class ProgressXpBar extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-          // ── top row: level badge + rank + total XP ─────────────────────
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 11,
-                  vertical: 5,
+        // ── top row: level badge + rank + total XP ─────────────────────
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [color, color.withValues(alpha: 0.55)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [color, color.withValues(alpha: 0.55)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(999),
-                  boxShadow: [
-                    BoxShadow(
-                      color: color.withValues(alpha: 0.40),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: Text(
-                  'LVL ${d.level}',
-                  style: GoogleFonts.spaceGrotesk(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.black87,
-                    letterSpacing: 0.6,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      d.title,
-                      style: GoogleFonts.spaceGrotesk(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.onSurface,
-                        height: 1.1,
-                      ),
-                    ),
-                    Text(
-                      courseTitle,
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        color: AppColors.onSurfaceVariant,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    '${d.totalXp}',
-                    style: GoogleFonts.spaceGrotesk(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w800,
-                      color: color,
-                      height: 1.0,
-                    ),
-                  ),
-                  Text(
-                    'total XP',
-                    style: GoogleFonts.inter(
-                      fontSize: 10,
-                      color: AppColors.onSurfaceVariant,
-                    ),
+                borderRadius: BorderRadius.circular(999),
+                boxShadow: [
+                  BoxShadow(
+                    color: color.withValues(alpha: 0.40),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
                   ),
                 ],
               ),
-            ],
-          ),
-
-          const SizedBox(height: 18),
-
-          // ── animated XP bar ─────────────────────────────────────────────
-          TweenAnimationBuilder<double>(
-            key: ValueKey(d.totalXp),
-            tween: Tween(begin: 0.0, end: d.progress),
-            duration: const Duration(milliseconds: 1100),
-            curve: Curves.easeOutCubic,
-            builder: (context, value, _) {
-              return Column(
+              child: Text(
+                'LVL ${d.level}',
+                style: GoogleFonts.spaceGrotesk(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.black87,
+                  letterSpacing: 0.6,
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(999),
-                    child: Stack(
-                      children: [
-                        Container(
-                          height: 9,
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            color: color.withValues(alpha: 0.13),
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                        ),
-                        FractionallySizedBox(
-                          widthFactor: value,
-                          child: Container(
-                            height: 9,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  color.withValues(alpha: 0.65),
-                                  color,
-                                ],
-                              ),
-                              borderRadius: BorderRadius.circular(999),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: color.withValues(alpha: 0.50),
-                                  blurRadius: 7,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
+                  Text(
+                    d.title,
+                    style: GoogleFonts.spaceGrotesk(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.onSurface,
+                      height: 1.1,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  Text(
+                    courseTitle,
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  '${d.totalXp}',
+                  style: GoogleFonts.spaceGrotesk(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: color,
+                    height: 1.0,
+                  ),
+                ),
+                Text(
+                  'course XP',
+                  style: GoogleFonts.inter(
+                    fontSize: 10,
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 18),
+
+        // ── animated XP bar ─────────────────────────────────────────────
+        TweenAnimationBuilder<double>(
+          key: ValueKey(d.totalXp),
+          tween: Tween(begin: 0.0, end: d.progress),
+          duration: const Duration(milliseconds: 1100),
+          curve: Curves.easeOutCubic,
+          builder: (context, value, _) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(999),
+                  child: Stack(
                     children: [
-                      Text(
-                        '${d.xpInLevel} / ${d.xpNeeded} XP',
-                        style: GoogleFonts.inter(
-                          fontSize: 11,
-                          color: AppColors.onSurfaceVariant,
+                      Container(
+                        height: 9,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: color.withValues(alpha: 0.13),
+                          borderRadius: BorderRadius.circular(999),
                         ),
                       ),
-                      Text(
-                        '${d.xpNeeded - d.xpInLevel} XP to LVL ${d.level + 1}',
-                        style: GoogleFonts.inter(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: color.withValues(alpha: 0.85),
+                      FractionallySizedBox(
+                        widthFactor: value,
+                        child: Container(
+                          height: 9,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [color.withValues(alpha: 0.65), color],
+                            ),
+                            borderRadius: BorderRadius.circular(999),
+                            boxShadow: [
+                              BoxShadow(
+                                color: color.withValues(alpha: 0.50),
+                                blurRadius: 7,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ],
                   ),
-                ],
-              );
-            },
-          ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '${d.xpInLevel} / ${d.xpNeeded} XP',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        color: AppColors.onSurfaceVariant,
+                      ),
+                    ),
+                    Text(
+                      '${d.xpNeeded - d.xpInLevel} XP to LVL ${d.level + 1}',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: color.withValues(alpha: 0.85),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            );
+          },
+        ),
 
-          const SizedBox(height: 14),
+        const SizedBox(height: 14),
 
-          // ── XP source breakdown chips ───────────────────────────────────
-          Wrap(
-            spacing: 8,
-            runSpacing: 6,
-            children: [
-              _XpChip(
-                icon: Icons.layers_rounded,
-                label: '${_chapterXp()} XP from chapters',
-                color: color,
-              ),
-              _XpChip(
-                icon: Icons.fitness_center_rounded,
-                label: '${xpState.totalXp} XP from exercises',
-                color: const Color(0xFFFF9F43),
-              ),
-              _XpChip(
-                icon: Icons.check_circle_outline_rounded,
-                label: '${xpState.exercisesCompleted} exercises done',
-                color: AppColors.tertiary,
-              ),
-            ],
-          ),
-        ],
+        // ── XP source breakdown chips ───────────────────────────────────
+        Wrap(
+          spacing: 8,
+          runSpacing: 6,
+          children: [
+            _XpChip(
+              icon: Icons.layers_rounded,
+              label: 'Chapter XP ${_chapterXp()}',
+              color: color,
+            ),
+            _XpChip(
+              icon: Icons.fitness_center_rounded,
+              label: 'Exercise XP ${xpState.totalXp}',
+              color: const Color(0xFFFF9F43),
+            ),
+            _XpChip(
+              icon: Icons.trending_up_rounded,
+              label: 'Level XP ${d.xpInLevel}/${d.xpNeeded}',
+              color: AppColors.tertiary,
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
 
 class _XpChip extends StatelessWidget {
-  const _XpChip({
-    required this.icon,
-    required this.label,
-    required this.color,
-  });
+  const _XpChip({required this.icon, required this.label, required this.color});
 
   final IconData icon;
   final String label;

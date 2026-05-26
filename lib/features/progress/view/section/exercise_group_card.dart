@@ -13,6 +13,8 @@ class ExerciseGroupCard extends StatelessWidget {
     required this.group,
     required this.accentColor,
     required this.checked,
+    required this.checkedQuestionKeys,
+    required this.checkedMatchKeys,
     required this.selectedAnswers,
     required this.matchingAnswers,
     required this.activeMatchKey,
@@ -21,12 +23,16 @@ class ExerciseGroupCard extends StatelessWidget {
     required this.onMatchLeftSelected,
     required this.onMatchRightSelected,
     required this.onMatchCleared,
+    required this.onQuestionChecked,
+    required this.onMatchChecked,
   });
 
   final int groupIndex;
   final ChapterExerciseGroupModel group;
   final Color accentColor;
   final bool checked;
+  final Set<String> checkedQuestionKeys;
+  final Set<String> checkedMatchKeys;
   final Map<String, String> selectedAnswers;
   final Map<String, String> matchingAnswers;
   final String? activeMatchKey;
@@ -35,6 +41,8 @@ class ExerciseGroupCard extends StatelessWidget {
   final ValueChanged<String> onMatchLeftSelected;
   final ValueChanged<String> onMatchRightSelected;
   final ValueChanged<String> onMatchCleared;
+  final ValueChanged<String> onQuestionChecked;
+  final ValueChanged<String> onMatchChecked;
 
   @override
   Widget build(BuildContext context) {
@@ -52,11 +60,13 @@ class ExerciseGroupCard extends StatelessWidget {
               pairs: group.pairs,
               accentColor: color,
               checked: checked,
+              checkedMatchKeys: checkedMatchKeys,
               matchingAnswers: matchingAnswers,
               activeMatchKey: activeMatchKey,
               onLeftSelected: onMatchLeftSelected,
               onRightSelected: onMatchRightSelected,
               onMatchCleared: onMatchCleared,
+              onMatchChecked: onMatchChecked,
             )
           else
             ...group.questions.map(
@@ -66,9 +76,11 @@ class ExerciseGroupCard extends StatelessWidget {
                 question: question,
                 accentColor: color,
                 checked: checked,
+                checkedQuestionKeys: checkedQuestionKeys,
                 selectedAnswers: selectedAnswers,
                 textControllers: textControllers,
                 onAnswerSelected: onAnswerSelected,
+                onQuestionChecked: onQuestionChecked,
               ),
             ),
         ],

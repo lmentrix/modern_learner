@@ -15,9 +15,11 @@ class QuestionBlock extends StatelessWidget {
     required this.question,
     required this.accentColor,
     required this.checked,
+    required this.checkedQuestionKeys,
     required this.selectedAnswers,
     required this.textControllers,
     required this.onAnswerSelected,
+    required this.onQuestionChecked,
   });
 
   final int groupIndex;
@@ -25,16 +27,22 @@ class QuestionBlock extends StatelessWidget {
   final ChapterExerciseQuestionModel question;
   final Color accentColor;
   final bool checked;
+  final Set<String> checkedQuestionKeys;
   final Map<String, String> selectedAnswers;
   final Map<String, TextEditingController> textControllers;
   final void Function(String key, String answer) onAnswerSelected;
+  final ValueChanged<String> onQuestionChecked;
 
   @override
   Widget build(BuildContext context) {
     final key = questionKey(groupIndex, question.questionNumber);
     final selected = selectedAnswers[key];
-    final controller = textControllers.putIfAbsent(key, TextEditingController.new);
+    final controller = textControllers.putIfAbsent(
+      key,
+      TextEditingController.new,
+    );
     final isFillBlank = group.exerciseType == 'fill_in_the_blank';
+    final isChecked = checked || checkedQuestionKeys.contains(key);
     final isCorrect = matchesAnswer(
       isFillBlank ? controller.text : selected,
       question.answer,
@@ -74,7 +82,7 @@ class QuestionBlock extends StatelessWidget {
             TextField(
               controller: controller,
               onChanged: (_) {
-                if (checked) onAnswerSelected(key, controller.text);
+                onAnswerSelected(key, controller.text);
               },
               decoration: InputDecoration(
                 hintText: 'Type your answer',
@@ -93,7 +101,7 @@ class QuestionBlock extends StatelessWidget {
                       child: AnswerOption(
                         label: option,
                         selected: selected == option,
-                        checked: checked,
+                        checked: isChecked,
                         isCorrectAnswer: option == question.answer,
                         accentColor: accentColor,
                         onTap: () => onAnswerSelected(key, option),
@@ -102,7 +110,21 @@ class QuestionBlock extends StatelessWidget {
                   )
                   .toList(),
             ),
-          if (checked) ...[
+          const SizedBox(height: 4),
+          Align(
+            alignment: Alignment.centerRight,
+            child: OutlinedButton.icon(
+              onPressed: () => onQuestionChecked(key),
+              icon: const Icon(Icons.fact_check_rounded, size: 16),
+              label: const Text('Check'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: accentColor,
+                side: BorderSide(color: accentColor.withValues(alpha: 0.35)),
+                visualDensity: VisualDensity.compact,
+              ),
+            ),
+          ),
+          if (isChecked && !isCorrect) ...[
             const SizedBox(height: 12),
             ExerciseResultNote(
               isCorrect: isCorrect,
