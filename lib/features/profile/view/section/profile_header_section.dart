@@ -16,6 +16,29 @@ class ProfileHeaderSection extends StatelessWidget {
   final int totalXp;
   final VoidCallback onEditTap;
 
+  Color _letterColor(String name) {
+    if (name.isEmpty) return AppColors.primary;
+
+    final letter = name[0].toUpperCase();
+
+    final colors = <Color>[
+      AppColors.primary,
+      AppColors.secondary,
+      AppColors.tertiary,
+      AppColors.error,
+      AppColors.primaryDim,
+      AppColors.tertiaryContainer,
+      Color.lerp(AppColors.primary, AppColors.secondary, 0.45)!,
+      Color.lerp(AppColors.secondary, AppColors.tertiary, 0.38)!,
+      Color.lerp(AppColors.primaryDim, AppColors.error, 0.42)!,
+      Color.lerp(AppColors.tertiaryContainer, AppColors.primary, 0.36)!,
+    ];
+
+    final index = letter.codeUnitAt(0) % colors.length;
+
+    return colors[index];
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -25,13 +48,13 @@ class ProfileHeaderSection extends StatelessWidget {
           Container(
             width: 52,
             height: 52,
-            decoration: const BoxDecoration(
-              gradient: AppColors.primaryGradient,
+            decoration: BoxDecoration(
+              color: _letterColor(identity.displayName),
               shape: BoxShape.circle,
             ),
             child: Center(
               child: Text(
-                identity.initial,
+                identity.displayName[0].toUpperCase(),
                 style: GoogleFonts.spaceGrotesk(
                   fontSize: 22,
                   fontWeight: FontWeight.w700,
@@ -89,7 +112,6 @@ class ProfileHeaderSection extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 10),
-          _AnimatedXpBadge(totalXp: totalXp),
           const SizedBox(width: 8),
           GestureDetector(
             onTap: onEditTap,
@@ -109,109 +131,6 @@ class ProfileHeaderSection extends StatelessWidget {
                 size: 17,
               ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _AnimatedXpBadge extends StatefulWidget {
-  const _AnimatedXpBadge({required this.totalXp});
-
-  final int totalXp;
-
-  @override
-  State<_AnimatedXpBadge> createState() => _AnimatedXpBadgeState();
-}
-
-class _AnimatedXpBadgeState extends State<_AnimatedXpBadge>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 3),
-    )..repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        final glow = 0.16 + (_controller.value * 0.18);
-        return Container(
-          constraints: const BoxConstraints(minWidth: 76),
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                AppColors.primaryDim.withValues(alpha: 0.78 + glow),
-                AppColors.tertiaryContainer.withValues(alpha: 0.62 + glow),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.08 + glow),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primary.withValues(alpha: glow),
-                blurRadius: 18 + (_controller.value * 10),
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
-          child: child,
-        );
-      },
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.bolt_rounded, size: 16, color: Color(0xFF10131D)),
-          const SizedBox(width: 4),
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TweenAnimationBuilder<int>(
-                tween: IntTween(begin: 0, end: widget.totalXp),
-                duration: const Duration(milliseconds: 650),
-                curve: Curves.easeOutCubic,
-                builder: (context, value, _) {
-                  return Text(
-                    '$value',
-                    style: GoogleFonts.spaceGrotesk(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
-                      color: const Color(0xFF10131D),
-                      height: 1,
-                    ),
-                  );
-                },
-              ),
-              Text(
-                'XP',
-                style: GoogleFonts.inter(
-                  fontSize: 8,
-                  fontWeight: FontWeight.w800,
-                  color: const Color(0xFF10131D).withValues(alpha: 0.74),
-                  letterSpacing: 0.8,
-                ),
-              ),
-            ],
           ),
         ],
       ),

@@ -7,3 +7,9 @@ final class XpEarned extends XpEvent {
 
   final int amount;
 }
+
+final class _XpDataChanged extends XpEvent {
+  _XpDataChanged(this.data);
+
+  final CourseXpData data;
+}

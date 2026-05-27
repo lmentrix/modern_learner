@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 import 'package:modern_learner_production/features/profile/data/learning_activity_summary.dart';
-import 'package:modern_learner_production/features/profile/service/learning_activity_service.dart';
+import 'package:modern_learner_production/features/profile/state/learning_activity_monitor.dart';
 import 'package:modern_learner_production/features/profile/view/widgets/profile_footer_stat.dart';
 
 class ProfileActivityChart extends StatefulWidget {
@@ -14,35 +13,21 @@ class ProfileActivityChart extends StatefulWidget {
 }
 
 class _ProfileActivityChartState extends State<ProfileActivityChart> {
-  Future<LearningActivitySummary>? _summaryFuture;
-
   @override
   void initState() {
     super.initState();
-    _summaryFuture = _loadSummary();
-  }
-
-  Future<LearningActivitySummary> _loadSummary() async {
-    await LearningActivityService.instance.flushPending();
-    return LearningActivityService.instance.fetchCurrentWeek();
+    LearningActivityMonitor.instance.refresh();
   }
 
   @override
   Widget build(BuildContext context) {
-    final summaryFuture = _summaryFuture ??= _loadSummary();
-
-    return FutureBuilder<LearningActivitySummary>(
-      future: summaryFuture,
-      builder: (context, snapshot) {
-        final summary =
-            snapshot.data ?? LearningActivitySummary.emptyForCurrentWeek();
-
+    return ValueListenableBuilder<LearningActivityMonitorState>(
+      valueListenable: LearningActivityMonitor.instance.state,
+      builder: (context, state, child) {
         return _ActivityCard(
-          summary: summary,
-          isLoading: snapshot.connectionState == ConnectionState.waiting,
-          onRefresh: () {
-            setState(() => _summaryFuture = _loadSummary());
-          },
+          summary: state.summary,
+          isLoading: state.isLoading,
+          onRefresh: LearningActivityMonitor.instance.refresh,
         );
       },
     );

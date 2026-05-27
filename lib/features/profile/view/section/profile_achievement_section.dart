@@ -13,37 +13,65 @@ class ProfileAchievementSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<int>(
-      valueListenable: CourseXpService.instance.totalExerciseXp,
-      builder: (context, totalXp, _) {
-        final achievements = _evaluateAchievements(totalXp);
-        final unlocked = achievements.where((a) => a.isUnlocked).length;
-        final progress = achievements.isEmpty ? 0.0 : unlocked / achievements.length;
+      valueListenable: CourseXpService.instance.version,
+      builder: (context, _, __) => ValueListenableBuilder<int>(
+        valueListenable: CourseXpService.instance.totalExerciseXp,
+        builder: (context, totalXp, _) {
+          final achievements = _evaluateAchievements(totalXp);
+          final unlocked = achievements.where((a) => a.isUnlocked).length;
+          final progress =
+              achievements.isEmpty ? 0.0 : unlocked / achievements.length;
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const ProfileSectionLabel(text: 'ACHIEVEMENTS'),
-            const SizedBox(height: 14),
-            _AchievementProgressBar(unlocked: unlocked, total: achievements.length, progress: progress),
-            const SizedBox(height: 16),
-            _AchievementBadgeRow(achievements: achievements),
-            const SizedBox(height: 20),
-            const ProfileSectionLabel(text: 'COURSE XP'),
-            const SizedBox(height: 14),
-            _CourseXpList(totalXp: totalXp),
-          ],
-        );
-      },
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const ProfileSectionLabel(text: 'ACHIEVEMENTS'),
+              const SizedBox(height: 14),
+              _AchievementProgressBar(
+                unlocked: unlocked,
+                total: achievements.length,
+                progress: progress,
+              ),
+              const SizedBox(height: 16),
+              _AchievementBadgeRow(achievements: achievements),
+              const SizedBox(height: 20),
+              const ProfileSectionLabel(text: 'COURSE XP'),
+              const SizedBox(height: 14),
+              _CourseXpList(totalXp: totalXp),
+            ],
+          );
+        },
+      ),
     );
   }
 
   List<Achievement> _evaluateAchievements(int totalXp) {
+    final courseData = Map.fromEntries(
+      CourseXpService.instance.courseNotifiers.entries
+          .map((e) => MapEntry(e.key, e.value.value)),
+    );
     return AchievementCatalogue.all.map((a) {
-      if (a.type == AchievementType.xp) {
-        return a.copyWith(isUnlocked: totalXp >= a.requirement);
-      }
-      return a;
+      final courses = _unlockedBy(a, courseData);
+      return a.copyWith(unlockedByCourses: courses);
     }).toList();
+  }
+
+  List<String> _unlockedBy(Achievement a, Map<String, CourseXpData> courseData) {
+    switch (a.type) {
+      case AchievementType.xp:
+        return courseData.entries
+            .where((e) => e.value.exerciseXp >= a.requirement)
+            .map((e) => e.key)
+            .toList();
+      case AchievementType.chapter:
+        return courseData.entries
+            .where((e) => e.value.chaptersUnlocked >= a.requirement)
+            .map((e) => e.key)
+            .toList();
+      // streak / level / gems / lesson are account-wide — not per-course in profile view
+      default:
+        return [];
+    }
   }
 }
 
@@ -139,51 +167,379 @@ class _AchievementBadge extends StatelessWidget {
         AchievementRarity.legendary => AppColors.tertiaryContainer,
       };
 
+  void _showDetail(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => _AchievementDetailSheet(
+        achievement: achievement,
+        rarityColor: _rarityColor,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final unlocked = achievement.isUnlocked;
-    return Tooltip(
-      message: '${achievement.title}\n${achievement.description}',
-      child: Container(
-        width: 64,
-        decoration: BoxDecoration(
-          color: unlocked
-              ? AppColors.primaryContainer
-              : AppColors.surfaceContainerHigh,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: unlocked ? _rarityColor : AppColors.outlineVariant,
-            width: unlocked ? 1.5 : 1,
-          ),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              achievement.emoji,
-              style: TextStyle(
-                fontSize: 24,
-                color: unlocked ? null : Colors.white.withAlpha(60),
+    final courseCount = achievement.unlockedByCourses
+        .where((c) => c != 'global')
+        .length;
+
+    return GestureDetector(
+      onTap: () => _showDetail(context),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            width: 64,
+            decoration: BoxDecoration(
+              color: unlocked
+                  ? _rarityColor.withValues(alpha: 0.10)
+                  : AppColors.surfaceContainerHigh,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: unlocked
+                    ? _rarityColor.withValues(alpha: 0.55)
+                    : AppColors.outlineVariant,
+                width: unlocked ? 1.5 : 1,
               ),
+              boxShadow: unlocked
+                  ? [
+                      BoxShadow(
+                        color: _rarityColor.withValues(alpha: 0.18),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
+                      ),
+                    ]
+                  : null,
             ),
-            const SizedBox(height: 4),
-            if (unlocked)
-              Container(
-                width: 8,
-                height: 8,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  achievement.emoji,
+                  style: TextStyle(
+                    fontSize: 24,
+                    color: unlocked ? null : Colors.white.withAlpha(50),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                if (unlocked)
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: _rarityColor,
+                      shape: BoxShape.circle,
+                    ),
+                  )
+                else
+                  const Icon(
+                    Icons.lock_outline_rounded,
+                    size: 10,
+                    color: AppColors.onSurfaceVariant,
+                  ),
+              ],
+            ),
+          ),
+          // course-count badge (top-right corner)
+          if (courseCount > 1)
+            Positioned(
+              top: -5,
+              right: -5,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                 decoration: BoxDecoration(
                   color: _rarityColor,
-                  shape: BoxShape.circle,
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(
+                    color: AppColors.surfaceContainerLow,
+                    width: 1.5,
+                  ),
                 ),
-              )
-            else
-              const Icon(
-                Icons.lock_outline_rounded,
-                size: 10,
-                color: AppColors.onSurfaceVariant,
+                child: Text(
+                  '×$courseCount',
+                  style: GoogleFonts.spaceGrotesk(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.black87,
+                  ),
+                ),
               ),
-          ],
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Achievement detail bottom sheet ───────────────────────────────────────────
+
+class _AchievementDetailSheet extends StatelessWidget {
+  const _AchievementDetailSheet({
+    required this.achievement,
+    required this.rarityColor,
+  });
+
+  final Achievement achievement;
+  final Color rarityColor;
+
+  String get _rarityLabel => switch (achievement.rarity) {
+        AchievementRarity.common => 'Common',
+        AchievementRarity.rare => 'Rare',
+        AchievementRarity.epic => 'Epic',
+        AchievementRarity.legendary => 'Legendary',
+      };
+
+  String get _typeLabel => switch (achievement.type) {
+        AchievementType.xp => 'XP',
+        AchievementType.streak => 'Streak',
+        AchievementType.level => 'Level',
+        AchievementType.lesson => 'Lessons',
+        AchievementType.chapter => 'Chapters',
+        AchievementType.gems => 'Gems',
+      };
+
+  String _formatCourseKey(String key) {
+    if (key == 'global') return 'Account';
+    return key
+        .replaceAll('_', ' ')
+        .replaceAll('-', ' ')
+        .split(' ')
+        .map((w) => w.isEmpty ? w : '${w[0].toUpperCase()}${w.substring(1)}')
+        .join(' ');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final unlocked = achievement.isUnlocked;
+    final courses = achievement.unlockedByCourses;
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(
+          color: unlocked
+              ? rarityColor.withValues(alpha: 0.35)
+              : AppColors.outlineVariant,
+          width: 1.5,
         ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // drag handle
+          Container(
+            margin: const EdgeInsets.only(top: 12),
+            width: 36,
+            height: 4,
+            decoration: BoxDecoration(
+              color: AppColors.outlineVariant,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 20, 24, 28),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // emoji + title row
+                Row(
+                  children: [
+                    Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: unlocked
+                            ? rarityColor.withValues(alpha: 0.12)
+                            : AppColors.surfaceContainerHigh,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: unlocked
+                              ? rarityColor.withValues(alpha: 0.40)
+                              : AppColors.outlineVariant,
+                          width: 1.5,
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          achievement.emoji,
+                          style: TextStyle(
+                            fontSize: 28,
+                            color: unlocked
+                                ? null
+                                : Colors.white.withAlpha(50),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            achievement.title,
+                            style: GoogleFonts.spaceGrotesk(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.onSurface,
+                              height: 1.1,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              _Chip(
+                                label: _rarityLabel,
+                                color: rarityColor,
+                              ),
+                              const SizedBox(width: 6),
+                              _Chip(
+                                label: _typeLabel,
+                                color: AppColors.secondary,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 16),
+
+                Text(
+                  achievement.description,
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    color: AppColors.onSurfaceVariant,
+                    height: 1.55,
+                  ),
+                ),
+
+                const SizedBox(height: 14),
+
+                // XP reward chip
+                Row(
+                  children: [
+                    _Chip(
+                      icon: Icons.auto_awesome_rounded,
+                      label: '+${achievement.xpReward} XP reward',
+                      color: AppColors.tertiaryContainer,
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 20),
+
+                Container(
+                  height: 1,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        rarityColor.withValues(alpha: 0.30),
+                        Colors.transparent,
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // unlock status
+                if (!unlocked) ...[
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.lock_outline_rounded,
+                        size: 14,
+                        color: AppColors.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Not yet unlocked',
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          color: AppColors.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ] else ...[
+                  Text(
+                    'Unlocked by',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.onSurfaceVariant,
+                      letterSpacing: 1.1,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: courses.map((courseKey) {
+                      final isGlobal = courseKey == 'global';
+                      return _Chip(
+                        icon: isGlobal
+                            ? Icons.person_outline_rounded
+                            : Icons.school_outlined,
+                        label: _formatCourseKey(courseKey),
+                        color: isGlobal ? AppColors.tertiary : rarityColor,
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Chip extends StatelessWidget {
+  const _Chip({required this.label, required this.color, this.icon});
+
+  final String label;
+  final Color color;
+  final IconData? icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: 0.22)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 11, color: color),
+            const SizedBox(width: 5),
+          ],
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

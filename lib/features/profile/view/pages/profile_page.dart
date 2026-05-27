@@ -3,9 +3,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:modern_learner_production/core/di/injection.dart';
 import 'package:modern_learner_production/core/profile/local_profile_service.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
+import 'package:modern_learner_production/features/auth/service/auth_service.dart';
 import 'package:modern_learner_production/features/profile/data/profile_identity.dart';
 import 'package:modern_learner_production/features/profile/data/profile_page_constants.dart';
 import 'package:modern_learner_production/features/profile/data/profile_preferences.dart';
+import 'package:modern_learner_production/features/profile/model/profile_moderl.dart';
+import 'package:modern_learner_production/features/profile/service/profile_service.dart';
+import 'package:modern_learner_production/features/profile/state/learning_activity_monitor.dart';
 import 'package:modern_learner_production/features/profile/view/bloc/profile_bloc.dart';
 import 'package:modern_learner_production/features/profile/view/section/profile_account_sheet_section.dart';
 import 'package:modern_learner_production/features/profile/view/section/profile_achievement_section.dart';
@@ -32,6 +36,14 @@ class _ProfilePageState extends State<ProfilePage> {
   final _scrollController = ScrollController();
   final _profileService = getIt<LocalProfileService>();
   ProfilePreferences _preferences = const ProfilePreferences();
+  late final Future<ProfileModel?> _supabaseProfile;
+
+  @override
+  void initState() {
+    super.initState();
+    _supabaseProfile = ProfileService().getCurrentProfile();
+    LearningActivityMonitor.instance.refresh();
+  }
 
   @override
   void dispose() {
@@ -119,6 +131,30 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  Future<void> _logout() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Log Out'),
+        content: const Text('Are you sure you want to log out?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.redAccent),
+            child: const Text('Log Out'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      await AuthService.instance.signOut();
+    }
+  }
+
   void _showEditProfileSheet() {
     final identity = _profileService.currentIdentity;
 
@@ -149,13 +185,27 @@ class _ProfilePageState extends State<ProfilePage> {
               physics: const BouncingScrollPhysics(),
               slivers: [
                 SliverToBoxAdapter(
-                  child: ValueListenableBuilder<int>(
-                    valueListenable: CourseXpService.instance.totalExerciseXp,
-                    builder: (context, totalXp, _) {
-                      return ProfileHeaderSection(
-                        identity: identity,
-                        totalXp: totalXp,
-                        onEditTap: _showAccountSheet,
+                  child: FutureBuilder<ProfileModel?>(
+                    future: _supabaseProfile,
+                    builder: (context, profileSnapshot) {
+                      final supabaseIdentity = profileSnapshot.data != null
+                          ? ProfileIdentity(
+                              displayName: profileSnapshot.data!.name.isNotEmpty
+                                  ? profileSnapshot.data!.name
+                                  : identity.displayName,
+                              email: profileSnapshot.data!.email,
+                            )
+                          : identity;
+                      return ValueListenableBuilder<int>(
+                        valueListenable:
+                            CourseXpService.instance.totalExerciseXp,
+                        builder: (context, totalXp, _) {
+                          return ProfileHeaderSection(
+                            identity: supabaseIdentity,
+                            totalXp: totalXp,
+                            onEditTap: _showAccountSheet,
+                          );
+                        },
                       );
                     },
                   ),
@@ -204,6 +254,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       onLanguageTap: _showLanguageSheet,
                       onPrivacyTap: _showPrivacySheet,
                       onHelpTap: _showHelpSheet,
+                      onLogoutTap: _logout,
                     ),
                   ),
                 ),

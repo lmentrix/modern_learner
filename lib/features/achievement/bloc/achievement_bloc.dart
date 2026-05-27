@@ -3,6 +3,7 @@ import 'package:meta/meta.dart';
 import 'package:modern_learner_production/core/models/user_progress.dart';
 import 'package:modern_learner_production/features/achievement/data/achievemenet_data.dart';
 import 'package:modern_learner_production/features/achievement/model/achievement_model.dart';
+import 'package:modern_learner_production/features/progress/service/course_xp_service.dart';
 
 part 'achievement_event.dart';
 part 'achievement_state.dart';
@@ -69,30 +70,56 @@ class AchievementBloc extends Bloc<AchievementEvent, AchievementState> {
     );
   }
 
-  /// Stamps each catalogue entry with its current unlock status.
+  /// Stamps each catalogue entry with the list of courses that unlocked it.
   List<Achievement> _evaluate(
     List<Achievement> catalogue,
     UserProgress progress,
   ) {
+    final courseData = Map.fromEntries(
+      CourseXpService.instance.courseNotifiers.entries
+          .map((e) => MapEntry(e.key, e.value.value)),
+    );
+
     return catalogue.map((a) {
-      final met = _isMet(a, progress);
+      final courses = _unlockedBy(a, progress, courseData);
       return a.copyWith(
-        isUnlocked: met,
-        unlockedAt: met && a.unlockedAt == null ? DateTime.now() : a.unlockedAt,
+        unlockedByCourses: courses,
+        unlockedAt:
+            courses.isNotEmpty && a.unlockedAt == null ? DateTime.now() : a.unlockedAt,
       );
     }).toList();
   }
 
-  bool _isMet(Achievement achievement, UserProgress progress) {
-    return switch (achievement.type) {
-      AchievementType.streak => progress.streak >= achievement.requirement,
-      AchievementType.xp => progress.totalXp >= achievement.requirement,
-      AchievementType.level => progress.level >= achievement.requirement,
-      AchievementType.lesson =>
-        progress.completedLessons.length >= achievement.requirement,
-      AchievementType.chapter =>
-        progress.completedChapters.length >= achievement.requirement,
-      AchievementType.gems => progress.gems >= achievement.requirement,
-    };
+  /// Returns the list of course keys (or ['global']) that meet [a]'s threshold.
+  List<String> _unlockedBy(
+    Achievement a,
+    UserProgress progress,
+    Map<String, CourseXpData> courseData,
+  ) {
+    switch (a.type) {
+      case AchievementType.xp:
+        return courseData.entries
+            .where((e) => e.value.exerciseXp >= a.requirement)
+            .map((e) => e.key)
+            .toList();
+
+      case AchievementType.chapter:
+        return courseData.entries
+            .where((e) => e.value.chaptersUnlocked >= a.requirement)
+            .map((e) => e.key)
+            .toList();
+
+      case AchievementType.streak:
+        return progress.streak >= a.requirement ? ['global'] : [];
+
+      case AchievementType.level:
+        return progress.level >= a.requirement ? ['global'] : [];
+
+      case AchievementType.gems:
+        return progress.gems >= a.requirement ? ['global'] : [];
+
+      case AchievementType.lesson:
+        return progress.completedLessons.length >= a.requirement ? ['global'] : [];
+    }
   }
 }

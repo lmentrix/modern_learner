@@ -138,7 +138,7 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
                           selectedCourse,
                           item,
                           pageData.moduleSteps,
-                        ),
+                        ), 
                       ),
                     ),
                   ),

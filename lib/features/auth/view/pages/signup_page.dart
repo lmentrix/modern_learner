@@ -61,65 +61,13 @@ class _SignupPageState extends State<SignupPage> {
       await AuthService.instance.signUp(
         email: email,
         password: password,
-        displayName: name,
       );
-      if (mounted) {
-        _showVerificationDialog();
-      }
+      if (mounted) context.go(Routes.login);
     } catch (e) {
       if (mounted) setState(() => _error = _friendly(e));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
-  }
-
-  void _showVerificationDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.surfaceContainerHigh,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(
-          'Check your email',
-          style: GoogleFonts.spaceGrotesk(
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-            color: AppColors.onSurface,
-          ),
-        ),
-        content: Text(
-          'We sent a verification link to ${_emailCtrl.text.trim()}. '
-          'Click it to activate your account, then sign in.',
-          style: GoogleFonts.inter(
-            fontSize: 14,
-            color: AppColors.onSurfaceVariant,
-            height: 1.5,
-          ),
-        ),
-        actions: [
-          FilledButton(
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              context.go(Routes.login);
-            },
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: Text(
-              'Go to Sign In',
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   String _friendly(Object e) {

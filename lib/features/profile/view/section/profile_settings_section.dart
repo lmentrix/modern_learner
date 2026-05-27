@@ -18,6 +18,7 @@ class ProfileSettingsSection extends StatelessWidget {
     required this.onLanguageTap,
     required this.onPrivacyTap,
     required this.onHelpTap,
+    required this.onLogoutTap,
   });
 
   final ProfileIdentity identity;
@@ -28,6 +29,7 @@ class ProfileSettingsSection extends StatelessWidget {
   final VoidCallback onLanguageTap;
   final VoidCallback onPrivacyTap;
   final VoidCallback onHelpTap;
+  final VoidCallback onLogoutTap;
 
   String get _accountSubtitle {
     if (identity.email.isEmpty) {
@@ -95,6 +97,14 @@ class ProfileSettingsSection extends StatelessWidget {
           subtitle: 'FAQs and contact us',
           accentColor: const Color(0xFFFF6B9D),
           onTap: onHelpTap,
+        ),
+        const SizedBox(height: 24),
+        SettingItem(
+          icon: Icons.logout_rounded,
+          title: 'Log Out',
+          subtitle: 'Sign out of your account',
+          accentColor: Colors.redAccent,
+          onTap: onLogoutTap,
         ),
       ],
     );

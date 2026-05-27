@@ -92,10 +92,7 @@ class HomeHeader extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          GestureDetector(
-            onTap: onStreakTap,
-            child: const StreakBadge(count: 14),
-          ),
+          GestureDetector(onTap: onStreakTap, child: const StreakBadge()),
         ],
       ),
     );

@@ -43,6 +43,19 @@ class LearningActivitySummary {
 
   int get daysActive => days.where((day) => day.minutes > 0).length;
 
+  int get currentStreakDays {
+    if (days.isEmpty || todayIndex < 0 || todayIndex >= days.length) {
+      return 0;
+    }
+
+    var streak = 0;
+    for (var index = todayIndex; index >= 0; index--) {
+      if (days[index].minutes <= 0) break;
+      streak++;
+    }
+    return streak;
+  }
+
   String get totalFormatted => formatMinutes(totalMinutes);
 
   static String formatMinutes(int minutes) {
