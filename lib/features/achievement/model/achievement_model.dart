@@ -14,7 +14,7 @@ class Achievement extends Equatable {
     required this.rarity,
     required this.requirement,
     required this.xpReward,
-    this.isUnlocked = false,
+    this.unlockedByCourses = const [],
     this.unlockedAt,
   });
 
@@ -28,11 +28,17 @@ class Achievement extends Equatable {
   /// The threshold value that must be reached to unlock this achievement.
   final int requirement;
   final int xpReward;
-  final bool isUnlocked;
+
+  /// Course keys that have independently met this achievement's requirement.
+  /// 'global' is used for account-wide types (streak, level, gems, lesson).
+  /// Empty means locked.
+  final List<String> unlockedByCourses;
   final DateTime? unlockedAt;
 
+  bool get isUnlocked => unlockedByCourses.isNotEmpty;
+
   Achievement copyWith({
-    bool? isUnlocked,
+    List<String>? unlockedByCourses,
     DateTime? unlockedAt,
   }) {
     return Achievement(
@@ -44,7 +50,7 @@ class Achievement extends Equatable {
       rarity: rarity,
       requirement: requirement,
       xpReward: xpReward,
-      isUnlocked: isUnlocked ?? this.isUnlocked,
+      unlockedByCourses: unlockedByCourses ?? this.unlockedByCourses,
       unlockedAt: unlockedAt ?? this.unlockedAt,
     );
   }
@@ -59,9 +65,7 @@ class Achievement extends Equatable {
         rarity,
         requirement,
         xpReward,
-        isUnlocked,
+        unlockedByCourses,
         unlockedAt,
       ];
 }
-
-

@@ -11,6 +11,7 @@ class ProgressOverviewCard extends StatefulWidget {
     required this.xp,
     required this.xpToNext,
     required this.progress,
+    this.rankTitle = 'Advanced Learner',
     this.onTap,
   });
 
@@ -18,6 +19,7 @@ class ProgressOverviewCard extends StatefulWidget {
   final int xp;
   final int xpToNext;
   final double progress;
+  final String rankTitle;
   final VoidCallback? onTap;
 
   @override
@@ -121,7 +123,7 @@ class _ProgressOverviewCardState extends State<ProgressOverviewCard>
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    'Advanced\nLearner',
+                    widget.rankTitle,
                     style: GoogleFonts.spaceGrotesk(
                       fontSize: 22,
                       fontWeight: FontWeight.w700,

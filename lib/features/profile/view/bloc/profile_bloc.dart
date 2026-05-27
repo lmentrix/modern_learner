@@ -42,16 +42,25 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     Emitter<ProfileState> emit,
   ) async {
     emit(state.copyWith(status: ProfileStatus.loading));
-    await _localProfileService.updateProfile(displayName: event.name);
-    emit(
-      state.copyWith(
-        status: ProfileStatus.success,
-        profile: (state.profile ?? _currentProfile()).copyWith(
-          displayName: event.name,
-          avatarUrl: event.avatarUrl,
+    try {
+      await _localProfileService.updateProfile(displayName: event.name);
+      emit(
+        state.copyWith(
+          status: ProfileStatus.success,
+          profile: (state.profile ?? _currentProfile()).copyWith(
+            displayName: event.name,
+            avatarUrl: event.avatarUrl,
+          ),
+          errorMessage: null,
         ),
-        errorMessage: null,
-      ),
-    );
+      );
+    } catch (error) {
+      emit(
+        state.copyWith(
+          status: ProfileStatus.error,
+          errorMessage: 'Failed to update profile: $error',
+        ),
+      );
+    }
   }
 }

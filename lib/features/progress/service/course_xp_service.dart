@@ -44,15 +44,26 @@ class CourseXpService {
   CourseXpService._();
   static final CourseXpService instance = CourseXpService._();
 
-  static const String _prefsKey = 'course_xp_data';
+  static const String _prefsKeyPrefix = 'course_xp_data';
 
   SharedPreferences? _prefs;
+  String _userId = '';
   final Map<String, ValueNotifier<CourseXpData>> _notifiers = {};
 
   final ValueNotifier<int> totalExerciseXp = ValueNotifier(0);
 
-  void inject(SharedPreferences prefs) {
+  /// Increments every time [inject] is called so listeners always rebuild on
+  /// user switch, even when [totalExerciseXp] stays at 0.
+  final ValueNotifier<int> version = ValueNotifier(0);
+
+  String get _prefsKey => '${_prefsKeyPrefix}_$_userId';
+
+  void inject(SharedPreferences prefs, {required String userId}) {
     _prefs = prefs;
+    _userId = userId;
+    _notifiers.clear();
+    totalExerciseXp.value = 0;
+    version.value++;
     _load();
   }
 

@@ -54,10 +54,14 @@ class _LoginPageState extends State<LoginPage> {
 
   String _friendly(Object e) {
     final msg = e.toString().toLowerCase();
-    if (msg.contains('invalid login')) return 'Incorrect email or password.';
-    if (msg.contains('email not confirmed')) return 'Please verify your email first.';
+    if (msg.contains('email not confirmed')) {
+      return 'Account not confirmed. Disable email confirmation in your Supabase dashboard.';
+    }
+    if (msg.contains('invalid login') || msg.contains('invalid credentials')) {
+      return 'Incorrect email or password.';
+    }
     if (msg.contains('network')) return 'Network error — check your connection.';
-    return 'Something went wrong. Please try again.';
+    return e.toString();
   }
 
   @override

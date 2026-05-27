@@ -5,12 +5,18 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:modern_learner_production/core/models/progress_course_selection.dart';
 
 class UserCoursesService {
-  const UserCoursesService({required SharedPreferences sharedPreferences})
-    : _sharedPreferences = sharedPreferences;
+  const UserCoursesService({
+    required SharedPreferences sharedPreferences,
+    required String userId,
+  }) : _sharedPreferences = sharedPreferences,
+       _userId = userId;
 
-  static const _storageKey = 'local_progress_courses';
+  static const _storageKeyPrefix = 'local_progress_courses';
 
   final SharedPreferences _sharedPreferences;
+  final String _userId;
+
+  String get _storageKey => '${_storageKeyPrefix}_$_userId';
 
   Future<List<ProgressCourseSelection>> fetchCourses() async {
     return _readCourses();

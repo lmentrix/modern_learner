@@ -18,16 +18,22 @@ class AuthService {
   Future<AuthUserModel> signUp({
     required String email,
     required String password,
-    String? displayName,
   }) async {
     final response = await supabase.auth.signUp(
       email: email,
       password: password,
-      data: displayName != null ? {'display_name': displayName} : null,
     );
 
     final user = response.user;
     if (user == null) throw Exception('Sign-up failed — no user returned.');
+
+    // When email confirmation is disabled, a genuine new signup returns a
+    // session immediately. A null session means the email is already registered
+    // (Supabase returns user_repeated_signup with no session).
+    if (response.session == null) {
+      throw Exception('Email already registered. Please sign in instead.');
+    }
+
     return AuthUserModel.fromSupabase(user);
   }
 

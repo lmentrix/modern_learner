@@ -1,8 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:modern_learner_production/features/profile/state/learning_activity_monitor.dart';
 
 class StreakBadge extends StatelessWidget {
-  const StreakBadge({super.key, required this.count});
+  const StreakBadge({super.key, this.count});
+
+  final int? count;
+
+  @override
+  Widget build(BuildContext context) {
+    final fixedCount = count;
+    if (fixedCount != null) {
+      return _StreakBadgeContent(count: fixedCount);
+    }
+
+    return ValueListenableBuilder<LearningActivityMonitorState>(
+      valueListenable: LearningActivityMonitor.instance.state,
+      builder: (context, state, child) {
+        return _StreakBadgeContent(count: state.currentStreakDays);
+      },
+    );
+  }
+}
+
+class _StreakBadgeContent extends StatelessWidget {
+  const _StreakBadgeContent({required this.count});
 
   final int count;
 
