@@ -1,5 +1,6 @@
 import 'package:modern_learner_production/core/supabase/supabase_service.dart';
 import 'package:modern_learner_production/features/achievement/model/achievement_model.dart';
+import 'package:modern_learner_production/main.dart';
 
 class AchievementService {
   AchievementService();
@@ -261,6 +262,8 @@ class AchievementService {
         ? (existing?.unlockedAt ?? DateTime.now())
         : existing?.unlockedAt;
 
+    final isNewlyUnlocked = isUnlocked && existing?.unlockedAt == null;
+
     await upsertProgress(
       UserAchievementProgressModel(
         id: existing?.id,
@@ -273,6 +276,14 @@ class AchievementService {
         metadata: existing?.metadata ?? const {},
       ),
     );
+
+    if (isNewlyUnlocked) {
+      pushNotificationService.notifyAchievementUnlocked(
+        emoji: definition.emoji,
+        title: definition.title,
+        description: definition.description,
+      ).ignore();
+    }
   }
 
   int _accountProgressValue(

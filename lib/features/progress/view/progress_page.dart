@@ -49,6 +49,8 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
   final Map<String, ChapterSubcontentResponseModel> _chapterSubcontentCache =
       <String, ChapterSubcontentResponseModel>{};
   final Map<String, int> _unlockedChapterLimitByCourse = <String, int>{};
+  // key: "${courseKey}::ch${chapterNumber}", value: completed subcontent count
+  final Map<String, int> _completedSubcontentsByCourseChapter = {};
 
   @override
   void dispose() {
@@ -83,6 +85,7 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
         final pageData = buildProgressPageData(
           course: selectedCourse,
           unlockedChapterLimit: _unlockedChapterLimit(selectedCourse),
+          chapterProgressOverrides: _chapterProgressOverrides(selectedCourse),
         );
         if (navState.hasSelection) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -151,6 +154,11 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
                           item,
                           pageData.moduleSteps,
                         ),
+                        completedSubcontentsInCurrentChapter:
+                            _completedSubcontentsForSelectedChapter(
+                          selectedCourse,
+                          pageData.moduleSteps,
+                        ),
                       ),
                     ),
                   ),
@@ -191,11 +199,24 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
 
     _selectedCourseKey = courseKey;
     _resetChapterSubcontentState(clearCache: false);
+    _restoreSubcontentProgress(course);
 
     if (!_dbLoadedCourses.contains(courseKey)) {
       _dbLoadedCourses.add(courseKey);
       _isDbLoading = course.courseId != null;
       unawaited(_loadFromDb(course));
+    }
+  }
+
+  /// Populates [_completedSubcontentsByCourseChapter] from persisted data in
+  /// [CourseXpService] so progress is correct without waiting for the DB load.
+  void _restoreSubcontentProgress(ProgressCourseSelection course) {
+    final courseKey = _courseKey(course);
+    final data = CourseXpService.instance.dataFor(courseKey);
+    for (final entry in data.subcontentCompleted.entries) {
+      // entry.key is "ch{chapterNumber}"
+      _completedSubcontentsByCourseChapter['$courseKey::${entry.key}'] =
+          entry.value;
     }
   }
 
@@ -474,7 +495,7 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
 
     _xpBlocFor(course).add(XpEarned(XpBloc.xpPerExercise));
 
-    _markChapterComplete(course, completion.chapterNumber);
+    _handleSubcontentCompletion(course, completion.chapterNumber);
   }
 
   int _unlockedChapterLimit(ProgressCourseSelection course) {
@@ -483,6 +504,79 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
       key,
       () => CourseXpService.instance.dataFor(key).chaptersUnlocked,
     );
+  }
+
+  int _completedSubcontentsForSelectedChapter(
+    ProgressCourseSelection course,
+    List<ProgressModuleStep> steps,
+  ) {
+    if (_selectedChapterId == null) return 0;
+    final step = steps
+        .where((s) => s.id == _selectedChapterId)
+        .cast<ProgressModuleStep?>()
+        .firstOrNull;
+    if (step == null) return 0;
+    final courseKey = _courseKey(course);
+    return _completedSubcontentsByCourseChapter[
+          '$courseKey::ch${step.chapterNumber}'] ??
+        0;
+  }
+
+  Map<int, double> _chapterProgressOverrides(ProgressCourseSelection course) {
+    final courseKey = _courseKey(course);
+    final result = <int, double>{};
+    for (final entry in _completedSubcontentsByCourseChapter.entries) {
+      if (!entry.key.startsWith('$courseKey::ch')) continue;
+      final chapterNumber = int.tryParse(
+        entry.key.substring('$courseKey::ch'.length),
+      );
+      if (chapterNumber == null) continue;
+      final cacheKey = _chapterCacheKeyByNumber(course, chapterNumber);
+      final total =
+          _chapterSubcontentCache[cacheKey]
+              ?.chapterSubcontent
+              .subcontents
+              .length ??
+          0;
+      if (total > 0) {
+        result[chapterNumber] = (entry.value / total).clamp(0.0, 1.0);
+      }
+    }
+    return result;
+  }
+
+  void _handleSubcontentCompletion(
+    ProgressCourseSelection course,
+    int chapterNumber,
+  ) {
+    final courseKey = _courseKey(course);
+    final subcontentKey = '$courseKey::ch$chapterNumber';
+    final newCount =
+        (_completedSubcontentsByCourseChapter[subcontentKey] ?? 0) + 1;
+
+    final cacheKey = _chapterCacheKeyByNumber(course, chapterNumber);
+    final total =
+        _chapterSubcontentCache[cacheKey]
+            ?.chapterSubcontent
+            .subcontents
+            .length ??
+        1;
+
+    setState(() {
+      _completedSubcontentsByCourseChapter[subcontentKey] = newCount;
+    });
+
+    // Persist to SharedPreferences + Supabase via CourseXpService.
+    CourseXpService.instance.updateSubcontentProgress(
+      courseKey,
+      chapterNumber,
+      newCount,
+      total,
+    );
+
+    if (newCount >= total) {
+      _markChapterComplete(course, chapterNumber);
+    }
   }
 
   void _markChapterComplete(ProgressCourseSelection course, int chapterNumber) {

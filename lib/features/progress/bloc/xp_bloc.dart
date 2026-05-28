@@ -24,6 +24,7 @@ class XpBloc extends Bloc<XpEvent, XpState> {
     return XpState(
       totalXp: data.exerciseXp,
       exercisesCompleted: data.exercisesCompleted,
+      chaptersUnlocked: data.chaptersUnlocked,
     );
   }
 
@@ -36,6 +37,7 @@ class XpBloc extends Bloc<XpEvent, XpState> {
       XpState(
         totalXp: event.data.exerciseXp,
         exercisesCompleted: event.data.exercisesCompleted,
+        chaptersUnlocked: event.data.chaptersUnlocked,
       ),
     );
   }

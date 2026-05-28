@@ -18,6 +18,7 @@ class ProgressJourneySection extends StatelessWidget {
     this.chapterSubcontentError,
     this.onRetryTap,
     this.onSubcontentTap,
+    this.completedSubcontentsInCurrentChapter = 0,
   });
 
   final ProgressPageData data;
@@ -28,6 +29,7 @@ class ProgressJourneySection extends StatelessWidget {
   final String? chapterSubcontentError;
   final VoidCallback? onRetryTap;
   final ValueChanged<ChapterSubcontentItemModel>? onSubcontentTap;
+  final int completedSubcontentsInCurrentChapter;
 
   @override
   Widget build(BuildContext context) {
@@ -69,6 +71,10 @@ class ProgressJourneySection extends StatelessWidget {
                     data.moduleSteps[i].id == selectedChapterId
                         ? onSubcontentTap
                         : null,
+                completedSubcontents:
+                    data.moduleSteps[i].id == selectedChapterId
+                        ? completedSubcontentsInCurrentChapter
+                        : 0,
               ),
           ],
         ),

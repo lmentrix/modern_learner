@@ -63,14 +63,17 @@ class PushNotificationService {
 
   Future<void> _initLocalNotifications() async {
     try {
-      const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+      const androidSettings = AndroidInitializationSettings(
+        '@mipmap/ic_launcher',
+      );
       const initSettings = InitializationSettings(android: androidSettings);
       await _localNotifications.initialize(initSettings);
 
       if (Platform.isAndroid) {
         await _localNotifications
             .resolvePlatformSpecificImplementation<
-                AndroidFlutterLocalNotificationsPlugin>()
+              AndroidFlutterLocalNotificationsPlugin
+            >()
             ?.createNotificationChannel(
               const AndroidNotificationChannel(
                 _channelId,
@@ -81,7 +84,11 @@ class PushNotificationService {
       }
       _localReady = true;
     } catch (e, st) {
-      _logger.w('[FCM] Local notifications init failed', error: e, stackTrace: st);
+      _logger.w(
+        '[FCM] Local notifications init failed',
+        error: e,
+        stackTrace: st,
+      );
     }
   }
 
@@ -89,10 +96,92 @@ class PushNotificationService {
   // Course notifications
   // ---------------------------------------------------------------------------
 
-  /// Shows a local notification confirming a new course was created.
-  Future<void> notifyNewCourse({required String title, required String topic}) async {
+  /// Shows a local notification when an achievement is unlocked.
+  Future<void> notifyAchievementUnlocked({
+    required String emoji,
+    required String title,
+    required String description,
+  }) async {
     if (!_localReady) {
-      _logger.w('[FCM] Local notifications not ready — skipping course notification');
+      _logger.w(
+        '[FCM] Local notifications not ready — skipping achievement notification',
+      );
+      return;
+    }
+    try {
+      const androidDetails = AndroidNotificationDetails(
+        _channelId,
+        _channelName,
+        channelDescription: 'Notifies when a new course is created',
+        importance: Importance.max,
+        priority: Priority.high,
+      );
+      const details = NotificationDetails(android: androidDetails);
+
+      await _localNotifications.show(
+        _notificationId++,
+        '$emoji Achievement Unlocked!',
+        '$title — $description',
+        details,
+      );
+      _logger.i('[FCM] Achievement notification shown: $title');
+    } catch (e, st) {
+      _logger.w(
+        '[FCM] Failed to show achievement notification',
+        error: e,
+        stackTrace: st,
+      );
+    }
+  }
+
+  /// Shows a local notification confirming a new voice lesson was created.
+  Future<void> notifyNewVoiceLesson({
+    required String language,
+    required String difficulty,
+  }) async {
+    if (!_localReady) {
+      _logger.w(
+        '[FCM] Local notifications not ready — skipping voice lesson notification',
+      );
+      return;
+    }
+    try {
+      const androidDetails = AndroidNotificationDetails(
+        _channelId,
+        _channelName,
+        channelDescription: 'Notifies when a new course is created',
+        importance: Importance.high,
+        priority: Priority.high,
+      );
+      const details = NotificationDetails(android: androidDetails);
+
+      await _localNotifications.show(
+        _notificationId++,
+        '🎙️ Voice Lesson Created!',
+        '$language · $difficulty is ready. Start speaking now.',
+        details,
+      );
+      _logger.i(
+        '[FCM] Local notification shown for new voice lesson: $language',
+      );
+    } catch (e, st) {
+      _logger.w(
+        '[FCM] Failed to show voice lesson notification',
+        error: e,
+        stackTrace: st,
+      );
+    }
+  }
+
+  /// Shows a local notification confirming a new course was created.
+  Future<void> notifyNewCourse({
+    required String title,
+    required String topic,
+  }) async {
+    if (!_localReady) {
+      _logger.w(
+        '[FCM] Local notifications not ready — skipping course notification',
+      );
       return;
     }
     try {
@@ -113,7 +202,11 @@ class PushNotificationService {
       );
       _logger.i('[FCM] Local notification shown for new course: $title');
     } catch (e, st) {
-      _logger.w('[FCM] Failed to show course notification', error: e, stackTrace: st);
+      _logger.w(
+        '[FCM] Failed to show course notification',
+        error: e,
+        stackTrace: st,
+      );
     }
   }
 
@@ -234,7 +327,8 @@ class PushNotificationService {
       title: message.notification?.title ?? '',
       body: message.notification?.body ?? '',
       data: message.data,
-      imageUrl: message.notification?.android?.imageUrl ??
+      imageUrl:
+          message.notification?.android?.imageUrl ??
           message.notification?.apple?.imageUrl,
       notificationId: message.messageId,
       channelId: message.notification?.android?.channelId,
