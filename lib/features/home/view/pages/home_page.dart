@@ -228,41 +228,57 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  static const int _totalChapters = 20;
+
+  double _averageChapterProgress(List<ProgressCourseSelection> courses) {
+    if (courses.isEmpty) return 0.0;
+    var total = 0.0;
+    for (final course in courses) {
+      final key = progressCourseXpKey(course);
+      final xpData = CourseXpService.instance.dataFor(key);
+      final completed = (xpData.chaptersUnlocked - 1).clamp(0, _totalChapters);
+      final partialFraction =
+          xpData.subcontentProgressFor(xpData.chaptersUnlocked) / _totalChapters;
+      total += (completed / _totalChapters) + partialFraction;
+    }
+    return (total / courses.length).clamp(0.0, 1.0);
+  }
+
   Widget _buildProgressOverviewCard(BuildContext context) {
     return ValueListenableBuilder<List<ProgressCourseSelection>>(
       valueListenable: ExploreCoursesService.instance.courses,
       builder: (context, courses, child) {
         if (courses.isEmpty) {
-          const levelData = _HomeXpLevelData(
+          return const ProgressOverviewCard(
             level: 1,
             rankTitle: 'Starter',
-            xpInLevel: 0,
-            xpNeeded: 500,
+            xp: 0,
+            xpToNext: 500,
             progress: 0,
-          );
-          return ProgressOverviewCard(
-            level: levelData.level,
-            rankTitle: levelData.rankTitle,
-            xp: levelData.xpInLevel,
-            xpToNext: levelData.xpNeeded,
-            progress: levelData.progress,
-            onTap: () {},
           );
         }
 
         final selectedCourse = courses.first;
         return BlocProvider.value(
           value: _xpBlocFor(selectedCourse),
-          child: BlocBuilder<XpBloc, XpState>(
-            builder: (context, xpState) {
-              final levelData = _levelData(xpState.totalXp);
-              return ProgressOverviewCard(
-                level: levelData.level,
-                rankTitle: levelData.rankTitle,
-                xp: levelData.xpInLevel,
-                xpToNext: levelData.xpNeeded,
-                progress: levelData.progress,
-                onTap: () => context.go(Routes.progress, extra: selectedCourse),
+          child: ValueListenableBuilder<int>(
+            valueListenable: CourseXpService.instance.totalExerciseXp,
+            builder: (context, _, __) {
+              return BlocBuilder<XpBloc, XpState>(
+                builder: (context, xpState) {
+                  final chapterXp = (xpState.chaptersUnlocked - 1) * 200;
+                  final levelData = _levelData(chapterXp + xpState.totalXp);
+                  final avgProgress = _averageChapterProgress(courses);
+                  return ProgressOverviewCard(
+                    level: levelData.level,
+                    rankTitle: levelData.rankTitle,
+                    xp: levelData.xpInLevel,
+                    xpToNext: levelData.xpNeeded,
+                    progress: avgProgress,
+                    onTap: () =>
+                        context.go(Routes.progress, extra: selectedCourse),
+                  );
+                },
               );
             },
           ),

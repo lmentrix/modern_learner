@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:modern_learner_production/core/models/progress_course_selection.dart';
@@ -10,6 +12,7 @@ import 'package:modern_learner_production/features/new_lesson/view/section/new_l
 import 'package:modern_learner_production/features/new_lesson/view/section/new_lesson_header_section.dart';
 import 'package:modern_learner_production/features/new_lesson/view/section/new_lesson_language_section.dart';
 import 'package:modern_learner_production/features/new_lesson/view/section/new_lesson_preview_section.dart';
+import 'package:modern_learner_production/main.dart';
 
 class NewLessonComposerSection extends StatefulWidget {
   const NewLessonComposerSection({super.key});
@@ -90,6 +93,11 @@ class _NewLessonComposerSectionState extends State<NewLessonComposerSection> {
     );
 
     ExploreCoursesService.instance.addCourse(course);
+
+    unawaited(pushNotificationService.notifyNewVoiceLesson(
+      language: _selectedLanguage!,
+      difficulty: _selectedDifficulty,
+    ));
 
     navigator.pop();
     router.go(Routes.progress, extra: course);

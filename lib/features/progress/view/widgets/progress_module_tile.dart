@@ -17,6 +17,7 @@ class ProgressModuleTile extends StatefulWidget {
     this.subcontentError,
     this.onRetrySubcontent,
     this.onSubcontentTap,
+    this.completedSubcontents = 0,
   });
 
   final ProgressModuleStep step;
@@ -28,6 +29,7 @@ class ProgressModuleTile extends StatefulWidget {
   final String? subcontentError;
   final VoidCallback? onRetrySubcontent;
   final ValueChanged<ChapterSubcontentItemModel>? onSubcontentTap;
+  final int completedSubcontents;
 
   @override
   State<ProgressModuleTile> createState() => _ProgressModuleTileState();
@@ -150,6 +152,7 @@ class _ProgressModuleTileState extends State<ProgressModuleTile>
                             errorMessage: widget.subcontentError,
                             onRetry: widget.onRetrySubcontent,
                             onSubcontentTap: widget.onSubcontentTap,
+                            completedSubcontents: widget.completedSubcontents,
                           )
                         : const SizedBox.shrink(),
                   ),
@@ -500,6 +503,7 @@ class _SubcontentPanel extends StatelessWidget {
     required this.errorMessage,
     required this.onRetry,
     required this.onSubcontentTap,
+    this.completedSubcontents = 0,
   });
 
   final ProgressModuleStep step;
@@ -508,6 +512,7 @@ class _SubcontentPanel extends StatelessWidget {
   final String? errorMessage;
   final VoidCallback? onRetry;
   final ValueChanged<ChapterSubcontentItemModel>? onSubcontentTap;
+  final int completedSubcontents;
 
   @override
   Widget build(BuildContext context) {
@@ -537,11 +542,19 @@ class _SubcontentPanel extends StatelessWidget {
       children: [
         for (int i = 0; i < payload.subcontents.length; i++)
           Padding(
-            padding: EdgeInsets.only(bottom: i < payload.subcontents.length - 1 ? 6 : 0),
+            padding: EdgeInsets.only(
+              bottom: i < payload.subcontents.length - 1 ? 6 : 0,
+            ),
             child: _SubcontentRow(
               item: payload.subcontents[i],
               accent: step.toneColor,
-              onTap: onSubcontentTap == null
+              isCompleted: payload.subcontents[i].subcontentNumber <=
+                  completedSubcontents,
+              isLocked: payload.subcontents[i].subcontentNumber >
+                  completedSubcontents + 1,
+              onTap: onSubcontentTap == null ||
+                      payload.subcontents[i].subcontentNumber >
+                          completedSubcontents + 1
                   ? null
                   : () => onSubcontentTap!(payload.subcontents[i]),
             ),
@@ -645,11 +658,15 @@ class _SubcontentRow extends StatelessWidget {
     required this.item,
     required this.accent,
     required this.onTap,
+    this.isCompleted = false,
+    this.isLocked = false,
   });
 
   final ChapterSubcontentItemModel item;
   final Color accent;
   final VoidCallback? onTap;
+  final bool isCompleted;
+  final bool isLocked;
 
   static Color _typeColor(String type) {
     switch (type.toLowerCase()) {
@@ -673,88 +690,114 @@ class _SubcontentRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final typeColor = _typeColor(item.subcontentType);
+    final typeColor = isLocked
+        ? AppColors.onSurfaceVariant.withValues(alpha: 0.4)
+        : _typeColor(item.subcontentType);
+    final effectiveAccent = isLocked ? AppColors.onSurfaceVariant.withValues(alpha: 0.35) : accent;
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            color: AppColors.surfaceContainer,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: typeColor.withValues(alpha: 0.18)),
-          ),
-          child: Row(
-            children: [
-              // number dot
-              Container(
-                width: 22,
-                height: 22,
-                decoration: BoxDecoration(
-                  color: typeColor.withValues(alpha: 0.14),
-                  shape: BoxShape.circle,
+    return Opacity(
+      opacity: isLocked ? 0.55 : 1.0,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceContainer,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isCompleted
+                    ? AppColors.tertiary.withValues(alpha: 0.35)
+                    : typeColor.withValues(alpha: 0.18),
+              ),
+            ),
+            child: Row(
+              children: [
+                // number dot / completed check / lock
+                Container(
+                  width: 22,
+                  height: 22,
+                  decoration: BoxDecoration(
+                    color: isCompleted
+                        ? AppColors.tertiary.withValues(alpha: 0.14)
+                        : typeColor.withValues(alpha: 0.14),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: isCompleted
+                        ? Icon(
+                            Icons.check_rounded,
+                            size: 13,
+                            color: AppColors.tertiary,
+                          )
+                        : isLocked
+                        ? Icon(
+                            Icons.lock_rounded,
+                            size: 11,
+                            color: AppColors.onSurfaceVariant.withValues(alpha: 0.5),
+                          )
+                        : Text(
+                            '${item.subcontentNumber}',
+                            style: GoogleFonts.spaceGrotesk(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              color: typeColor,
+                            ),
+                          ),
+                  ),
                 ),
-                child: Center(
+                const SizedBox(width: 10),
+                // title
+                Expanded(
                   child: Text(
-                    '${item.subcontentNumber}',
-                    style: GoogleFonts.spaceGrotesk(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      color: typeColor,
+                    item.title,
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: isLocked
+                          ? AppColors.onSurfaceVariant
+                          : AppColors.onSurface,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-              ),
-              const SizedBox(width: 10),
-              // title
-              Expanded(
-                child: Text(
-                  item.title,
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.onSurface,
+                const SizedBox(width: 10),
+                // duration badge
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: effectiveAccent.withValues(alpha: 0.10),
+                    borderRadius: BorderRadius.circular(999),
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              const SizedBox(width: 10),
-              // duration badge
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: accent.withValues(alpha: 0.10),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.schedule_rounded, size: 10, color: accent),
-                    const SizedBox(width: 3),
-                    Text(
-                      '${item.estimatedMinutes} min',
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: accent,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.schedule_rounded, size: 10, color: effectiveAccent),
+                      const SizedBox(width: 3),
+                      Text(
+                        '${item.estimatedMinutes} min',
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: effectiveAccent,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              if (onTap != null) ...[
-                const SizedBox(width: 8),
-                Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  size: 12,
-                  color: typeColor,
-                ),
+                if (!isLocked && onTap != null) ...[
+                  const SizedBox(width: 8),
+                  Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 12,
+                    color: typeColor,
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),

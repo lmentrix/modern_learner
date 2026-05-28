@@ -12,6 +12,7 @@ import 'package:modern_learner_production/features/progress/service/course_xp_se
 ProgressPageData buildProgressPageData({
   required ProgressCourseSelection course,
   int unlockedChapterLimit = 1,
+  Map<int, double> chapterProgressOverrides = const {},
 }) {
   final levelFactor = _levelFactor(course.level);
   final roadmap = _extractBaseRoadmapPayload(course.roadmapJson);
@@ -22,6 +23,7 @@ ProgressPageData buildProgressPageData({
     levelFactor: levelFactor,
     accentColor: accentColor,
     unlockedChapterLimit: unlockedChapterLimit,
+    chapterProgressOverrides: chapterProgressOverrides,
   );
   final totalLessons = _totalLessons(roadmap, moduleSteps.length);
   final masteredLessons = _estimateMasteredLessons(totalLessons, levelFactor);
@@ -145,6 +147,7 @@ List<ProgressModuleStep> _buildModuleSteps({
   required double levelFactor,
   required Color accentColor,
   required int unlockedChapterLimit,
+  Map<int, double> chapterProgressOverrides = const {},
 }) {
   final chapters = _mapList(roadmap['chapters']);
   if (chapters.isEmpty) {
@@ -153,6 +156,7 @@ List<ProgressModuleStep> _buildModuleSteps({
       levelFactor: levelFactor,
       accentColor: accentColor,
       unlockedChapterLimit: unlockedChapterLimit,
+      chapterProgressOverrides: chapterProgressOverrides,
     );
   }
 
@@ -169,7 +173,15 @@ List<ProgressModuleStep> _buildModuleSteps({
     final lessons = _mapList(chapter['lessons']);
     final lessonCount = lessons.length;
     final chapterNumber = _chapterNumberFor(chapter, index);
-    final progress = index < currentIndex ? 1.0 : 0.0;
+
+    double progress;
+    if (index < currentIndex) {
+      progress = 1.0;
+    } else if (index == currentIndex) {
+      progress = chapterProgressOverrides[chapterNumber] ?? 0.0;
+    } else {
+      progress = 0.0;
+    }
 
     return ProgressModuleStep(
       id: _chapterIdFor(chapter, index),
@@ -203,6 +215,7 @@ List<ProgressModuleStep> _fallbackModuleSteps({
   required double levelFactor,
   required Color accentColor,
   required int unlockedChapterLimit,
+  Map<int, double> chapterProgressOverrides = const {},
 }) {
   final titles = course.courseType == ProgressCourseType.voice
       ? [
@@ -239,14 +252,24 @@ List<ProgressModuleStep> _fallbackModuleSteps({
   ];
 
   return List<ProgressModuleStep>.generate(titles.length, (index) {
+    final chapterNumber = index + 1;
+    double progress;
+    if (index < currentIndex) {
+      progress = 1.0;
+    } else if (index == currentIndex) {
+      progress = chapterProgressOverrides[chapterNumber] ?? 0.0;
+    } else {
+      progress = 0.0;
+    }
+
     return ProgressModuleStep(
-      id: 'chapter_${index + 1}',
-      chapterNumber: index + 1,
+      id: 'chapter_$chapterNumber',
+      chapterNumber: chapterNumber,
       icon: _fallbackIcons(course.courseType)[index],
-      eyebrow: 'CHAPTER ${(index + 1).toString().padLeft(2, '0')}',
+      eyebrow: 'CHAPTER ${chapterNumber.toString().padLeft(2, '0')}',
       title: titles[index],
       detail: details[index],
-      progress: index < currentIndex ? 1.0 : 0.0,
+      progress: progress,
       durationLabel: '${50 + index * 15} min',
       lessonCountLabel:
           '${course.courseType == ProgressCourseType.voice ? 4 + index : 3 + index} lessons',

@@ -10,6 +10,8 @@ class CourseXpData {
     this.exerciseXp = 0,
     this.exercisesCompleted = 0,
     this.chaptersUnlocked = 1,
+    this.subcontentCompleted = const {},
+    this.subcontentTotals = const {},
   });
 
   factory CourseXpData.fromJson(Map<String, dynamic> json) {
@@ -17,22 +19,40 @@ class CourseXpData {
       exerciseXp: (json['exerciseXp'] as num?)?.toInt() ?? 0,
       exercisesCompleted: (json['exercisesCompleted'] as num?)?.toInt() ?? 0,
       chaptersUnlocked: (json['chaptersUnlocked'] as num?)?.toInt() ?? 1,
+      subcontentCompleted: _intMapFromJson(json['subcontentCompleted']),
+      subcontentTotals: _intMapFromJson(json['subcontentTotals']),
     );
   }
 
   final int exerciseXp;
   final int exercisesCompleted;
   final int chaptersUnlocked;
+  /// Completed subcontent count per chapter — key: "ch{chapterNumber}".
+  final Map<String, int> subcontentCompleted;
+  /// Total subcontent count per chapter — key: "ch{chapterNumber}".
+  final Map<String, int> subcontentTotals;
+
+  /// Fractional progress (0.0–1.0) for [chapterNumber] based on subcontent.
+  double subcontentProgressFor(int chapterNumber) {
+    final key = 'ch$chapterNumber';
+    final total = subcontentTotals[key] ?? 0;
+    if (total == 0) return 0.0;
+    return ((subcontentCompleted[key] ?? 0) / total).clamp(0.0, 1.0);
+  }
 
   CourseXpData copyWith({
     int? exerciseXp,
     int? exercisesCompleted,
     int? chaptersUnlocked,
+    Map<String, int>? subcontentCompleted,
+    Map<String, int>? subcontentTotals,
   }) {
     return CourseXpData(
       exerciseXp: exerciseXp ?? this.exerciseXp,
       exercisesCompleted: exercisesCompleted ?? this.exercisesCompleted,
       chaptersUnlocked: chaptersUnlocked ?? this.chaptersUnlocked,
+      subcontentCompleted: subcontentCompleted ?? this.subcontentCompleted,
+      subcontentTotals: subcontentTotals ?? this.subcontentTotals,
     );
   }
 
@@ -40,7 +60,19 @@ class CourseXpData {
     'exerciseXp': exerciseXp,
     'exercisesCompleted': exercisesCompleted,
     'chaptersUnlocked': chaptersUnlocked,
+    'subcontentCompleted': subcontentCompleted,
+    'subcontentTotals': subcontentTotals,
   };
+
+  static Map<String, int> _intMapFromJson(dynamic raw) {
+    if (raw is Map) {
+      return {
+        for (final e in raw.entries)
+          e.key.toString(): (e.value as num?)?.toInt() ?? 0,
+      };
+    }
+    return const {};
+  }
 }
 
 class CourseXpService {
@@ -98,6 +130,8 @@ class CourseXpService {
       exerciseXp: _readIntOrDefault(() => data.exerciseXp, 0),
       exercisesCompleted: _readIntOrDefault(() => data.exercisesCompleted, 0),
       chaptersUnlocked: _readIntOrDefault(() => data.chaptersUnlocked, 1),
+      subcontentCompleted: _readMapOrDefault(() => data.subcontentCompleted),
+      subcontentTotals: _readMapOrDefault(() => data.subcontentTotals),
     );
   }
 
@@ -106,9 +140,19 @@ class CourseXpService {
       data.exerciseXp;
       data.exercisesCompleted;
       data.chaptersUnlocked;
+      data.subcontentCompleted;
+      data.subcontentTotals;
       return false;
     } catch (_) {
       return true;
+    }
+  }
+
+  Map<String, int> _readMapOrDefault(Map<String, int>? Function() read) {
+    try {
+      return read() ?? const {};
+    } catch (_) {
+      return const {};
     }
   }
 
@@ -165,6 +209,23 @@ class CourseXpService {
     _syncToSupabase();
   }
 
+  void updateSubcontentProgress(
+    String courseKey,
+    int chapterNumber,
+    int completed,
+    int total,
+  ) {
+    final chKey = 'ch$chapterNumber';
+    final notifier = notifierFor(courseKey);
+    final data = _normalized(notifier.value);
+    notifier.value = data.copyWith(
+      subcontentCompleted: {...data.subcontentCompleted, chKey: completed},
+      subcontentTotals: {...data.subcontentTotals, chKey: total},
+    );
+    _persist();
+    _syncToSupabase();
+  }
+
   void addXp(String courseKey, int amount) {
     final notifier = notifierFor(courseKey);
     final data = _normalized(notifier.value);
@@ -199,6 +260,12 @@ class CourseXpService {
           exerciseXp: d.exerciseXp,
           exercisesCompleted: d.exercisesCompleted,
           chaptersUnlocked: d.chaptersUnlocked,
+          metadata: {
+            if (d.subcontentCompleted.isNotEmpty)
+              'subcontent_completed': d.subcontentCompleted,
+            if (d.subcontentTotals.isNotEmpty)
+              'subcontent_totals': d.subcontentTotals,
+          },
         );
       }).toList();
 
