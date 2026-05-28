@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "402514965831",
+    "project_id": "modernlearner-b5115",
+    "storage_bucket": "modernlearner-b5115.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:402514965831:android:36bb667d54d36d68388862",
+        "android_client_info": {
+          "package_name": "moderlLearner.domain.com"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAw2a8VbD5O5V8zNsBSXSEQdGzojRL0VNo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
