@@ -6,7 +6,21 @@ import 'package:modern_learner_production/features/profile/state/learning_activi
 import 'package:modern_learner_production/features/profile/view/widgets/profile_footer_stat.dart';
 
 class ProfileActivityChart extends StatefulWidget {
-  const ProfileActivityChart({super.key});
+  const ProfileActivityChart({super.key})
+    : summary = null,
+      onRefresh = null,
+      isLoading = false;
+
+  const ProfileActivityChart.fromSummary({
+    super.key,
+    required LearningActivitySummary this.summary,
+    required VoidCallback this.onRefresh,
+    this.isLoading = false,
+  });
+
+  final LearningActivitySummary? summary;
+  final VoidCallback? onRefresh;
+  final bool isLoading;
 
   @override
   State<ProfileActivityChart> createState() => _ProfileActivityChartState();
@@ -16,11 +30,21 @@ class _ProfileActivityChartState extends State<ProfileActivityChart> {
   @override
   void initState() {
     super.initState();
-    LearningActivityMonitor.instance.refresh();
+    // Only use monitor when not externally driven.
+    if (widget.summary == null) {
+      LearningActivityMonitor.instance.refresh();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (widget.summary != null) {
+      return _ActivityCard(
+        summary: widget.summary!,
+        isLoading: widget.isLoading,
+        onRefresh: widget.onRefresh ?? () {},
+      );
+    }
     return ValueListenableBuilder<LearningActivityMonitorState>(
       valueListenable: LearningActivityMonitor.instance.state,
       builder: (context, state, child) {

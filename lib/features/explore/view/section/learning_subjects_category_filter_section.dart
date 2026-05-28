@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import 'package:modern_learner_production/features/explore/domain/entities/learning_subject.dart';
 import 'package:modern_learner_production/features/explore/view/bloc/learning_subjects_bloc.dart';
 import 'package:modern_learner_production/features/explore/view/bloc/learning_subjects_event.dart';

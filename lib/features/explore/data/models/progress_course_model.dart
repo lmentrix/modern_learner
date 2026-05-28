@@ -8,12 +8,14 @@ class ProgressCourseModel {
     required this.roadmapLanguage,
     required this.level,
     required this.nativeLanguage,
+    this.id,
     this.roadmapJson,
     this.courseType = ProgressCourseType.school,
   });
 
   factory ProgressCourseModel.fromRow(Map<String, dynamic> row) =>
       ProgressCourseModel(
+        id: row['id'] as String?,
         title: row['title'] as String,
         topic: row['topic'] as String,
         roadmapLanguage: row['roadmap_language'] as String,
@@ -48,10 +50,12 @@ class ProgressCourseModel {
     nativeLanguage: nativeLanguage,
     roadmapJson: roadmapJson,
     courseType: courseType,
+    courseId: id,
   );
 
   static ProgressCourseModel fromEntity(ProgressCourseSelection e) =>
       ProgressCourseModel(
+        id: e.courseId,
         title: e.title,
         topic: e.topic,
         roadmapLanguage: e.roadmapLanguage,
@@ -61,6 +65,7 @@ class ProgressCourseModel {
         courseType: e.courseType,
       );
 
+  final String? id;
   final String title;
   final String topic;
   final String roadmapLanguage;

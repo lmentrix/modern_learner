@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:modern_learner_production/core/di/injection.dart';
 import 'package:modern_learner_production/core/models/progress_course_selection.dart';
 import 'package:modern_learner_production/core/router/app_router.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
-import 'package:modern_learner_production/features/auth/service/auth_service.dart';
+import 'package:modern_learner_production/features/course/service/course_service.dart';
 import 'package:modern_learner_production/features/explore/service/explore_courses_service.dart';
+import 'package:modern_learner_production/features/progress/service/course_xp_service.dart';
 import 'package:modern_learner_production/features/home/data/home_lesson_filter.dart';
 import 'package:modern_learner_production/features/home/view/pages/all_lessons_page.dart';
 import 'package:modern_learner_production/features/home/view/section/home_continue_learning_header_section.dart';
@@ -16,10 +16,7 @@ import 'package:modern_learner_production/features/home/view/widgets/home_delete
 import 'package:modern_learner_production/features/home/view/widgets/home_header.dart';
 import 'package:modern_learner_production/features/home/view/widgets/home_lesson_quick_access.dart';
 import 'package:modern_learner_production/features/home/view/widgets/home_section_label.dart';
-import 'package:modern_learner_production/features/home/view/widgets/lesson_card.dart';
 import 'package:modern_learner_production/features/home/view/widgets/progress_overview_card.dart';
-import 'package:modern_learner_production/features/new_lesson/model/lesson_actions_model.dart';
-import 'package:modern_learner_production/features/new_lesson/service/lesson_actions.dart';
 import 'package:modern_learner_production/features/profile/service/profile_service.dart';
 import 'package:modern_learner_production/features/profile/state/learning_activity_monitor.dart';
 import 'package:modern_learner_production/features/progress/bloc/xp_bloc.dart';
@@ -58,30 +55,11 @@ class _HomePageState extends State<HomePage> {
     'Grandmaster',
   ];
 
-  List<AddLesson> _fetchedLessons = [];
-  bool _lessonsLoading = true;
-
   @override
   void initState() {
     super.initState();
     _nameFuture = _profileService.getCurrentUserName();
-
-    _fetchLessons();
     LearningActivityMonitor.instance.refresh();
-  }
-
-  Future<void> _fetchLessons() async {
-    final userId = AuthService.instance.currentUser?.id;
-    if (userId == null) {
-      if (mounted) setState(() => _lessonsLoading = false);
-      return;
-    }
-    try {
-      final lessons = await getLessonsService(userId: userId);
-      if (mounted) setState(() => _fetchedLessons = lessons);
-    } finally {
-      if (mounted) setState(() => _lessonsLoading = false);
-    }
   }
 
   void _showDeleteConfirmation(ProgressCourseSelection course) {
@@ -158,7 +136,6 @@ class _HomePageState extends State<HomePage> {
             onPressed: () async {
               Navigator.pop(dialogContext);
               await _deleteAllCourses();
-              await _deleteAllLessons();
             },
             style: FilledButton.styleFrom(
               backgroundColor: Colors.red,
@@ -182,18 +159,12 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _deleteAllCourses() async {
-    await ExploreCoursesService.instance.removeAllCourses();
-  }
-
-  Future<void> _deleteAllLessons() async {
-    final userId = AuthService.instance.currentUser?.id;
-    if (userId == null) return;
-    try {
-      await deleteAllLessonsService(userId: userId);
-      if (mounted) setState(() => _fetchedLessons = []);
-    } catch (e) {
-      debugPrint('[HomePage] deleteAllLessons failed: $e');
+    final courses = ExploreCoursesService.instance.courses.value;
+    for (final c in courses) {
+      CourseXpService.instance.removeCourse(progressCourseXpKey(c));
     }
+    ExploreCoursesService.instance.courses.value = const [];
+    await CourseService.instance.deleteAllCourses();
   }
 
   void _openVoiceLessonPage() {
@@ -227,7 +198,7 @@ class _HomePageState extends State<HomePage> {
 
   XpBloc _xpBlocFor(ProgressCourseSelection course) {
     final key = progressCourseXpKey(course);
-    return _xpBlocByCourse.putIfAbsent(key, () => getIt<XpBloc>(param1: key));
+    return _xpBlocByCourse.putIfAbsent(key, () => XpBloc(courseKey: key));
   }
 
   _HomeXpLevelData _levelData(int xp) {
@@ -366,69 +337,6 @@ class _HomePageState extends State<HomePage> {
                   onCourseTap: (course) =>
                       context.go(Routes.progress, extra: course),
                   onCourseLongPress: _showDeleteConfirmation,
-                ),
-              ),
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                sliver: SliverToBoxAdapter(
-                  child: _lessonsLoading
-                      ? const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 24),
-                          child: Center(
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                        )
-                      : _fetchedLessons.isEmpty
-                      ? Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 24),
-                          child: Center(
-                            child: Text(
-                              'No lessons yet. Start creating!',
-                              style: GoogleFonts.inter(
-                                fontSize: 14,
-                                color: AppColors.onSurfaceVariant,
-                              ),
-                            ),
-                          ),
-                        )
-                      : ListView.separated(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: _fetchedLessons.length,
-                          separatorBuilder: (_, _) =>
-                              const SizedBox(height: 12),
-                          itemBuilder: (context, i) {
-                            final lesson = _fetchedLessons[i];
-                            const accentColors = [
-                              Color(0xFFB1A0FF),
-                              Color(0xFF929BFA),
-                              Color(0xFF7E51FF),
-                              Color(0xFFB1FFCE),
-                            ];
-                            const emojis = ['📚', '🎯', '✏️', '🧠', '🚀', '💡'];
-                            final accent =
-                                accentColors[i % accentColors.length];
-                            final emoji = emojis[i % emojis.length];
-                            return LessonCard(
-                              emoji: emoji,
-                              title: lesson.title.isEmpty
-                                  ? 'Untitled Lesson'
-                                  : lesson.title,
-                              chapter:
-                                  lesson.lessonType.name[0].toUpperCase() +
-                                  lesson.lessonType.name.substring(1),
-                              duration: lesson.status.name,
-                              progress: lesson.status == LessonStatus.completed
-                                  ? 1.0
-                                  : lesson.status == LessonStatus.active
-                                  ? 0.5
-                                  : 0.0,
-                              accentColor: accent,
-                              isNew: lesson.status == LessonStatus.draft,
-                              lessonType: lesson.lessonType.name,
-                            );
-                          },
-                        ),
                 ),
               ),
               const SliverToBoxAdapter(child: SizedBox(height: 100)),

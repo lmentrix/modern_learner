@@ -1,6 +1,5 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import 'package:modern_learner_production/core/profile/local_profile_service.dart';
 import 'package:modern_learner_production/features/profile/data/profile_entity.dart';
 
@@ -14,6 +13,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
   }
 
   final LocalProfileService _localProfileService;
+
 
   ProfileEntity _currentProfile() {
     final identity = _localProfileService.currentIdentity;

@@ -4,7 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:modern_learner_production/core/models/progress_course_selection.dart';
 import 'package:modern_learner_production/core/router/app_router.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
-import 'package:modern_learner_production/features/auth/service/auth_service.dart';
 import 'package:modern_learner_production/features/explore/domain/entities/learning_subject.dart';
 import 'package:modern_learner_production/features/explore/service/explore_courses_service.dart';
 import 'package:modern_learner_production/features/explore/view/section/create_course_header_section.dart';
@@ -12,8 +11,6 @@ import 'package:modern_learner_production/features/explore/view/section/create_c
 import 'package:modern_learner_production/features/explore/view/section/create_course_level_selector_section.dart';
 import 'package:modern_learner_production/features/explore/view/section/create_course_preview_section.dart';
 import 'package:modern_learner_production/features/explore/view/widgets/create_course_section_label.dart';
-import 'package:modern_learner_production/features/new_lesson/model/lesson_actions_model.dart';
-import 'package:modern_learner_production/features/new_lesson/service/lesson_actions.dart';
 
 class CreateCoursePage extends StatefulWidget {
   const CreateCoursePage({super.key, required this.subject, this.topic});
@@ -69,26 +66,6 @@ class _CreateCoursePageState extends State<CreateCoursePage> {
     setState(() => _creating = true);
 
     try {
-      final userId = AuthService.instance.currentUser?.id;
-      if (userId != null) {
-        final difficulty = _selectedLevel[0].toUpperCase() +
-            _selectedLevel.substring(1);
-        await addLessonService(
-          userId: userId,
-          title: widget.subject.name,
-          content: {
-            'topic': _topicName,
-            'level': _selectedLevel,
-            'nativeLanguage': _selectedLanguage,
-            'subject': widget.subject.name,
-          },
-          lessonType: LessonType.school,
-          contentType: 'school',
-          difficulty: difficulty,
-          status: LessonStatus.active,
-        );
-      }
-
       final course = ProgressCourseSelection(
         title: widget.subject.name,
         topic: _topicName,
