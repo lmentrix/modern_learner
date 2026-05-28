@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:modern_learner_production/core/di/injection.dart';
 import 'package:modern_learner_production/core/profile/local_profile_service.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 import 'package:modern_learner_production/features/auth/service/auth_service.dart';
@@ -21,6 +20,7 @@ import 'package:modern_learner_production/features/profile/view/section/profile_
 import 'package:modern_learner_production/features/profile/view/section/profile_notifications_sheet_section.dart';
 import 'package:modern_learner_production/features/profile/view/section/profile_privacy_sheet_section.dart';
 import 'package:modern_learner_production/features/profile/view/section/profile_settings_section.dart';
+import 'package:modern_learner_production/features/profile/view/section/profile_stats_section.dart';
 import 'package:modern_learner_production/features/profile/view/section/profile_version_footer_section.dart';
 import 'package:modern_learner_production/features/profile/view/widgets/edit_profile_sheet.dart';
 import 'package:modern_learner_production/features/progress/service/course_xp_service.dart';
@@ -34,7 +34,7 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   final _scrollController = ScrollController();
-  final _profileService = getIt<LocalProfileService>();
+  final _profileService = LocalProfileService.instance;
   ProfilePreferences _preferences = const ProfilePreferences();
   late final Future<ProfileModel?> _supabaseProfile;
 
@@ -163,7 +163,7 @@ class _ProfilePageState extends State<ProfilePage> {
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (context) => BlocProvider(
-        create: (_) => getIt<ProfileBloc>()..add(const ProfileLoadRequested()),
+        create: (_) => ProfileBloc(LocalProfileService.instance)..add(const ProfileLoadRequested()),
         child: EditProfileSheet(
           currentName: identity.displayName,
           currentEmail: identity.email,
@@ -215,13 +215,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
                 const SliverPadding(
                   padding: ProfilePageConstants.pagePadding,
-                  sliver: SliverToBoxAdapter(
-                    child: Column(
-                      children: [
-                        SizedBox(height: ProfilePageConstants.sectionSpacing),
-                      ],
-                    ),
-                  ),
+                  sliver: SliverToBoxAdapter(child: ProfileStatsSection()),
                 ),
                 const SliverToBoxAdapter(
                   child: SizedBox(height: ProfilePageConstants.sectionSpacing),

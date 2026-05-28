@@ -1,6 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:modern_learner_production/features/achievement/data/achievemenet_data.dart';
+import 'package:modern_learner_production/features/achievement/model/achievement_model.dart';
+import 'package:modern_learner_production/features/achievement/service/achievement_service.dart';
 
 class CourseXpData {
   const CourseXpData({
@@ -146,12 +149,20 @@ class CourseXpService {
     _persist();
   }
 
+  void removeCourse(String courseKey) {
+    _notifiers.remove(courseKey)?.dispose();
+    _courseIdByKey.remove(courseKey);
+    _recalcTotal();
+    _persist();
+  }
+
   void updateUnlockedLimit(String courseKey, int limit) {
     final notifier = notifierFor(courseKey);
     final data = _normalized(notifier.value);
     if (limit <= data.chaptersUnlocked) return;
     notifier.value = data.copyWith(chaptersUnlocked: limit);
     _persist();
+    _syncToSupabase();
   }
 
   void addXp(String courseKey, int amount) {
@@ -163,6 +174,51 @@ class CourseXpService {
     );
     _recalcTotal();
     _persist();
+    _syncToSupabase();
+  }
+
+  /// Public entry-point: call once on profile load to backfill any existing data.
+  Future<void> syncToSupabase() => _syncToSupabase();
+
+  final Map<String, String> _courseIdByKey = {};
+
+  void setCourseId(String courseKey, String courseId) {
+    _courseIdByKey[courseKey] = courseId;
+  }
+
+  Future<void> _syncToSupabase() async {
+    if (_userId.isEmpty) return;
+    try {
+      final service = AchievementService();
+      final courseXpList = _notifiers.entries.map((e) {
+        final d = _normalized(e.value.value);
+        return ProfileCourseXpModel(
+          userId: _userId,
+          courseKey: e.key,
+          courseId: _courseIdByKey[e.key],
+          exerciseXp: d.exerciseXp,
+          exercisesCompleted: d.exercisesCompleted,
+          chaptersUnlocked: d.chaptersUnlocked,
+        );
+      }).toList();
+
+      final definitions = AchievementCatalogue.all
+          .asMap()
+          .entries
+          .map(
+            (e) => AchievementDefinitionModel.fromAchievement(
+              achievement: e.value,
+              sortOrder: e.key,
+            ),
+          )
+          .toList();
+
+      await service.syncProfileSnapshot(
+        userId: _userId,
+        definitions: definitions,
+        courseXp: courseXpList,
+      );
+    } catch (_) {}
   }
 
   Future<void> _persist() async {

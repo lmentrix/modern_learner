@@ -3,6 +3,9 @@ import 'package:flutter/foundation.dart';
 /// Shared state service for progress navigation between features.
 /// Used to pass chapter/lesson selection from Home page to Progress page.
 class ProgressNavigationState extends ChangeNotifier {
+  ProgressNavigationState._();
+  static final ProgressNavigationState instance = ProgressNavigationState._();
+
   String? _selectedChapterId;
   String? _selectedLessonId;
 

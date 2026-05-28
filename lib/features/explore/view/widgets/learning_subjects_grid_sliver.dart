@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'package:modern_learner_production/features/explore/domain/entities/learning_subject.dart';
 import 'package:modern_learner_production/features/explore/view/widgets/learning_subject_card.dart';
 

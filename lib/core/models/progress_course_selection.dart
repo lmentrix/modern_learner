@@ -32,6 +32,7 @@ class ProgressCourseSelection extends Equatable {
     this.roadmapJson,
     this.roadmapGenerated = false,
     this.courseType = ProgressCourseType.school,
+    this.courseId,
   });
 
   final String title;
@@ -42,6 +43,8 @@ class ProgressCourseSelection extends Equatable {
   final Map<String, dynamic>? roadmapJson;
   final bool roadmapGenerated;
   final ProgressCourseType courseType;
+  /// UUID from the Supabase `user_courses` table. Null until first remote sync.
+  final String? courseId;
 
   String get xpKey =>
       [title, topic, level, nativeLanguage, courseType.name].join('::');
@@ -50,6 +53,7 @@ class ProgressCourseSelection extends Equatable {
     Map<String, dynamic>? roadmapJson,
     bool? roadmapGenerated,
     ProgressCourseType? courseType,
+    String? courseId,
   }) {
     return ProgressCourseSelection(
       title: title,
@@ -60,6 +64,7 @@ class ProgressCourseSelection extends Equatable {
       roadmapJson: roadmapJson ?? this.roadmapJson,
       roadmapGenerated: roadmapGenerated ?? this.roadmapGenerated,
       courseType: courseType ?? this.courseType,
+      courseId: courseId ?? this.courseId,
     );
   }
 
@@ -73,6 +78,7 @@ class ProgressCourseSelection extends Equatable {
     roadmapJson,
     roadmapGenerated,
     courseType,
+    courseId,
   ];
 }
 

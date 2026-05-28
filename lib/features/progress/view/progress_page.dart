@@ -1,7 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:modern_learner_production/core/di/injection.dart';
 import 'package:modern_learner_production/core/models/progress_course_selection.dart';
 import 'package:modern_learner_production/core/router/app_router.dart';
 import 'package:modern_learner_production/core/state/progress_navigation_state.dart';
@@ -22,6 +23,8 @@ import 'package:modern_learner_production/features/progress/service/request/prog
 import 'package:modern_learner_production/features/progress/view/section/progress_empty_state_section.dart';
 import 'package:modern_learner_production/features/progress/view/section/progress_header.dart';
 import 'package:modern_learner_production/features/progress/view/section/progress_journey_section.dart';
+import 'package:modern_learner_production/features/progress/view/section/progress_skeleton_section.dart';
+import 'package:modern_learner_production/features/roadmap/service/roadmap_service.dart';
 
 class ProgressViewPage extends StatefulWidget {
   const ProgressViewPage({super.key, this.initialCourseSelection});
@@ -34,6 +37,8 @@ class ProgressViewPage extends StatefulWidget {
 
 class _ProgressViewPageState extends State<ProgressViewPage> {
   final Map<String, XpBloc> _xpBlocByCourse = {};
+  final Set<String> _dbLoadedCourses = {};
+  bool _isDbLoading = false;
 
   bool _isLoadingChapterSubcontent = false;
   String? _chapterSubcontentError;
@@ -55,7 +60,7 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
 
   XpBloc _xpBlocFor(ProgressCourseSelection course) {
     final key = _courseKey(course);
-    return _xpBlocByCourse.putIfAbsent(key, () => getIt<XpBloc>(param1: key));
+    return _xpBlocByCourse.putIfAbsent(key, () => XpBloc(courseKey: key));
   }
 
   @override
@@ -74,7 +79,7 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
 
         _syncSelectedCourse(selectedCourse);
 
-        final navState = getIt<ProgressNavigationState>();
+        final navState = ProgressNavigationState.instance;
         final pageData = buildProgressPageData(
           course: selectedCourse,
           unlockedChapterLimit: _unlockedChapterLimit(selectedCourse),
@@ -85,6 +90,13 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
               navState.clearSelection();
             }
           });
+        }
+
+        if (_isDbLoading) {
+          return const Material(
+            color: AppColors.surface,
+            child: ProgressSkeletonSection(),
+          );
         }
 
         return BlocProvider.value(
@@ -138,7 +150,7 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
                           selectedCourse,
                           item,
                           pageData.moduleSteps,
-                        ), 
+                        ),
                       ),
                     ),
                   ),
@@ -179,6 +191,12 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
 
     _selectedCourseKey = courseKey;
     _resetChapterSubcontentState(clearCache: false);
+
+    if (!_dbLoadedCourses.contains(courseKey)) {
+      _dbLoadedCourses.add(courseKey);
+      _isDbLoading = course.courseId != null;
+      unawaited(_loadFromDb(course));
+    }
   }
 
   Future<void> _handleChapterTap(
@@ -228,6 +246,86 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
     await _fetchSubcontent(course, step);
   }
 
+  Future<void> _loadFromDb(ProgressCourseSelection course) async {
+    final courseId = course.courseId;
+    if (courseId == null) return;
+
+    try {
+      // Hydrate roadmap JSON if not already present locally.
+      if (course.roadmapJson == null || course.roadmapJson!.isEmpty) {
+        final roadmapRow = await RoadmapService.instance.fetchRoadmapByCourse(
+          courseId,
+        );
+        if (roadmapRow != null && mounted) {
+          final updatedCourse = course.copyWith(
+            roadmapJson: roadmapRow.roadmapJson,
+            roadmapGenerated: true,
+          );
+          await ExploreCoursesService.instance.updateCourse(updatedCourse);
+        }
+      }
+
+      // Pre-populate chapter subcontent cache so tapping a chapter is instant.
+      final chapterRows = await RoadmapService.instance
+          .fetchChapterProgressByCourse(courseId);
+
+      if (!mounted) return;
+
+      var cacheUpdated = false;
+      for (final row in chapterRows) {
+        final subcontentJson = row.chapterSubcontentJson;
+        if (subcontentJson == null) continue;
+
+        final cacheKey = _chapterCacheKeyByNumber(course, row.chapterNumber);
+        if (_chapterSubcontentCache.containsKey(cacheKey)) continue;
+
+        try {
+          final subcontent = ChapterSubcontentModel.fromJson(subcontentJson);
+          _chapterSubcontentCache[cacheKey] = ChapterSubcontentResponseModel(
+            statusCode: 200,
+            code: 'ok',
+            message: '',
+            model: '',
+            courseType: subcontent.courseType,
+            chapterSubcontent: subcontent,
+          );
+          cacheUpdated = true;
+        } catch (_) {
+          // Corrupt row — skip silently.
+        }
+      }
+
+      if (cacheUpdated && mounted) {
+        // Refresh the active chapter panel if it was waiting on a DB-cached entry.
+        final activeKey = _selectedChapterId == null
+            ? null
+            : _chapterSubcontentCache.entries
+                  .where(
+                    (e) =>
+                        e.key.startsWith('${_courseKey(course)}::ch') &&
+                        _chapterSubcontentResponse == null,
+                  )
+                  .map((e) => e.value)
+                  .firstOrNull;
+
+        if (activeKey != null) {
+          setState(() {
+            _chapterSubcontentResponse = activeKey;
+            _isLoadingChapterSubcontent = false;
+          });
+        } else {
+          setState(() {});
+        }
+      }
+    } catch (_) {
+      // DB errors must never crash the UI.
+    } finally {
+      if (mounted && _isDbLoading) {
+        setState(() => _isDbLoading = false);
+      }
+    }
+  }
+
   Future<void> _fetchSubcontent(
     ProgressCourseSelection course,
     ProgressModuleStep step,
@@ -254,6 +352,24 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
       }
 
       _chapterSubcontentCache[cacheEntryKey] = response;
+
+      final courseId = course.courseId;
+      final roadmapId = roadmapResponse.roadmap.id;
+      if (courseId != null &&
+          roadmapId != null &&
+          roadmapId.trim().isNotEmpty) {
+        unawaited(() async {
+          try {
+            await RoadmapService.instance.saveChapterProgress(
+              response: response,
+              roadmapId: roadmapId,
+              courseKey: _courseKey(course),
+              courseId: courseId,
+            );
+          } catch (_) {}
+        }());
+      }
+
       setState(() {
         _chapterSubcontentResponse = response;
         _chapterSubcontentError = null;
@@ -280,23 +396,36 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
       return existingResponse;
     }
 
-    final generatedResponse = await fetchProgress(
-      RoadmapGenerateRequestModel(
-        roadmapMode: course.courseType == ProgressCourseType.voice
-            ? 'voice'
-            : 'school',
-        topic: course.topic,
-        language: course.roadmapLanguage,
-        level: course.level,
-        nativeLanguage: course.nativeLanguage,
-      ),
+    final request = RoadmapGenerateRequestModel(
+      roadmapMode: course.courseType == ProgressCourseType.voice
+          ? 'voice'
+          : 'school',
+      topic: course.topic,
+      language: course.roadmapLanguage,
+      level: course.level,
+      nativeLanguage: course.nativeLanguage,
     );
+
+    final generatedResponse = await fetchProgress(request);
 
     final updatedCourse = course.copyWith(
       roadmapJson: generatedResponse.toJson(),
       roadmapGenerated: true,
     );
     await ExploreCoursesService.instance.updateCourse(updatedCourse);
+
+    final courseId = course.courseId;
+    if (courseId != null) {
+      unawaited(() async {
+        try {
+          await RoadmapService.instance.saveRoadmap(
+            response: generatedResponse,
+            request: request,
+            courseId: courseId,
+          );
+        } catch (_) {}
+      }());
+    }
 
     return generatedResponse;
   }
@@ -392,13 +521,15 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
         nativeLanguage: course.nativeLanguage,
       );
 
-  // Key includes the backend chapter_number so each chapter gets its own cache slot.
   String _chapterCacheKey(
     ProgressCourseSelection course,
     ProgressModuleStep step,
-  ) {
-    return '${_courseKey(course)}::ch${step.chapterNumber}::${step.id}';
-  }
+  ) => _chapterCacheKeyByNumber(course, step.chapterNumber);
+
+  String _chapterCacheKeyByNumber(
+    ProgressCourseSelection course,
+    int chapterNumber,
+  ) => '${_courseKey(course)}::ch$chapterNumber';
 
   void _resetChapterSubcontentState({required bool clearCache}) {
     _selectedChapterId = null;

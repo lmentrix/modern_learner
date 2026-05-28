@@ -79,6 +79,8 @@ abstract final class AppRouter {
       GoRoute(
         path: Routes.learningSubjectDetail,
         parentNavigatorKey: _rootNavigatorKey,
+        redirect: (context, state) =>
+            state.extra is! LearningSubject ? Routes.explore : null,
         pageBuilder: (context, state) => _slideUp(
           state.pageKey,
           LearningSubjectDetailPage(subject: state.extra as LearningSubject),
@@ -87,6 +89,8 @@ abstract final class AppRouter {
       GoRoute(
         path: Routes.createCourse,
         parentNavigatorKey: _rootNavigatorKey,
+        redirect: (context, state) =>
+            state.extra is! CreateCourseArgs ? Routes.explore : null,
         pageBuilder: (context, state) {
           final args = state.extra as CreateCourseArgs;
           return _slideUp(

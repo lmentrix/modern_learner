@@ -13,19 +13,20 @@ Future<AddLesson> addLessonService({
   String difficulty = 'Beginner',
   LessonStatus status = LessonStatus.draft,
 }) async {
-  final row = await supabase
-      .from(_table)
-      .insert({
-        'user_id': userId,
-        'title': title,
-        'content': content,
-        'lesson_type': lessonTypeToDb(lessonType),
-        'content_type': contentType,
-        'difficulty': difficulty,
-        'status': status.name,
-      })
-      .select()
-      .single();
+  final row =
+      await supabase
+          .from(_table)
+          .insert({
+            'user_id': userId,
+            'title': title,
+            'content': content,
+            'lesson_type': lessonTypeToDb(lessonType),
+            'content_type': contentType,
+            'difficulty': difficulty,
+            'status': status.name,
+          })
+          .select()
+          .single();
 
   return AddLesson.fromRow(row);
 }
@@ -63,20 +64,21 @@ Future<AddLesson> updateLessonService({
   String? difficulty,
   LessonStatus? status,
 }) async {
-  final row = await supabase
-      .from(_table)
-      .update({
-        if (title != null) 'title': title,
-        if (content != null) 'content': content,
-        if (lessonType != null) 'lesson_type': lessonTypeToDb(lessonType),
-        if (contentType != null) 'content_type': contentType,
-        if (difficulty != null) 'difficulty': difficulty,
-        if (status != null) 'status': status.name,
-        'updated_at': DateTime.now().toIso8601String(),
-      })
-      .eq('id', id)
-      .select()
-      .single();
+  final row =
+      await supabase
+          .from(_table)
+          .update({
+            if (title != null) 'title': title,
+            if (content != null) 'content': content,
+            if (lessonType != null) 'lesson_type': lessonTypeToDb(lessonType),
+            if (contentType != null) 'content_type': contentType,
+            if (difficulty != null) 'difficulty': difficulty,
+            if (status != null) 'status': status.name,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('id', id)
+          .select()
+          .single();
 
   return AddLesson.fromRow(row);
 }

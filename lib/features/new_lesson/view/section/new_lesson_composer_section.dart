@@ -3,11 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:modern_learner_production/core/models/progress_course_selection.dart';
 import 'package:modern_learner_production/core/router/app_router.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
-import 'package:modern_learner_production/features/auth/service/auth_service.dart';
 import 'package:modern_learner_production/features/explore/service/explore_courses_service.dart';
 import 'package:modern_learner_production/features/new_lesson/data/new_lesson_page_data.dart';
-import 'package:modern_learner_production/features/new_lesson/model/lesson_actions_model.dart';
-import 'package:modern_learner_production/features/new_lesson/service/lesson_actions.dart';
 import 'package:modern_learner_production/features/new_lesson/view/section/new_lesson_action_section.dart';
 import 'package:modern_learner_production/features/new_lesson/view/section/new_lesson_difficulty_section.dart';
 import 'package:modern_learner_production/features/new_lesson/view/section/new_lesson_header_section.dart';
@@ -15,16 +12,7 @@ import 'package:modern_learner_production/features/new_lesson/view/section/new_l
 import 'package:modern_learner_production/features/new_lesson/view/section/new_lesson_preview_section.dart';
 
 class NewLessonComposerSection extends StatefulWidget {
-  const NewLessonComposerSection({
-    super.key,
-    this.lessons = const [],
-    this.lessonsLoading = false,
-    this.onLessonsRefresh,
-  });
-
-  final List<AddLesson> lessons;
-  final bool lessonsLoading;
-  final VoidCallback? onLessonsRefresh;
+  const NewLessonComposerSection({super.key});
 
   @override
   State<NewLessonComposerSection> createState() =>
@@ -102,26 +90,6 @@ class _NewLessonComposerSectionState extends State<NewLessonComposerSection> {
     );
 
     ExploreCoursesService.instance.addCourse(course);
-
-    final userId = AuthService.instance.currentUser?.id;
-    if (userId != null) {
-      try {
-        await addLessonService(
-          userId: userId,
-          title: _selectedLanguage!,
-          content: {
-            'language': _selectedLanguage,
-            'difficulty': _selectedDifficulty,
-          },
-          lessonType: LessonType.voice,
-          contentType: 'language',
-          difficulty: _selectedDifficulty,
-          status: LessonStatus.active,
-        );
-      } catch (_) {
-        // lesson save is best-effort; navigation proceeds regardless
-      }
-    }
 
     navigator.pop();
     router.go(Routes.progress, extra: course);

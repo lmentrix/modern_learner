@@ -77,6 +77,7 @@ class UserCoursesService {
       'roadmapJson': course.roadmapJson,
       'roadmapGenerated': course.roadmapGenerated,
       'courseType': course.courseType.name,
+      if (course.courseId != null) 'courseId': course.courseId,
     };
   }
 
@@ -92,6 +93,7 @@ class UserCoursesService {
           : null,
       roadmapGenerated: json['roadmapGenerated'] as bool? ?? false,
       courseType: _courseTypeFromName(json['courseType'] as String?),
+      courseId: json['courseId'] as String?,
     );
   }
 

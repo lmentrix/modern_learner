@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-
-import 'package:modern_learner_production/core/di/injection.dart';
 import 'package:modern_learner_production/core/router/app_router.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
+import 'package:modern_learner_production/features/explore/data/datasources/learning_subject_local_datasource.dart';
+import 'package:modern_learner_production/features/explore/data/repositories/learning_subject_repository_impl.dart';
+import 'package:modern_learner_production/features/explore/domain/usecases/get_all_learning_subjects.dart';
+import 'package:modern_learner_production/features/explore/domain/usecases/get_subjects_by_category.dart';
+import 'package:modern_learner_production/features/explore/domain/usecases/search_learning_subjects.dart';
 import 'package:modern_learner_production/features/explore/view/bloc/learning_subjects_bloc.dart';
 import 'package:modern_learner_production/features/explore/view/bloc/learning_subjects_event.dart';
 import 'package:modern_learner_production/features/explore/view/section/learning_subjects_category_filter_section.dart';
@@ -18,8 +21,16 @@ class ExplorePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider<LearningSubjectsBloc>(
-      create: (_) =>
-          getIt<LearningSubjectsBloc>()..add(const LoadLearningSubjects()),
+      create: (_) {
+        final repo = LearningSubjectRepositoryImpl(
+          LearningSubjectLocalDatasourceImpl(),
+        );
+        return LearningSubjectsBloc(
+          getAllSubjects: GetAllLearningSubjects(repo),
+          getByCategory: GetSubjectsByCategory(repo),
+          searchSubjects: SearchLearningSubjects(repo),
+        )..add(const LoadLearningSubjects());
+      },
       child: Container(
         color: AppColors.surface,
         child: SafeArea(
