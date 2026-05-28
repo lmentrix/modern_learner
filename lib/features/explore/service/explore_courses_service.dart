@@ -73,6 +73,12 @@ class ExploreCoursesService {
         final courseId = await CourseService.instance.upsertCourse(request);
         saved = course.copyWith(courseId: courseId);
         CourseXpService.instance.setCourseId(progressCourseXpKey(saved), courseId);
+
+        // Trigger FCM push notification via Supabase webhook.
+        await _sendCourseCreatedNotification(
+          userId: userId,
+          course: saved,
+        );
       }
     } catch (_) {}
 
@@ -137,6 +143,24 @@ class ExploreCoursesService {
           return c;
         })
         .toList(growable: false);
+  }
+
+  Future<void> _sendCourseCreatedNotification({
+    required String userId,
+    required ProgressCourseSelection course,
+  }) async {
+    try {
+      final typeLabel = course.courseType == ProgressCourseType.voice
+          ? 'Voice Lesson'
+          : 'School Lesson';
+      await Supabase.instance.client.from('notifications').insert({
+        'user_id': userId,
+        'title': 'New $typeLabel Created! ${course.courseType.badgeEmoji}',
+        'body': '${course.title} (${course.level}) is ready. Start learning now!',
+      });
+    } catch (_) {
+      // Notification failure must never break course creation.
+    }
   }
 
   bool _matches(ProgressCourseSelection left, ProgressCourseSelection right) {

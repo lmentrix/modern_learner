@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:modern_learner_production/main.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:modern_learner_production/core/models/progress_course_selection.dart';
 import 'package:modern_learner_production/core/router/app_router.dart';
@@ -75,6 +78,11 @@ class _CreateCoursePageState extends State<CreateCoursePage> {
         courseType: ProgressCourseType.school,
       );
       ExploreCoursesService.instance.addCourse(course);
+
+      unawaited(pushNotificationService.notifyNewCourse(
+        title: widget.subject.name,
+        topic: _topicName,
+      ));
 
       if (!mounted) return;
       context.go(Routes.home);
