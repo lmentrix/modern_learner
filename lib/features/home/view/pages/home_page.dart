@@ -33,10 +33,15 @@ class _HomePageState extends State<HomePage> {
   final ProfileService _profileService = ProfileService();
   final Map<String, XpBloc> _xpBlocByCourse = {};
   late final Future<({String name, bool isVip})> _profileFuture =
-      _profileService.getCurrentProfile().then((p) => (
-            name: p?.name.trim().isNotEmpty == true ? p!.name.trim() : 'Learner',
-            isVip: p?.role == 'vip',
-          ));
+      _profileService.getCurrentProfile().then((p) {
+        final profileName = p?.name.trim();
+        return (
+          name: profileName != null && profileName.isNotEmpty
+              ? profileName
+              : 'Learner',
+          isVip: p?.role == 'vip',
+        );
+      });
 
   static const List<int> _xpLevelThresholds = [
     0,
@@ -241,7 +246,8 @@ class _HomePageState extends State<HomePage> {
       final xpData = CourseXpService.instance.dataFor(key);
       final completed = (xpData.chaptersUnlocked - 1).clamp(0, _totalChapters);
       final partialFraction =
-          xpData.subcontentProgressFor(xpData.chaptersUnlocked) / _totalChapters;
+          xpData.subcontentProgressFor(xpData.chaptersUnlocked) /
+          _totalChapters;
       total += (completed / _totalChapters) + partialFraction;
     }
     return (total / courses.length).clamp(0.0, 1.0);
@@ -266,7 +272,7 @@ class _HomePageState extends State<HomePage> {
           value: _xpBlocFor(selectedCourse),
           child: ValueListenableBuilder<int>(
             valueListenable: CourseXpService.instance.totalExerciseXp,
-            builder: (context, _, __) {
+            builder: (context, totalXp, child) {
               return BlocBuilder<XpBloc, XpState>(
                 builder: (context, xpState) {
                   final chapterXp = (xpState.chaptersUnlocked - 1) * 200;

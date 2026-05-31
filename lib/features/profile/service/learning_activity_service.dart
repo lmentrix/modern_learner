@@ -185,12 +185,14 @@ class LearningActivityService with WidgetsBindingObserver {
 
       final date = DateTime.tryParse(dateKey);
       final seconds = (row['active_seconds'] as num?)?.toInt() ?? 0;
+      final baseDay = baseDays[dateKey];
+      if (baseDay == null) continue;
       baseDays[dateKey] = ProfileActivityDay(
         label: date == null
-            ? baseDays[dateKey]!.label
+            ? baseDay.label
             : LearningActivitySummary.weekdayLabel(date),
         minutes: (seconds / 60).round(),
-        date: date ?? baseDays[dateKey]!.date,
+        date: date ?? baseDay.date,
       );
     }
 

@@ -116,7 +116,7 @@ class _VoiceExerciseBodyState extends State<VoiceExerciseBody>
               const SizedBox(height: 12),
               if ((widget.detail.speakingFocus ?? '').trim().isNotEmpty)
                 Text(
-                  widget.detail.speakingFocus!,
+                  widget.detail.speakingFocus ?? '',
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     color: AppColors.onSurfaceVariant,
@@ -156,7 +156,7 @@ class _VoiceExerciseBodyState extends State<VoiceExerciseBody>
             accentColor: AppColors.tertiary,
             child: ExerciseSmallNote(
               icon: Icons.record_voice_over_rounded,
-              text: widget.detail.performanceTask!,
+              text: widget.detail.performanceTask ?? '',
             ),
           ),
         ],

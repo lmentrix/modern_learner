@@ -17,6 +17,7 @@ class SpotlightCover extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final imageUrl = coverUrl;
     return Container(
       width: 108,
       height: 156,
@@ -32,10 +33,10 @@ class SpotlightCover extends StatelessWidget {
           ),
         ],
       ),
-      child: coverUrl == null
+      child: imageUrl == null
           ? ExploreEmojiCover(emoji: emoji, accentColor: accentColor, size: 40)
           : CachedNetworkImage(
-              imageUrl: coverUrl!,
+              imageUrl: imageUrl,
               fit: BoxFit.cover,
               placeholder: (context, url) => ExploreEmojiCover(
                 emoji: emoji,

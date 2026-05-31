@@ -186,12 +186,17 @@ class ChapterExerciseGenerateRequestModel {
   /// without requiring an in-memory store lookup.
   final ChapterDetailContext? context;
 
-  Map<String, dynamic> toJson() => {
-    'chapter_subcontent_id': chapterSubcontentId,
-    'subcontent_number': subcontentNumber,
-    if (model != null && model!.trim().isNotEmpty) 'model': model,
-    if (context != null) 'context': context!.toJson(),
-  };
+  Map<String, dynamic> toJson() {
+    final selectedModel = model;
+    final selectedContext = context;
+    return {
+      'chapter_subcontent_id': chapterSubcontentId,
+      'subcontent_number': subcontentNumber,
+      if (selectedModel != null && selectedModel.trim().isNotEmpty)
+        'model': selectedModel,
+      if (selectedContext != null) 'context': selectedContext.toJson(),
+    };
+  }
 }
 
 class ChapterDetailContext {
@@ -279,9 +284,10 @@ class ChapterExerciseResponseModel {
       courseType:
           _readString(json, const ['course_type', 'courseType']) ?? 'school',
       chapterDetail: ChapterExerciseDetailModel.fromJson(detailJson),
-      usage: _readMap(json, const ['usage']) == null
-          ? null
-          : RoadmapUsageModel.fromJson(_readMap(json, const ['usage'])!),
+      usage: switch (_readMap(json, const ['usage'])) {
+        final usageJson? => RoadmapUsageModel.fromJson(usageJson),
+        null => null,
+      },
       rawContent: _readString(json, const ['raw_content', 'rawContent']),
       prompt: _readString(json, const ['prompt']),
     );

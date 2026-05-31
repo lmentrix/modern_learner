@@ -38,9 +38,10 @@ class _ProfileActivityChartState extends State<ProfileActivityChart> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.summary != null) {
+    final summary = widget.summary;
+    if (summary != null) {
       return _ActivityCard(
-        summary: widget.summary!,
+        summary: summary,
         isLoading: widget.isLoading,
         onRefresh: widget.onRefresh ?? () {},
       );

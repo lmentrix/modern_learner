@@ -18,7 +18,9 @@ class ExerciseCompletionDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final percentage = correctAnswers / totalQuestions;
+    final percentage = totalQuestions <= 0
+        ? 0.0
+        : correctAnswers / totalQuestions;
     final isPerfect = percentage == 1.0;
     final isGood = percentage >= 0.7;
 
@@ -42,11 +44,8 @@ class ExerciseCompletionDialog extends StatelessWidget {
                   colors: isPerfect
                       ? [const Color(0xFFFFD700), const Color(0xFFFFA500)]
                       : isGood
-                          ? [accentColor.withValues(alpha: 0.5), accentColor]
-                          : [
-                              AppColors.outlineVariant,
-                              AppColors.onSurfaceVariant,
-                            ],
+                      ? [accentColor.withValues(alpha: 0.5), accentColor]
+                      : [AppColors.outlineVariant, AppColors.onSurfaceVariant],
                 ),
               ),
               child: Center(
@@ -54,8 +53,8 @@ class ExerciseCompletionDialog extends StatelessWidget {
                   isPerfect
                       ? '🏆'
                       : isGood
-                          ? '🎉'
-                          : '💪',
+                      ? '🎉'
+                      : '💪',
                   style: const TextStyle(fontSize: 40),
                 ),
               ),
@@ -65,8 +64,8 @@ class ExerciseCompletionDialog extends StatelessWidget {
               isPerfect
                   ? 'Perfect!'
                   : isGood
-                      ? 'Great Job!'
-                      : 'Keep Practicing!',
+                  ? 'Great Job!'
+                  : 'Keep Practicing!',
               style: GoogleFonts.spaceGrotesk(
                 fontSize: 28,
                 fontWeight: FontWeight.w800,

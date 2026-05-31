@@ -7,6 +7,7 @@ import 'package:modern_learner_production/features/course/service/course_service
 import 'package:modern_learner_production/features/explore/data/models/progress_course_model.dart';
 import 'package:modern_learner_production/features/explore/service/user_courses_service.dart';
 import 'package:modern_learner_production/features/progress/service/course_xp_service.dart';
+import 'package:modern_learner_production/features/progress/service/progress_preload_service.dart';
 
 /// Holds courses created from the Explore page and mirrors them to local
 /// storage.
@@ -33,17 +34,19 @@ class ExploreCoursesService {
         courses.value = remote;
         // Sync course IDs into CourseXpService so XP sync carries the FK.
         for (final c in remote) {
-          if (c.courseId != null) {
+          final courseId = c.courseId;
+          if (courseId != null) {
             CourseXpService.instance.setCourseId(
               progressCourseXpKey(c),
-              c.courseId!,
+              courseId,
             );
           }
         }
         // Persist the authoritative list locally for offline use.
-        if (_storage != null) {
+        final storage = _storage;
+        if (storage != null) {
           for (final c in remote) {
-            await _storage!.upsertCourse(c);
+            await storage.upsertCourse(c);
           }
         }
       }
@@ -72,13 +75,13 @@ class ExploreCoursesService {
         );
         final courseId = await CourseService.instance.upsertCourse(request);
         saved = course.copyWith(courseId: courseId);
-        CourseXpService.instance.setCourseId(progressCourseXpKey(saved), courseId);
+        CourseXpService.instance.setCourseId(
+          progressCourseXpKey(saved),
+          courseId,
+        );
 
         // Trigger FCM push notification via Supabase webhook.
-        await _sendCourseCreatedNotification(
-          userId: userId,
-          course: saved,
-        );
+        await _sendCourseCreatedNotification(userId: userId, course: saved);
       }
     } catch (_) {}
 
@@ -101,16 +104,19 @@ class ExploreCoursesService {
   }
 
   Future<void> removeCourse(ProgressCourseSelection course) async {
-    CourseXpService.instance.removeCourse(progressCourseXpKey(course));
+    final courseKey = progressCourseXpKey(course);
+    CourseXpService.instance.removeCourse(courseKey);
+    ProgressPreloadService.instance.evictCourse(courseKey);
     courses.value = courses.value
         .where((c) => c != course)
         .toList(growable: false);
     await _storage?.deleteCourse(course);
     // Deleting from user_courses cascades to profile_course_xp,
     // user_achievement_progress, and achievements automatically.
-    if (course.courseId != null) {
+    final courseId = course.courseId;
+    if (courseId != null) {
       try {
-        await CourseService.instance.deleteCourse(course.courseId!);
+        await CourseService.instance.deleteCourse(courseId);
       } catch (_) {}
     }
   }
@@ -118,7 +124,9 @@ class ExploreCoursesService {
   Future<List<ProgressCourseSelection>> removeAllCourses() async {
     final previous = List<ProgressCourseSelection>.from(courses.value);
     for (final c in previous) {
-      CourseXpService.instance.removeCourse(progressCourseXpKey(c));
+      final courseKey = progressCourseXpKey(c);
+      CourseXpService.instance.removeCourse(courseKey);
+      ProgressPreloadService.instance.evictCourse(courseKey);
     }
     courses.value = const [];
     await _storage?.deleteAllCourses();
@@ -156,7 +164,8 @@ class ExploreCoursesService {
       await Supabase.instance.client.from('notifications').insert({
         'user_id': userId,
         'title': 'New $typeLabel Created! ${course.courseType.badgeEmoji}',
-        'body': '${course.title} (${course.level}) is ready. Start learning now!',
+        'body':
+            '${course.title} (${course.level}) is ready. Start learning now!',
       });
     } catch (_) {
       // Notification failure must never break course creation.

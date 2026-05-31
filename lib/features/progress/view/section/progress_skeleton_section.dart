@@ -60,12 +60,8 @@ class _ProgressSkeletonSectionState extends State<ProgressSkeletonSection>
                 child: _SkeletonJourney(shimmerValue: _shimmer.value),
               ),
             ),
-            const SliverToBoxAdapter(
-              child: SizedBox(height: 36),
-            ),
-            const SliverToBoxAdapter(
-              child: _LearningPathLoader(),
-            ),
+            const SliverToBoxAdapter(child: SizedBox(height: 36)),
+            const SliverToBoxAdapter(child: _LearningPathLoader()),
             const SliverToBoxAdapter(child: SizedBox(height: 80)),
           ],
         );
@@ -216,35 +212,50 @@ class _SolarSystemPainter extends CustomPainter {
   // Y-scale factor that gives the "seen from slightly above" perspective tilt.
   static const _yScale = 0.36;
 
-  static const _sunColor   = Color(0xFFFFD580);
-  static const _sunCore    = Color(0xFFFFFFCC);
-  static const _coronaHue  = Color(0xFFFF9900);
+  static const _sunColor = Color(0xFFFFD580);
+  static const _sunCore = Color(0xFFFFFFCC);
+  static const _coronaHue = Color(0xFFFF9900);
 
   static final _planets = <_PlanetData>[
     // Mercury-analog: tiny, grey, swift inner orbit
     const _PlanetData(
-      orbitRadius: 38, size: 3.8, speed: 4.8,
-      color: Color(0xFFBBB8B0), phase: 0.15,
+      orbitRadius: 38,
+      size: 3.8,
+      speed: 4.8,
+      color: Color(0xFFBBB8B0),
+      phase: 0.15,
     ),
     // Venus-analog: warm golden, medium orbit
     const _PlanetData(
-      orbitRadius: 60, size: 5.5, speed: 2.9,
-      color: AppColors.primary, phase: 0.42,
+      orbitRadius: 60,
+      size: 5.5,
+      speed: 2.9,
+      color: AppColors.primary,
+      phase: 0.42,
     ),
     // Earth-analog: app tertiary (greenish glow)
     const _PlanetData(
-      orbitRadius: 86, size: 6.5, speed: 1.9,
-      color: AppColors.tertiary, phase: 0.70,
+      orbitRadius: 86,
+      size: 6.5,
+      speed: 1.9,
+      color: AppColors.tertiary,
+      phase: 0.70,
     ),
     // Mars-analog: reddish-orange, slightly slower
     const _PlanetData(
-      orbitRadius: 114, size: 5.0, speed: 1.2,
-      color: Color(0xFFFF7B5E), phase: 0.05,
+      orbitRadius: 114,
+      size: 5.0,
+      speed: 1.2,
+      color: Color(0xFFFF7B5E),
+      phase: 0.05,
     ),
     // Saturn-analog: large, secondary purple, has a ring
     _PlanetData(
-      orbitRadius: 152, size: 10.5, speed: 0.65,
-      color: AppColors.secondary, phase: 0.58,
+      orbitRadius: 152,
+      size: 10.5,
+      speed: 0.65,
+      color: AppColors.secondary,
+      phase: 0.58,
       hasRing: true,
       ringColor: AppColors.secondary.withValues(alpha: 0.45),
     ),
@@ -255,10 +266,34 @@ class _SolarSystemPainter extends CustomPainter {
 
   static List<Offset> _buildStars() {
     const seeds = <double>[
-      0.07, 0.21, 0.38, 0.51, 0.63, 0.79, 0.89,
-      0.14, 0.29, 0.44, 0.56, 0.68, 0.83, 0.93,
-      0.03, 0.17, 0.35, 0.49, 0.61, 0.75, 0.87,
-      0.11, 0.26, 0.41, 0.54, 0.67, 0.80, 0.92,
+      0.07,
+      0.21,
+      0.38,
+      0.51,
+      0.63,
+      0.79,
+      0.89,
+      0.14,
+      0.29,
+      0.44,
+      0.56,
+      0.68,
+      0.83,
+      0.93,
+      0.03,
+      0.17,
+      0.35,
+      0.49,
+      0.61,
+      0.75,
+      0.87,
+      0.11,
+      0.26,
+      0.41,
+      0.54,
+      0.67,
+      0.80,
+      0.92,
     ];
     // Map each pair of seeds to a (dx, dy) in normalised [-0.5, 0.5] space.
     final result = <Offset>[];
@@ -288,8 +323,13 @@ class _SolarSystemPainter extends CustomPainter {
 
     // Draw planets in back-to-front order based on current y position.
     final sorted = List<_PlanetData>.from(_planets)
-      ..sort((a, b) =>
-          _planetPos(center, a, scale).dy.compareTo(_planetPos(center, b, scale).dy));
+      ..sort(
+        (a, b) => _planetPos(
+          center,
+          a,
+          scale,
+        ).dy.compareTo(_planetPos(center, b, scale).dy),
+      );
 
     for (final p in sorted) {
       _drawPlanet(canvas, center, p, scale);
@@ -304,10 +344,12 @@ class _SolarSystemPainter extends CustomPainter {
 
     for (int i = 0; i < _stars.length; i++) {
       final raw = _stars[i];
-      final dx = raw.dx * size.width  * math.cos(drift) -
-                 raw.dy * size.height * math.sin(drift);
-      final dy = raw.dx * size.width  * math.sin(drift) +
-                 raw.dy * size.height * math.cos(drift);
+      final dx =
+          raw.dx * size.width * math.cos(drift) -
+          raw.dy * size.height * math.sin(drift);
+      final dy =
+          raw.dx * size.width * math.sin(drift) +
+          raw.dy * size.height * math.cos(drift);
       final pos = center + Offset(dx, dy);
 
       // Twinkle: each star has its own sinusoidal brightness phase.
@@ -330,17 +372,25 @@ class _SolarSystemPainter extends CustomPainter {
     final o1 = Offset(-30 * scale, 10 * scale);
     final o2 = Offset(40 * scale, -10 * scale);
     canvas.drawCircle(
-      center + o1, r1,
+      center + o1,
+      r1,
       Paint()
         ..shader = RadialGradient(
-          colors: [AppColors.primaryDim.withValues(alpha: 0.07), Colors.transparent],
+          colors: [
+            AppColors.primaryDim.withValues(alpha: 0.07),
+            Colors.transparent,
+          ],
         ).createShader(Rect.fromCircle(center: center + o1, radius: r1)),
     );
     canvas.drawCircle(
-      center + o2, r2,
+      center + o2,
+      r2,
       Paint()
         ..shader = RadialGradient(
-          colors: [AppColors.secondary.withValues(alpha: 0.05), Colors.transparent],
+          colors: [
+            AppColors.secondary.withValues(alpha: 0.05),
+            Colors.transparent,
+          ],
         ).createShader(Rect.fromCircle(center: center + o2, radius: r2)),
     );
   }
@@ -369,7 +419,8 @@ class _SolarSystemPainter extends CustomPainter {
 
     // Outer diffuse corona halo
     canvas.drawCircle(
-      center, haloR,
+      center,
+      haloR,
       Paint()
         ..shader = RadialGradient(
           colors: [
@@ -400,7 +451,8 @@ class _SolarSystemPainter extends CustomPainter {
 
     // Sun body
     canvas.drawCircle(
-      center, bodyR,
+      center,
+      bodyR,
       Paint()
         ..shader = const RadialGradient(
           colors: [_sunCore, _sunColor, _coronaHue],
@@ -409,7 +461,8 @@ class _SolarSystemPainter extends CustomPainter {
     );
 
     canvas.drawCircle(
-      center, bodyR,
+      center,
+      bodyR,
       Paint()
         ..color = _coronaHue.withValues(alpha: 0.40)
         ..style = PaintingStyle.stroke
@@ -425,14 +478,21 @@ class _SolarSystemPainter extends CustomPainter {
     return center + Offset(math.cos(angle) * r, math.sin(angle) * r * _yScale);
   }
 
-  void _drawRingBack(Canvas canvas, Offset center, _PlanetData p, double scale) {
+  void _drawRingBack(
+    Canvas canvas,
+    Offset center,
+    _PlanetData p,
+    double scale,
+  ) {
     final pos = _planetPos(center, p, scale);
     final sz = p.size * scale;
     final rx = sz * 2.4;
     final ry = sz * 0.55;
     canvas.save();
     // Clip to the back half of the ring (above the planet centre).
-    canvas.clipRect(Rect.fromLTRB(pos.dx - rx - 2, -9999, pos.dx + rx + 2, pos.dy));
+    canvas.clipRect(
+      Rect.fromLTRB(pos.dx - rx - 2, -9999, pos.dx + rx + 2, pos.dy),
+    );
     canvas.drawOval(
       Rect.fromCenter(center: pos, width: rx * 2, height: ry * 2),
       Paint()
@@ -463,9 +523,9 @@ class _SolarSystemPainter extends CustomPainter {
       Paint()
         ..shader = RadialGradient(
           colors: [
-            Color.lerp(Colors.white, p.color, 0.45)!,
+            Color.lerp(Colors.white, p.color, 0.45) ?? p.color,
             p.color,
-            Color.lerp(p.color, Colors.black, 0.35)!,
+            Color.lerp(p.color, Colors.black, 0.35) ?? p.color,
           ],
           stops: const [0.0, 0.55, 1.0],
           center: const Alignment(-0.4, -0.4),
@@ -477,7 +537,9 @@ class _SolarSystemPainter extends CustomPainter {
       final rx = sz * 2.4;
       final ry = sz * 0.55;
       canvas.save();
-      canvas.clipRect(Rect.fromLTRB(pos.dx - rx - 2, pos.dy, pos.dx + rx + 2, 9999));
+      canvas.clipRect(
+        Rect.fromLTRB(pos.dx - rx - 2, pos.dy, pos.dx + rx + 2, 9999),
+      );
       canvas.drawOval(
         Rect.fromCenter(center: pos, width: rx * 2, height: ry * 2),
         Paint()
@@ -709,7 +771,7 @@ class _ShimmerBox extends StatelessWidget {
     const base = AppColors.surfaceContainerHigh;
     const highlight = AppColors.surfaceContainerHighest;
 
-    final color = Color.lerp(base, highlight, shimmerValue)!;
+    final color = Color.lerp(base, highlight, shimmerValue) ?? base;
 
     return Container(
       width: width == double.infinity ? null : width,

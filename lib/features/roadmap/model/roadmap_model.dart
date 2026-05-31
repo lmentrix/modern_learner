@@ -253,6 +253,6 @@ class UpsertChapterProgressRequest {
     if (subcontentApiId != null) 'subcontent_api_id': subcontentApiId,
     if (courseId != null) 'course_id': courseId,
     'is_completed': isCompleted,
-    if (completedAt != null) 'completed_at': completedAt!.toIso8601String(),
+    if (completedAt != null) 'completed_at': completedAt?.toIso8601String(),
   };
 }

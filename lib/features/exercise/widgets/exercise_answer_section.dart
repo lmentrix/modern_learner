@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
-
-import '../models/exercise.dart';
-import 'exercise_answer_option.dart';
-import 'exercise_hint.dart';
+import 'package:modern_learner_production/features/exercise/models/exercise.dart';
+import 'package:modern_learner_production/features/exercise/widgets/exercise_answer_option.dart';
+import 'package:modern_learner_production/features/exercise/widgets/exercise_hint.dart';
 
 class ExerciseAnswerSection extends StatelessWidget {
   const ExerciseAnswerSection({
@@ -43,10 +42,11 @@ class ExerciseAnswerSection extends StatelessWidget {
   }
 
   Widget _buildMultipleChoice() {
+    final hint = exercise.hint;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (exercise.hint != null && !answered) ExerciseHint(hint: exercise.hint!),
+        if (hint != null && !answered) ExerciseHint(hint: hint),
         const SizedBox(height: 16),
         ...(exercise.options ?? []).map(
           (option) => Padding(
@@ -56,7 +56,9 @@ class ExerciseAnswerSection extends StatelessWidget {
               isSelected: selectedAnswer == option,
               isCorrect: answered && option == exercise.correctAnswer,
               isWrong:
-                  answered && selectedAnswer == option && option != exercise.correctAnswer,
+                  answered &&
+                  selectedAnswer == option &&
+                  option != exercise.correctAnswer,
               onTap: () => onCheckAnswer(option),
               accentColor: accentColor,
             ),
@@ -67,10 +69,11 @@ class ExerciseAnswerSection extends StatelessWidget {
   }
 
   Widget _buildFillBlank() {
+    final hint = exercise.hint;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (exercise.hint != null && !answered) ExerciseHint(hint: exercise.hint!),
+        if (hint != null && !answered) ExerciseHint(hint: hint),
         const SizedBox(height: 16),
         TextField(
           enabled: !answered,
@@ -115,10 +118,11 @@ class ExerciseAnswerSection extends StatelessWidget {
   }
 
   Widget _buildSpeaking() {
+    final hint = exercise.hint;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (exercise.hint != null && !answered) ExerciseHint(hint: exercise.hint!),
+        if (hint != null && !answered) ExerciseHint(hint: hint),
         const SizedBox(height: 24),
         Container(
           padding: const EdgeInsets.all(24),
@@ -212,10 +216,11 @@ class ExerciseAnswerSection extends StatelessWidget {
   }
 
   Widget _buildMatching() {
+    final hint = exercise.hint;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (exercise.hint != null && !answered) ExerciseHint(hint: exercise.hint!),
+        if (hint != null && !answered) ExerciseHint(hint: hint),
         const SizedBox(height: 16),
         ...(exercise.pairs ?? []).map(
           (pair) => Padding(
@@ -226,34 +231,53 @@ class ExerciseAnswerSection extends StatelessWidget {
                 color: AppColors.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      pair.values.first,
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        color: AppColors.onSurface,
-                      ),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final left = Text(
+                    pair.values.first,
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      color: AppColors.onSurface,
                     ),
-                  ),
-                  const Icon(
-                    Icons.arrow_forward_rounded,
-                    size: 18,
-                    color: AppColors.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      pair.values.last,
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        color: accentColor,
-                        fontWeight: FontWeight.w600,
-                      ),
+                  );
+                  final right = Text(
+                    pair.values.last,
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      color: accentColor,
+                      fontWeight: FontWeight.w600,
                     ),
-                  ),
-                ],
+                  );
+                  if (constraints.maxWidth < 260) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        left,
+                        const SizedBox(height: 8),
+                        const Icon(
+                          Icons.arrow_downward_rounded,
+                          size: 18,
+                          color: AppColors.onSurfaceVariant,
+                        ),
+                        const SizedBox(height: 8),
+                        right,
+                      ],
+                    );
+                  }
+                  return Row(
+                    children: [
+                      Expanded(child: left),
+                      const SizedBox(width: 8),
+                      const Icon(
+                        Icons.arrow_forward_rounded,
+                        size: 18,
+                        color: AppColors.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(child: right),
+                    ],
+                  );
+                },
               ),
             ),
           ),
@@ -284,47 +308,60 @@ class ExerciseAnswerSection extends StatelessWidget {
   }
 
   Widget _buildTrueFalse() {
+    final hint = exercise.hint;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (exercise.hint != null && !answered) ExerciseHint(hint: exercise.hint!),
+        if (hint != null && !answered) ExerciseHint(hint: hint),
         const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: ExerciseAnswerOption(
-                option: 'True',
-                isSelected: selectedAnswer == 'true',
-                isCorrect: answered && exercise.correctAnswer == 'true',
-                isWrong:
-                    answered && selectedAnswer == 'true' && exercise.correctAnswer != 'true',
-                onTap: () => onCheckAnswer('true'),
-                accentColor: accentColor,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: ExerciseAnswerOption(
-                option: 'False',
-                isSelected: selectedAnswer == 'false',
-                isCorrect: answered && exercise.correctAnswer == 'false',
-                isWrong:
-                    answered && selectedAnswer == 'false' && exercise.correctAnswer != 'false',
-                onTap: () => onCheckAnswer('false'),
-                accentColor: accentColor,
-              ),
-            ),
-          ],
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final trueOption = ExerciseAnswerOption(
+              option: 'True',
+              isSelected: selectedAnswer == 'true',
+              isCorrect: answered && exercise.correctAnswer == 'true',
+              isWrong:
+                  answered &&
+                  selectedAnswer == 'true' &&
+                  exercise.correctAnswer != 'true',
+              onTap: () => onCheckAnswer('true'),
+              accentColor: accentColor,
+            );
+            final falseOption = ExerciseAnswerOption(
+              option: 'False',
+              isSelected: selectedAnswer == 'false',
+              isCorrect: answered && exercise.correctAnswer == 'false',
+              isWrong:
+                  answered &&
+                  selectedAnswer == 'false' &&
+                  exercise.correctAnswer != 'false',
+              onTap: () => onCheckAnswer('false'),
+              accentColor: accentColor,
+            );
+            if (constraints.maxWidth < 300) {
+              return Column(
+                children: [trueOption, const SizedBox(height: 10), falseOption],
+              );
+            }
+            return Row(
+              children: [
+                Expanded(child: trueOption),
+                const SizedBox(width: 12),
+                Expanded(child: falseOption),
+              ],
+            );
+          },
         ),
       ],
     );
   }
 
   Widget _buildWriting() {
+    final hint = exercise.hint;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (exercise.hint != null && !answered) ExerciseHint(hint: exercise.hint!),
+        if (hint != null && !answered) ExerciseHint(hint: hint),
         const SizedBox(height: 16),
         TextField(
           enabled: !answered,
