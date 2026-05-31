@@ -81,8 +81,9 @@ class AllLessonsLesson {
   double get progress => status == 'completed' ? 1.0 : 0.0;
 
   ProgressCourseSelection toCourseSelection() {
-    final roadmapJson = content?['roadmap'] is Map
-        ? Map<String, dynamic>.from(content!['roadmap'] as Map)
+    final rawContent = content;
+    final roadmapJson = rawContent?['roadmap'] is Map
+        ? Map<String, dynamic>.from(rawContent?['roadmap'] as Map)
         : null;
     final courseType = lessonType == 'language'
         ? ProgressCourseType.voice
@@ -97,14 +98,14 @@ class AllLessonsLesson {
       title: title,
       topic: topic,
       roadmapLanguage:
-          (content?['roadmapLanguage'] as String?)?.trim().isNotEmpty == true
-          ? (content!['roadmapLanguage'] as String).trim()
+          (rawContent?['roadmapLanguage'] as String?)?.trim().isNotEmpty == true
+          ? (rawContent?['roadmapLanguage'] as String).trim()
           : contentType,
-      level: ((content?['level'] as String?) ?? difficulty.toLowerCase())
+      level: ((rawContent?['level'] as String?) ?? difficulty.toLowerCase())
           .toLowerCase(),
       nativeLanguage:
-          (content?['nativeLanguage'] as String?)?.trim().isNotEmpty == true
-          ? (content!['nativeLanguage'] as String).trim()
+          (rawContent?['nativeLanguage'] as String?)?.trim().isNotEmpty == true
+          ? (rawContent?['nativeLanguage'] as String).trim()
           : 'English',
       roadmapJson: roadmapJson,
       courseType: courseType,

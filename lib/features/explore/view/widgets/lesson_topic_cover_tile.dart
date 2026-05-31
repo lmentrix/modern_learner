@@ -15,6 +15,7 @@ class LessonTopicCoverTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final imageUrl = coverUrl;
     return Container(
       width: 82,
       height: 116,
@@ -38,13 +39,13 @@ class LessonTopicCoverTile extends StatelessWidget {
           ],
         ),
       ),
-      child: coverUrl == null
+      child: imageUrl == null
           ? Center(child: Text(emoji, style: const TextStyle(fontSize: 34)))
           : Stack(
               fit: StackFit.expand,
               children: [
                 CachedNetworkImage(
-                  imageUrl: coverUrl!,
+                  imageUrl: imageUrl,
                   fit: BoxFit.cover,
                   placeholder: (context, url) => Container(
                     color: accentColor.withValues(alpha: 0.16),

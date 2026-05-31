@@ -28,10 +28,14 @@ class ProfileHeaderSection extends StatelessWidget {
       AppColors.error,
       AppColors.primaryDim,
       AppColors.tertiaryContainer,
-      Color.lerp(AppColors.primary, AppColors.secondary, 0.45)!,
-      Color.lerp(AppColors.secondary, AppColors.tertiary, 0.38)!,
-      Color.lerp(AppColors.primaryDim, AppColors.error, 0.42)!,
-      Color.lerp(AppColors.tertiaryContainer, AppColors.primary, 0.36)!,
+      Color.lerp(AppColors.primary, AppColors.secondary, 0.45) ??
+          AppColors.primary,
+      Color.lerp(AppColors.secondary, AppColors.tertiary, 0.38) ??
+          AppColors.secondary,
+      Color.lerp(AppColors.primaryDim, AppColors.error, 0.42) ??
+          AppColors.primaryDim,
+      Color.lerp(AppColors.tertiaryContainer, AppColors.primary, 0.36) ??
+          AppColors.tertiaryContainer,
     ];
 
     final index = letter.codeUnitAt(0) % colors.length;

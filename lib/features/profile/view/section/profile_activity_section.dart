@@ -47,8 +47,12 @@ class _ProfileActivitySectionState extends State<ProfileActivitySection> {
             if (snapshot.hasError) {
               return _errorCard();
             }
+            final summary = snapshot.data;
+            if (summary == null) {
+              return const _ActivitySkeletonInline();
+            }
             return ProfileActivityChart.fromSummary(
-              summary: snapshot.data!,
+              summary: summary,
               onRefresh: _refresh,
               isLoading: snapshot.connectionState == ConnectionState.waiting,
             );

@@ -129,7 +129,7 @@ class AchievementDefinitionModel {
       sortOrder: sortOrder,
       metadata: {
         if (achievement.unlockedAt != null)
-          'unlocked_at': achievement.unlockedAt!.toUtc().toIso8601String(),
+          'unlocked_at': achievement.unlockedAt?.toUtc().toIso8601String(),
       },
     );
   }
@@ -276,8 +276,10 @@ class ProfileCourseXpModel {
 
   final String userId;
   final String courseKey;
+
   /// UUID FK to `user_courses.id`. Null for rows created before this field existed.
   final String? courseId;
+
   /// Human-readable title from the joined `user_courses` row.
   final String? courseTitle;
   final String? courseTopic;

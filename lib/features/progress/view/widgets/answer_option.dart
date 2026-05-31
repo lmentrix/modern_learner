@@ -221,32 +221,36 @@ class _AnswerOptionState extends State<AnswerOption>
                     ],
                   ),
                   // ── Correct shimmer sweep ───────────────────────────────
+                  // Positioned.fill keeps this out of Stack size computation,
+                  // avoiding the unbounded-height layout assertion that occurs
+                  // when FractionallySizedBox is a non-positioned Stack child.
                   if (showCorrect)
-                    AnimatedBuilder(
-                      animation: _shimmerAnim,
-                      builder: (context, _) {
-                        return ClipRRect(
-                          borderRadius: BorderRadius.circular(16),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: FractionallySizedBox(
-                              widthFactor: _shimmerAnim.value,
-                              child: Container(
-                                height: double.infinity,
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      AppColors.tertiary.withValues(alpha: 0.0),
-                                      AppColors.tertiary.withValues(alpha: 0.18),
-                                      AppColors.tertiary.withValues(alpha: 0.0),
-                                    ],
+                    Positioned.fill(
+                      child: AnimatedBuilder(
+                        animation: _shimmerAnim,
+                        builder: (context, _) {
+                          return ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: FractionallySizedBox(
+                                widthFactor: _shimmerAnim.value,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        AppColors.tertiary.withValues(alpha: 0.0),
+                                        AppColors.tertiary.withValues(alpha: 0.18),
+                                        AppColors.tertiary.withValues(alpha: 0.0),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
-                          ),
-                        );
-                      },
+                          );
+                        },
+                      ),
                     ),
                 ],
               ),

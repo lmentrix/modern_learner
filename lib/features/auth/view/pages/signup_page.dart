@@ -58,10 +58,7 @@ class _SignupPageState extends State<SignupPage> {
     });
 
     try {
-      await AuthService.instance.signUp(
-        email: email,
-        password: password,
-      );
+      await AuthService.instance.signUp(email: email, password: password);
       if (mounted) context.go(Routes.login);
     } catch (e) {
       if (mounted) setState(() => _error = _friendly(e));
@@ -75,7 +72,9 @@ class _SignupPageState extends State<SignupPage> {
     if (msg.contains('already registered') || msg.contains('already exists')) {
       return 'An account with this email already exists.';
     }
-    if (msg.contains('network')) return 'Network error — check your connection.';
+    if (msg.contains('network')) {
+      return 'Network error — check your connection.';
+    }
     return 'Something went wrong. Please try again.';
   }
 
@@ -150,7 +149,7 @@ class _SignupPageState extends State<SignupPage> {
               ),
               if (_error != null) ...[
                 const SizedBox(height: 16),
-                _ErrorBanner(message: _error!),
+                _ErrorBanner(message: _error ?? ''),
               ],
               const SizedBox(height: 32),
               _SignUpButton(loading: _loading, onTap: _signUp),
@@ -229,7 +228,11 @@ class _ErrorBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.error_outline_rounded, color: AppColors.error, size: 18),
+          const Icon(
+            Icons.error_outline_rounded,
+            color: AppColors.error,
+            size: 18,
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(

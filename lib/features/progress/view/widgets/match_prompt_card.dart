@@ -58,47 +58,75 @@ class MatchPromptCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Icon(Icons.drag_indicator_rounded, size: 18, color: tone),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      label,
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.onSurface,
-                        height: 1.35,
-                      ),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final title = Text(
+                    label,
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.onSurface,
+                      height: 1.35,
                     ),
-                  ),
-                  if (onClear != null)
-                    IconButton(
-                      onPressed: onClear,
-                      icon: const Icon(Icons.close_rounded, size: 16),
-                      color: AppColors.onSurfaceVariant,
-                      constraints: const BoxConstraints(
-                        minWidth: 32,
-                        minHeight: 32,
-                      ),
-                      padding: EdgeInsets.zero,
-                    ),
-                ],
+                  );
+                  final clearButton = onClear == null
+                      ? null
+                      : IconButton(
+                          onPressed: onClear,
+                          icon: const Icon(Icons.close_rounded, size: 16),
+                          color: AppColors.onSurfaceVariant,
+                          constraints: const BoxConstraints(
+                            minWidth: 32,
+                            minHeight: 32,
+                          ),
+                          padding: EdgeInsets.zero,
+                        );
+                  if (constraints.maxWidth < 240) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.drag_indicator_rounded,
+                              size: 18,
+                              color: tone,
+                            ),
+                            ?clearButton,
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        title,
+                      ],
+                    );
+                  }
+                  return Row(
+                    children: [
+                      Icon(Icons.drag_indicator_rounded, size: 18, color: tone),
+                      const SizedBox(width: 8),
+                      Expanded(child: title),
+                      ?clearButton,
+                    ],
+                  );
+                },
               ),
               const SizedBox(height: 10),
               AnimatedContainer(
                 duration: const Duration(milliseconds: 180),
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.surfaceContainer,
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(color: tone.withValues(alpha: 0.18)),
                 ),
-                child: Row(
-                  children: [
-                    Icon(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final icon = Icon(
                       showCorrect
                           ? Icons.check_circle_rounded
                           : showWrong
@@ -108,22 +136,32 @@ class MatchPromptCard extends StatelessWidget {
                           : Icons.add_link_rounded,
                       size: 16,
                       color: tone,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        selectedAnswer ?? 'Choose a matching answer',
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: hasAnswer
-                              ? AppColors.onSurface
-                              : AppColors.onSurfaceVariant,
-                          height: 1.35,
-                        ),
+                    );
+                    final answer = Text(
+                      selectedAnswer ?? 'Choose a matching answer',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: hasAnswer
+                            ? AppColors.onSurface
+                            : AppColors.onSurfaceVariant,
+                        height: 1.35,
                       ),
-                    ),
-                  ],
+                    );
+                    if (constraints.maxWidth < 220) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [icon, const SizedBox(height: 6), answer],
+                      );
+                    }
+                    return Row(
+                      children: [
+                        icon,
+                        const SizedBox(width: 8),
+                        Expanded(child: answer),
+                      ],
+                    );
+                  },
                 ),
               ),
             ],

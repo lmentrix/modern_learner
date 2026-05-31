@@ -43,9 +43,10 @@ class LearningSubjectsBloc
   ) async {
     final current = state;
     try {
-      final filtered = event.category == null
+      final category = event.category;
+      final filtered = category == null
           ? await _getAllSubjects()
-          : await _getByCategory(event.category!);
+          : await _getByCategory(category);
       emit(
         LearningSubjectsLoaded(
           allSubjects: current is LearningSubjectsLoaded

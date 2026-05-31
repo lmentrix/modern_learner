@@ -31,7 +31,7 @@ class OpenAlexService {
         '${category.toLowerCase()}::${normalizedSearch.toLowerCase()}';
 
     if (!forceRefresh && _cache.containsKey(cacheKey)) {
-      return _cache[cacheKey]!;
+      return _cache[cacheKey] ?? const [];
     }
 
     final response = await _dio.get<Map<String, dynamic>>(

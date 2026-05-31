@@ -18,6 +18,8 @@ class ExploreWorkInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final sourceName = work.sourceName;
+    final type = work.type;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -39,10 +41,10 @@ class ExploreWorkInfo extends StatelessWidget {
             color: AppColors.onSurfaceVariant,
           ),
         ),
-        if (work.sourceName != null && work.sourceName!.isNotEmpty) ...[
+        if (sourceName != null && sourceName.isNotEmpty) ...[
           const SizedBox(height: 4),
           Text(
-            work.sourceName!,
+            sourceName,
             style: GoogleFonts.inter(
               fontSize: 12,
               color: AppColors.onSurfaceVariant,
@@ -64,11 +66,8 @@ class ExploreWorkInfo extends StatelessWidget {
                 label: '${formatCount(work.citationCount)} citations',
                 accentColor: accentColor,
               ),
-            if (work.type != null && work.type!.isNotEmpty)
-              ExploreWorkDetailPill(
-                label: work.type!,
-                accentColor: accentColor,
-              ),
+            if (type != null && type.isNotEmpty)
+              ExploreWorkDetailPill(label: type, accentColor: accentColor),
             if (work.isOpenAccess)
               ExploreWorkDetailPill(
                 label: 'Open access',

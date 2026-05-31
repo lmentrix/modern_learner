@@ -67,8 +67,7 @@ class ProfileAchievementSectionState extends State<ProfileAchievementSection> {
       final courses = _unlockedBy(a, userProgress, courseData);
       final nowUnlocked = courses.isNotEmpty;
       return a.copyWith(
-        unlockedByCourses:
-            nowUnlocked ? courses : existing.unlockedByCourses,
+        unlockedByCourses: nowUnlocked ? courses : existing.unlockedByCourses,
         unlockedAt: nowUnlocked && existing.unlockedAt == null
             ? DateTime.now()
             : existing.unlockedAt,
@@ -154,12 +153,12 @@ class ProfileAchievementSectionState extends State<ProfileAchievementSection> {
       final achievements = AchievementCatalogue.all.map((a) {
         final rows = progressByKey[a.id] ?? [];
         final unlockedRows = rows.where((r) => r.isUnlocked).toList();
-        final unlockedByCourses =
-            unlockedRows.map((r) => r.courseKey).toList();
-        final unlockedAt = unlockedRows.isNotEmpty
-            ? unlockedRows
-                  .map((r) => r.unlockedAt!)
-                  .reduce((x, y) => x.isBefore(y) ? x : y)
+        final unlockedByCourses = unlockedRows.map((r) => r.courseKey).toList();
+        final unlockedDates = unlockedRows
+            .map((r) => r.unlockedAt)
+            .whereType<DateTime>();
+        final unlockedAt = unlockedDates.isNotEmpty
+            ? unlockedDates.reduce((x, y) => x.isBefore(y) ? x : y)
             : null;
         return a.copyWith(
           unlockedAt: unlockedAt,
@@ -193,8 +192,9 @@ class ProfileAchievementSectionState extends State<ProfileAchievementSection> {
     if (_hasError) return const ProfileAchievementErrorPlaceholder();
 
     final unlocked = _achievements.where((a) => a.isUnlocked).length;
-    final progress =
-        _achievements.isEmpty ? 0.0 : unlocked / _achievements.length;
+    final progress = _achievements.isEmpty
+        ? 0.0
+        : unlocked / _achievements.length;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

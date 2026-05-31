@@ -40,17 +40,21 @@ class RoadmapGenerateRequestModel {
   final int maxTokens;
   final double topP;
 
-  Map<String, dynamic> toJson() => {
-    'roadmap_mode': roadmapMode,
-    'topic': topic,
-    'language': language,
-    'level': level,
-    'native_language': nativeLanguage,
-    if (model != null && model!.trim().isNotEmpty) 'model': model,
-    'temperature': temperature,
-    'max_tokens': maxTokens,
-    'top_p': topP,
-  };
+  Map<String, dynamic> toJson() {
+    final selectedModel = model;
+    return {
+      'roadmap_mode': roadmapMode,
+      'topic': topic,
+      'language': language,
+      'level': level,
+      'native_language': nativeLanguage,
+      if (selectedModel != null && selectedModel.trim().isNotEmpty)
+        'model': selectedModel,
+      'temperature': temperature,
+      'max_tokens': maxTokens,
+      'top_p': topP,
+    };
+  }
 
   String toRawJson() => jsonEncode(toJson());
 }
@@ -97,9 +101,10 @@ class RoadmapResponseModel {
           _readString(json, const ['roadmap_mode', 'roadmapMode']) ?? 'school',
       mocked: json['mocked'] as bool? ?? false,
       roadmap: RoadmapModel.fromJson(roadmapJson),
-      usage: _readMap(json, const ['usage']) == null
-          ? null
-          : RoadmapUsageModel.fromJson(_readMap(json, const ['usage'])!),
+      usage: switch (_readMap(json, const ['usage'])) {
+        final usageJson? => RoadmapUsageModel.fromJson(usageJson),
+        null => null,
+      },
       rawContent: _readString(json, const ['raw_content', 'rawContent']),
       prompt: _readString(json, const ['prompt']),
       rawJson: json,
@@ -122,6 +127,7 @@ class RoadmapResponseModel {
   final RoadmapUsageModel? usage;
   final String? rawContent;
   final String? prompt;
+
   /// The original JSON from the backend — stored so it can be forwarded verbatim
   /// to the /ai/chapter-content/generate endpoint as the `roadmap` field.
   final Map<String, dynamic>? rawJson;
@@ -135,7 +141,7 @@ class RoadmapResponseModel {
     'roadmapMode': roadmapMode,
     'mocked': mocked,
     'roadmap': roadmap.toJson(),
-    if (usage != null) 'usage': usage!.toJson(),
+    if (usage != null) 'usage': usage?.toJson(),
     if (rawContent != null) 'raw_content': rawContent,
     if (prompt != null) 'prompt': prompt,
   };

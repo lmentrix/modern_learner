@@ -60,7 +60,9 @@ class _LoginPageState extends State<LoginPage> {
     if (msg.contains('invalid login') || msg.contains('invalid credentials')) {
       return 'Incorrect email or password.';
     }
-    if (msg.contains('network')) return 'Network error — check your connection.';
+    if (msg.contains('network')) {
+      return 'Network error — check your connection.';
+    }
     return e.toString();
   }
 
@@ -106,7 +108,7 @@ class _LoginPageState extends State<LoginPage> {
               ),
               if (_error != null) ...[
                 const SizedBox(height: 16),
-                _ErrorBanner(message: _error!),
+                _ErrorBanner(message: _error ?? ''),
               ],
               const SizedBox(height: 32),
               _SignInButton(loading: _loading, onTap: _signIn),
@@ -133,7 +135,11 @@ class _Header extends StatelessWidget {
             gradient: AppColors.primaryGradient,
             borderRadius: BorderRadius.circular(14),
           ),
-          child: const Icon(Icons.school_rounded, color: Colors.white, size: 26),
+          child: const Icon(
+            Icons.school_rounded,
+            color: Colors.white,
+            size: 26,
+          ),
         ),
         const SizedBox(height: 24),
         Text(
@@ -173,15 +179,16 @@ class _ErrorBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.error_outline_rounded, color: AppColors.error, size: 18),
+          const Icon(
+            Icons.error_outline_rounded,
+            color: AppColors.error,
+            size: 18,
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               message,
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                color: AppColors.error,
-              ),
+              style: GoogleFonts.inter(fontSize: 13, color: AppColors.error),
             ),
           ),
         ],

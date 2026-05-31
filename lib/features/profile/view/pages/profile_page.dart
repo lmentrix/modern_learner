@@ -163,7 +163,9 @@ class _ProfilePageState extends State<ProfilePage> {
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (context) => BlocProvider(
-        create: (_) => ProfileBloc(LocalProfileService.instance)..add(const ProfileLoadRequested()),
+        create: (_) =>
+            ProfileBloc(LocalProfileService.instance)
+              ..add(const ProfileLoadRequested()),
         child: EditProfileSheet(
           currentName: identity.displayName,
           currentEmail: identity.email,
@@ -188,12 +190,13 @@ class _ProfilePageState extends State<ProfilePage> {
                   child: FutureBuilder<ProfileModel?>(
                     future: _supabaseProfile,
                     builder: (context, profileSnapshot) {
-                      final supabaseIdentity = profileSnapshot.data != null
+                      final profile = profileSnapshot.data;
+                      final supabaseIdentity = profile != null
                           ? ProfileIdentity(
-                              displayName: profileSnapshot.data!.name.isNotEmpty
-                                  ? profileSnapshot.data!.name
+                              displayName: profile.name.isNotEmpty
+                                  ? profile.name
                                   : identity.displayName,
-                              email: profileSnapshot.data!.email,
+                              email: profile.email,
                             )
                           : identity;
                       return ValueListenableBuilder<int>(

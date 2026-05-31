@@ -53,12 +53,11 @@ class VoiceStepRow extends StatefulWidget {
 
 class _VoiceStepRowState extends State<VoiceStepRow>
     with TickerProviderStateMixin {
-
   // ── Phase & data ───────────────────────────────────────────────────────────
   _Phase _phase = _Phase.idle;
   Duration _audioDuration = Duration.zero;
   Duration _audioPosition = Duration.zero;
-  int _highlightedWordIdx = -1;       // -1 = none highlighted
+  int _highlightedWordIdx = -1; // -1 = none highlighted
   String _liveTranscription = '';
   double _liveConfidence = 0;
   PronunciationResult? _result;
@@ -70,10 +69,10 @@ class _VoiceStepRowState extends State<VoiceStepRow>
   StreamSubscription<Duration>? _durSub;
 
   // ── Animations ─────────────────────────────────────────────────────────────
-  late final AnimationController _waveCtrl;           // listening waveform
-  late final AnimationController _scoreBarCtrl;       // score fill on reveal
+  late final AnimationController _waveCtrl; // listening waveform
+  late final AnimationController _scoreBarCtrl; // score fill on reveal
   late final Animation<double> _scoreBarAnim;
-  late final AnimationController _wordPulseCtrl;      // glow on highlighted word
+  late final AnimationController _wordPulseCtrl; // glow on highlighted word
   late final Animation<double> _wordPulseAnim;
 
   // Derived from the prompt text — split once and reused.
@@ -171,10 +170,11 @@ class _VoiceStepRowState extends State<VoiceStepRow>
     if (!mounted) return;
     _audioPosition = pos;
     if (_audioDuration > Duration.zero && _promptWords.isNotEmpty) {
-      final progress =
-          pos.inMilliseconds / _audioDuration.inMilliseconds;
-      final idx =
-          (progress * _promptWords.length).floor().clamp(0, _promptWords.length - 1);
+      final progress = pos.inMilliseconds / _audioDuration.inMilliseconds;
+      final idx = (progress * _promptWords.length).floor().clamp(
+        0,
+        _promptWords.length - 1,
+      );
       if (idx != _highlightedWordIdx) {
         setState(() => _highlightedWordIdx = idx);
       }
@@ -298,9 +298,14 @@ class _VoiceStepRowState extends State<VoiceStepRow>
             height: 3,
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [widget.accentColor, widget.accentColor.withValues(alpha: 0.2)],
+                colors: [
+                  widget.accentColor,
+                  widget.accentColor.withValues(alpha: 0.2),
+                ],
               ),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(22),
+              ),
             ),
           ),
 
@@ -344,46 +349,54 @@ class _VoiceStepRowState extends State<VoiceStepRow>
   }
 
   Widget _buildPhaseControls() {
+    final result = _result;
     return switch (_phase) {
-      _Phase.idle     => _IdleControls(
-          accentColor: widget.accentColor,
-          onListen: _startListen,
-          ttsErrored: _ttsErrored,
-        ),
+      _Phase.idle => _IdleControls(
+        accentColor: widget.accentColor,
+        onListen: _startListen,
+        ttsErrored: _ttsErrored,
+      ),
       _Phase.loadingTts => _LoadingTtsRow(accentColor: widget.accentColor),
-      _Phase.playing  => _PlayingControls(
-          accentColor: widget.accentColor,
-          position: _audioPosition,
-          duration: _audioDuration,
-          onStop: _stopTts,
-        ),
-      _Phase.ready    => _ReadyControls(
-          accentColor: widget.accentColor,
-          hasResult: _result != null,
-          onReplay: _startListen,
-          onSpeak: _startSpeak,
-        ),
+      _Phase.playing => _PlayingControls(
+        accentColor: widget.accentColor,
+        position: _audioPosition,
+        duration: _audioDuration,
+        onStop: _stopTts,
+      ),
+      _Phase.ready => _ReadyControls(
+        accentColor: widget.accentColor,
+        hasResult: _result != null,
+        onReplay: _startListen,
+        onSpeak: _startSpeak,
+      ),
       _Phase.listening => _ListeningControls(
-          accentColor: widget.accentColor,
-          waveCtrl: _waveCtrl,
-          transcription: _liveTranscription,
-          onStop: _stopSpeak,
-        ),
-      _Phase.scored   => _ScoredControls(
-          result: _result!,
-          accentColor: widget.accentColor,
-          scoreAnim: _scoreBarAnim,
-          onReplay: _startListen,
-          onRetry: _retry,
-        ),
+        accentColor: widget.accentColor,
+        waveCtrl: _waveCtrl,
+        transcription: _liveTranscription,
+        onStop: _stopSpeak,
+      ),
+      _Phase.scored when result != null => _ScoredControls(
+        result: result,
+        accentColor: widget.accentColor,
+        scoreAnim: _scoreBarAnim,
+        onReplay: _startListen,
+        onRetry: _retry,
+      ),
+      _Phase.scored => _ReadyControls(
+        accentColor: widget.accentColor,
+        hasResult: false,
+        onReplay: _startListen,
+        onSpeak: _startSpeak,
+      ),
     };
   }
 
   // ── Card appearance helpers ────────────────────────────────────────────────
 
   Color get _cardColor {
-    if (_phase == _Phase.scored && _result != null) {
-      return _result!.score >= 0.62
+    final result = _result;
+    if (_phase == _Phase.scored && result != null) {
+      return result.score >= 0.62
           ? AppColors.tertiary.withValues(alpha: 0.04)
           : AppColors.error.withValues(alpha: 0.04);
     }
@@ -394,19 +407,28 @@ class _VoiceStepRowState extends State<VoiceStepRow>
   }
 
   Color get _borderColor {
-    if (_phase == _Phase.scored && _result != null) {
-      return _result!.score >= 0.62
+    final result = _result;
+    if (_phase == _Phase.scored && result != null) {
+      return result.score >= 0.62
           ? AppColors.tertiary.withValues(alpha: 0.28)
           : AppColors.error.withValues(alpha: 0.28);
     }
-    if (_phase == _Phase.playing) return widget.accentColor.withValues(alpha: 0.45);
-    if (_phase == _Phase.listening) return AppColors.error.withValues(alpha: 0.45);
+    if (_phase == _Phase.playing) {
+      return widget.accentColor.withValues(alpha: 0.45);
+    }
+    if (_phase == _Phase.listening) {
+      return AppColors.error.withValues(alpha: 0.45);
+    }
     return widget.accentColor.withValues(alpha: 0.16);
   }
 
   Color get _shadowColor {
-    if (_phase == _Phase.playing) return widget.accentColor.withValues(alpha: 0.12);
-    if (_phase == _Phase.listening) return AppColors.error.withValues(alpha: 0.10);
+    if (_phase == _Phase.playing) {
+      return widget.accentColor.withValues(alpha: 0.12);
+    }
+    if (_phase == _Phase.listening) {
+      return AppColors.error.withValues(alpha: 0.10);
+    }
     return Colors.transparent;
   }
 }
@@ -476,7 +498,11 @@ class _PhraseDisplay extends StatelessWidget {
             ),
             if (hit) ...[
               const SizedBox(width: 3),
-              const Icon(Icons.check_rounded, size: 12, color: AppColors.tertiary),
+              const Icon(
+                Icons.check_rounded,
+                size: 12,
+                color: AppColors.tertiary,
+              ),
             ],
           ],
         ),
@@ -501,7 +527,12 @@ class _PhraseDisplay extends StatelessWidget {
               ? Border.all(color: accentColor.withValues(alpha: 0.50))
               : null,
           boxShadow: isCurrent
-              ? [BoxShadow(color: accentColor.withValues(alpha: 0.30 + glow * 0.15), blurRadius: 10)]
+              ? [
+                  BoxShadow(
+                    color: accentColor.withValues(alpha: 0.30 + glow * 0.15),
+                    blurRadius: 10,
+                  ),
+                ]
               : null,
         ),
         child: Text(

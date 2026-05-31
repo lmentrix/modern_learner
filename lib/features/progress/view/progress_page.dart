@@ -7,17 +7,18 @@ import 'package:modern_learner_production/core/models/progress_course_selection.
 import 'package:modern_learner_production/core/router/app_router.dart';
 import 'package:modern_learner_production/core/state/progress_navigation_state.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
+import 'package:modern_learner_production/features/cache/generation_cache.dart';
 import 'package:modern_learner_production/features/explore/service/explore_courses_service.dart';
 import 'package:modern_learner_production/features/profile/view/widgets/learning_activity_scope.dart';
 import 'package:modern_learner_production/features/progress/bloc/xp_bloc.dart';
 import 'package:modern_learner_production/features/progress/data/progress_module_step.dart';
 import 'package:modern_learner_production/features/progress/data/progress_page_constants.dart';
 import 'package:modern_learner_production/features/progress/data/progress_page_seed.dart';
-import 'package:modern_learner_production/features/cache/generation_cache.dart';
 import 'package:modern_learner_production/features/progress/service/cache/roadmap_id_cache.dart';
 import 'package:modern_learner_production/features/progress/service/course_xp_service.dart';
 import 'package:modern_learner_production/features/progress/service/model/chapter_subcontent_model.dart';
 import 'package:modern_learner_production/features/progress/service/model/roadmap_model.dart';
+import 'package:modern_learner_production/features/progress/service/progress_preload_service.dart';
 import 'package:modern_learner_production/features/progress/service/request/chapter_subcontent.dart';
 import 'package:modern_learner_production/features/progress/service/request/exercise_request.dart';
 import 'package:modern_learner_production/features/progress/service/request/progress_request.dart';
@@ -210,10 +211,27 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
 
     if (!_dbLoadedCourses.contains(courseKey)) {
       _dbLoadedCourses.add(courseKey);
-      _isDbLoading =
+
+      // If startup preload already fetched subcontent for this course, seed the
+      // in-memory cache now so the skeleton is skipped entirely.
+      final preloaded = ProgressPreloadService.instance.subcontentFor(
+        courseKey,
+      );
+      if (preloaded != null && preloaded.isNotEmpty) {
+        for (final entry in preloaded.entries) {
+          _chapterSubcontentCache.putIfAbsent(entry.key, () => entry.value);
+        }
+      }
+
+      // Show the skeleton only when we still need a DB round-trip AND no
+      // preloaded data is available to render immediately.
+      final needsDbLoad =
           course.courseId != null ||
           course.roadmapJson == null ||
-          course.roadmapJson!.isEmpty;
+          (course.roadmapJson?.isEmpty ?? true);
+      _isDbLoading =
+          needsDbLoad &&
+          !ProgressPreloadService.instance.isCourseLoaded(courseKey);
       unawaited(_loadFromDb(course));
     }
   }
@@ -323,7 +341,7 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
 
     try {
       // Hydrate roadmap JSON if not already present locally.
-      if (course.roadmapJson == null || course.roadmapJson!.isEmpty) {
+      if (course.roadmapJson?.isEmpty ?? true) {
         final courseId = course.courseId;
         if (courseId != null) {
           final roadmapRow = await RoadmapService.instance.fetchRoadmapByCourse(
@@ -339,8 +357,7 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
         }
 
         // Still no roadmap — generate it now so the chapter list is real.
-        if (effectiveCourse.roadmapJson == null ||
-            effectiveCourse.roadmapJson!.isEmpty) {
+        if (effectiveCourse.roadmapJson?.isEmpty ?? true) {
           final generatedResponse = await _resolveOrGenerateRoadmap(
             effectiveCourse,
           );
@@ -548,7 +565,15 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
       );
       return;
     }
-    final activeResponse = response!;
+    final activeResponse = response;
+    if (activeResponse == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Generate the chapter build before opening exercises.'),
+        ),
+      );
+      return;
+    }
 
     final selectedStep = steps
         .where((step) => step.id == _selectedChapterId)

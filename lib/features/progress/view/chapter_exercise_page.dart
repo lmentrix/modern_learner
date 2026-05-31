@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
@@ -14,6 +15,8 @@ import 'package:modern_learner_production/features/progress/view/section/exercis
 import 'package:modern_learner_production/features/progress/view/section/exercise_state_scaffold.dart';
 import 'package:modern_learner_production/features/progress/view/section/school_exercise_body.dart';
 import 'package:modern_learner_production/features/progress/view/section/voice_exercise_body.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ChapterExercisePage extends StatefulWidget {
   const ChapterExercisePage({super.key, required this.args});
@@ -25,6 +28,8 @@ class ChapterExercisePage extends StatefulWidget {
 }
 
 class _ChapterExercisePageState extends State<ChapterExercisePage> {
+  static const _progressCachePrefix = 'chapter_exercise_progress_v1';
+
   // ── Load state ────────────────────────────────────────────────────────────
   ChapterExerciseResponseModel? _response;
   Object? _error;
@@ -54,6 +59,16 @@ class _ChapterExercisePageState extends State<ChapterExercisePage> {
   int _answeredCount = 0;
 
   Color get _accentColor => Color(widget.args.accentColorValue);
+
+  String get _progressCacheKey {
+    final userId = Supabase.instance.client.auth.currentUser?.id ?? 'guest';
+    return [
+      _progressCachePrefix,
+      userId,
+      widget.args.chapterSubcontentId,
+      widget.args.subcontentNumber,
+    ].join('::');
+  }
 
   @override
   void initState() {
@@ -92,6 +107,8 @@ class _ChapterExercisePageState extends State<ChapterExercisePage> {
       }
 
       if (parsed != null) {
+        await _restoreProgress();
+        if (!mounted) return;
         setState(() {
           _response = parsed;
           _isResolvingCache = false;
@@ -119,6 +136,8 @@ class _ChapterExercisePageState extends State<ChapterExercisePage> {
           context: widget.args.context,
         ),
       );
+      if (!mounted) return;
+      await _restoreProgress();
       if (!mounted) return;
       setState(() {
         _response = result;
@@ -152,7 +171,98 @@ class _ChapterExercisePageState extends State<ChapterExercisePage> {
         c.clear();
       }
     });
+    unawaited(_clearProgress());
     unawaited(_fetchFromNetwork());
+  }
+
+  Future<void> _restoreProgress() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_progressCacheKey);
+    if (raw == null) return;
+
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map<String, dynamic>) return;
+
+      final selectedAnswers = _readStringMap(decoded['selectedAnswers']);
+      final matchingAnswers = _readStringMap(decoded['matchingAnswers']);
+      final checkedQuestionKeys = _readStringSet(
+        decoded['checkedQuestionKeys'],
+      );
+      final checkedMatchKeys = _readStringSet(decoded['checkedMatchKeys']);
+      final checkedVoiceStepKeys = _readStringSet(
+        decoded['checkedVoiceStepKeys'],
+      );
+
+      _selectedAnswers
+        ..clear()
+        ..addAll(selectedAnswers);
+      _matchingAnswers
+        ..clear()
+        ..addAll(matchingAnswers);
+      _checkedQuestionKeys
+        ..clear()
+        ..addAll(checkedQuestionKeys);
+      _checkedMatchKeys
+        ..clear()
+        ..addAll(checkedMatchKeys);
+      _checkedVoiceStepKeys
+        ..clear()
+        ..addAll(checkedVoiceStepKeys);
+
+      _checked = decoded['checked'] == true;
+      _streak = (decoded['streak'] as num?)?.toInt() ?? 0;
+      _answeredCount =
+          (decoded['answeredCount'] as num?)?.toInt() ??
+          checkedQuestionKeys.length + checkedMatchKeys.length;
+
+      for (final entry in selectedAnswers.entries) {
+        _textControllers
+                .putIfAbsent(entry.key, TextEditingController.new)
+                .text =
+            entry.value;
+      }
+    } catch (_) {
+      await prefs.remove(_progressCacheKey);
+    }
+  }
+
+  Future<void> _saveProgress() async {
+    final textAnswers = {
+      for (final entry in _textControllers.entries)
+        if (entry.value.text.trim().isNotEmpty) entry.key: entry.value.text,
+    };
+    final selectedAnswers = {..._selectedAnswers, ...textAnswers};
+    final payload = <String, dynamic>{
+      'selectedAnswers': selectedAnswers,
+      'matchingAnswers': _matchingAnswers,
+      'checkedQuestionKeys': _checkedQuestionKeys.toList(),
+      'checkedMatchKeys': _checkedMatchKeys.toList(),
+      'checkedVoiceStepKeys': _checkedVoiceStepKeys.toList(),
+      'checked': _checked,
+      'streak': _streak,
+      'answeredCount': _answeredCount,
+      'updatedAt': DateTime.now().toIso8601String(),
+    };
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_progressCacheKey, jsonEncode(payload));
+  }
+
+  Future<void> _clearProgress() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_progressCacheKey);
+  }
+
+  Map<String, String> _readStringMap(Object? value) {
+    if (value is! Map) return const {};
+    return value.map(
+      (key, value) => MapEntry(key.toString(), value?.toString() ?? ''),
+    );
+  }
+
+  Set<String> _readStringSet(Object? value) {
+    if (value is! List) return const {};
+    return value.map((item) => item.toString()).toSet();
   }
 
   // ── Interaction ───────────────────────────────────────────────────────────
@@ -160,6 +270,7 @@ class _ChapterExercisePageState extends State<ChapterExercisePage> {
   void _checkAnswers() {
     FocusScope.of(context).unfocus();
     setState(() => _checked = true);
+    unawaited(_saveProgress());
   }
 
   void _handlePrimaryAction() {
@@ -167,6 +278,7 @@ class _ChapterExercisePageState extends State<ChapterExercisePage> {
       _checkAnswers();
       return;
     }
+    unawaited(_clearProgress());
     Navigator.pop(
       context,
       ChapterExerciseCompletionResult(
@@ -185,7 +297,7 @@ class _ChapterExercisePageState extends State<ChapterExercisePage> {
     return Scaffold(
       backgroundColor: AppColors.surface,
       body: LearningActivityScope(
-        child: SafeArea(child: _buildBody()),
+        child: SafeArea(child: SizedBox.expand(child: _buildBody())),
       ),
     );
   }
@@ -222,7 +334,21 @@ class _ChapterExercisePageState extends State<ChapterExercisePage> {
     }
 
     // Loaded — render the exercise.
-    final detail = _response!.chapterDetail;
+    final response = _response;
+    if (response == null) {
+      return ExerciseStateScaffold(
+        accentColor: AppColors.error,
+        title: 'Exercise unavailable',
+        subtitle: widget.args.subcontentTitle,
+        icon: Icons.error_outline_rounded,
+        message: 'The exercise did not finish loading. Try opening it again.',
+        actionLabel: 'Try again',
+        onAction: _retry,
+        onBack: () => Navigator.pop(context),
+      );
+    }
+
+    final detail = response.chapterDetail;
     final score = _score(detail);
     final total = _totalScoredItems(detail);
     _lastScore = score;
@@ -232,116 +358,135 @@ class _ChapterExercisePageState extends State<ChapterExercisePage> {
       physics: const BouncingScrollPhysics(),
       slivers: [
         SliverToBoxAdapter(
-          child: ExerciseHeader(
-            detail: detail,
-            accentColor: _accentColor,
-            checked: _checked,
-            score: score,
-            total: total,
-            answeredCount: _answeredCount,
-            streak: _streak,
-            onBack: () => Navigator.pop(context),
+          child: Expanded(
+            child: ExerciseHeader(
+              detail: detail,
+              accentColor: _accentColor,
+              checked: _checked,
+              score: score,
+              total: total,
+              answeredCount: _answeredCount,
+              streak: _streak,
+              onBack: () => Navigator.pop(context),
+            ),
           ),
         ),
         const SliverToBoxAdapter(child: SizedBox(height: 20)),
-        SliverPadding(
-          padding: ProfilePageConstants.pagePadding,
-          sliver: SliverToBoxAdapter(
-            child: ExerciseIntroCard(detail: detail, accentColor: _accentColor),
+        Expanded(
+          child: SliverPadding(
+            padding: ProfilePageConstants.pagePadding,
+            sliver: SliverToBoxAdapter(
+              child: ExerciseIntroCard(
+                detail: detail,
+                accentColor: _accentColor,
+              ),
+            ),
           ),
         ),
         const SliverToBoxAdapter(
           child: SizedBox(height: ProfilePageConstants.sectionSpacing),
         ),
-        SliverPadding(
-          padding: ProfilePageConstants.pagePadding,
-          sliver: SliverToBoxAdapter(
-            child: detail.isVoice
-                ? VoiceExerciseBody(
-                    detail: detail,
-                    accentColor: _accentColor,
-                    checkedVoiceStepKeys: _checkedVoiceStepKeys,
-                    onVoiceStepChecked: (key) {
-                      setState(() => _checkedVoiceStepKeys.add(key));
-                    },
-                  )
-                : SchoolExerciseBody(
-                    detail: detail,
-                    accentColor: _accentColor,
-                    checked: _checked,
-                    checkedQuestionKeys: _checkedQuestionKeys,
-                    checkedMatchKeys: _checkedMatchKeys,
-                    selectedAnswers: _selectedAnswers,
-                    matchingAnswers: _matchingAnswers,
-                    activeMatchKey: _activeMatchKey,
-                    textControllers: _textControllers,
-                    onAnswerSelected: (key, answer) {
-                      setState(() {
-                        _selectedAnswers[key] = answer;
-                        _checked = false;
-                        _checkedQuestionKeys.remove(key);
-                      });
-                    },
-                    onMatchLeftSelected: (key) {
-                      setState(() {
-                        _activeMatchKey =
-                            _activeMatchKey == key ? null : key;
-                        _checked = false;
-                      });
-                    },
-                    onMatchRightSelected: (answer) {
-                      final activeKey = _activeMatchKey;
-                      if (activeKey == null) return;
-                      setState(() {
-                        _matchingAnswers.removeWhere(
-                          (k, v) => k != activeKey && v == answer,
-                        );
-                        _matchingAnswers[activeKey] = answer;
-                        _activeMatchKey = null;
-                        _checked = false;
-                        _checkedMatchKeys.remove(activeKey);
-                      });
-                    },
-                    onMatchCleared: (key) {
-                      setState(() {
-                        _matchingAnswers.remove(key);
-                        _checkedMatchKeys.remove(key);
-                        if (_activeMatchKey == key) _activeMatchKey = null;
-                        _checked = false;
-                      });
-                    },
-                    onQuestionChecked: (key, {required bool isCorrect}) {
-                      setState(() {
-                        _checkedQuestionKeys.add(key);
-                        _answeredCount =
-                            _checkedQuestionKeys.length + _checkedMatchKeys.length;
-                        if (isCorrect) {
-                          _streak++;
-                        } else {
-                          _streak = 0;
-                        }
-                      });
-                    },
-                    onMatchChecked: (key) {
-                      setState(() {
-                        _checkedMatchKeys.add(key);
-                        _answeredCount =
-                            _checkedQuestionKeys.length + _checkedMatchKeys.length;
-                      });
-                    },
-                  ),
+        Expanded(
+          child: SliverPadding(
+            padding: ProfilePageConstants.pagePadding,
+            sliver: SliverToBoxAdapter(
+              child: detail.isVoice
+                  ? VoiceExerciseBody(
+                      detail: detail,
+                      accentColor: _accentColor,
+                      checkedVoiceStepKeys: _checkedVoiceStepKeys,
+                      onVoiceStepChecked: (key) {
+                        setState(() => _checkedVoiceStepKeys.add(key));
+                        unawaited(_saveProgress());
+                      },
+                    )
+                  : SchoolExerciseBody(
+                      detail: detail,
+                      accentColor: _accentColor,
+                      checked: _checked,
+                      checkedQuestionKeys: _checkedQuestionKeys,
+                      checkedMatchKeys: _checkedMatchKeys,
+                      selectedAnswers: _selectedAnswers,
+                      matchingAnswers: _matchingAnswers,
+                      activeMatchKey: _activeMatchKey,
+                      textControllers: _textControllers,
+                      onAnswerSelected: (key, answer) {
+                        setState(() {
+                          _selectedAnswers[key] = answer;
+                          _checked = false;
+                          _checkedQuestionKeys.remove(key);
+                        });
+                        unawaited(_saveProgress());
+                      },
+                      onMatchLeftSelected: (key) {
+                        setState(() {
+                          _activeMatchKey = _activeMatchKey == key ? null : key;
+                          _checked = false;
+                        });
+                        unawaited(_saveProgress());
+                      },
+                      onMatchRightSelected: (answer) {
+                        final activeKey = _activeMatchKey;
+                        if (activeKey == null) return;
+                        setState(() {
+                          _matchingAnswers.removeWhere(
+                            (k, v) => k != activeKey && v == answer,
+                          );
+                          _matchingAnswers[activeKey] = answer;
+                          _activeMatchKey = null;
+                          _checked = false;
+                          _checkedMatchKeys.remove(activeKey);
+                        });
+                        unawaited(_saveProgress());
+                      },
+                      onMatchCleared: (key) {
+                        setState(() {
+                          _matchingAnswers.remove(key);
+                          _checkedMatchKeys.remove(key);
+                          if (_activeMatchKey == key) _activeMatchKey = null;
+                          _checked = false;
+                        });
+                        unawaited(_saveProgress());
+                      },
+                      onQuestionChecked: (key, {required bool isCorrect}) {
+                        setState(() {
+                          _checkedQuestionKeys.add(key);
+                          _answeredCount =
+                              _checkedQuestionKeys.length +
+                              _checkedMatchKeys.length;
+                          if (isCorrect) {
+                            _streak++;
+                          } else {
+                            _streak = 0;
+                          }
+                        });
+                        unawaited(_saveProgress());
+                      },
+                      onMatchChecked: (key) {
+                        setState(() {
+                          _checkedMatchKeys.add(key);
+                          _answeredCount =
+                              _checkedQuestionKeys.length +
+                              _checkedMatchKeys.length;
+                        });
+                        unawaited(_saveProgress());
+                      },
+                    ),
+            ),
           ),
         ),
         const SliverToBoxAdapter(child: SizedBox(height: 18)),
-        SliverPadding(
-          padding: ProfilePageConstants.pagePadding,
-          sliver: SliverToBoxAdapter(
-            child: ExerciseActionCard(
-              checked: _checked,
-              score: score,
-              total: total,
-              accentColor: _accentColor,
-              onPrimaryAction: _handlePrimaryAction,
+        Expanded(
+          child: SliverPadding(
+            padding: ProfilePageConstants.pagePadding,
+            sliver: SliverToBoxAdapter(
+              child: ExerciseActionCard(
+                checked: _checked,
+                score: score,
+                total: total,
+                accentColor: _accentColor,
+                onPrimaryAction: _handlePrimaryAction,
+              ),
             ),
           ),
         ),

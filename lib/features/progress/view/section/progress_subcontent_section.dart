@@ -22,7 +22,8 @@ class ProgressSubcontentSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (selectedStep == null) {
+    final step = selectedStep;
+    if (step == null) {
       return const _StatusCard(
         icon: Icons.touch_app_rounded,
         iconColor: AppColors.secondary,
@@ -35,10 +36,10 @@ class ProgressSubcontentSection extends StatelessWidget {
     if (isLoading) {
       return _StatusCard(
         icon: Icons.auto_awesome_rounded,
-        iconColor: selectedStep!.toneColor,
-        title: 'Building chapter ${selectedStep!.chapterNumber}',
+        iconColor: step.toneColor,
+        title: 'Building chapter ${step.chapterNumber}',
         body:
-            'Generating detailed subcontent for "${selectedStep!.title}" from the cached roadmap id.',
+            'Generating detailed subcontent for "${step.title}" from the cached roadmap id.',
         showSpinner: true,
       );
     }
@@ -47,8 +48,8 @@ class ProgressSubcontentSection extends StatelessWidget {
       return _StatusCard(
         icon: Icons.error_outline_rounded,
         iconColor: AppColors.error,
-        title: 'Could not load chapter ${selectedStep!.chapterNumber}',
-        body: errorMessage!,
+        title: 'Could not load chapter ${step.chapterNumber}',
+        body: errorMessage ?? '',
         actionLabel: onRetryTap == null ? null : 'Try again',
         onAction: onRetryTap,
       );
@@ -58,9 +59,10 @@ class ProgressSubcontentSection extends StatelessWidget {
     if (payload == null) {
       return _StatusCard(
         icon: Icons.refresh_rounded,
-        iconColor: selectedStep!.toneColor,
-        title: 'Chapter ${selectedStep!.chapterNumber} not loaded',
-        body: 'The build for "${selectedStep!.title}" could not be retrieved. Tap to try again.',
+        iconColor: step.toneColor,
+        title: 'Chapter ${step.chapterNumber} not loaded',
+        body:
+            'The build for "${step.title}" could not be retrieved. Tap to try again.',
         actionLabel: onRetryTap == null ? null : 'Retry',
         onAction: onRetryTap,
       );
@@ -69,9 +71,9 @@ class ProgressSubcontentSection extends StatelessWidget {
     final metaChips = <String>[
       'Chapter ${payload.chapterNumber}',
       '${payload.subcontents.length} study blocks',
-      if ((payload.level ?? '').trim().isNotEmpty) payload.level!,
+      if ((payload.level ?? '').trim().isNotEmpty) payload.level ?? '',
       if ((payload.targetLanguage ?? '').trim().isNotEmpty)
-        payload.targetLanguage!,
+        payload.targetLanguage ?? '',
       payload.courseType,
     ];
 
@@ -83,17 +85,15 @@ class ProgressSubcontentSection extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            selectedStep!.toneColor.withValues(alpha: 0.08),
+            step.toneColor.withValues(alpha: 0.08),
             AppColors.surfaceContainer,
           ],
         ),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(
-          color: selectedStep!.toneColor.withValues(alpha: 0.30),
-        ),
+        border: Border.all(color: step.toneColor.withValues(alpha: 0.30)),
         boxShadow: [
           BoxShadow(
-            color: selectedStep!.toneColor.withValues(alpha: 0.10),
+            color: step.toneColor.withValues(alpha: 0.10),
             blurRadius: 22,
             offset: const Offset(0, 8),
           ),
@@ -135,13 +135,13 @@ class ProgressSubcontentSection extends StatelessWidget {
             spacing: 8,
             runSpacing: 8,
             children: metaChips
-                .map((c) => _MetaChip(c, color: selectedStep!.toneColor))
+                .map((c) => _MetaChip(c, color: step.toneColor))
                 .toList(),
           ),
           if ((response?.message ?? '').trim().isNotEmpty) ...[
             const SizedBox(height: 18),
             Text(
-              response!.message,
+              response?.message ?? '',
               style: GoogleFonts.inter(
                 fontSize: 13,
                 color: AppColors.onSurfaceVariant,
@@ -295,7 +295,7 @@ class _SubcontentCard extends StatelessWidget {
                   const _SectionLabel(label: 'Teaching note'),
                   const SizedBox(height: 6),
                   Text(
-                    item.teachingNote!,
+                    item.teachingNote ?? '',
                     style: GoogleFonts.inter(
                       fontSize: 13,
                       color: AppColors.onSurfaceVariant,
@@ -308,7 +308,7 @@ class _SubcontentCard extends StatelessWidget {
                   const _SectionLabel(label: 'Speaking focus'),
                   const SizedBox(height: 6),
                   Text(
-                    item.speakingFocus!,
+                    item.speakingFocus ?? '',
                     style: GoogleFonts.inter(
                       fontSize: 13,
                       color: AppColors.onSurfaceVariant,
@@ -358,6 +358,7 @@ class _StatusCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final actionText = actionLabel;
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -440,12 +441,12 @@ class _StatusCard extends StatelessWidget {
                               height: 1.5,
                             ),
                           ),
-                          if (actionLabel != null && onAction != null) ...[
+                          if (actionText != null && onAction != null) ...[
                             const SizedBox(height: 12),
                             TextButton.icon(
                               onPressed: onAction,
                               icon: const Icon(Icons.refresh_rounded, size: 16),
-                              label: Text(actionLabel!),
+                              label: Text(actionText),
                             ),
                           ],
                         ],

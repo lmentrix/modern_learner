@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
-
-import '../models/exercise.dart';
+import 'package:modern_learner_production/features/exercise/models/exercise.dart';
 
 class ExerciseQuestionCard extends StatelessWidget {
   const ExerciseQuestionCard({
@@ -18,6 +17,7 @@ class ExerciseQuestionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final content = exercise.content;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -41,10 +41,7 @@ class ExerciseQuestionCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Center(
-                  child: Text(
-                    emoji,
-                    style: const TextStyle(fontSize: 22),
-                  ),
+                  child: Text(emoji, style: const TextStyle(fontSize: 22)),
                 ),
               ),
               const SizedBox(width: 12),
@@ -71,7 +68,7 @@ class ExerciseQuestionCard extends StatelessWidget {
               height: 1.4,
             ),
           ),
-          if (exercise.content != null) ...[
+          if (content != null) ...[
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(16),
@@ -80,7 +77,7 @@ class ExerciseQuestionCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
-                exercise.content!,
+                content,
                 style: GoogleFonts.inter(
                   fontSize: 15,
                   color: AppColors.onSurface,

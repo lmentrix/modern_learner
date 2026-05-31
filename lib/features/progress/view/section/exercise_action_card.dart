@@ -22,27 +22,19 @@ class ExerciseActionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasScore = total > 0;
+    final label = checked
+        ? hasScore
+              ? 'Score: $score of $total'
+              : 'Practice checked'
+        : hasScore
+        ? 'Ready to review your answers'
+        : 'Ready to complete this practice';
     return ExercisePanel(
       accentColor: accentColor,
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              checked
-                  ? hasScore
-                        ? 'Score: $score of $total'
-                        : 'Practice checked'
-                  : hasScore
-                  ? 'Ready to review your answers'
-                  : 'Ready to complete this practice',
-              style: GoogleFonts.spaceGrotesk(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: AppColors.onSurface,
-              ),
-            ),
-          ),
-          FilledButton.icon(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final compact = constraints.maxWidth < 360;
+          final button = FilledButton.icon(
             onPressed: onPrimaryAction,
             icon: Icon(
               checked ? Icons.arrow_forward_rounded : Icons.check_rounded,
@@ -50,8 +42,43 @@ class ExerciseActionCard extends StatelessWidget {
             ),
             label: Text(checked ? 'Continue' : 'Check'),
             style: FilledButton.styleFrom(backgroundColor: accentColor),
-          ),
-        ],
+          );
+
+          if (compact) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  label,
+                  style: GoogleFonts.spaceGrotesk(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                button,
+              ],
+            );
+          }
+
+          return Row(
+            children: [
+              Expanded(
+                child: Text(
+                  label,
+                  style: GoogleFonts.spaceGrotesk(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.onSurface,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              button,
+            ],
+          );
+        },
       ),
     );
   }

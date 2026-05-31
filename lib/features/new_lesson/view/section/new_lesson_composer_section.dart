@@ -82,11 +82,15 @@ class _NewLessonComposerSectionState extends State<NewLessonComposerSection> {
   Future<void> _onStart(BuildContext context) async {
     final router = GoRouter.of(context);
     final navigator = Navigator.of(context);
+    final selectedLanguage = _selectedLanguage;
+    if (selectedLanguage == null || selectedLanguage.trim().isEmpty) {
+      return;
+    }
 
     final course = ProgressCourseSelection(
-      title: _selectedLanguage!,
-      topic: _selectedLanguage!,
-      roadmapLanguage: _selectedLanguage!,
+      title: selectedLanguage,
+      topic: selectedLanguage,
+      roadmapLanguage: selectedLanguage,
       level: _selectedDifficulty.toLowerCase(),
       nativeLanguage: 'English',
       courseType: ProgressCourseType.voice,
@@ -96,7 +100,7 @@ class _NewLessonComposerSectionState extends State<NewLessonComposerSection> {
 
     unawaited(
       pushNotificationService.notifyNewVoiceLesson(
-        language: _selectedLanguage!,
+        language: selectedLanguage,
         difficulty: _selectedDifficulty,
       ),
     );

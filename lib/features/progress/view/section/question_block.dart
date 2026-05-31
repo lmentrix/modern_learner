@@ -40,7 +40,10 @@ class QuestionBlock extends StatelessWidget {
   Widget build(BuildContext context) {
     final key = questionKey(groupIndex, question.questionNumber);
     final selected = selectedAnswers[key];
-    final controller = textControllers.putIfAbsent(key, TextEditingController.new);
+    final controller = textControllers.putIfAbsent(
+      key,
+      TextEditingController.new,
+    );
     final isFillBlank = group.exerciseType == 'fill_in_the_blank';
     final isChecked = checked || checkedQuestionKeys.contains(key);
     final currentAnswer = isFillBlank ? controller.text : selected;
@@ -54,14 +57,16 @@ class QuestionBlock extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: isChecked
-            ? (isCorrect ? AppColors.tertiary : AppColors.error)
-                  .withValues(alpha: 0.04)
+            ? (isCorrect ? AppColors.tertiary : AppColors.error).withValues(
+                alpha: 0.04,
+              )
             : AppColors.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
           color: isChecked
-              ? (isCorrect ? AppColors.tertiary : AppColors.error)
-                    .withValues(alpha: 0.18)
+              ? (isCorrect ? AppColors.tertiary : AppColors.error).withValues(
+                  alpha: 0.18,
+                )
               : AppColors.outlineVariant.withValues(alpha: 0.16),
         ),
       ),
@@ -108,7 +113,7 @@ class QuestionBlock extends StatelessWidget {
             const SizedBox(height: 8),
             ExerciseSmallNote(
               icon: Icons.lightbulb_outline_rounded,
-              text: question.clue!,
+              text: question.clue ?? '',
             ),
           ],
           const SizedBox(height: 12),
@@ -273,9 +278,7 @@ class _CheckButtonState extends State<_CheckButton>
           label: const Text('Check'),
           style: OutlinedButton.styleFrom(
             foregroundColor: widget.accentColor,
-            side: BorderSide(
-              color: widget.accentColor.withValues(alpha: 0.45),
-            ),
+            side: BorderSide(color: widget.accentColor.withValues(alpha: 0.45)),
             visualDensity: VisualDensity.compact,
           ),
         ),

@@ -1,4 +1,4 @@
-import '../models/exercise.dart';
+import 'package:modern_learner_production/features/exercise/models/exercise.dart';
 
 List<Exercise> buildExercises(LessonType lessonType) {
   switch (lessonType) {

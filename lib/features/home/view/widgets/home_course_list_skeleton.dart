@@ -38,16 +38,20 @@ class _HomeCourseListSkeletonState extends State<HomeCourseListSkeleton>
       child: AnimatedBuilder(
         animation: _shimmer,
         builder: (context, _) {
-          final shimmerColor = Color.lerp(
-            AppColors.surfaceContainerLow,
-            AppColors.surfaceContainerHighest,
-            _shimmer.value,
-          )!;
-          final highlightColor = Color.lerp(
-            AppColors.surfaceContainer,
-            AppColors.surfaceBright,
-            _shimmer.value,
-          )!;
+          final shimmerColor =
+              Color.lerp(
+                AppColors.surfaceContainerLow,
+                AppColors.surfaceContainerHighest,
+                _shimmer.value,
+              ) ??
+              AppColors.surfaceContainerLow;
+          final highlightColor =
+              Color.lerp(
+                AppColors.surfaceContainer,
+                AppColors.surfaceBright,
+                _shimmer.value,
+              ) ??
+              AppColors.surfaceContainer;
 
           return Column(
             children: List.generate(
@@ -68,23 +72,19 @@ class _HomeCourseListSkeletonState extends State<HomeCourseListSkeleton>
 }
 
 class _SkeletonCard extends StatelessWidget {
-  const _SkeletonCard({
-    required this.baseColor,
-    required this.highlightColor,
-  });
+  const _SkeletonCard({required this.baseColor, required this.highlightColor});
 
   final Color baseColor;
   final Color highlightColor;
 
-  Widget _box({double? width, double? height, double radius = 8}) =>
-      Container(
-        width: width,
-        height: height,
-        decoration: BoxDecoration(
-          color: baseColor,
-          borderRadius: BorderRadius.circular(radius),
-        ),
-      );
+  Widget _box({double? width, double? height, double radius = 8}) => Container(
+    width: width,
+    height: height,
+    decoration: BoxDecoration(
+      color: baseColor,
+      borderRadius: BorderRadius.circular(radius),
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {

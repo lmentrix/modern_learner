@@ -61,6 +61,7 @@ class _LessonCardState extends State<LessonCard>
 
   @override
   Widget build(BuildContext context) {
+    final lessonType = widget.lessonType;
     return GestureDetector(
       onLongPress: widget.onLongPress,
       child: Container(
@@ -120,8 +121,8 @@ class _LessonCardState extends State<LessonCard>
                                 ),
                               ),
                             ),
-                            if (widget.lessonType != null) ...[
-                              LessonTypeBadge(lessonType: widget.lessonType!),
+                            if (lessonType != null) ...[
+                              LessonTypeBadge(lessonType: lessonType),
                               const SizedBox(width: 6),
                             ],
                             if (widget.isNew)

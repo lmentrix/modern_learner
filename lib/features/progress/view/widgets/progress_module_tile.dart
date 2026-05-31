@@ -116,10 +116,7 @@ class _ProgressModuleTileState extends State<ProgressModuleTile>
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        colors: [
-                          lineColor,
-                          lineColor.withValues(alpha: 0.0),
-                        ],
+                        colors: [lineColor, lineColor.withValues(alpha: 0.0)],
                       ),
                       borderRadius: BorderRadius.circular(1),
                     ),
@@ -231,11 +228,12 @@ class _StepNode extends StatelessWidget {
       ),
     );
 
-    if (pulseAnimation != null) {
+    final pulse = pulseAnimation;
+    if (pulse != null) {
       node = AnimatedBuilder(
-        animation: pulseAnimation!,
+        animation: pulse,
         builder: (context, child) =>
-            Transform.scale(scale: pulseAnimation!.value, child: child),
+            Transform.scale(scale: pulse.value, child: child),
         child: node,
       );
     }
@@ -405,8 +403,9 @@ class _TileCard extends StatelessWidget {
                           backgroundColor: AppColors.surfaceContainerHighest,
                           valueColor: AlwaysStoppedAnimation<Color>(
                             step.isLocked
-                                ? AppColors.onSurfaceVariant
-                                    .withValues(alpha: 0.3)
+                                ? AppColors.onSurfaceVariant.withValues(
+                                    alpha: 0.3,
+                                  )
                                 : step.toneColor,
                           ),
                         ),
@@ -521,18 +520,17 @@ class _SubcontentPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 8),
-      child: _buildBody(),
-    );
+    return Padding(padding: const EdgeInsets.only(top: 8), child: _buildBody());
   }
 
   Widget _buildBody() {
+    final error = errorMessage;
+    final subcontentTap = onSubcontentTap;
     if (isLoading) {
       return _LoadingRow(step: step, isGenerating: !isLoadingFromCache);
     }
-    if (errorMessage != null) {
-      return _ErrorRow(step: step, message: errorMessage!, onRetry: onRetry);
+    if (error != null) {
+      return _ErrorRow(step: step, message: error, onRetry: onRetry);
     }
     final payload = response?.chapterSubcontent;
     if (payload == null) {
@@ -553,15 +551,18 @@ class _SubcontentPanel extends StatelessWidget {
             child: _SubcontentRow(
               item: payload.subcontents[i],
               accent: step.toneColor,
-              isCompleted: payload.subcontents[i].subcontentNumber <=
+              isCompleted:
+                  payload.subcontents[i].subcontentNumber <=
                   completedSubcontents,
-              isLocked: payload.subcontents[i].subcontentNumber >
+              isLocked:
+                  payload.subcontents[i].subcontentNumber >
                   completedSubcontents + 1,
-              onTap: onSubcontentTap == null ||
+              onTap:
+                  subcontentTap == null ||
                       payload.subcontents[i].subcontentNumber >
                           completedSubcontents + 1
                   ? null
-                  : () => onSubcontentTap!(payload.subcontents[i]),
+                  : () => subcontentTap(payload.subcontents[i]),
             ),
           ),
       ],
@@ -596,9 +597,7 @@ class _LoadingRow extends StatelessWidget {
             child: CircularProgressIndicator(
               strokeWidth: 1.8,
               valueColor: AlwaysStoppedAnimation<Color>(
-                isGenerating
-                    ? step.toneColor
-                    : AppColors.onSurfaceVariant,
+                isGenerating ? step.toneColor : AppColors.onSurfaceVariant,
               ),
             ),
           ),
@@ -635,7 +634,11 @@ class _ErrorRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
       child: Row(
         children: [
-          const Icon(Icons.error_outline_rounded, size: 14, color: AppColors.error),
+          const Icon(
+            Icons.error_outline_rounded,
+            size: 14,
+            color: AppColors.error,
+          ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
@@ -710,7 +713,9 @@ class _SubcontentRow extends StatelessWidget {
     final typeColor = isLocked
         ? AppColors.onSurfaceVariant.withValues(alpha: 0.4)
         : _typeColor(item.subcontentType);
-    final effectiveAccent = isLocked ? AppColors.onSurfaceVariant.withValues(alpha: 0.35) : accent;
+    final effectiveAccent = isLocked
+        ? AppColors.onSurfaceVariant.withValues(alpha: 0.35)
+        : accent;
 
     return Opacity(
       opacity: isLocked ? 0.55 : 1.0,
@@ -753,7 +758,9 @@ class _SubcontentRow extends StatelessWidget {
                         ? Icon(
                             Icons.lock_rounded,
                             size: 11,
-                            color: AppColors.onSurfaceVariant.withValues(alpha: 0.5),
+                            color: AppColors.onSurfaceVariant.withValues(
+                              alpha: 0.5,
+                            ),
                           )
                         : Text(
                             '${item.subcontentNumber}',
@@ -784,7 +791,10 @@ class _SubcontentRow extends StatelessWidget {
                 const SizedBox(width: 10),
                 // duration badge
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: effectiveAccent.withValues(alpha: 0.10),
                     borderRadius: BorderRadius.circular(999),
@@ -792,7 +802,11 @@ class _SubcontentRow extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.schedule_rounded, size: 10, color: effectiveAccent),
+                      Icon(
+                        Icons.schedule_rounded,
+                        size: 10,
+                        color: effectiveAccent,
+                      ),
                       const SizedBox(width: 3),
                       Text(
                         '${item.estimatedMinutes} min',
