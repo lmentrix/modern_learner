@@ -568,6 +568,23 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
         subcontentTitle: item.title,
         accentColorValue: accentColor.toARGB32(),
         model: activeResponse.model,
+        context: ChapterDetailContext(
+          courseType: course.courseType == ProgressCourseType.voice
+              ? 'voice'
+              : 'school',
+          topic: course.topic,
+          targetLanguage: course.roadmapLanguage,
+          level: course.level,
+          chapterNumber: chapterNumber,
+          chapterTitle: activeResponse.chapterSubcontent.chapterTitle,
+          subcontentTitle: item.title,
+          subcontentType: item.subcontentType,
+          subcontentSummary: item.summary,
+          sourceLessons: List<String>.from(item.sourceLessons),
+          objectives: List<String>.from(item.objectives),
+          activities: List<String>.from(item.activities),
+          focusSkills: List<String>.from(item.focusSkills),
+        ),
       ),
     );
 

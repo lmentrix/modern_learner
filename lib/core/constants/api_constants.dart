@@ -72,5 +72,8 @@ abstract final class ApiConstants {
   static const String voiceLessonGenerateWithAudio =
       '/ai/voice-lesson/generate-with-audio';
   static const String voiceLessonTts = '/ai/voice-lesson/tts';
+  static const String openRouterVoiceTts = '/openrouter/voice/tts';
+
+  static String get openRouterApiKey => dotenv.env['OPENROUTER_API_KEY'] ?? '';
   static const String exploreSubjects = '/explore/subjects';
 }

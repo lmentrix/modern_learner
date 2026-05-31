@@ -175,16 +175,70 @@ class ChapterExerciseGenerateRequestModel {
     required this.chapterSubcontentId,
     required this.subcontentNumber,
     this.model,
+    this.context,
   });
 
   final String chapterSubcontentId;
   final int subcontentNumber;
   final String? model;
 
+  /// Inline context forwarded to the backend so it can generate the exercise
+  /// without requiring an in-memory store lookup.
+  final ChapterDetailContext? context;
+
   Map<String, dynamic> toJson() => {
     'chapter_subcontent_id': chapterSubcontentId,
     'subcontent_number': subcontentNumber,
     if (model != null && model!.trim().isNotEmpty) 'model': model,
+    if (context != null) 'context': context!.toJson(),
+  };
+}
+
+class ChapterDetailContext {
+  const ChapterDetailContext({
+    required this.courseType,
+    required this.topic,
+    required this.targetLanguage,
+    required this.level,
+    required this.chapterNumber,
+    required this.chapterTitle,
+    required this.subcontentTitle,
+    required this.subcontentType,
+    required this.subcontentSummary,
+    required this.sourceLessons,
+    required this.objectives,
+    required this.activities,
+    required this.focusSkills,
+  });
+
+  final String courseType;
+  final String topic;
+  final String targetLanguage;
+  final String level;
+  final int chapterNumber;
+  final String chapterTitle;
+  final String subcontentTitle;
+  final String subcontentType;
+  final String subcontentSummary;
+  final List<String> sourceLessons;
+  final List<String> objectives;
+  final List<String> activities;
+  final List<String> focusSkills;
+
+  Map<String, dynamic> toJson() => {
+    'course_type': courseType,
+    'topic': topic,
+    'target_language': targetLanguage,
+    'level': level,
+    'chapter_number': chapterNumber,
+    'chapter_title': chapterTitle,
+    'subcontent_title': subcontentTitle,
+    'subcontent_type': subcontentType,
+    'subcontent_summary': subcontentSummary,
+    'source_lessons': sourceLessons,
+    'objectives': objectives,
+    'activities': activities,
+    'focus_skills': focusSkills,
   };
 }
 
@@ -482,6 +536,7 @@ class ChapterExercisePageArgs {
     required this.subcontentTitle,
     required this.accentColorValue,
     this.model,
+    this.context,
   });
 
   final String chapterSubcontentId;
@@ -491,6 +546,10 @@ class ChapterExercisePageArgs {
   final String subcontentTitle;
   final int accentColorValue;
   final String? model;
+
+  /// Inline context passed through to the network request so the backend
+  /// doesn't need in-memory store lookups.
+  final ChapterDetailContext? context;
 }
 
 class ChapterExerciseCompletionResult {
