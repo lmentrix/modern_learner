@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:http/http.dart' as http;
 import 'package:modern_learner_production/core/constants/api_constants.dart';
+import 'package:modern_learner_production/features/cache/generation_cache.dart';
 import 'package:modern_learner_production/features/progress/service/model/roadmap_model.dart';
 
 const _fallbackRoadmapBaseUrl = 'http://127.0.0.1:8000/api/v1';
@@ -11,6 +12,14 @@ Future<ChapterExerciseResponseModel> fetchChapterExercise(
   ChapterExerciseGenerateRequestModel request, {
   http.Client? client,
 }) async {
+  final cached = await const GenerationCache().readExercise(
+    chapterSubcontentId: request.chapterSubcontentId,
+    subcontentNumber: request.subcontentNumber,
+  );
+  if (cached != null) {
+    return ChapterExerciseResponseModel.fromRawJson(cached);
+  }
+
   final activeClient = client ?? http.Client();
 
   try {
@@ -23,16 +32,14 @@ Future<ChapterExerciseResponseModel> fetchChapterExercise(
       );
     }
 
-    final decoded = jsonDecode(utf8.decode(response.bodyBytes));
-    if (decoded is! Map) {
-      throw const FormatException(
-        'Chapter exercise response is not a JSON object.',
-      );
-    }
-
-    return ChapterExerciseResponseModel.fromJson(
-      Map<String, dynamic>.from(decoded),
+    final rawJson = utf8.decode(response.bodyBytes);
+    final result = ChapterExerciseResponseModel.fromRawJson(rawJson);
+    await const GenerationCache().saveExercise(
+      chapterSubcontentId: request.chapterSubcontentId,
+      subcontentNumber: request.subcontentNumber,
+      rawJson: rawJson,
     );
+    return result;
   } on SocketException catch (error) {
     throw ChapterExerciseRequestException(
       'Could not reach the FastAPI chapter detail API at '
@@ -194,6 +201,11 @@ class ChapterExerciseResponseModel {
     this.rawContent,
     this.prompt,
   });
+
+  factory ChapterExerciseResponseModel.fromRawJson(String source) =>
+      ChapterExerciseResponseModel.fromJson(
+        Map<String, dynamic>.from(jsonDecode(source) as Map),
+      );
 
   factory ChapterExerciseResponseModel.fromJson(Map<String, dynamic> json) {
     final detailJson = _readMap(json, const [

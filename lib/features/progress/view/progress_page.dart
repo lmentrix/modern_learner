@@ -13,6 +13,7 @@ import 'package:modern_learner_production/features/progress/bloc/xp_bloc.dart';
 import 'package:modern_learner_production/features/progress/data/progress_module_step.dart';
 import 'package:modern_learner_production/features/progress/data/progress_page_constants.dart';
 import 'package:modern_learner_production/features/progress/data/progress_page_seed.dart';
+import 'package:modern_learner_production/features/cache/generation_cache.dart';
 import 'package:modern_learner_production/features/progress/service/cache/roadmap_id_cache.dart';
 import 'package:modern_learner_production/features/progress/service/course_xp_service.dart';
 import 'package:modern_learner_production/features/progress/service/model/chapter_subcontent_model.dart';
@@ -24,6 +25,7 @@ import 'package:modern_learner_production/features/progress/view/section/progres
 import 'package:modern_learner_production/features/progress/view/section/progress_header.dart';
 import 'package:modern_learner_production/features/progress/view/section/progress_journey_section.dart';
 import 'package:modern_learner_production/features/progress/view/section/progress_skeleton_section.dart';
+import 'package:modern_learner_production/features/roadmap/model/roadmap_model.dart';
 import 'package:modern_learner_production/features/roadmap/service/roadmap_service.dart';
 
 class ProgressViewPage extends StatefulWidget {
@@ -41,9 +43,13 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
   bool _isDbLoading = false;
 
   bool _isLoadingChapterSubcontent = false;
+  // True while awaiting a disk/cache read — distinguishes cache lookup from
+  // actual network generation so the UI can show a different loading label.
+  bool _isSubcontentFromCache = false;
   String? _chapterSubcontentError;
   String? _selectedCourseKey;
   String? _selectedChapterId;
+  int? _selectedChapterNumber;
   ChapterSubcontentResponseModel? _chapterSubcontentResponse;
   int _chapterSubcontentRequestToken = 0;
   final Map<String, ChapterSubcontentResponseModel> _chapterSubcontentCache =
@@ -137,6 +143,7 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
                             _handleChapterTap(selectedCourse, step),
                         chapterSubcontentResponse: _chapterSubcontentResponse,
                         isLoadingChapterSubcontent: _isLoadingChapterSubcontent,
+                        isLoadingFromCache: _isSubcontentFromCache,
                         chapterSubcontentError: _chapterSubcontentError,
                         onRetryTap: _selectedChapterId == null
                             ? null
@@ -156,9 +163,9 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
                         ),
                         completedSubcontentsInCurrentChapter:
                             _completedSubcontentsForSelectedChapter(
-                          selectedCourse,
-                          pageData.moduleSteps,
-                        ),
+                              selectedCourse,
+                              pageData.moduleSteps,
+                            ),
                       ),
                     ),
                   ),
@@ -203,7 +210,10 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
 
     if (!_dbLoadedCourses.contains(courseKey)) {
       _dbLoadedCourses.add(courseKey);
-      _isDbLoading = course.courseId != null;
+      _isDbLoading =
+          course.courseId != null ||
+          course.roadmapJson == null ||
+          course.roadmapJson!.isEmpty;
       unawaited(_loadFromDb(course));
     }
   }
@@ -235,19 +245,60 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
     }
 
     final cacheEntryKey = _chapterCacheKey(course, step);
-    final cachedResponse = _chapterSubcontentCache[cacheEntryKey];
+    ChapterSubcontentResponseModel? cachedResponse =
+        _chapterSubcontentCache[cacheEntryKey];
 
-    setState(() {
-      _selectedChapterId = step.id;
-      _chapterSubcontentError = null;
-      _chapterSubcontentResponse = cachedResponse;
-      _isLoadingChapterSubcontent = cachedResponse == null;
-    });
-
+    // In-memory hit — open instantly with no loading state.
     if (cachedResponse != null) {
+      setState(() {
+        _selectedChapterId = step.id;
+        _selectedChapterNumber = step.chapterNumber;
+        _chapterSubcontentError = null;
+        _chapterSubcontentResponse = cachedResponse;
+        _isLoadingChapterSubcontent = false;
+        _isSubcontentFromCache = false;
+      });
       return;
     }
 
+    // No in-memory hit. Open the panel immediately in "reading cache" state so
+    // the UI feels responsive while the async disk read completes.
+    setState(() {
+      _selectedChapterId = step.id;
+      _selectedChapterNumber = step.chapterNumber;
+      _chapterSubcontentError = null;
+      _chapterSubcontentResponse = null;
+      _isLoadingChapterSubcontent = true;
+      _isSubcontentFromCache = true;
+    });
+
+    // Check the persistent on-disk cache (flutter_cache_manager).
+    final rawJson = await const GenerationCache().readChapterSubcontent(
+      roadmapKey: _roadmapCacheKey(course),
+      chapterNumber: step.chapterNumber,
+    );
+    if (!mounted) return;
+
+    if (rawJson != null) {
+      try {
+        cachedResponse = ChapterSubcontentResponseModel.fromRawJson(rawJson);
+        _chapterSubcontentCache[cacheEntryKey] = cachedResponse;
+      } catch (_) {
+        // Malformed cache entry — fall through to network fetch.
+      }
+    }
+
+    if (cachedResponse != null) {
+      setState(() {
+        _chapterSubcontentResponse = cachedResponse;
+        _isLoadingChapterSubcontent = false;
+        _isSubcontentFromCache = false;
+      });
+      return;
+    }
+
+    // Disk cache miss — switch to "generating" state and hit the network.
+    setState(() => _isSubcontentFromCache = false);
     await _fetchSubcontent(course, step);
   }
 
@@ -268,27 +319,47 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
   }
 
   Future<void> _loadFromDb(ProgressCourseSelection course) async {
-    final courseId = course.courseId;
-    if (courseId == null) return;
+    var effectiveCourse = course;
 
     try {
       // Hydrate roadmap JSON if not already present locally.
       if (course.roadmapJson == null || course.roadmapJson!.isEmpty) {
-        final roadmapRow = await RoadmapService.instance.fetchRoadmapByCourse(
-          courseId,
-        );
-        if (roadmapRow != null && mounted) {
-          final updatedCourse = course.copyWith(
-            roadmapJson: roadmapRow.roadmapJson,
-            roadmapGenerated: true,
+        final courseId = course.courseId;
+        if (courseId != null) {
+          final roadmapRow = await RoadmapService.instance.fetchRoadmapByCourse(
+            courseId,
           );
-          await ExploreCoursesService.instance.updateCourse(updatedCourse);
+          if (roadmapRow != null && mounted) {
+            effectiveCourse = course.copyWith(
+              roadmapJson: roadmapRow.roadmapJson,
+              roadmapGenerated: true,
+            );
+            await ExploreCoursesService.instance.updateCourse(effectiveCourse);
+          }
+        }
+
+        // Still no roadmap — generate it now so the chapter list is real.
+        if (effectiveCourse.roadmapJson == null ||
+            effectiveCourse.roadmapJson!.isEmpty) {
+          final generatedResponse = await _resolveOrGenerateRoadmap(
+            effectiveCourse,
+          );
+          if (mounted) {
+            effectiveCourse = effectiveCourse.copyWith(
+              roadmapJson: generatedResponse.toJson(),
+              roadmapGenerated: true,
+            );
+          }
         }
       }
 
       // Pre-populate chapter subcontent cache so tapping a chapter is instant.
-      final chapterRows = await RoadmapService.instance
-          .fetchChapterProgressByCourse(courseId);
+      final courseId = effectiveCourse.courseId;
+      final chapterRows = courseId == null
+          ? const <RoadmapChapterProgressDbModel>[]
+          : await RoadmapService.instance.fetchChapterProgressByCourse(
+              courseId,
+            );
 
       if (!mounted) return;
 
@@ -338,6 +409,11 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
           setState(() {});
         }
       }
+
+      // Background-prefetch any unlocked chapters not yet in cache.
+      if (mounted) {
+        unawaited(_prefetchUnlockedChapters(effectiveCourse));
+      }
     } catch (_) {
       // DB errors must never crash the UI.
     } finally {
@@ -356,15 +432,19 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
 
     try {
       final roadmapResponse = await _resolveOrGenerateRoadmap(course);
-      final roadmapJson = roadmapResponse.roadmap.toJson();
 
+      final roadmapJson = roadmapResponse.roadmap.toJson();
       final response = await fetchChapterSubcontent(
         ChapterSubcontentGenerateRequestModel(
           roadmapId: roadmapResponse.roadmap.id,
           roadmapCacheKey: _roadmapCacheKey(course),
           chapterNumber: step.chapterNumber,
-          model: roadmapResponse.model,
+          model: roadmapResponse.model.isEmpty ? null : roadmapResponse.model,
           roadmapJson: roadmapJson,
+          topic: course.topic,
+          language: course.roadmapLanguage,
+          level: course.level,
+          nativeLanguage: course.nativeLanguage,
         ),
       );
 
@@ -429,8 +509,10 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
 
     final generatedResponse = await fetchProgress(request);
 
+    // Store the raw backend JSON so it can be forwarded verbatim to
+    // /ai/chapter-content/generate as the `roadmap` field.
     final updatedCourse = course.copyWith(
-      roadmapJson: generatedResponse.toJson(),
+      roadmapJson: generatedResponse.rawJson ?? generatedResponse.toJson(),
       roadmapGenerated: true,
     );
     await ExploreCoursesService.instance.updateCourse(updatedCourse);
@@ -517,8 +599,7 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
         .firstOrNull;
     if (step == null) return 0;
     final courseKey = _courseKey(course);
-    return _completedSubcontentsByCourseChapter[
-          '$courseKey::ch${step.chapterNumber}'] ??
+    return _completedSubcontentsByCourseChapter['$courseKey::ch${step.chapterNumber}'] ??
         0;
   }
 
@@ -625,11 +706,82 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
     int chapterNumber,
   ) => '${_courseKey(course)}::ch$chapterNumber';
 
+  /// Silently fetches subcontent for every unlocked chapter not already cached.
+  /// Runs entirely in the background — no loading indicators are shown.
+  /// If the user taps a chapter while it is being prefetched, the result is
+  /// surfaced immediately once the fetch completes.
+  Future<void> _prefetchUnlockedChapters(ProgressCourseSelection course) async {
+    final roadmapResponse = _extractRoadmapResponse(course.roadmapJson);
+    if (roadmapResponse == null) return;
+
+    final limit = _unlockedChapterLimit(course);
+    final courseId = course.courseId;
+    final roadmapId = roadmapResponse.roadmap.id;
+    final courseKey = _courseKey(course);
+
+    for (int ch = 1; ch <= limit; ch++) {
+      if (!mounted) return;
+      final cacheKey = _chapterCacheKeyByNumber(course, ch);
+      if (_chapterSubcontentCache.containsKey(cacheKey)) continue;
+
+      try {
+        final response = await fetchChapterSubcontent(
+          ChapterSubcontentGenerateRequestModel(
+            roadmapId: roadmapId,
+            roadmapCacheKey: _roadmapCacheKey(course),
+            chapterNumber: ch,
+            model: roadmapResponse.model.isEmpty ? null : roadmapResponse.model,
+            roadmapJson: roadmapResponse.roadmap.toJson(),
+            topic: course.topic,
+            language: course.roadmapLanguage,
+            level: course.level,
+            nativeLanguage: course.nativeLanguage,
+          ),
+        );
+
+        if (!mounted) return;
+        _chapterSubcontentCache[cacheKey] = response;
+
+        // If the user already tapped this chapter and it is still loading,
+        // resolve the panel immediately without waiting for their tap to retry.
+        if (_isLoadingChapterSubcontent &&
+            _chapterSubcontentResponse == null &&
+            _selectedChapterNumber == ch) {
+          setState(() {
+            _chapterSubcontentResponse = response;
+            _isLoadingChapterSubcontent = false;
+            _chapterSubcontentError = null;
+          });
+        }
+
+        // Persist to DB so future sessions benefit from the cached entry.
+        if (courseId != null &&
+            roadmapId != null &&
+            roadmapId.trim().isNotEmpty) {
+          unawaited(() async {
+            try {
+              await RoadmapService.instance.saveChapterProgress(
+                response: response,
+                roadmapId: roadmapId,
+                courseKey: courseKey,
+                courseId: courseId,
+              );
+            } catch (_) {}
+          }());
+        }
+      } catch (_) {
+        // Skip silently — the user can still tap to trigger a fresh fetch.
+      }
+    }
+  }
+
   void _resetChapterSubcontentState({required bool clearCache}) {
     _selectedChapterId = null;
+    _selectedChapterNumber = null;
     _chapterSubcontentError = null;
     _chapterSubcontentResponse = null;
     _isLoadingChapterSubcontent = false;
+    _isSubcontentFromCache = false;
     _chapterSubcontentRequestToken++;
     if (clearCache) {
       _chapterSubcontentCache.clear();
@@ -638,9 +790,14 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
 }
 
 RoadmapResponseModel? _extractRoadmapResponse(Map<String, dynamic>? raw) {
-  if (raw == null || raw.isEmpty || raw['roadmap'] is! Map) {
-    return null;
-  }
+  if (raw == null || raw.isEmpty) return null;
+
+  // Accept both:
+  //  - legacy envelope format: {roadmap: {...}, status_code: ...}
+  //  - direct backend format:  {chapters: [...], id: "roadmap_...", ...}
+  final hasLegacyEnvelope = raw['roadmap'] is Map;
+  final hasDirectChapters = raw['chapters'] is List;
+  if (!hasLegacyEnvelope && !hasDirectChapters) return null;
 
   try {
     return RoadmapResponseModel.fromJson(raw);

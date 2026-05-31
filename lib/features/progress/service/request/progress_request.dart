@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:http/http.dart' as http;
 import 'package:modern_learner_production/core/constants/api_constants.dart';
+import 'package:modern_learner_production/features/cache/generation_cache.dart';
 import 'package:modern_learner_production/features/progress/service/cache/roadmap_id_cache.dart';
 import 'package:modern_learner_production/features/progress/service/model/roadmap_model.dart';
 
@@ -12,6 +13,19 @@ Future<RoadmapResponseModel> fetchProgress(
   RoadmapGenerateRequestModel request, {
   http.Client? client,
 }) async {
+  final cacheKey = RoadmapIdCache.buildRoadmapCacheKey(
+    roadmapMode: request.roadmapMode,
+    topic: request.topic,
+    language: request.language,
+    level: request.level,
+    nativeLanguage: request.nativeLanguage,
+  );
+
+  final cached = await const GenerationCache().readRoadmap(cacheKey);
+  if (cached != null) {
+    return RoadmapResponseModel.fromRawJson(cached);
+  }
+
   final activeClient = client ?? http.Client();
 
   try {
@@ -24,27 +38,16 @@ Future<RoadmapResponseModel> fetchProgress(
       );
     }
 
-    final decoded = jsonDecode(utf8.decode(response.bodyBytes));
-    if (decoded is! Map) {
-      throw const FormatException('Roadmap response is not a JSON object.');
-    }
-
-    final roadmapResponse = RoadmapResponseModel.fromJson(
-      Map<String, dynamic>.from(decoded),
-    );
+    final rawJson = utf8.decode(response.bodyBytes);
+    final roadmapResponse = RoadmapResponseModel.fromRawJson(rawJson);
     final roadmapId = roadmapResponse.roadmap.id;
     if (roadmapId != null && roadmapId.trim().isNotEmpty) {
       await const RoadmapIdCache().saveRoadmapId(
         roadmapId: roadmapId,
-        cacheKey: RoadmapIdCache.buildRoadmapCacheKey(
-          roadmapMode: request.roadmapMode,
-          topic: request.topic,
-          language: request.language,
-          level: request.level,
-          nativeLanguage: request.nativeLanguage,
-        ),
+        cacheKey: cacheKey,
       );
     }
+    await const GenerationCache().saveRoadmap(cacheKey, rawJson);
 
     return roadmapResponse;
   } on SocketException catch (error) {
@@ -124,17 +127,7 @@ List<Uri> _roadmapGenerateUris() {
   final normalizedBaseUrl = baseUrl.endsWith('/')
       ? baseUrl.substring(0, baseUrl.length - 1)
       : baseUrl;
-  final configuredOpenRouterUrl = ApiConstants.openRouterRoadmapGenerate.trim();
-  final configuredOpenRouterUri = Uri.tryParse(configuredOpenRouterUrl);
-  final hasAbsoluteConfiguredUrl =
-      configuredOpenRouterUri != null &&
-      configuredOpenRouterUri.hasScheme &&
-      configuredOpenRouterUri.host.isNotEmpty;
-  final openRouterUrl = hasAbsoluteConfiguredUrl
-      ? configuredOpenRouterUrl
-      : '$normalizedBaseUrl/openrouter/roadmaps/generate';
-
-  final primary = Uri.parse(openRouterUrl);
+  final primary = Uri.parse('$normalizedBaseUrl/openrouter/roadmaps/generate');
   final fallback = Uri.parse(
     '$_fallbackRoadmapBaseUrl/openrouter/roadmaps/generate',
   );

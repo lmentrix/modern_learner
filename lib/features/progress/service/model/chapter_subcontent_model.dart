@@ -9,38 +9,34 @@ class ChapterSubcontentGenerateRequestModel {
     required this.chapterNumber,
     this.model,
     this.roadmapJson,
+    this.topic,
+    this.language,
+    this.level,
+    this.nativeLanguage,
   });
-
-  factory ChapterSubcontentGenerateRequestModel.fromJson(
-    Map<String, dynamic> json,
-  ) {
-    return ChapterSubcontentGenerateRequestModel(
-      roadmapId: _readString(json, const ['roadmap_id', 'roadmapId']),
-      roadmapCacheKey: _readString(json, const [
-        'roadmap_cache_key',
-        'roadmapCacheKey',
-      ]),
-      chapterNumber:
-          _readInt(json, const ['chapter_number', 'chapterNumber']) ?? 1,
-      model: _readString(json, const ['model']),
-      roadmapJson: json['roadmap_json'] is Map
-          ? Map<String, dynamic>.from(json['roadmap_json'] as Map)
-          : null,
-    );
-  }
 
   final String? roadmapId;
   final String? roadmapCacheKey;
   final int chapterNumber;
   final String? model;
-  // Sent inline so the backend can reconstruct the roadmap if it's not in its store.
+  /// Sent inline so the server can reconstruct the roadmap if the in-memory
+  /// store was cleared (e.g. after a restart).
   final Map<String, dynamic>? roadmapJson;
+  final String? topic;
+  final String? language;
+  final String? level;
+  final String? nativeLanguage;
 
   Map<String, dynamic> toJson({required String resolvedRoadmapId}) => {
     'roadmap_id': resolvedRoadmapId,
     'chapter_number': chapterNumber,
     if (model != null && model!.trim().isNotEmpty) 'model': model,
     if (roadmapJson != null) 'roadmap_json': roadmapJson,
+    if (topic != null && topic!.trim().isNotEmpty) 'topic': topic,
+    if (language != null && language!.trim().isNotEmpty) 'language': language,
+    if (level != null && level!.trim().isNotEmpty) 'level': level,
+    if (nativeLanguage != null && nativeLanguage!.trim().isNotEmpty)
+      'native_language': nativeLanguage,
   };
 
   String toRawJson({required String resolvedRoadmapId}) =>
@@ -71,7 +67,7 @@ class ChapterSubcontentResponseModel {
     }
 
     return ChapterSubcontentResponseModel(
-      statusCode: _readInt(json, const ['status_code', 'statusCode']) ?? 0,
+      statusCode: _readInt(json, const ['status_code', 'statusCode']) ?? 200,
       requestId: _readString(json, const ['request_id', 'requestId']),
       code: _readString(json, const ['code']) ?? '',
       message: _readString(json, const ['message']) ?? '',
@@ -164,6 +160,175 @@ class ChapterSubcontentModel {
       ChapterSubcontentModel.fromJson(
         Map<String, dynamic>.from(jsonDecode(source) as Map),
       );
+
+  /// Maps a backend ChapterContent object (from /ai/chapter-content/generate)
+  /// to this model by flattening its sections into subcontent items.
+  factory ChapterSubcontentModel.fromChapterContent(
+    Map<String, dynamic> json,
+  ) {
+    final chapterNumber =
+        _readInt(json, const ['chapterNumber', 'chapter_number']) ?? 0;
+    final chapterTitle =
+        _readString(json, const ['chapterTitle', 'chapter_title']) ?? '';
+    final overview =
+        _readString(json, const ['introduction', 'overview']) ?? '';
+    final id = _readString(json, const ['id']);
+    final learningObjectives = _readStringList(
+      json,
+      const ['learningObjectives', 'learning_objectives'],
+    );
+    final summary =
+        _readString(json, const ['summary']) ?? '';
+    final culturalNotes = _readStringList(
+      json,
+      const ['culturalNotes', 'cultural_notes'],
+    );
+    final tips = _readStringList(json, const ['tips']);
+
+    final subcontents = <ChapterSubcontentItemModel>[];
+    var idx = 1;
+
+    // Vocabulary
+    final vocab = _rawList(json, 'vocabulary');
+    if (vocab.isNotEmpty) {
+      final activities = vocab
+          .map((v) {
+            final word = v['word']?.toString() ?? '';
+            final translation = v['translation']?.toString() ?? '';
+            return '$word — $translation';
+          })
+          .toList();
+      subcontents.add(ChapterSubcontentItemModel(
+        subcontentNumber: idx++,
+        title: 'Vocabulary Practice',
+        subcontentType: 'vocabulary',
+        summary: 'Learn and practise new vocabulary for this chapter.',
+        objectives: learningObjectives,
+        activities: activities,
+        sourceLessons: const [],
+        estimatedMinutes: 15,
+        focusSkills: const ['vocabulary', 'pronunciation'],
+      ));
+    }
+
+    // Grammar
+    final grammar = _rawList(json, 'grammar');
+    if (grammar.isNotEmpty) {
+      final activities =
+          grammar.map((g) => g['name']?.toString() ?? '').toList();
+      subcontents.add(ChapterSubcontentItemModel(
+        subcontentNumber: idx++,
+        title: 'Grammar Study',
+        subcontentType: 'grammar',
+        summary: 'Master the grammar concepts introduced in this chapter.',
+        objectives: learningObjectives,
+        activities: activities,
+        sourceLessons: const [],
+        estimatedMinutes: 20,
+        focusSkills: const ['grammar', 'structure'],
+      ));
+    }
+
+    // Conversation
+    final conversation = _rawList(json, 'conversation');
+    if (conversation.isNotEmpty) {
+      final activities = conversation
+          .map((c) => c['title']?.toString() ?? '')
+          .toList();
+      subcontents.add(ChapterSubcontentItemModel(
+        subcontentNumber: idx++,
+        title: 'Conversation Practice',
+        subcontentType: 'conversation',
+        summary: 'Build real-world speaking skills through guided dialogue.',
+        objectives: learningObjectives,
+        activities: activities,
+        sourceLessons: const [],
+        estimatedMinutes: 20,
+        focusSkills: const ['speaking', 'listening'],
+      ));
+    }
+
+    // Reading
+    final reading = _rawList(json, 'reading');
+    if (reading.isNotEmpty) {
+      final activities =
+          reading.map((r) => r['title']?.toString() ?? '').toList();
+      subcontents.add(ChapterSubcontentItemModel(
+        subcontentNumber: idx++,
+        title: 'Reading Practice',
+        subcontentType: 'reading',
+        summary: 'Develop reading comprehension through authentic passages.',
+        objectives: learningObjectives,
+        activities: activities,
+        sourceLessons: const [],
+        estimatedMinutes: 15,
+        focusSkills: const ['reading', 'comprehension'],
+      ));
+    }
+
+    // Listening
+    final listening = _rawList(json, 'listening');
+    if (listening.isNotEmpty) {
+      final activities =
+          listening.map((l) => l['title']?.toString() ?? '').toList();
+      subcontents.add(ChapterSubcontentItemModel(
+        subcontentNumber: idx++,
+        title: 'Listening Practice',
+        subcontentType: 'listening',
+        summary: 'Sharpen your ear with curated listening exercises.',
+        objectives: learningObjectives,
+        activities: activities,
+        sourceLessons: const [],
+        estimatedMinutes: 15,
+        focusSkills: const ['listening', 'comprehension'],
+      ));
+    }
+
+    // Exercises (always present per schema)
+    final exercises = _rawList(json, 'exercises');
+    if (exercises.isNotEmpty) {
+      final activities =
+          exercises.map((e) => e['title']?.toString() ?? '').toList();
+      subcontents.add(ChapterSubcontentItemModel(
+        subcontentNumber: idx++,
+        title: 'Practice Exercises',
+        subcontentType: 'exercise',
+        summary: 'Reinforce learning with targeted practice questions.',
+        objectives: learningObjectives,
+        activities: activities,
+        sourceLessons: const [],
+        estimatedMinutes: 20,
+        focusSkills: const ['recall', 'application'],
+      ));
+    }
+
+    // Chapter review / summary
+    if (summary.isNotEmpty || culturalNotes.isNotEmpty || tips.isNotEmpty) {
+      subcontents.add(ChapterSubcontentItemModel(
+        subcontentNumber: idx,
+        title: 'Chapter Review',
+        subcontentType: 'review',
+        summary: summary.isNotEmpty ? summary : 'Review and consolidate.',
+        objectives: learningObjectives,
+        activities: [
+          ...culturalNotes.map((n) => '🌍 $n'),
+          ...tips.map((t) => '💡 $t'),
+        ],
+        sourceLessons: const [],
+        estimatedMinutes: 10,
+        focusSkills: const ['review', 'retention'],
+      ));
+    }
+
+    return ChapterSubcontentModel(
+      courseType: 'school',
+      chapterNumber: chapterNumber,
+      chapterTitle: chapterTitle,
+      overview: overview,
+      subcontents: subcontents,
+      id: id,
+    );
+  }
 
   final String courseType;
   final int chapterNumber;
@@ -315,5 +480,15 @@ List<String> _readStringList(Map<String, dynamic> json, List<String> keys) {
     }
   }
 
+  return const [];
+}
+
+/// Helper used by [ChapterSubcontentModel.fromChapterContent] to extract a
+/// typed list from a single top-level key (backend uses camelCase).
+List<Map<String, dynamic>> _rawList(Map<String, dynamic> json, String key) {
+  final value = json[key];
+  if (value is List) {
+    return value.whereType<Map>().map(Map<String, dynamic>.from).toList();
+  }
   return const [];
 }

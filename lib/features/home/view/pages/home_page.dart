@@ -32,7 +32,11 @@ class _HomePageState extends State<HomePage> {
   final _scrollCtrl = ScrollController();
   final ProfileService _profileService = ProfileService();
   final Map<String, XpBloc> _xpBlocByCourse = {};
-  late final Future<String?> _nameFuture;
+  late final Future<({String name, bool isVip})> _profileFuture =
+      _profileService.getCurrentProfile().then((p) => (
+            name: p?.name.trim().isNotEmpty == true ? p!.name.trim() : 'Learner',
+            isVip: p?.role == 'vip',
+          ));
 
   static const List<int> _xpLevelThresholds = [
     0,
@@ -58,7 +62,6 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    _nameFuture = _profileService.getCurrentUserName();
     LearningActivityMonitor.instance.refresh();
   }
 
@@ -300,15 +303,15 @@ class _HomePageState extends State<HomePage> {
               SliverPadding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 sliver: SliverToBoxAdapter(
-                  child: FutureBuilder<String?>(
-                    future: _nameFuture,
+                  child: FutureBuilder<({String name, bool isVip})>(
+                    future: _profileFuture,
                     builder: (context, snapshot) {
-                      final displayName = snapshot.data?.trim();
+                      final name = snapshot.data?.name ?? 'Learner';
+                      final isVip = snapshot.data?.isVip ?? false;
 
                       return HomeHeader(
-                        displayName: displayName == null || displayName.isEmpty
-                            ? 'Learner'
-                            : displayName,
+                        displayName: name,
+                        isVip: isVip,
                         onAvatarTap: _onAvatarTap,
                         onStreakTap: () {},
                       );

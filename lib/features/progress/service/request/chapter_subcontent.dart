@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:http/http.dart' as http;
 import 'package:modern_learner_production/core/constants/api_constants.dart';
+import 'package:modern_learner_production/features/cache/generation_cache.dart';
 import 'package:modern_learner_production/features/progress/service/cache/roadmap_id_cache.dart';
 import 'package:modern_learner_production/features/progress/service/model/chapter_subcontent_model.dart';
 
@@ -12,16 +13,26 @@ Future<ChapterSubcontentResponseModel> fetchChapterSubcontent(
   ChapterSubcontentGenerateRequestModel request, {
   http.Client? client,
 }) async {
+  // Resolve the roadmap ID: prefer the one on the request, then the cache
+  // keyed by this course, then the most-recently-generated one.
   final resolvedRoadmapId =
       _sanitize(request.roadmapId) ??
       const RoadmapIdCache().readRoadmapId(cacheKey: request.roadmapCacheKey) ??
       const RoadmapIdCache().readRoadmapId();
 
-  if (resolvedRoadmapId == null) {
-    throw const ChapterSubcontentRequestException(
-      'No roadmap id was provided and no cached roadmap id was found. '
-      'Generate the roadmap first so the roadmap id can be cached.',
-    );
+  // If we have no ID at all, roadmap_json must be present — the server will
+  // use it as a fallback. Generate a placeholder ID so validation passes.
+  final effectiveRoadmapId = resolvedRoadmapId ?? 'unknown';
+
+  // Use the stable roadmap cache key (topic/language/level) rather than the
+  // roadmap ID, which can differ between sessions (DB vs. freshly generated).
+  final subcontentCacheKey = request.roadmapCacheKey ?? effectiveRoadmapId;
+  final cached = await const GenerationCache().readChapterSubcontent(
+    roadmapKey: subcontentCacheKey,
+    chapterNumber: request.chapterNumber,
+  );
+  if (cached != null) {
+    return ChapterSubcontentResponseModel.fromRawJson(cached);
   }
 
   final activeClient = client ?? http.Client();
@@ -29,7 +40,7 @@ Future<ChapterSubcontentResponseModel> fetchChapterSubcontent(
   try {
     final response = await _postChapterSubcontent(
       activeClient,
-      request.toJson(resolvedRoadmapId: resolvedRoadmapId),
+      request.toJson(resolvedRoadmapId: effectiveRoadmapId),
     );
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
@@ -39,16 +50,14 @@ Future<ChapterSubcontentResponseModel> fetchChapterSubcontent(
       );
     }
 
-    final decoded = jsonDecode(utf8.decode(response.bodyBytes));
-    if (decoded is! Map) {
-      throw const FormatException(
-        'Chapter subcontent response is not a JSON object.',
-      );
-    }
-
-    return ChapterSubcontentResponseModel.fromJson(
-      Map<String, dynamic>.from(decoded),
+    final rawJson = utf8.decode(response.bodyBytes);
+    final result = ChapterSubcontentResponseModel.fromRawJson(rawJson);
+    await const GenerationCache().saveChapterSubcontent(
+      roadmapKey: subcontentCacheKey,
+      chapterNumber: request.chapterNumber,
+      rawJson: rawJson,
     );
+    return result;
   } on SocketException catch (error) {
     throw ChapterSubcontentRequestException(
       'Could not reach the FastAPI chapter subcontent API at '
@@ -127,17 +136,9 @@ List<Uri> _chapterSubcontentUris() {
   final normalizedBaseUrl = baseUrl.endsWith('/')
       ? baseUrl.substring(0, baseUrl.length - 1)
       : baseUrl;
-  final configuredUrl = ApiConstants.openRouterChapterSubcontentGenerate.trim();
-  final configuredUri = Uri.tryParse(configuredUrl);
-  final hasAbsoluteConfiguredUrl =
-      configuredUri != null &&
-      configuredUri.hasScheme &&
-      configuredUri.host.isNotEmpty;
-  final endpointUrl = hasAbsoluteConfiguredUrl
-      ? configuredUrl
-      : '$normalizedBaseUrl/openrouter/chapter-subcontent/generate';
-
-  final primary = Uri.parse(endpointUrl);
+  final primary = Uri.parse(
+    '$normalizedBaseUrl/openrouter/chapter-subcontent/generate',
+  );
   final fallback = Uri.parse(
     '$_fallbackRoadmapBaseUrl/openrouter/chapter-subcontent/generate',
   );
@@ -187,9 +188,7 @@ Object? _jsonDecodeSafe(String raw) {
 
 String? _sanitize(String? value) {
   final trimmed = value?.trim();
-  if (trimmed == null || trimmed.isEmpty) {
-    return null;
-  }
+  if (trimmed == null || trimmed.isEmpty) return null;
   return trimmed;
 }
 

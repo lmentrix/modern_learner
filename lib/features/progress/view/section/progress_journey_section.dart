@@ -15,6 +15,7 @@ class ProgressJourneySection extends StatelessWidget {
     this.selectedChapterId,
     this.chapterSubcontentResponse,
     this.isLoadingChapterSubcontent = false,
+    this.isLoadingFromCache = false,
     this.chapterSubcontentError,
     this.onRetryTap,
     this.onSubcontentTap,
@@ -26,6 +27,7 @@ class ProgressJourneySection extends StatelessWidget {
   final String? selectedChapterId;
   final ChapterSubcontentResponseModel? chapterSubcontentResponse;
   final bool isLoadingChapterSubcontent;
+  final bool isLoadingFromCache;
   final String? chapterSubcontentError;
   final VoidCallback? onRetryTap;
   final ValueChanged<ChapterSubcontentItemModel>? onSubcontentTap;
@@ -59,6 +61,9 @@ class ProgressJourneySection extends StatelessWidget {
                 isLoadingSubcontent:
                     data.moduleSteps[i].id == selectedChapterId &&
                         isLoadingChapterSubcontent,
+                isLoadingFromCache:
+                    data.moduleSteps[i].id == selectedChapterId &&
+                        isLoadingFromCache,
                 subcontentError:
                     data.moduleSteps[i].id == selectedChapterId
                         ? chapterSubcontentError

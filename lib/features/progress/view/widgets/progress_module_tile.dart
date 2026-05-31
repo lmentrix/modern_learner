@@ -14,6 +14,7 @@ class ProgressModuleTile extends StatefulWidget {
     this.isLast = false,
     this.chapterSubcontentResponse,
     this.isLoadingSubcontent = false,
+    this.isLoadingFromCache = false,
     this.subcontentError,
     this.onRetrySubcontent,
     this.onSubcontentTap,
@@ -26,6 +27,7 @@ class ProgressModuleTile extends StatefulWidget {
   final bool isLast;
   final ChapterSubcontentResponseModel? chapterSubcontentResponse;
   final bool isLoadingSubcontent;
+  final bool isLoadingFromCache;
   final String? subcontentError;
   final VoidCallback? onRetrySubcontent;
   final ValueChanged<ChapterSubcontentItemModel>? onSubcontentTap;
@@ -149,6 +151,7 @@ class _ProgressModuleTileState extends State<ProgressModuleTile>
                             step: step,
                             response: widget.chapterSubcontentResponse,
                             isLoading: widget.isLoadingSubcontent,
+                            isLoadingFromCache: widget.isLoadingFromCache,
                             errorMessage: widget.subcontentError,
                             onRetry: widget.onRetrySubcontent,
                             onSubcontentTap: widget.onSubcontentTap,
@@ -500,6 +503,7 @@ class _SubcontentPanel extends StatelessWidget {
     required this.step,
     required this.response,
     required this.isLoading,
+    this.isLoadingFromCache = false,
     required this.errorMessage,
     required this.onRetry,
     required this.onSubcontentTap,
@@ -509,6 +513,7 @@ class _SubcontentPanel extends StatelessWidget {
   final ProgressModuleStep step;
   final ChapterSubcontentResponseModel? response;
   final bool isLoading;
+  final bool isLoadingFromCache;
   final String? errorMessage;
   final VoidCallback? onRetry;
   final ValueChanged<ChapterSubcontentItemModel>? onSubcontentTap;
@@ -524,7 +529,7 @@ class _SubcontentPanel extends StatelessWidget {
 
   Widget _buildBody() {
     if (isLoading) {
-      return _LoadingRow(step: step);
+      return _LoadingRow(step: step, isGenerating: !isLoadingFromCache);
     }
     if (errorMessage != null) {
       return _ErrorRow(step: step, message: errorMessage!, onRetry: onRetry);
@@ -567,12 +572,20 @@ class _SubcontentPanel extends StatelessWidget {
 // ── Loading row ───────────────────────────────────────────────────────────────
 
 class _LoadingRow extends StatelessWidget {
-  const _LoadingRow({required this.step});
+  const _LoadingRow({required this.step, this.isGenerating = true});
 
   final ProgressModuleStep step;
 
+  /// True when a network generation is in progress.
+  /// False when only reading from the local disk cache.
+  final bool isGenerating;
+
   @override
   Widget build(BuildContext context) {
+    final label = isGenerating
+        ? 'Generating chapter ${step.chapterNumber} build…'
+        : 'Loading…';
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
       child: Row(
@@ -582,12 +595,16 @@ class _LoadingRow extends StatelessWidget {
             height: 14,
             child: CircularProgressIndicator(
               strokeWidth: 1.8,
-              valueColor: AlwaysStoppedAnimation<Color>(step.toneColor),
+              valueColor: AlwaysStoppedAnimation<Color>(
+                isGenerating
+                    ? step.toneColor
+                    : AppColors.onSurfaceVariant,
+              ),
             ),
           ),
           const SizedBox(width: 10),
           Text(
-            'Generating chapter ${step.chapterNumber} build…',
+            label,
             style: GoogleFonts.inter(
               fontSize: 12,
               color: AppColors.onSurfaceVariant,
@@ -727,7 +744,7 @@ class _SubcontentRow extends StatelessWidget {
                   ),
                   child: Center(
                     child: isCompleted
-                        ? Icon(
+                        ? const Icon(
                             Icons.check_rounded,
                             size: 13,
                             color: AppColors.tertiary,
