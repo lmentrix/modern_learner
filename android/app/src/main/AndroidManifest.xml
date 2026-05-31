@@ -2,6 +2,10 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- Required on Android 13+ (API 33+) to show notifications -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Speech recognition & microphone -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>
     <application
         android:label="modern_learner_production"
         android:name="${applicationName}"
@@ -48,6 +52,13 @@
             </intent-filter>
         </service>
     </application>
+
+    <!-- flutter_tts: allows querying the TTS engine on Android 11+ -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
+    </queries>
     <queries>
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>

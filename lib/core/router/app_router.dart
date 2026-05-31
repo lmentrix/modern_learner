@@ -102,10 +102,15 @@ abstract final class AppRouter {
       GoRoute(
         path: Routes.chapterExercise,
         parentNavigatorKey: _rootNavigatorKey,
-        pageBuilder: (context, state) => _slideUp(
-          state.pageKey,
-          ChapterExercisePage(args: state.extra as ChapterExercisePageArgs),
-        ),
+        pageBuilder: (context, state) {
+          final args = state.extra;
+          return _slideUp(
+            state.pageKey,
+            args is ChapterExercisePageArgs
+                ? ChapterExercisePage(args: args)
+                : const _AutoPopPage(),
+          );
+        },
       ),
 
       // ── Shell (bottom nav) ──────────────────────────────────────────────────
@@ -158,4 +163,28 @@ abstract final class AppRouter {
           child: child,
         ),
   );
+}
+
+/// Shown when the exercise route is built without valid args (e.g. after a
+/// hot reload that loses navigation state). Pops itself on the next frame so
+/// the user lands back on the previous screen without seeing anything.
+class _AutoPopPage extends StatefulWidget {
+  const _AutoPopPage();
+
+  @override
+  State<_AutoPopPage> createState() => _AutoPopPageState();
+}
+
+class _AutoPopPageState extends State<_AutoPopPage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && context.canPop()) context.pop();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) =>
+      const Scaffold(backgroundColor: Color(0xFF0C0E17));
 }
