@@ -41,7 +41,7 @@ class ExerciseGroupCard extends StatelessWidget {
   final ValueChanged<String> onMatchLeftSelected;
   final ValueChanged<String> onMatchRightSelected;
   final ValueChanged<String> onMatchCleared;
-  final ValueChanged<String> onQuestionChecked;
+  final void Function(String key, {required bool isCorrect}) onQuestionChecked;
   final ValueChanged<String> onMatchChecked;
 
   @override

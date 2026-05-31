@@ -94,10 +94,12 @@ class _NewLessonComposerSectionState extends State<NewLessonComposerSection> {
 
     ExploreCoursesService.instance.addCourse(course);
 
-    unawaited(pushNotificationService.notifyNewVoiceLesson(
-      language: _selectedLanguage!,
-      difficulty: _selectedDifficulty,
-    ));
+    unawaited(
+      pushNotificationService.notifyNewVoiceLesson(
+        language: _selectedLanguage!,
+        difficulty: _selectedDifficulty,
+      ),
+    );
 
     navigator.pop();
     router.go(Routes.progress, extra: course);

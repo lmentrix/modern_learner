@@ -68,16 +68,27 @@ class RoadmapResponseModel {
     this.usage,
     this.rawContent,
     this.prompt,
+    this.rawJson,
   });
 
   factory RoadmapResponseModel.fromJson(Map<String, dynamic> json) {
-    final roadmapJson = _readMap(json, const ['roadmap']);
+    // FastAPI /openrouter/roadmaps/generate returns an envelope:
+    // {status_code, roadmap: {...}, ...}
+    // The inner roadmap can be nested under 'roadmap'.
+    // Direct format (chapters at top level) is also accepted as a fallback.
+    Map<String, dynamic>? roadmapJson = _readMap(json, const ['roadmap']);
+
     if (roadmapJson == null) {
-      throw const FormatException('Missing roadmap payload.');
+      // Fallback: the whole response is the roadmap (e.g. stored rawJson).
+      if (json['chapters'] is List) {
+        roadmapJson = json;
+      } else {
+        throw const FormatException('Missing roadmap payload.');
+      }
     }
 
     return RoadmapResponseModel(
-      statusCode: _readInt(json, const ['status_code', 'statusCode']) ?? 0,
+      statusCode: _readInt(json, const ['status_code', 'statusCode']) ?? 200,
       requestId: _readString(json, const ['request_id', 'requestId']),
       code: _readString(json, const ['code']) ?? '',
       message: _readString(json, const ['message']) ?? '',
@@ -91,6 +102,7 @@ class RoadmapResponseModel {
           : RoadmapUsageModel.fromJson(_readMap(json, const ['usage'])!),
       rawContent: _readString(json, const ['raw_content', 'rawContent']),
       prompt: _readString(json, const ['prompt']),
+      rawJson: json,
     );
   }
 
@@ -110,6 +122,9 @@ class RoadmapResponseModel {
   final RoadmapUsageModel? usage;
   final String? rawContent;
   final String? prompt;
+  /// The original JSON from the backend — stored so it can be forwarded verbatim
+  /// to the /ai/chapter-content/generate endpoint as the `roadmap` field.
+  final Map<String, dynamic>? rawJson;
 
   Map<String, dynamic> toJson() => {
     'status_code': statusCode,
@@ -146,7 +161,7 @@ class RoadmapModel {
   factory RoadmapModel.fromJson(Map<String, dynamic> json) {
     return RoadmapModel(
       title: _readString(json, const ['title']) ?? '',
-      summary: _readString(json, const ['summary']) ?? '',
+      summary: _readString(json, const ['summary', 'description']) ?? '',
       targetLanguage:
           _readString(json, const ['target_language', 'targetLanguage']) ?? '',
       level: _readString(json, const ['level']) ?? '',
@@ -220,9 +235,13 @@ class RoadmapChapterModel {
       description: _readString(json, const ['description']) ?? '',
       skills: _readStringList(json, const ['skills']),
       lessons: _readList(json, const ['lessons'])
+          .asMap()
+          .entries
           .map(
-            (lesson) =>
-                RoadmapLessonModel.fromJson(Map<String, dynamic>.from(lesson)),
+            (e) => RoadmapLessonModel.fromJson(
+              Map<String, dynamic>.from(e.value),
+              indexFallback: e.key,
+            ),
           )
           .toList(),
     );
@@ -252,10 +271,14 @@ class RoadmapLessonModel {
     required this.objectives,
   });
 
-  factory RoadmapLessonModel.fromJson(Map<String, dynamic> json) {
+  factory RoadmapLessonModel.fromJson(
+    Map<String, dynamic> json, {
+    int indexFallback = 0,
+  }) {
     return RoadmapLessonModel(
       lessonNumber:
-          _readInt(json, const ['lesson_number', 'lessonNumber']) ?? 0,
+          _readInt(json, const ['lesson_number', 'lessonNumber']) ??
+          (indexFallback + 1),
       title: _readString(json, const ['title']) ?? '',
       type: _readString(json, const ['type']) ?? '',
       description: _readString(json, const ['description']) ?? '',

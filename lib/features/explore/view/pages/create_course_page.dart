@@ -72,7 +72,7 @@ class _CreateCoursePageState extends State<CreateCoursePage> {
       final course = ProgressCourseSelection(
         title: widget.subject.name,
         topic: _topicName,
-        roadmapLanguage: _topicName,
+        roadmapLanguage: _selectedLanguage,
         level: _selectedLevel,
         nativeLanguage: _selectedLanguage,
         courseType: ProgressCourseType.school,
