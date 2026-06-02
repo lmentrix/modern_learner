@@ -9,7 +9,7 @@ const corsHeaders = {
 const STRIPE_SECRET =
   Deno.env.get("STRIPE_SECRET") ?? Deno.env.get("STRIPE_SECRET_KEY");
 const STRIPE_PRICE_ID = Deno.env.get("STRIPE_PRICE_ID");
-const APP_DEEP_LINK = Deno.env.get("APP_DEEP_LINK") ?? "modernlearner://";
+const APP_DEEP_LINK = Deno.env.get("APP_DEEP_LINK") ?? "modernlearner:///";
 
 if (!STRIPE_SECRET) {
   throw new Error(
@@ -25,6 +25,15 @@ const stripe = new Stripe(STRIPE_SECRET, {
   apiVersion: "2024-06-20",
   httpClient: Stripe.createFetchHttpClient(),
 });
+
+function appDeepLink(path: string): string {
+  const base = APP_DEEP_LINK.endsWith("://")
+    ? `${APP_DEEP_LINK}/`
+    : APP_DEEP_LINK.endsWith("/")
+    ? APP_DEEP_LINK
+    : `${APP_DEEP_LINK}/`;
+  return `${base}${path.replace(/^\//, "")}`;
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -98,8 +107,8 @@ Deno.serve(async (req) => {
       customer: customerId,
       mode: "subscription",
       line_items: [{ price: STRIPE_PRICE_ID, quantity: 1 }],
-      success_url: `${APP_DEEP_LINK}subscription/success`,
-      cancel_url: `${APP_DEEP_LINK}subscription/cancel`,
+      success_url: appDeepLink("/subscription/success"),
+      cancel_url: appDeepLink("/subscription/cancel"),
       metadata: { user_id: user.id },
       subscription_data: { metadata: { user_id: user.id } },
     });

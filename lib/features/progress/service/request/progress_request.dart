@@ -21,9 +21,18 @@ Future<RoadmapResponseModel> fetchProgress(
     nativeLanguage: request.nativeLanguage,
   );
 
-  final cached = await const GenerationCache().readRoadmap(cacheKey);
+  const generationCache = GenerationCache();
+  final cached = await generationCache.readRoadmap(cacheKey);
   if (cached != null) {
-    return RoadmapResponseModel.fromRawJson(cached);
+    try {
+      final cachedResponse = RoadmapResponseModel.fromRawJson(cached);
+      if (!_isStaleGeneratedRoadmap(cachedResponse)) {
+        return cachedResponse;
+      }
+      await generationCache.clearRoadmap(cacheKey);
+    } catch (_) {
+      await generationCache.clearRoadmap(cacheKey);
+    }
   }
 
   final activeClient = client ?? http.Client();
@@ -47,7 +56,7 @@ Future<RoadmapResponseModel> fetchProgress(
         cacheKey: cacheKey,
       );
     }
-    await const GenerationCache().saveRoadmap(cacheKey, rawJson);
+    await generationCache.saveRoadmap(cacheKey, rawJson);
 
     return roadmapResponse;
   } on SocketException catch (error) {
@@ -173,6 +182,19 @@ Object? jsonDecodeSafe(String raw) {
   } catch (_) {
     return null;
   }
+}
+
+bool _isStaleGeneratedRoadmap(RoadmapResponseModel response) {
+  final code = response.code.toLowerCase();
+  final model = response.model.toLowerCase();
+  final message = response.message.toLowerCase();
+  final summary = response.roadmap.summary.toLowerCase();
+  return response.mocked ||
+      code.contains('mock') ||
+      code.contains('offline_fallback') ||
+      model == 'offline-fallback' ||
+      message.contains('mock roadmap') ||
+      summary.contains('deterministic offline');
 }
 
 class RoadmapRequestException implements Exception {

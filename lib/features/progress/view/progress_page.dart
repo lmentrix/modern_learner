@@ -510,7 +510,8 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
     ProgressCourseSelection course,
   ) async {
     final existingResponse = _extractRoadmapResponse(course.roadmapJson);
-    if (existingResponse != null) {
+    if (existingResponse != null &&
+        !_isStaleRoadmapResponse(existingResponse)) {
       return existingResponse;
     }
 
@@ -829,6 +830,19 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
       _chapterSubcontentCache.clear();
     }
   }
+}
+
+bool _isStaleRoadmapResponse(RoadmapResponseModel response) {
+  final code = response.code.toLowerCase();
+  final model = response.model.toLowerCase();
+  final message = response.message.toLowerCase();
+  final summary = response.roadmap.summary.toLowerCase();
+  return response.mocked ||
+      code.contains('mock') ||
+      code.contains('offline_fallback') ||
+      model == 'offline-fallback' ||
+      message.contains('mock roadmap') ||
+      summary.contains('deterministic offline');
 }
 
 RoadmapResponseModel? _extractRoadmapResponse(Map<String, dynamic>? raw) {
