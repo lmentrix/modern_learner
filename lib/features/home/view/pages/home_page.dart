@@ -29,14 +29,13 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   final _scrollCtrl = ScrollController();
   final ProfileService _profileService = ProfileService();
   final Map<String, XpBloc> _xpBlocByCourse = {};
-  late final Future<String> _profileNameFuture =
-      _profileService.getCurrentProfile().then((p) {
-        // Seed VIP status into the shared service while we have the profile.
-        SubscriptionService.instance.isVip.value = p?.role == 'vip';
+  late final Future<String> _profileNameFuture = _profileService
+      .getCurrentProfile()
+      .then((p) {
         final profileName = p?.name.trim();
         return profileName != null && profileName.isNotEmpty
             ? profileName
@@ -67,7 +66,16 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     LearningActivityMonitor.instance.refresh();
+    SubscriptionService.instance.refresh();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      SubscriptionService.instance.refresh();
+    }
   }
 
   void _showDeleteConfirmation(ProgressCourseSelection course) {
@@ -197,6 +205,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     for (final bloc in _xpBlocByCourse.values) {
       bloc.close();
     }

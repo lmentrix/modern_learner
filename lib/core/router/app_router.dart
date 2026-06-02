@@ -18,6 +18,7 @@ import 'package:modern_learner_production/features/profile/view/pages/profile_pa
 import 'package:modern_learner_production/features/progress/service/request/exercise_request.dart';
 import 'package:modern_learner_production/features/progress/view/chapter_exercise_page.dart';
 import 'package:modern_learner_production/features/progress/view/progress_page.dart';
+import 'package:modern_learner_production/features/subscription/view/subscription_page.dart';
 
 abstract final class Routes {
   static const home = '/';
@@ -31,6 +32,8 @@ abstract final class Routes {
   static const learningSubjectDetail = '/learning-subject-detail';
   static const createCourse = '/create-course';
   static const chapterExercise = '/chapter-exercise';
+  static const subscriptionSuccess = '/subscription/success';
+  static const subscriptionCancel = '/subscription/cancel';
 
   static const _publicRoutes = {login, signup};
   static bool isPublic(String location) => _publicRoutes.contains(location);
@@ -114,6 +117,18 @@ abstract final class AppRouter {
       ),
 
       // ── Shell (bottom nav) ──────────────────────────────────────────────────
+      GoRoute(
+        path: Routes.subscriptionSuccess,
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) =>
+            _slideUp(state.pageKey, const SubscriptionPage()),
+      ),
+      GoRoute(
+        path: Routes.subscriptionCancel,
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) =>
+            _slideUp(state.pageKey, const SubscriptionPage()),
+      ),
       ShellRoute(
         builder: (context, state, child) {
           var idx = 0;

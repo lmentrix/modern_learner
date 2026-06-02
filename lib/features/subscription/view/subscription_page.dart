@@ -22,6 +22,8 @@ class _SubscriptionPageState extends State<SubscriptionPage>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _refreshStatus();
+    Future<void>.delayed(const Duration(seconds: 2), _refreshStatus);
   }
 
   @override
