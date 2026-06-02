@@ -3,6 +3,7 @@ import 'package:modern_learner_production/core/models/user_progress.dart';
 import 'package:modern_learner_production/features/achievement/data/achievemenet_data.dart';
 import 'package:modern_learner_production/features/achievement/model/achievement_model.dart';
 import 'package:modern_learner_production/features/achievement/service/achievement_service.dart';
+import 'package:modern_learner_production/features/profile/service/streak_service.dart';
 import 'package:modern_learner_production/features/profile/view/section/profile_achievement_section.dart';
 import 'package:modern_learner_production/features/profile/view/widgets/profile_achievement_badge_row.dart';
 import 'package:modern_learner_production/features/profile/view/widgets/profile_achievement_error_placeholder.dart';
@@ -26,12 +27,14 @@ class ProfileAchievementSectionState extends State<ProfileAchievementSection> {
     _loadFromSupabase();
     CourseXpService.instance.totalExerciseXp.addListener(_onXpChanged);
     CourseXpService.instance.version.addListener(_onVersionChanged);
+    StreakService.instance.currentStreak.addListener(_onStreakChanged);
   }
 
   @override
   void dispose() {
     CourseXpService.instance.totalExerciseXp.removeListener(_onXpChanged);
     CourseXpService.instance.version.removeListener(_onVersionChanged);
+    StreakService.instance.currentStreak.removeListener(_onStreakChanged);
     super.dispose();
   }
 
@@ -45,6 +48,10 @@ class ProfileAchievementSectionState extends State<ProfileAchievementSection> {
 
   void _onVersionChanged() {
     _loadFromSupabase();
+  }
+
+  void _onStreakChanged() {
+    _evaluateLocally();
   }
 
   // ── Local evaluation (instant, no network) ───────────────────────────────────
@@ -87,7 +94,7 @@ class ProfileAchievementSectionState extends State<ProfileAchievementSection> {
       totalXp: totalXp,
       level: 1,
       gems: 0,
-      streak: 0,
+      streak: StreakService.instance.currentStreak.value,
       completedLessons: {
         for (var i = 0; i < totalExercises; i++) 'ex_$i': DateTime.now(),
       },

@@ -6,6 +6,7 @@ import 'package:modern_learner_production/features/profile/data/profile_preferen
 import 'package:modern_learner_production/features/profile/view/widgets/profile_on_off_chip.dart';
 import 'package:modern_learner_production/features/profile/view/widgets/profile_section_label.dart';
 import 'package:modern_learner_production/features/profile/view/widgets/setting_item.dart';
+import 'package:modern_learner_production/features/subscription/service/subscription_service.dart';
 
 class ProfileSettingsSection extends StatelessWidget {
   const ProfileSettingsSection({
@@ -13,6 +14,7 @@ class ProfileSettingsSection extends StatelessWidget {
     required this.identity,
     required this.preferences,
     required this.onAccountTap,
+    required this.onSubscriptionTap,
     required this.onNotificationsTap,
     required this.onAppearanceTap,
     required this.onLanguageTap,
@@ -24,6 +26,7 @@ class ProfileSettingsSection extends StatelessWidget {
   final ProfileIdentity identity;
   final ProfilePreferences preferences;
   final VoidCallback onAccountTap;
+  final VoidCallback onSubscriptionTap;
   final VoidCallback onNotificationsTap;
   final VoidCallback onAppearanceTap;
   final VoidCallback onLanguageTap;
@@ -54,6 +57,19 @@ class ProfileSettingsSection extends StatelessWidget {
           subtitle: _accountSubtitle,
           accentColor: AppColors.primary,
           onTap: onAccountTap,
+        ),
+        const SizedBox(height: 8),
+        ValueListenableBuilder<bool>(
+          valueListenable: SubscriptionService.instance.isVip,
+          builder: (context, isVip, _) {
+            return SettingItem(
+              icon: Icons.workspace_premium_rounded,
+              title: 'Subscription',
+              subtitle: isVip ? '👑 VIP — Active' : 'Upgrade to VIP',
+              accentColor: const Color(0xFFFFD700),
+              onTap: onSubscriptionTap,
+            );
+          },
         ),
         const SizedBox(height: 8),
         SettingItem(
