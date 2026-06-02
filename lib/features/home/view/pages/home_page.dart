@@ -20,6 +20,7 @@ import 'package:modern_learner_production/features/home/view/widgets/progress_ov
 import 'package:modern_learner_production/features/profile/service/profile_service.dart';
 import 'package:modern_learner_production/features/profile/state/learning_activity_monitor.dart';
 import 'package:modern_learner_production/features/progress/bloc/xp_bloc.dart';
+import 'package:modern_learner_production/features/subscription/service/subscription_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -32,15 +33,14 @@ class _HomePageState extends State<HomePage> {
   final _scrollCtrl = ScrollController();
   final ProfileService _profileService = ProfileService();
   final Map<String, XpBloc> _xpBlocByCourse = {};
-  late final Future<({String name, bool isVip})> _profileFuture =
+  late final Future<String> _profileNameFuture =
       _profileService.getCurrentProfile().then((p) {
+        // Seed VIP status into the shared service while we have the profile.
+        SubscriptionService.instance.isVip.value = p?.role == 'vip';
         final profileName = p?.name.trim();
-        return (
-          name: profileName != null && profileName.isNotEmpty
-              ? profileName
-              : 'Learner',
-          isVip: p?.role == 'vip',
-        );
+        return profileName != null && profileName.isNotEmpty
+            ? profileName
+            : 'Learner';
       });
 
   static const List<int> _xpLevelThresholds = [
@@ -309,17 +309,21 @@ class _HomePageState extends State<HomePage> {
               SliverPadding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 sliver: SliverToBoxAdapter(
-                  child: FutureBuilder<({String name, bool isVip})>(
-                    future: _profileFuture,
+                  child: FutureBuilder<String>(
+                    future: _profileNameFuture,
                     builder: (context, snapshot) {
-                      final name = snapshot.data?.name ?? 'Learner';
-                      final isVip = snapshot.data?.isVip ?? false;
+                      final name = snapshot.data ?? 'Learner';
 
-                      return HomeHeader(
-                        displayName: name,
-                        isVip: isVip,
-                        onAvatarTap: _onAvatarTap,
-                        onStreakTap: () {},
+                      return ValueListenableBuilder<bool>(
+                        valueListenable: SubscriptionService.instance.isVip,
+                        builder: (context, isVip, _) {
+                          return HomeHeader(
+                            displayName: name,
+                            isVip: isVip,
+                            onAvatarTap: _onAvatarTap,
+                            onStreakTap: () {},
+                          );
+                        },
                       );
                     },
                   ),

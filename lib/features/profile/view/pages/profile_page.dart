@@ -24,6 +24,8 @@ import 'package:modern_learner_production/features/profile/view/section/profile_
 import 'package:modern_learner_production/features/profile/view/section/profile_version_footer_section.dart';
 import 'package:modern_learner_production/features/profile/view/widgets/edit_profile_sheet.dart';
 import 'package:modern_learner_production/features/progress/service/course_xp_service.dart';
+import 'package:modern_learner_production/features/subscription/service/subscription_service.dart';
+import 'package:modern_learner_production/features/subscription/view/subscription_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -43,12 +45,20 @@ class _ProfilePageState extends State<ProfilePage> {
     super.initState();
     _supabaseProfile = ProfileService().getCurrentProfile();
     LearningActivityMonitor.instance.refresh();
+    SubscriptionService.instance.refresh();
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _showSubscriptionPage() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const SubscriptionPage()),
+    ).then((_) => SubscriptionService.instance.refresh());
   }
 
   void _showAccountSheet() {
@@ -246,6 +256,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       identity: identity,
                       preferences: _preferences,
                       onAccountTap: _showAccountSheet,
+                      onSubscriptionTap: _showSubscriptionPage,
                       onNotificationsTap: _showNotificationsSheet,
                       onAppearanceTap: _showAppearanceSheet,
                       onLanguageTap: _showLanguageSheet,
