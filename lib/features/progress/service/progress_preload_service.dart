@@ -1,7 +1,10 @@
+import 'dart:convert';
+
 import 'package:modern_learner_production/features/course/model/course__service_model.dart';
 import 'package:modern_learner_production/features/course/service/course_service.dart';
 import 'package:modern_learner_production/features/explore/data/models/progress_course_model.dart';
 import 'package:modern_learner_production/features/explore/service/explore_courses_service.dart';
+import 'package:modern_learner_production/features/cache/generation_cache.dart';
 import 'package:modern_learner_production/features/progress/service/course_xp_service.dart';
 import 'package:modern_learner_production/features/progress/service/model/chapter_subcontent_model.dart';
 import 'package:modern_learner_production/features/roadmap/service/roadmap_service.dart';
@@ -40,6 +43,7 @@ class ProgressPreloadService {
   /// Safe to call fire-and-forget — all errors are silently absorbed.
   Future<void> preload() async {
     try {
+      await CourseXpService.instance.ensureInitializedForCurrentUser();
       final models = await CourseService.instance.fetchCourses();
       if (models.isEmpty) return;
 
@@ -57,6 +61,7 @@ class ProgressPreloadService {
           );
         }
       }
+      await CourseXpService.instance.restoreFromSupabase();
 
       // Load chapter subcontent for each course from the DB.
       for (final course in courses) {
@@ -94,7 +99,30 @@ class ProgressPreloadService {
 
       _subcontentByCourse[courseKey] = subcontentMap;
       _loadedCourseKeys.add(courseKey);
+      await _preloadExercises(courseId);
     } catch (_) {}
+  }
+
+  Future<void> _preloadExercises(String courseId) async {
+    final rows = await RoadmapService.instance.fetchChapterExercisesByCourse(
+      courseId,
+    );
+    for (final row in rows) {
+      final chapterSubcontentId = row['chapter_subcontent_id'] as String?;
+      final subcontentNumber = (row['subcontent_number'] as num?)?.toInt();
+      final exerciseJson = row['exercise_json'];
+      if (chapterSubcontentId == null ||
+          chapterSubcontentId.trim().isEmpty ||
+          subcontentNumber == null ||
+          exerciseJson is! Map) {
+        continue;
+      }
+      await const GenerationCache().saveExercise(
+        chapterSubcontentId: chapterSubcontentId,
+        subcontentNumber: subcontentNumber,
+        rawJson: jsonEncode(exerciseJson),
+      );
+    }
   }
 
   static ProgressCourseSelection _toEntity(UserCourseModel m) =>

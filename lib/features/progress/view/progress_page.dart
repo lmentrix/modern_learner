@@ -19,6 +19,7 @@ import 'package:modern_learner_production/features/progress/service/course_xp_se
 import 'package:modern_learner_production/features/progress/service/model/chapter_subcontent_model.dart';
 import 'package:modern_learner_production/features/progress/service/model/roadmap_model.dart';
 import 'package:modern_learner_production/features/progress/service/progress_preload_service.dart';
+import 'package:modern_learner_production/features/progress/service/roadmap_mock_guard.dart';
 import 'package:modern_learner_production/features/progress/service/request/chapter_subcontent.dart';
 import 'package:modern_learner_production/features/progress/service/request/exercise_request.dart';
 import 'package:modern_learner_production/features/progress/service/request/progress_request.dart';
@@ -26,6 +27,7 @@ import 'package:modern_learner_production/features/progress/view/section/progres
 import 'package:modern_learner_production/features/progress/view/section/progress_header.dart';
 import 'package:modern_learner_production/features/progress/view/section/progress_journey_section.dart';
 import 'package:modern_learner_production/features/progress/view/section/progress_skeleton_section.dart';
+import 'package:modern_learner_production/features/progress/view/section/progress_stats_row.dart';
 import 'package:modern_learner_production/features/roadmap/model/roadmap_model.dart';
 import 'package:modern_learner_production/features/roadmap/service/roadmap_service.dart';
 
@@ -41,6 +43,8 @@ class ProgressViewPage extends StatefulWidget {
 class _ProgressViewPageState extends State<ProgressViewPage> {
   final Map<String, XpBloc> _xpBlocByCourse = {};
   final Set<String> _dbLoadedCourses = {};
+  final Set<String> _roadmapRefreshInFlight = {};
+  final Set<String> _roadmapRefreshAttempted = {};
   bool _isDbLoading = false;
 
   bool _isLoadingChapterSubcontent = false;
@@ -77,7 +81,9 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
     return ValueListenableBuilder<List<ProgressCourseSelection>>(
       valueListenable: ExploreCoursesService.instance.courses,
       builder: (context, courses, child) {
-        final selectedCourse = _resolveSelectedCourse(courses);
+        final selectedCourse = _withoutMockRoadmap(
+          _resolveSelectedCourse(courses),
+        );
 
         if (selectedCourse == null) {
           return const Material(
@@ -126,6 +132,21 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
                     padding: ProgressPageConstants.pagePadding,
                     sliver: SliverToBoxAdapter(
                       child: ProgressHeaderSection(data: pageData),
+                    ),
+                  ),
+
+                  const SliverToBoxAdapter(
+                    child: SizedBox(
+                      height: ProgressPageConstants.sectionSpacing,
+                    ),
+                  ),
+                  SliverPadding(
+                    padding: ProgressPageConstants.pagePadding,
+                    sliver: SliverToBoxAdapter(
+                      child: ProgressStatsRow(
+                        moduleSteps: pageData.moduleSteps,
+                        accentColor: pageData.snapshot.accentColor,
+                      ),
                     ),
                   ),
 
@@ -202,6 +223,11 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
   void _syncSelectedCourse(ProgressCourseSelection course) {
     final courseKey = _courseKey(course);
     if (_selectedCourseKey == courseKey) {
+      if (!isUsableRoadmapPayload(course.roadmapJson) &&
+          !_roadmapRefreshInFlight.contains(courseKey) &&
+          !_roadmapRefreshAttempted.contains(courseKey)) {
+        _startRoadmapRefresh(course);
+      }
       return;
     }
 
@@ -223,17 +249,22 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
         }
       }
 
-      // Show the skeleton only when we still need a DB round-trip AND no
-      // preloaded data is available to render immediately.
-      final needsDbLoad =
-          course.courseId != null ||
-          course.roadmapJson == null ||
-          (course.roadmapJson?.isEmpty ?? true);
-      _isDbLoading =
-          needsDbLoad &&
-          !ProgressPreloadService.instance.isCourseLoaded(courseKey);
-      unawaited(_loadFromDb(course));
+      // Show the skeleton until we have a real roadmap to render. Never fall
+      // through to the generic fallback steps — show skeleton instead.
+      _isDbLoading = !isUsableRoadmapPayload(course.roadmapJson);
+      _startRoadmapRefresh(course);
     }
+  }
+
+  void _startRoadmapRefresh(ProgressCourseSelection course) {
+    final courseKey = _courseKey(course);
+    _roadmapRefreshAttempted.add(courseKey);
+    _roadmapRefreshInFlight.add(courseKey);
+    unawaited(
+      _loadFromDb(
+        course,
+      ).whenComplete(() => _roadmapRefreshInFlight.remove(courseKey)),
+    );
   }
 
   /// Populates [_completedSubcontentsByCourseChapter] from persisted data in
@@ -338,10 +369,10 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
 
   Future<void> _loadFromDb(ProgressCourseSelection course) async {
     var effectiveCourse = course;
-
     try {
-      // Hydrate roadmap JSON if not already present locally.
-      if (course.roadmapJson?.isEmpty ?? true) {
+      // Hydrate roadmap JSON from the 7-day DB cache before trusting local
+      // course JSON. Mock/offline JSON is treated as missing.
+      if (course.courseId != null || (course.roadmapJson?.isEmpty ?? true)) {
         final courseId = course.courseId;
         if (courseId != null) {
           final roadmapRow = await RoadmapService.instance.fetchRoadmapByCourse(
@@ -357,7 +388,13 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
         }
 
         // Still no roadmap — generate it now so the chapter list is real.
-        if (effectiveCourse.roadmapJson?.isEmpty ?? true) {
+        final existingResponse = _extractRoadmapResponse(
+          effectiveCourse.roadmapJson,
+        );
+        final needsFreshRoadmap =
+            existingResponse == null ||
+            _isStaleRoadmapResponse(existingResponse);
+        if (needsFreshRoadmap) {
           final generatedResponse = await _resolveOrGenerateRoadmap(
             effectiveCourse,
           );
@@ -507,9 +544,12 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
   }
 
   Future<RoadmapResponseModel> _resolveOrGenerateRoadmap(
-    ProgressCourseSelection course,
-  ) async {
-    final existingResponse = _extractRoadmapResponse(course.roadmapJson);
+    ProgressCourseSelection course, {
+    bool forceRegenerate = false,
+  }) async {
+    final existingResponse = forceRegenerate
+        ? null
+        : _extractRoadmapResponse(course.roadmapJson);
     if (existingResponse != null &&
         !_isStaleRoadmapResponse(existingResponse)) {
       return existingResponse;
@@ -525,7 +565,10 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
       nativeLanguage: course.nativeLanguage,
     );
 
-    final generatedResponse = await fetchProgress(request);
+    final generatedResponse = await fetchProgress(
+      request,
+      bypassCache: forceRegenerate,
+    );
 
     // Store the raw backend JSON so it can be forwarded verbatim to
     // /ai/chapter-content/generate as the `roadmap` field.
@@ -594,6 +637,8 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
         subcontentTitle: item.title,
         accentColorValue: accentColor.toARGB32(),
         model: activeResponse.model,
+        courseKey: _courseKey(course),
+        courseId: course.courseId,
         context: ChapterDetailContext(
           courseType: course.courseType == ProgressCourseType.voice
               ? 'voice'
@@ -847,6 +892,7 @@ bool _isStaleRoadmapResponse(RoadmapResponseModel response) {
 
 RoadmapResponseModel? _extractRoadmapResponse(Map<String, dynamic>? raw) {
   if (raw == null || raw.isEmpty) return null;
+  if (isMockRoadmapPayload(raw)) return null;
 
   // Accept both:
   //  - legacy envelope format: {roadmap: {...}, status_code: ...}
@@ -860,4 +906,11 @@ RoadmapResponseModel? _extractRoadmapResponse(Map<String, dynamic>? raw) {
   } catch (_) {
     return null;
   }
+}
+
+ProgressCourseSelection? _withoutMockRoadmap(ProgressCourseSelection? course) {
+  if (course == null || !isMockRoadmapPayload(course.roadmapJson)) {
+    return course;
+  }
+  return course.copyWith(clearRoadmapJson: true);
 }

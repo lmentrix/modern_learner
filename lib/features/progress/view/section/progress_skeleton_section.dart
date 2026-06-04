@@ -57,6 +57,15 @@ class _ProgressSkeletonSectionState extends State<ProgressSkeletonSection>
             SliverPadding(
               padding: ProgressPageConstants.pagePadding,
               sliver: SliverToBoxAdapter(
+                child: _SkeletonStatsRow(shimmerValue: _shimmer.value),
+              ),
+            ),
+            const SliverToBoxAdapter(
+              child: SizedBox(height: ProgressPageConstants.sectionSpacing),
+            ),
+            SliverPadding(
+              padding: ProgressPageConstants.pagePadding,
+              sliver: SliverToBoxAdapter(
                 child: _SkeletonJourney(shimmerValue: _shimmer.value),
               ),
             ),
@@ -566,25 +575,61 @@ class _SkeletonHeader extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SkeletonSectionHeading(shimmerValue: shimmerValue),
-        const SizedBox(height: 18),
-        _SkeletonXpBar(shimmerValue: shimmerValue),
+        // Course identity card
+        _ShimmerBox(
+          shimmerValue: shimmerValue,
+          width: double.infinity,
+          height: 76,
+          borderRadius: 20,
+        ),
+        const SizedBox(height: 10),
+        // XP progress card
+        _ShimmerBox(
+          shimmerValue: shimmerValue,
+          width: double.infinity,
+          height: 72,
+          borderRadius: 20,
+        ),
       ],
     );
   }
 }
 
-class _SkeletonXpBar extends StatelessWidget {
-  const _SkeletonXpBar({required this.shimmerValue});
+class _SkeletonStatsRow extends StatelessWidget {
+  const _SkeletonStatsRow({required this.shimmerValue});
   final double shimmerValue;
 
   @override
   Widget build(BuildContext context) {
-    return _ShimmerBox(
-      shimmerValue: shimmerValue,
-      width: double.infinity,
-      height: 80,
-      borderRadius: 16,
+    return Row(
+      children: [
+        Expanded(
+          child: _ShimmerBox(
+            shimmerValue: shimmerValue,
+            width: double.infinity,
+            height: 88,
+            borderRadius: 20,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _ShimmerBox(
+            shimmerValue: shimmerValue,
+            width: double.infinity,
+            height: 88,
+            borderRadius: 20,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _ShimmerBox(
+            shimmerValue: shimmerValue,
+            width: double.infinity,
+            height: 88,
+            borderRadius: 20,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -600,10 +645,17 @@ class _SkeletonJourney extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SkeletonSectionHeading(shimmerValue: shimmerValue),
-        const SizedBox(height: 18),
-        for (int i = 0; i < 3; i++) ...[
-          _SkeletonChapterTile(shimmerValue: shimmerValue, isLast: i == 2),
+        // Section label
+        _ShimmerBox(
+          shimmerValue: shimmerValue,
+          width: 80,
+          height: 13,
+          borderRadius: 6,
+        ),
+        const SizedBox(height: 14),
+        for (int i = 0; i < 4; i++) ...[
+          _SkeletonChapterTile(shimmerValue: shimmerValue),
+          if (i < 3) const SizedBox(height: 8),
         ],
       ],
     );
@@ -611,142 +663,76 @@ class _SkeletonJourney extends StatelessWidget {
 }
 
 class _SkeletonChapterTile extends StatelessWidget {
-  const _SkeletonChapterTile({
-    required this.shimmerValue,
-    required this.isLast,
-  });
+  const _SkeletonChapterTile({required this.shimmerValue});
 
   final double shimmerValue;
-  final bool isLast;
 
   @override
   Widget build(BuildContext context) {
-    return IntrinsicHeight(
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: _ShimmerBox._colorFor(shimmerValue),
+        borderRadius: BorderRadius.circular(20),
+      ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Timeline column
-          SizedBox(
-            width: 40,
+          // Icon box
+          _ShimmerBox(
+            shimmerValue: shimmerValue,
+            width: 44,
+            height: 44,
+            borderRadius: 14,
+          ),
+          const SizedBox(width: 14),
+          Expanded(
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _ShimmerBox(
                   shimmerValue: shimmerValue,
-                  width: 40,
-                  height: 40,
-                  borderRadius: 12,
+                  width: double.infinity,
+                  height: 15,
+                  borderRadius: 6,
                 ),
-                if (!isLast)
-                  Expanded(
-                    child: Center(
-                      child: _ShimmerBox(
-                        shimmerValue: shimmerValue,
-                        width: 2,
-                        height: double.infinity,
-                        borderRadius: 2,
-                      ),
-                    ),
-                  ),
+                const SizedBox(height: 7),
+                _ShimmerBox(
+                  shimmerValue: shimmerValue,
+                  width: 110,
+                  height: 12,
+                  borderRadius: 6,
+                ),
+                const SizedBox(height: 14),
+                _ShimmerBox(
+                  shimmerValue: shimmerValue,
+                  width: double.infinity,
+                  height: 4,
+                  borderRadius: 999,
+                ),
               ],
             ),
           ),
-          const SizedBox(width: 16),
-          // Content
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 4),
-                  _ShimmerBox(
-                    shimmerValue: shimmerValue,
-                    width: 60,
-                    height: 11,
-                    borderRadius: 6,
-                  ),
-                  const SizedBox(height: 8),
-                  _ShimmerBox(
-                    shimmerValue: shimmerValue,
-                    width: double.infinity,
-                    height: 16,
-                    borderRadius: 6,
-                  ),
-                  const SizedBox(height: 6),
-                  _ShimmerBox(
-                    shimmerValue: shimmerValue,
-                    width: 140,
-                    height: 12,
-                    borderRadius: 6,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Shared heading skeleton ───────────────────────────────────────────────────
-
-class _SkeletonSectionHeading extends StatelessWidget {
-  const _SkeletonSectionHeading({required this.shimmerValue});
-  final double shimmerValue;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Accent bar
-        _ShimmerBox(
-          shimmerValue: shimmerValue,
-          width: 3,
-          height: 56,
-          borderRadius: 999,
-        ),
-        const SizedBox(width: 14),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          const SizedBox(width: 14),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              // Eyebrow pill
               _ShimmerBox(
                 shimmerValue: shimmerValue,
-                width: 72,
+                width: 52,
                 height: 22,
                 borderRadius: 999,
               ),
-              const SizedBox(height: 10),
-              // Title
-              _ShimmerBox(
-                shimmerValue: shimmerValue,
-                width: 220,
-                height: 20,
-                borderRadius: 6,
-              ),
               const SizedBox(height: 8),
-              // Subtitle line 1
               _ShimmerBox(
                 shimmerValue: shimmerValue,
-                width: double.infinity,
-                height: 13,
-                borderRadius: 5,
-              ),
-              const SizedBox(height: 5),
-              // Subtitle line 2
-              _ShimmerBox(
-                shimmerValue: shimmerValue,
-                width: 180,
-                height: 13,
-                borderRadius: 5,
+                width: 20,
+                height: 20,
+                borderRadius: 10,
               ),
             ],
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -766,13 +752,15 @@ class _ShimmerBox extends StatelessWidget {
   final double height;
   final double borderRadius;
 
-  @override
-  Widget build(BuildContext context) {
+  static Color _colorFor(double v) {
     const base = AppColors.surfaceContainerHigh;
     const highlight = AppColors.surfaceContainerHighest;
+    return Color.lerp(base, highlight, v) ?? base;
+  }
 
-    final color = Color.lerp(base, highlight, shimmerValue) ?? base;
-
+  @override
+  Widget build(BuildContext context) {
+    final color = _colorFor(shimmerValue);
     return Container(
       width: width == double.infinity ? null : width,
       height: height == double.infinity ? null : height,

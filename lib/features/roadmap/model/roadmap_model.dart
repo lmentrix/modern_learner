@@ -24,6 +24,7 @@ class RoadmapDbModel {
     this.maxTokens,
     this.topP,
     this.courseId,
+    this.expiresAt,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -55,6 +56,9 @@ class RoadmapDbModel {
       maxTokens: json['max_tokens'] as int?,
       topP: (json['top_p'] as num?)?.toDouble(),
       courseId: json['course_id'] as String?,
+      expiresAt: json['expires_at'] == null
+          ? null
+          : DateTime.parse(json['expires_at'] as String),
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
     );
@@ -81,8 +85,12 @@ class RoadmapDbModel {
   final int? maxTokens;
   final double? topP;
   final String? courseId;
+  final DateTime? expiresAt;
   final DateTime createdAt;
   final DateTime updatedAt;
+
+  bool get isExpired =>
+      expiresAt != null && !expiresAt!.isAfter(DateTime.now().toUtc());
 }
 
 /// Insert/upsert payload for the `roadmaps` table.
@@ -170,6 +178,7 @@ class RoadmapChapterProgressDbModel {
     this.chapterSubcontentJson,
     this.subcontentApiId,
     this.courseId,
+    this.expiresAt,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -192,6 +201,9 @@ class RoadmapChapterProgressDbModel {
           : null,
       subcontentApiId: json['subcontent_api_id'] as String?,
       courseId: json['course_id'] as String?,
+      expiresAt: json['expires_at'] == null
+          ? null
+          : DateTime.parse(json['expires_at'] as String),
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
     );
@@ -209,8 +221,12 @@ class RoadmapChapterProgressDbModel {
   final Map<String, dynamic>? chapterSubcontentJson;
   final String? subcontentApiId;
   final String? courseId;
+  final DateTime? expiresAt;
   final DateTime createdAt;
   final DateTime updatedAt;
+
+  bool get isExpired =>
+      expiresAt != null && !expiresAt!.isAfter(DateTime.now().toUtc());
 }
 
 /// Insert/upsert payload for the `roadmap_chapter_progress` table.

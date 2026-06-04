@@ -12,6 +12,7 @@ const _fallbackRoadmapBaseUrl = 'http://127.0.0.1:8000/api/v1';
 Future<RoadmapResponseModel> fetchProgress(
   RoadmapGenerateRequestModel request, {
   http.Client? client,
+  bool bypassCache = false,
 }) async {
   final cacheKey = RoadmapIdCache.buildRoadmapCacheKey(
     roadmapMode: request.roadmapMode,
@@ -22,7 +23,9 @@ Future<RoadmapResponseModel> fetchProgress(
   );
 
   const generationCache = GenerationCache();
-  final cached = await generationCache.readRoadmap(cacheKey);
+  final cached = bypassCache
+      ? null
+      : await generationCache.readRoadmap(cacheKey);
   if (cached != null) {
     try {
       final cachedResponse = RoadmapResponseModel.fromRawJson(cached);
@@ -49,6 +52,11 @@ Future<RoadmapResponseModel> fetchProgress(
 
     final rawJson = utf8.decode(response.bodyBytes);
     final roadmapResponse = RoadmapResponseModel.fromRawJson(rawJson);
+    if (_isStaleGeneratedRoadmap(roadmapResponse)) {
+      throw const RoadmapRequestException(
+        'The roadmap generator returned a mock/offline roadmap. Try again when the roadmap backend is available.',
+      );
+    }
     final roadmapId = roadmapResponse.roadmap.id;
     if (roadmapId != null && roadmapId.trim().isNotEmpty) {
       await const RoadmapIdCache().saveRoadmapId(
@@ -189,12 +197,15 @@ bool _isStaleGeneratedRoadmap(RoadmapResponseModel response) {
   final model = response.model.toLowerCase();
   final message = response.message.toLowerCase();
   final summary = response.roadmap.summary.toLowerCase();
+  final id = (response.roadmap.id ?? '').toLowerCase();
   return response.mocked ||
       code.contains('mock') ||
       code.contains('offline_fallback') ||
       model == 'offline-fallback' ||
       message.contains('mock roadmap') ||
-      summary.contains('deterministic offline');
+      summary.contains('deterministic offline') ||
+      id.startsWith('mock') ||
+      id.contains('_mock');
 }
 
 class RoadmapRequestException implements Exception {

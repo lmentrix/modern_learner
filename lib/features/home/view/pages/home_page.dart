@@ -5,7 +5,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:modern_learner_production/core/models/progress_course_selection.dart';
 import 'package:modern_learner_production/core/router/app_router.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
-import 'package:modern_learner_production/features/course/service/course_service.dart';
 import 'package:modern_learner_production/features/explore/service/explore_courses_service.dart';
 import 'package:modern_learner_production/features/progress/service/course_xp_service.dart';
 import 'package:modern_learner_production/features/home/data/home_lesson_filter.dart';
@@ -175,12 +174,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   }
 
   Future<void> _deleteAllCourses() async {
-    final courses = ExploreCoursesService.instance.courses.value;
-    for (final c in courses) {
-      CourseXpService.instance.removeCourse(progressCourseXpKey(c));
-    }
-    ExploreCoursesService.instance.courses.value = const [];
-    await CourseService.instance.deleteAllCourses();
+    await ExploreCoursesService.instance.removeAllCourses();
   }
 
   void _openVoiceLessonPage() {
