@@ -11,20 +11,26 @@ class NewLessonActionSection extends StatelessWidget {
     required this.selectedLanguage,
     required this.selectedDifficulty,
     required this.onStart,
+    this.isStarting = false,
   });
 
   final bool canStart;
+  final bool isStarting;
   final String? selectedLanguage;
   final String selectedDifficulty;
   final VoidCallback onStart;
 
   @override
   Widget build(BuildContext context) {
-    final summary = canStart
+    final summary = isStarting
+        ? context.tr('Saving your course…')
+        : canStart
         ? '${context.tr(selectedLanguage ?? '')} · ${context.tr(selectedDifficulty)} ${context.tr('roadmap')}'
         : context.tr('Select a language to unlock generation');
 
-    final actionLabel = canStart
+    final actionLabel = isStarting
+        ? context.tr('Starting…')
+        : canStart
         ? '${context.tr('Generate')} ${context.tr(selectedDifficulty)} ${context.tr('Roadmap')}'
         : context.tr('Choose a language first');
 
@@ -92,13 +98,26 @@ class NewLessonActionSection extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    canStart
-                        ? Icons.auto_awesome_rounded
-                        : Icons.lock_outline_rounded,
-                    color: canStart ? Colors.white : AppColors.onSurfaceVariant,
-                    size: 18,
-                  ),
+                  isStarting
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
+                          ),
+                        )
+                      : Icon(
+                          canStart
+                              ? Icons.auto_awesome_rounded
+                              : Icons.lock_outline_rounded,
+                          color: canStart
+                              ? Colors.white
+                              : AppColors.onSurfaceVariant,
+                          size: 18,
+                        ),
                   const SizedBox(width: 10),
                   Text(
                     actionLabel,

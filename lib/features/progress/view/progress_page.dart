@@ -24,6 +24,7 @@ import 'package:modern_learner_production/features/progress/service/request/chap
 import 'package:modern_learner_production/features/progress/service/request/exercise_request.dart';
 import 'package:modern_learner_production/features/progress/service/request/progress_request.dart';
 import 'package:modern_learner_production/features/progress/view/section/progress_empty_state_section.dart';
+import 'package:modern_learner_production/features/progress/view/section/progress_roadmap_error_section.dart';
 import 'package:modern_learner_production/features/progress/view/section/progress_header.dart';
 import 'package:modern_learner_production/features/progress/view/section/progress_journey_section.dart';
 import 'package:modern_learner_production/features/progress/view/section/progress_skeleton_section.dart';
@@ -94,6 +95,41 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
 
         _syncSelectedCourse(selectedCourse);
 
+        final courseKey = _courseKey(selectedCourse);
+
+        // Show skeleton while the initial DB/generation load is in progress.
+        if (_isDbLoading) {
+          return const Material(
+            color: AppColors.surface,
+            child: ProgressSkeletonSection(),
+          );
+        }
+
+        // If loading finished but we still have no real roadmap chapters, it
+        // means generation failed (network error, backend unavailable, mock
+        // response rejected). Show skeleton while a retry is in flight,
+        // otherwise show an error state. NEVER fall through to the generic
+        // fallback steps — they look like mock data to the user.
+        if (!isUsableRoadmapPayload(selectedCourse.roadmapJson)) {
+          if (_roadmapRefreshInFlight.contains(courseKey)) {
+            return const Material(
+              color: AppColors.surface,
+              child: ProgressSkeletonSection(),
+            );
+          }
+          return Material(
+            color: AppColors.surface,
+            child: ProgressRoadmapErrorSection(
+              onRetry: () {
+                final key = _courseKey(selectedCourse);
+                _roadmapRefreshAttempted.remove(key);
+                setState(() => _isDbLoading = true);
+                _startRoadmapRefresh(selectedCourse);
+              },
+            ),
+          );
+        }
+
         final navState = ProgressNavigationState.instance;
         final pageData = buildProgressPageData(
           course: selectedCourse,
@@ -106,13 +142,6 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
               navState.clearSelection();
             }
           });
-        }
-
-        if (_isDbLoading) {
-          return const Material(
-            color: AppColors.surface,
-            child: ProgressSkeletonSection(),
-          );
         }
 
         return BlocProvider.value(

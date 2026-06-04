@@ -331,6 +331,32 @@ class RoadmapService {
         .toList();
   }
 
+  /// Deletes all AI-generated content rows for [courseId] from Supabase
+  /// so the next progress-page load is forced to generate fresh content.
+  ///
+  /// Called before navigating to progress for a brand-new lesson so stale
+  /// Supabase rows from a previous generation of the same course are not
+  /// served by [_loadFromDb].
+  Future<void> resetCourseGeneratedContent(String courseId) async {
+    try {
+      await Future.wait([
+        _client.from(_roadmapsTable).delete().eq('course_id', courseId),
+        _client
+            .from(_chapterProgressTable)
+            .delete()
+            .eq('course_id', courseId),
+        _client
+            .from(_chapterExercisesTable)
+            .delete()
+            .eq('course_id', courseId),
+        _client
+            .from(_chapterExerciseProgressTable)
+            .delete()
+            .eq('course_id', courseId),
+      ]);
+    } catch (_) {}
+  }
+
   Future<void> saveChapterExerciseJson({
     required String rawJson,
     required String courseKey,
