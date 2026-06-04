@@ -34,12 +34,13 @@ class _ProfileStatsSectionState extends State<ProfileStatsSection> {
 
   Future<_StatsData> _load() async {
     final userId = supabase.auth.currentUser?.id;
-    if (userId == null)
+    if (userId == null) {
       return const _StatsData(streak: 0, totalXp: 0, exercisesCompleted: 0);
+    }
 
     final xpFuture = supabase
         .from('profile_course_xp')
-        .select('exercise_xp, exercises_completed')
+        .select('exercise_xp, exercises_completed, user_courses!inner(id)')
         .eq('user_id', userId);
     final streakFuture = StreakService.instance.fetchAndUpdate();
 

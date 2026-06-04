@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -5,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:modern_learner_production/core/constants/api_constants.dart';
 import 'package:modern_learner_production/features/cache/generation_cache.dart';
 import 'package:modern_learner_production/features/progress/service/model/roadmap_model.dart';
+import 'package:modern_learner_production/features/roadmap/service/roadmap_service.dart';
 
 const _fallbackRoadmapBaseUrl = 'http://127.0.0.1:8000/api/v1';
 
@@ -19,6 +21,22 @@ Future<ChapterExerciseResponseModel> fetchChapterExercise(
   if (cached != null) {
     return ChapterExerciseResponseModel.fromRawJson(cached);
   }
+
+  try {
+    final dbJson = await RoadmapService.instance.fetchChapterExerciseJson(
+      chapterSubcontentId: request.chapterSubcontentId,
+      subcontentNumber: request.subcontentNumber,
+    );
+    if (dbJson != null) {
+      final rawJson = jsonEncode(dbJson);
+      await const GenerationCache().saveExercise(
+        chapterSubcontentId: request.chapterSubcontentId,
+        subcontentNumber: request.subcontentNumber,
+        rawJson: rawJson,
+      );
+      return ChapterExerciseResponseModel.fromRawJson(rawJson);
+    }
+  } catch (_) {}
 
   final activeClient = client ?? http.Client();
 
@@ -39,6 +57,22 @@ Future<ChapterExerciseResponseModel> fetchChapterExercise(
       subcontentNumber: request.subcontentNumber,
       rawJson: rawJson,
     );
+    final courseKey = request.courseKey;
+    final chapterNumber = request.context?.chapterNumber;
+    if (courseKey != null && chapterNumber != null) {
+      unawaited(() async {
+        try {
+          await RoadmapService.instance.saveChapterExerciseJson(
+            rawJson: rawJson,
+            courseKey: courseKey,
+            courseId: request.courseId,
+            chapterSubcontentId: request.chapterSubcontentId,
+            chapterNumber: chapterNumber,
+            subcontentNumber: request.subcontentNumber,
+          );
+        } catch (_) {}
+      }());
+    }
     return result;
   } on SocketException catch (error) {
     throw ChapterExerciseRequestException(
@@ -176,6 +210,8 @@ class ChapterExerciseGenerateRequestModel {
     required this.subcontentNumber,
     this.model,
     this.context,
+    this.courseKey,
+    this.courseId,
   });
 
   final String chapterSubcontentId;
@@ -185,6 +221,8 @@ class ChapterExerciseGenerateRequestModel {
   /// Inline context forwarded to the backend so it can generate the exercise
   /// without requiring an in-memory store lookup.
   final ChapterDetailContext? context;
+  final String? courseKey;
+  final String? courseId;
 
   Map<String, dynamic> toJson() {
     final selectedModel = model;
@@ -543,6 +581,8 @@ class ChapterExercisePageArgs {
     required this.accentColorValue,
     this.model,
     this.context,
+    this.courseKey,
+    this.courseId,
   });
 
   final String chapterSubcontentId;
@@ -556,6 +596,8 @@ class ChapterExercisePageArgs {
   /// Inline context passed through to the network request so the backend
   /// doesn't need in-memory store lookups.
   final ChapterDetailContext? context;
+  final String? courseKey;
+  final String? courseId;
 }
 
 class ChapterExerciseCompletionResult {

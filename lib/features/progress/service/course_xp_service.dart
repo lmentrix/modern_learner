@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:modern_learner_production/features/achievement/data/achievemenet_data.dart';
 import 'package:modern_learner_production/features/achievement/model/achievement_model.dart';
 import 'package:modern_learner_production/features/achievement/service/achievement_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class CourseXpData {
   const CourseXpData({
@@ -94,6 +95,14 @@ class CourseXpService {
   final ValueNotifier<int> version = ValueNotifier(0);
 
   String get _prefsKey => '${_prefsKeyPrefix}_$_userId';
+
+  Future<void> ensureInitializedForCurrentUser() async {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId == null || userId.isEmpty) return;
+    if (_prefs != null && _userId == userId) return;
+    final prefs = await SharedPreferences.getInstance();
+    inject(prefs, userId: userId);
+  }
 
   void inject(SharedPreferences prefs, {required String userId}) {
     _prefs = prefs;
@@ -243,6 +252,40 @@ class CourseXpService {
   /// Public entry-point: call once on profile load to backfill any existing data.
   Future<void> syncToSupabase() => _syncToSupabase();
 
+  Future<void> restoreFromSupabase() async {
+    if (_userId.isEmpty) return;
+    try {
+      final rows = await AchievementService().getCourseXp(userId: _userId);
+      var changed = false;
+      for (final row in rows) {
+        final subcontentCompleted = CourseXpData._intMapFromJson(
+          row.metadata['subcontent_completed'],
+        );
+        final subcontentTotals = CourseXpData._intMapFromJson(
+          row.metadata['subcontent_totals'],
+        );
+        final data = CourseXpData(
+          exerciseXp: row.exerciseXp,
+          exercisesCompleted: row.exercisesCompleted,
+          chaptersUnlocked: row.chaptersUnlocked,
+          subcontentCompleted: subcontentCompleted,
+          subcontentTotals: subcontentTotals,
+        );
+        _notifiers.putIfAbsent(row.courseKey, () => ValueNotifier(data)).value =
+            data;
+        final courseId = row.courseId;
+        if (courseId != null) {
+          _courseIdByKey[row.courseKey] = courseId;
+        }
+        changed = true;
+      }
+      if (changed) {
+        _recalcTotal();
+        await _persist();
+      }
+    } catch (_) {}
+  }
+
   final Map<String, String> _courseIdByKey = {};
 
   void setCourseId(String courseKey, String courseId) {
@@ -253,23 +296,26 @@ class CourseXpService {
     if (_userId.isEmpty) return;
     try {
       final service = AchievementService();
-      final courseXpList = _notifiers.entries.map((e) {
-        final d = _normalized(e.value.value);
-        return ProfileCourseXpModel(
-          userId: _userId,
-          courseKey: e.key,
-          courseId: _courseIdByKey[e.key],
-          exerciseXp: d.exerciseXp,
-          exercisesCompleted: d.exercisesCompleted,
-          chaptersUnlocked: d.chaptersUnlocked,
-          metadata: {
-            if (d.subcontentCompleted.isNotEmpty)
-              'subcontent_completed': d.subcontentCompleted,
-            if (d.subcontentTotals.isNotEmpty)
-              'subcontent_totals': d.subcontentTotals,
-          },
-        );
-      }).toList();
+      final courseXpList = _notifiers.entries
+          .where((e) => _courseIdByKey[e.key] != null)
+          .map((e) {
+            final d = _normalized(e.value.value);
+            return ProfileCourseXpModel(
+              userId: _userId,
+              courseKey: e.key,
+              courseId: _courseIdByKey[e.key],
+              exerciseXp: d.exerciseXp,
+              exercisesCompleted: d.exercisesCompleted,
+              chaptersUnlocked: d.chaptersUnlocked,
+              metadata: {
+                if (d.subcontentCompleted.isNotEmpty)
+                  'subcontent_completed': d.subcontentCompleted,
+                if (d.subcontentTotals.isNotEmpty)
+                  'subcontent_totals': d.subcontentTotals,
+              },
+            );
+          })
+          .toList();
 
       final definitions = AchievementCatalogue.all
           .asMap()

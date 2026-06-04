@@ -91,6 +91,33 @@ class GenerationCache {
   /// Evicts all entries from the cache (roadmap, subcontent, and exercise).
   Future<void> clearAll() => GenerationCacheManager().emptyCache();
 
+  /// Clears every local cache entry that belongs to a single course.
+  ///
+  /// [roadmapCacheKey] identifies the roadmap + subcontent entries.
+  /// [chapterNumbers] lists the chapter numbers whose subcontent was cached.
+  /// [exerciseKeys] lists every (chapterSubcontentId, subcontentNumber) pair
+  /// whose exercise was cached.
+  Future<void> clearCourseEntries({
+    required String roadmapCacheKey,
+    required List<int> chapterNumbers,
+    required List<({String chapterSubcontentId, int subcontentNumber})>
+    exerciseKeys,
+  }) async {
+    await clearRoadmap(roadmapCacheKey);
+    for (final ch in chapterNumbers) {
+      await clearChapterSubcontent(
+        roadmapKey: roadmapCacheKey,
+        chapterNumber: ch,
+      );
+    }
+    for (final key in exerciseKeys) {
+      await clearExercise(
+        chapterSubcontentId: key.chapterSubcontentId,
+        subcontentNumber: key.subcontentNumber,
+      );
+    }
+  }
+
   /// No-op: flutter_cache_manager prunes expired entries automatically.
   Future<void> pruneExpired() async {}
 

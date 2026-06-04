@@ -137,7 +137,7 @@ class AchievementService {
     final resolvedUserId = _resolveUserId(userId);
     final data = await supabase
         .from(_courseXpTable)
-        .select('*, user_courses(title, topic)')
+        .select('*, user_courses!inner(title, topic)')
         .eq('user_id', resolvedUserId)
         .order('exercise_xp', ascending: false)
         .order('course_key');
@@ -152,7 +152,7 @@ class AchievementService {
     final resolvedUserId = _resolveUserId(userId);
     final data = await supabase
         .from(_courseXpTable)
-        .select()
+        .select('*, user_courses!inner(title, topic)')
         .eq('user_id', resolvedUserId)
         .eq('course_key', courseKey)
         .maybeSingle();

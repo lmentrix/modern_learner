@@ -15,6 +15,7 @@ import 'package:modern_learner_production/features/progress/view/section/exercis
 import 'package:modern_learner_production/features/progress/view/section/exercise_state_scaffold.dart';
 import 'package:modern_learner_production/features/progress/view/section/school_exercise_body.dart';
 import 'package:modern_learner_production/features/progress/view/section/voice_exercise_body.dart';
+import 'package:modern_learner_production/features/roadmap/service/roadmap_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -134,6 +135,8 @@ class _ChapterExercisePageState extends State<ChapterExercisePage> {
           subcontentNumber: widget.args.subcontentNumber,
           model: widget.args.model,
           context: widget.args.context,
+          courseKey: widget.args.courseKey,
+          courseId: widget.args.courseId,
         ),
       );
       if (!mounted) return;
@@ -178,62 +181,48 @@ class _ChapterExercisePageState extends State<ChapterExercisePage> {
   Future<void> _restoreProgress() async {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString(_progressCacheKey);
-    if (raw == null) return;
+    if (raw == null) {
+      await _restoreProgressFromSupabase(prefs);
+      return;
+    }
 
     try {
       final decoded = jsonDecode(raw);
       if (decoded is! Map<String, dynamic>) return;
-
-      final selectedAnswers = _readStringMap(decoded['selectedAnswers']);
-      final matchingAnswers = _readStringMap(decoded['matchingAnswers']);
-      final checkedQuestionKeys = _readStringSet(
-        decoded['checkedQuestionKeys'],
-      );
-      final checkedMatchKeys = _readStringSet(decoded['checkedMatchKeys']);
-      final checkedVoiceStepKeys = _readStringSet(
-        decoded['checkedVoiceStepKeys'],
-      );
-
-      _selectedAnswers
-        ..clear()
-        ..addAll(selectedAnswers);
-      _matchingAnswers
-        ..clear()
-        ..addAll(matchingAnswers);
-      _checkedQuestionKeys
-        ..clear()
-        ..addAll(checkedQuestionKeys);
-      _checkedMatchKeys
-        ..clear()
-        ..addAll(checkedMatchKeys);
-      _checkedVoiceStepKeys
-        ..clear()
-        ..addAll(checkedVoiceStepKeys);
-
-      _checked = decoded['checked'] == true;
-      _streak = (decoded['streak'] as num?)?.toInt() ?? 0;
-      _answeredCount =
-          (decoded['answeredCount'] as num?)?.toInt() ??
-          checkedQuestionKeys.length + checkedMatchKeys.length;
-
-      for (final entry in selectedAnswers.entries) {
-        _textControllers
-                .putIfAbsent(entry.key, TextEditingController.new)
-                .text =
-            entry.value;
-      }
+      _applyProgressPayload(decoded);
     } catch (_) {
       await prefs.remove(_progressCacheKey);
+      await _restoreProgressFromSupabase(prefs);
     }
   }
 
+  Future<void> _restoreProgressFromSupabase(SharedPreferences prefs) async {
+    try {
+      final payload = await RoadmapService.instance
+          .fetchChapterExerciseProgress(
+            chapterSubcontentId: widget.args.chapterSubcontentId,
+            subcontentNumber: widget.args.subcontentNumber,
+          );
+      if (payload == null || payload.isEmpty) return;
+      await prefs.setString(_progressCacheKey, jsonEncode(payload));
+      _applyProgressPayload(payload);
+    } catch (_) {}
+  }
+
   Future<void> _saveProgress() async {
+    final payload = _progressPayload();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_progressCacheKey, jsonEncode(payload));
+    unawaited(_saveProgressToSupabase(payload));
+  }
+
+  Map<String, dynamic> _progressPayload({DateTime? completedAt}) {
     final textAnswers = {
       for (final entry in _textControllers.entries)
         if (entry.value.text.trim().isNotEmpty) entry.key: entry.value.text,
     };
     final selectedAnswers = {..._selectedAnswers, ...textAnswers};
-    final payload = <String, dynamic>{
+    return <String, dynamic>{
       'selectedAnswers': selectedAnswers,
       'matchingAnswers': _matchingAnswers,
       'checkedQuestionKeys': _checkedQuestionKeys.toList(),
@@ -242,15 +231,67 @@ class _ChapterExercisePageState extends State<ChapterExercisePage> {
       'checked': _checked,
       'streak': _streak,
       'answeredCount': _answeredCount,
+      if (completedAt != null) 'completedAt': completedAt.toIso8601String(),
       'updatedAt': DateTime.now().toIso8601String(),
     };
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_progressCacheKey, jsonEncode(payload));
+  }
+
+  Future<void> _saveProgressToSupabase(Map<String, dynamic> payload) async {
+    final courseKey = widget.args.courseKey;
+    if (courseKey == null) return;
+    try {
+      await RoadmapService.instance.saveChapterExerciseProgress(
+        progressJson: payload,
+        courseKey: courseKey,
+        courseId: widget.args.courseId,
+        chapterSubcontentId: widget.args.chapterSubcontentId,
+        chapterNumber: widget.args.chapterNumber,
+        subcontentNumber: widget.args.subcontentNumber,
+        completedAt: DateTime.tryParse(payload['completedAt'] as String? ?? ''),
+      );
+    } catch (_) {}
   }
 
   Future<void> _clearProgress() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_progressCacheKey);
+  }
+
+  void _applyProgressPayload(Map<String, dynamic> decoded) {
+    final selectedAnswers = _readStringMap(decoded['selectedAnswers']);
+    final matchingAnswers = _readStringMap(decoded['matchingAnswers']);
+    final checkedQuestionKeys = _readStringSet(decoded['checkedQuestionKeys']);
+    final checkedMatchKeys = _readStringSet(decoded['checkedMatchKeys']);
+    final checkedVoiceStepKeys = _readStringSet(
+      decoded['checkedVoiceStepKeys'],
+    );
+
+    _selectedAnswers
+      ..clear()
+      ..addAll(selectedAnswers);
+    _matchingAnswers
+      ..clear()
+      ..addAll(matchingAnswers);
+    _checkedQuestionKeys
+      ..clear()
+      ..addAll(checkedQuestionKeys);
+    _checkedMatchKeys
+      ..clear()
+      ..addAll(checkedMatchKeys);
+    _checkedVoiceStepKeys
+      ..clear()
+      ..addAll(checkedVoiceStepKeys);
+
+    _checked = decoded['checked'] == true;
+    _streak = (decoded['streak'] as num?)?.toInt() ?? 0;
+    _answeredCount =
+        (decoded['answeredCount'] as num?)?.toInt() ??
+        checkedQuestionKeys.length + checkedMatchKeys.length;
+
+    for (final entry in selectedAnswers.entries) {
+      _textControllers.putIfAbsent(entry.key, TextEditingController.new).text =
+          entry.value;
+    }
   }
 
   Map<String, String> _readStringMap(Object? value) {
@@ -278,7 +319,15 @@ class _ChapterExercisePageState extends State<ChapterExercisePage> {
       _checkAnswers();
       return;
     }
-    unawaited(_clearProgress());
+    unawaited(_completeAndExit());
+  }
+
+  Future<void> _completeAndExit() async {
+    final completedAt = DateTime.now();
+    final payload = _progressPayload(completedAt: completedAt);
+    await _saveProgressToSupabase(payload);
+    await _clearProgress();
+    if (!mounted) return;
     Navigator.pop(
       context,
       ChapterExerciseCompletionResult(

@@ -6,6 +6,7 @@ import 'package:modern_learner_production/core/constants/api_constants.dart';
 import 'package:modern_learner_production/features/cache/generation_cache.dart';
 import 'package:modern_learner_production/features/progress/service/cache/roadmap_id_cache.dart';
 import 'package:modern_learner_production/features/progress/service/model/chapter_subcontent_model.dart';
+import 'package:modern_learner_production/features/roadmap/service/roadmap_service.dart';
 
 const _fallbackRoadmapBaseUrl = 'http://127.0.0.1:8000/api/v1';
 
@@ -33,6 +34,33 @@ Future<ChapterSubcontentResponseModel> fetchChapterSubcontent(
   );
   if (cached != null) {
     return ChapterSubcontentResponseModel.fromRawJson(cached);
+  }
+
+  if (effectiveRoadmapId != 'unknown') {
+    try {
+      final row = await RoadmapService.instance.fetchChapterProgress(
+        roadmapId: effectiveRoadmapId,
+        chapterNumber: request.chapterNumber,
+      );
+      final subcontentJson = row?.chapterSubcontentJson;
+      if (subcontentJson != null) {
+        final responseJson = {
+          'status_code': 200,
+          'code': 'ok',
+          'message': '',
+          'model': '',
+          'course_type': subcontentJson['course_type'] ?? 'school',
+          'chapter_subcontent': subcontentJson,
+        };
+        final rawJson = jsonEncode(responseJson);
+        await const GenerationCache().saveChapterSubcontent(
+          roadmapKey: subcontentCacheKey,
+          chapterNumber: request.chapterNumber,
+          rawJson: rawJson,
+        );
+        return ChapterSubcontentResponseModel.fromRawJson(rawJson);
+      }
+    } catch (_) {}
   }
 
   final activeClient = client ?? http.Client();
