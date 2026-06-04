@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:modern_learner_production/core/l10n/app_text.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 
 class NewLessonActionSection extends StatelessWidget {
@@ -19,6 +20,14 @@ class NewLessonActionSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final summary = canStart
+        ? '${context.tr(selectedLanguage ?? '')} · ${context.tr(selectedDifficulty)} ${context.tr('roadmap')}'
+        : context.tr('Select a language to unlock generation');
+
+    final actionLabel = canStart
+        ? '${context.tr('Generate')} ${context.tr(selectedDifficulty)} ${context.tr('Roadmap')}'
+        : context.tr('Choose a language first');
+
     return Container(
       padding: EdgeInsets.fromLTRB(
         20,
@@ -40,9 +49,7 @@ class NewLessonActionSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            canStart
-                ? '$selectedLanguage • $selectedDifficulty roadmap'
-                : 'Select a language to unlock generation',
+            summary,
             style: GoogleFonts.inter(
               fontSize: 12,
               fontWeight: FontWeight.w600,
@@ -94,9 +101,7 @@ class NewLessonActionSection extends StatelessWidget {
                   ),
                   const SizedBox(width: 10),
                   Text(
-                    canStart
-                        ? 'Generate $selectedDifficulty Roadmap'
-                        : 'Choose a language first',
+                    actionLabel,
                     style: GoogleFonts.spaceGrotesk(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,

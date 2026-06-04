@@ -27,8 +27,10 @@ class CourseXpData {
   final int exerciseXp;
   final int exercisesCompleted;
   final int chaptersUnlocked;
+
   /// Completed subcontent count per chapter — key: "ch{chapterNumber}".
   final Map<String, int> subcontentCompleted;
+
   /// Total subcontent count per chapter — key: "ch{chapterNumber}".
   final Map<String, int> subcontentTotals;
 

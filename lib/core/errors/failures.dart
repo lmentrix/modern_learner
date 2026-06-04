@@ -24,4 +24,3 @@ final class NetworkFailure extends Failure {
 final class UnauthorizedFailure extends Failure {
   const UnauthorizedFailure(super.message);
 }
-

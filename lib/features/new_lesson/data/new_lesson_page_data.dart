@@ -38,7 +38,7 @@ abstract final class NewLessonPageData {
       detail: 'Melodic delivery and confidence',
     ),
     NewLessonOptionItem(
-      emoji: '🇧🇷',
+      emoji: '🇵🇹',
       label: 'Portuguese',
       detail: 'Warm speaking pace and dialogue',
     ),

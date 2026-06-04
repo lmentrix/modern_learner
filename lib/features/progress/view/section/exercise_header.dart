@@ -132,8 +132,10 @@ class _ProgressTrack extends StatelessWidget {
             builder: (context, constraints) {
               const segGap = 4.0;
               final segWidth =
-                  ((constraints.maxWidth - segGap * (total - 1)) / total)
-                      .clamp(4.0, 40.0);
+                  ((constraints.maxWidth - segGap * (total - 1)) / total).clamp(
+                    4.0,
+                    40.0,
+                  );
               return Row(
                 children: List.generate(total, (i) {
                   final filled = i < answered;

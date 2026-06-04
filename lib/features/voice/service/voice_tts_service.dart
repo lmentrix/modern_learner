@@ -21,8 +21,7 @@ class VoiceTtsEvent {
       VoiceTtsEvent._(VoiceTtsPhase.playing, totalDuration: totalDuration);
   factory VoiceTtsEvent.completed() =>
       const VoiceTtsEvent._(VoiceTtsPhase.completed);
-  factory VoiceTtsEvent.error() =>
-      const VoiceTtsEvent._(VoiceTtsPhase.error);
+  factory VoiceTtsEvent.error() => const VoiceTtsEvent._(VoiceTtsPhase.error);
 
   final VoiceTtsPhase phase;
   final Duration? totalDuration;
@@ -52,13 +51,13 @@ class VoiceTtsService {
   bool _deviceTtsReady = false;
 
   // ── Unified output streams ─────────────────────────────────────────────────
-  final _eventCtrl    = StreamController<VoiceTtsEvent>.broadcast();
+  final _eventCtrl = StreamController<VoiceTtsEvent>.broadcast();
   final _positionCtrl = StreamController<Duration>.broadcast();
   final _durationCtrl = StreamController<Duration>.broadcast();
 
-  Stream<VoiceTtsEvent> get eventStream    => _eventCtrl.stream;
-  Stream<Duration>      get positionStream => _positionCtrl.stream;
-  Stream<Duration>      get durationStream => _durationCtrl.stream;
+  Stream<VoiceTtsEvent> get eventStream => _eventCtrl.stream;
+  Stream<Duration> get positionStream => _positionCtrl.stream;
+  Stream<Duration> get durationStream => _durationCtrl.stream;
 
   bool _playing = false;
   bool get isPlaying => _playing;
@@ -81,7 +80,12 @@ class VoiceTtsService {
     // Path 1 — OpenRouter direct (requires OPENROUTER_API_KEY in .env).
     final apiKey = ApiConstants.openRouterApiKey.trim();
     if (apiKey.isNotEmpty) {
-      final bytes = await _fetchOpenRouter(text, apiKey: apiKey, voice: voice, model: model);
+      final bytes = await _fetchOpenRouter(
+        text,
+        apiKey: apiKey,
+        voice: voice,
+        model: model,
+      );
       if (bytes != null && bytes.isNotEmpty) {
         await _playWithAudioPlayer(bytes);
         return;

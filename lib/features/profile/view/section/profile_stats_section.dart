@@ -34,7 +34,8 @@ class _ProfileStatsSectionState extends State<ProfileStatsSection> {
 
   Future<_StatsData> _load() async {
     final userId = supabase.auth.currentUser?.id;
-    if (userId == null) return const _StatsData(streak: 0, totalXp: 0, exercisesCompleted: 0);
+    if (userId == null)
+      return const _StatsData(streak: 0, totalXp: 0, exercisesCompleted: 0);
 
     final xpFuture = supabase
         .from('profile_course_xp')

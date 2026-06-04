@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:modern_learner_production/core/l10n/app_text.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 
 class ExploreEmptyState extends StatelessWidget {
@@ -27,8 +28,8 @@ class ExploreEmptyState extends StatelessWidget {
           const SizedBox(height: 14),
           Text(
             hasSearchQuery
-                ? 'No matching collections'
-                : 'No collections available',
+                ? context.tr('No matching collections')
+                : context.tr('No collections available'),
             style: GoogleFonts.spaceGrotesk(
               fontSize: 18,
               fontWeight: FontWeight.w700,
@@ -37,7 +38,9 @@ class ExploreEmptyState extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Try another category or clear the current search to see more research fields.',
+            context.tr(
+              'Try another category or clear the current search to see more research fields.',
+            ),
             textAlign: TextAlign.center,
             style: GoogleFonts.inter(
               fontSize: 13,
@@ -48,7 +51,7 @@ class ExploreEmptyState extends StatelessWidget {
           const SizedBox(height: 16),
           TextButton(
             onPressed: onClearFilters,
-            child: const Text('Clear filters'),
+            child: Text(context.tr('Clear filters')),
           ),
         ],
       ),

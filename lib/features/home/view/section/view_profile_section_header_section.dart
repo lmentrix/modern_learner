@@ -6,10 +6,7 @@ import 'package:modern_learner_production/features/profile/model/profile_moderl.
 import 'package:modern_learner_production/features/profile/service/profile_service.dart';
 
 class ViewProfileSectionHeaderSection extends StatefulWidget {
-  const ViewProfileSectionHeaderSection({
-    super.key,
-    required this.onSeeAll,
-  });
+  const ViewProfileSectionHeaderSection({super.key, required this.onSeeAll});
 
   final VoidCallback onSeeAll;
 

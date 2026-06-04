@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:modern_learner_production/core/l10n/app_text.dart';
 import 'package:modern_learner_production/core/router/app_router.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 import 'package:modern_learner_production/features/exercise/data/exercise_bank.dart';
@@ -173,9 +174,11 @@ class _ExercisePageState extends State<ExercisePage> {
   @override
   Widget build(BuildContext context) {
     if (_exercises.isEmpty) {
-      return const Scaffold(
+      return Scaffold(
         backgroundColor: AppColors.surface,
-        body: SafeArea(child: Center(child: Text('No exercises available'))),
+        body: SafeArea(
+          child: Center(child: Text(context.tr('No exercises available'))),
+        ),
       );
     }
 

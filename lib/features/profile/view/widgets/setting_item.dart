@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:modern_learner_production/core/l10n/app_text.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 
 class SettingItem extends StatefulWidget {
@@ -96,7 +97,7 @@ class _SettingItemState extends State<SettingItem>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          widget.title,
+                          context.tr(widget.title),
                           style: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -105,7 +106,7 @@ class _SettingItemState extends State<SettingItem>
                         ),
                         const SizedBox(height: 3),
                         Text(
-                          widget.subtitle,
+                          context.tr(widget.subtitle),
                           style: GoogleFonts.inter(
                             fontSize: 12,
                             color: AppColors.onSurfaceVariant,

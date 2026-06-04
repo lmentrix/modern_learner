@@ -79,10 +79,12 @@ class _CreateCoursePageState extends State<CreateCoursePage> {
       );
       ExploreCoursesService.instance.addCourse(course);
 
-      unawaited(pushNotificationService.notifyNewCourse(
-        title: widget.subject.name,
-        topic: _topicName,
-      ));
+      unawaited(
+        pushNotificationService.notifyNewCourse(
+          title: widget.subject.name,
+          topic: _topicName,
+        ),
+      );
 
       if (!mounted) return;
       context.go(Routes.home);

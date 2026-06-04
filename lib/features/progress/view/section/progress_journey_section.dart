@@ -56,30 +56,27 @@ class ProgressJourneySection extends StatelessWidget {
                 onTap: () => onChapterTap(data.moduleSteps[i]),
                 chapterSubcontentResponse:
                     data.moduleSteps[i].id == selectedChapterId
-                        ? chapterSubcontentResponse
-                        : null,
+                    ? chapterSubcontentResponse
+                    : null,
                 isLoadingSubcontent:
                     data.moduleSteps[i].id == selectedChapterId &&
-                        isLoadingChapterSubcontent,
+                    isLoadingChapterSubcontent,
                 isLoadingFromCache:
                     data.moduleSteps[i].id == selectedChapterId &&
-                        isLoadingFromCache,
-                subcontentError:
-                    data.moduleSteps[i].id == selectedChapterId
-                        ? chapterSubcontentError
-                        : null,
-                onRetrySubcontent:
-                    data.moduleSteps[i].id == selectedChapterId
-                        ? onRetryTap
-                        : null,
-                onSubcontentTap:
-                    data.moduleSteps[i].id == selectedChapterId
-                        ? onSubcontentTap
-                        : null,
+                    isLoadingFromCache,
+                subcontentError: data.moduleSteps[i].id == selectedChapterId
+                    ? chapterSubcontentError
+                    : null,
+                onRetrySubcontent: data.moduleSteps[i].id == selectedChapterId
+                    ? onRetryTap
+                    : null,
+                onSubcontentTap: data.moduleSteps[i].id == selectedChapterId
+                    ? onSubcontentTap
+                    : null,
                 completedSubcontents:
                     data.moduleSteps[i].id == selectedChapterId
-                        ? completedSubcontentsInCurrentChapter
-                        : 0,
+                    ? completedSubcontentsInCurrentChapter
+                    : 0,
               ),
           ],
         ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:modern_learner_production/core/l10n/app_text.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 import 'package:modern_learner_production/features/exercise/models/exercise.dart';
 import 'package:modern_learner_production/features/exercise/widgets/exercise_answer_option.dart';
@@ -29,15 +30,15 @@ class ExerciseAnswerSection extends StatelessWidget {
       case ExerciseType.multipleChoice:
         return _buildMultipleChoice();
       case ExerciseType.fillBlank:
-        return _buildFillBlank();
+        return _buildFillBlank(context);
       case ExerciseType.speaking:
-        return _buildSpeaking();
+        return _buildSpeaking(context);
       case ExerciseType.matching:
-        return _buildMatching();
+        return _buildMatching(context);
       case ExerciseType.trueFalse:
         return _buildTrueFalse();
       case ExerciseType.writing:
-        return _buildWriting();
+        return _buildWriting(context);
     }
   }
 
@@ -68,7 +69,7 @@ class ExerciseAnswerSection extends StatelessWidget {
     );
   }
 
-  Widget _buildFillBlank() {
+  Widget _buildFillBlank(BuildContext context) {
     final hint = exercise.hint;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -78,7 +79,7 @@ class ExerciseAnswerSection extends StatelessWidget {
         TextField(
           enabled: !answered,
           decoration: InputDecoration(
-            hintText: 'Type your answer here...',
+            hintText: context.tr('Type your answer here...'),
             filled: true,
             fillColor: AppColors.surfaceContainerHighest,
             border: OutlineInputBorder(
@@ -105,7 +106,7 @@ class ExerciseAnswerSection extends StatelessWidget {
               ),
             ),
             child: Text(
-              answered ? 'Submitted' : 'Check Answer',
+              context.tr(answered ? 'Submitted' : 'Check Answer'),
               style: GoogleFonts.spaceGrotesk(
                 fontSize: 15,
                 fontWeight: FontWeight.w700,
@@ -117,7 +118,7 @@ class ExerciseAnswerSection extends StatelessWidget {
     );
   }
 
-  Widget _buildSpeaking() {
+  Widget _buildSpeaking(BuildContext context) {
     final hint = exercise.hint;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -179,8 +180,10 @@ class ExerciseAnswerSection extends StatelessWidget {
               const SizedBox(height: 16),
               Text(
                 answered
-                    ? (isCorrect ? 'Great pronunciation!' : 'Keep practicing!')
-                    : 'Tap to speak',
+                    ? context.tr(
+                        isCorrect ? 'Great pronunciation!' : 'Keep practicing!',
+                      )
+                    : context.tr('Tap to speak'),
                 style: GoogleFonts.spaceGrotesk(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -203,7 +206,7 @@ class ExerciseAnswerSection extends StatelessWidget {
               ),
             ),
             child: Text(
-              answered ? 'Completed' : 'Practice',
+              context.tr(answered ? 'Completed' : 'Practice'),
               style: GoogleFonts.spaceGrotesk(
                 fontSize: 15,
                 fontWeight: FontWeight.w700,
@@ -215,7 +218,7 @@ class ExerciseAnswerSection extends StatelessWidget {
     );
   }
 
-  Widget _buildMatching() {
+  Widget _buildMatching(BuildContext context) {
     final hint = exercise.hint;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -295,7 +298,7 @@ class ExerciseAnswerSection extends StatelessWidget {
               ),
             ),
             child: Text(
-              'Continue',
+              context.tr('Continue'),
               style: GoogleFonts.spaceGrotesk(
                 fontSize: 15,
                 fontWeight: FontWeight.w700,
@@ -356,7 +359,7 @@ class ExerciseAnswerSection extends StatelessWidget {
     );
   }
 
-  Widget _buildWriting() {
+  Widget _buildWriting(BuildContext context) {
     final hint = exercise.hint;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -367,7 +370,7 @@ class ExerciseAnswerSection extends StatelessWidget {
           enabled: !answered,
           maxLines: 5,
           decoration: InputDecoration(
-            hintText: 'Write your answer here...',
+            hintText: context.tr('Write your answer here...'),
             filled: true,
             fillColor: AppColors.surfaceContainerHighest,
             border: OutlineInputBorder(
@@ -393,7 +396,7 @@ class ExerciseAnswerSection extends StatelessWidget {
               ),
             ),
             child: Text(
-              answered ? 'Submitted' : 'Submit',
+              context.tr(answered ? 'Submitted' : 'Submit'),
               style: GoogleFonts.spaceGrotesk(
                 fontSize: 15,
                 fontWeight: FontWeight.w700,

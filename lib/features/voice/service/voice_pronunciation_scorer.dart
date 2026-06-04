@@ -68,14 +68,22 @@ class VoicePronunciationScorer {
   static int _editDistance(String a, String b) {
     final m = a.length, n = b.length;
     final dp = List.generate(m + 1, (_) => List.filled(n + 1, 0));
-    for (var i = 0; i <= m; i++) { dp[i][0] = i; }
-    for (var j = 0; j <= n; j++) { dp[0][j] = j; }
+    for (var i = 0; i <= m; i++) {
+      dp[i][0] = i;
+    }
+    for (var j = 0; j <= n; j++) {
+      dp[0][j] = j;
+    }
     for (var i = 1; i <= m; i++) {
       for (var j = 1; j <= n; j++) {
         dp[i][j] = a[i - 1] == b[j - 1]
             ? dp[i - 1][j - 1]
-            : 1 + [dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]]
-                .reduce((x, y) => x < y ? x : y);
+            : 1 +
+                  [
+                    dp[i - 1][j],
+                    dp[i][j - 1],
+                    dp[i - 1][j - 1],
+                  ].reduce((x, y) => x < y ? x : y);
       }
     }
     return dp[m][n];

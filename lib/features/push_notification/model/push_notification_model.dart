@@ -29,21 +29,21 @@ class PushNotificationModel extends Equatable {
   }
 
   Map<String, dynamic> toMap() => {
-        'title': title,
-        'body': body,
-        'data': data,
-        'imageUrl': imageUrl,
-        'notificationId': notificationId,
-        'channelId': channelId,
-      };
+    'title': title,
+    'body': body,
+    'data': data,
+    'imageUrl': imageUrl,
+    'notificationId': notificationId,
+    'channelId': channelId,
+  };
 
   @override
   List<Object?> get props => [
-        title,
-        body,
-        data,
-        imageUrl,
-        notificationId,
-        channelId,
-      ];
+    title,
+    body,
+    data,
+    imageUrl,
+    notificationId,
+    channelId,
+  ];
 }

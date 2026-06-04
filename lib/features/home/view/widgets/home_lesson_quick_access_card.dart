@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:modern_learner_production/core/l10n/app_text.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 
 class HomeLessonQuickAccessCard extends StatelessWidget {
@@ -63,7 +64,7 @@ class HomeLessonQuickAccessCard extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             Text(
-              title,
+              context.tr(title),
               style: GoogleFonts.spaceGrotesk(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
@@ -74,7 +75,7 @@ class HomeLessonQuickAccessCard extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              subtitle,
+              context.tr(subtitle),
               style: GoogleFonts.inter(
                 fontSize: 11,
                 color: AppColors.onSurfaceVariant,

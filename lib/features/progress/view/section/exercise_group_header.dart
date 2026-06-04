@@ -20,7 +20,10 @@ class ExerciseGroupHeader extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ExerciseIconBox(icon: groupIcon(group.exerciseType), color: accentColor),
+        ExerciseIconBox(
+          icon: groupIcon(group.exerciseType),
+          color: accentColor,
+        ),
         const SizedBox(width: 12),
         Expanded(
           child: Column(

@@ -26,9 +26,10 @@ class _ShimmerState extends State<_Shimmer>
       vsync: this,
       duration: const Duration(milliseconds: 1400),
     )..repeat();
-    _animation = Tween<double>(begin: -1.5, end: 2.5).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _animation = Tween<double>(
+      begin: -1.5,
+      end: 2.5,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -89,13 +90,13 @@ class _SkeletonBox extends StatelessWidget {
   }
 
   Widget _plain() => Container(
-        width: width,
-        height: height,
-        decoration: BoxDecoration(
-          color: _base,
-          borderRadius: BorderRadius.circular(borderRadius),
-        ),
-      );
+    width: width,
+    height: height,
+    decoration: BoxDecoration(
+      color: _base,
+      borderRadius: BorderRadius.circular(borderRadius),
+    ),
+  );
 }
 
 // ── Stats skeleton (3 cards) ──────────────────────────────────────────────────
@@ -331,7 +332,11 @@ class ProfileActivitySkeleton extends StatelessWidget {
                     ),
                     const _SkeletonBox(width: 32, height: 32, borderRadius: 8),
                     const SizedBox(width: 8),
-                    const _SkeletonBox(width: 60, height: 28, borderRadius: 999),
+                    const _SkeletonBox(
+                      width: 60,
+                      height: 28,
+                      borderRadius: 999,
+                    ),
                   ],
                 ),
                 const SizedBox(height: 24),
@@ -342,7 +347,13 @@ class ProfileActivitySkeleton extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: List.generate(7, (i) {
                       final heights = [
-                        0.55, 0.80, 0.40, 0.65, 0.90, 0.30, 0.60,
+                        0.55,
+                        0.80,
+                        0.40,
+                        0.65,
+                        0.90,
+                        0.30,
+                        0.60,
                       ];
                       return Expanded(
                         child: Column(
@@ -356,7 +367,10 @@ class ProfileActivitySkeleton extends StatelessWidget {
                             const SizedBox(height: 3),
                             _SkeletonBox(
                               width: 22,
-                              height: (_maxBarH * heights[i]).clamp(4, _maxBarH),
+                              height: (_maxBarH * heights[i]).clamp(
+                                4,
+                                _maxBarH,
+                              ),
                               borderRadius: 6,
                             ),
                             const SizedBox(height: 8),

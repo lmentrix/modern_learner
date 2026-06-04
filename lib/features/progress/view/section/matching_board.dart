@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:modern_learner_production/core/l10n/app_text.dart';
 import 'package:modern_learner_production/features/progress/service/request/exercise_request.dart';
 import 'package:modern_learner_production/features/progress/view/helpers/exercise_helpers.dart';
 import 'package:modern_learner_production/features/progress/view/widgets/match_choice_chip.dart';
@@ -42,7 +43,7 @@ class MatchingBoard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const ExerciseLabel('Tap a prompt, then choose its match'),
+        ExerciseLabel(context.tr('Tap a prompt, then choose its match')),
         const SizedBox(height: 10),
         ...pairs.map((pair) {
           final key = matchingKey(groupIndex, pair.pairNumber);
@@ -71,7 +72,7 @@ class MatchingBoard extends StatelessWidget {
                 OutlinedButton.icon(
                   onPressed: () => onMatchChecked(key),
                   icon: const Icon(Icons.fact_check_rounded, size: 16),
-                  label: const Text('Check'),
+                  label: Text(context.tr('Check')),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: accentColor,
                     side: BorderSide(
@@ -85,7 +86,9 @@ class MatchingBoard extends StatelessWidget {
                   ExerciseResultNote(
                     isCorrect: false,
                     answer: pair.rightItem,
-                    explanation: 'Match this prompt with the shown answer.',
+                    explanation: context.tr(
+                      'Match this prompt with the shown answer.',
+                    ),
                   ),
                 ],
               ],

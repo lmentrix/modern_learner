@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:modern_learner_production/core/l10n/app_text.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 import 'package:modern_learner_production/features/profile/data/profile_identity.dart';
 import 'package:modern_learner_production/features/profile/view/widgets/profile_account_info_row.dart';
@@ -117,7 +118,7 @@ class ProfileAccountSheetSection extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              child: const Text('Edit Profile'),
+              child: Text(context.tr('Edit Profile')),
             ),
           ),
         ],

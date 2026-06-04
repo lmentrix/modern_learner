@@ -65,10 +65,16 @@ class _HomeCourseListState extends State<HomeCourseList> {
     ProgressCourseSelection course,
     CourseXpData xpData,
   ) {
-    final chaptersCompleted = (xpData.chaptersUnlocked - 1).clamp(0, _totalChapters);
+    final chaptersCompleted = (xpData.chaptersUnlocked - 1).clamp(
+      0,
+      _totalChapters,
+    );
     final partialFraction =
         xpData.subcontentProgressFor(xpData.chaptersUnlocked) / _totalChapters;
-    return ((chaptersCompleted / _totalChapters) + partialFraction).clamp(0.0, 1.0);
+    return ((chaptersCompleted / _totalChapters) + partialFraction).clamp(
+      0.0,
+      1.0,
+    );
   }
 
   static ProgressCourseSelection _toEntity(UserCourseModel m) =>
@@ -93,41 +99,34 @@ class _HomeCourseListState extends State<HomeCourseList> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
-        children: _courses
-            .map(
-              (course) {
-                final courseKey = progressCourseXpKey(course);
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: ValueListenableBuilder<CourseXpData>(
-                    valueListenable:
-                        CourseXpService.instance.notifierFor(courseKey),
-                    builder: (context, xpData, _) {
-                      final progress = _courseProgress(course, xpData);
-                      return GestureDetector(
-                        onLongPress: () => widget.onCourseLongPress(course),
-                        child: LessonCard(
-                          emoji: '🎓',
-                          title: course.topic,
-                          chapter: course.title,
-                          duration: course.level,
-                          progress: progress,
-                          accentColor: AppColors.primary,
-                          isNew: !course.roadmapGenerated,
-                          lessonType: course.roadmapGenerated
-                              ? (course.title == 'Languages'
-                                  ? 'language'
-                                  : 'school')
-                              : null,
-                          onTap: () => widget.onCourseTap(course),
-                        ),
-                      );
-                    },
+        children: _courses.map((course) {
+          final courseKey = progressCourseXpKey(course);
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: ValueListenableBuilder<CourseXpData>(
+              valueListenable: CourseXpService.instance.notifierFor(courseKey),
+              builder: (context, xpData, _) {
+                final progress = _courseProgress(course, xpData);
+                return GestureDetector(
+                  onLongPress: () => widget.onCourseLongPress(course),
+                  child: LessonCard(
+                    emoji: '🎓',
+                    title: course.topic,
+                    chapter: course.title,
+                    duration: course.level,
+                    progress: progress,
+                    accentColor: AppColors.primary,
+                    isNew: !course.roadmapGenerated,
+                    lessonType: course.roadmapGenerated
+                        ? (course.title == 'Languages' ? 'language' : 'school')
+                        : null,
+                    onTap: () => widget.onCourseTap(course),
                   ),
                 );
               },
-            )
-            .toList(),
+            ),
+          );
+        }).toList(),
       ),
     );
   }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:modern_learner_production/core/l10n/app_text.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 
 class HomeProfileQuickStat extends StatelessWidget {
@@ -39,7 +40,7 @@ class HomeProfileQuickStat extends StatelessWidget {
           ),
           const SizedBox(height: 2),
           Text(
-            label,
+            context.tr(label),
             style: GoogleFonts.inter(
               fontSize: 10,
               fontWeight: FontWeight.w600,
@@ -47,7 +48,7 @@ class HomeProfileQuickStat extends StatelessWidget {
             ),
           ),
           Text(
-            subtitle,
+            context.tr(subtitle),
             style: GoogleFonts.inter(
               fontSize: 9,
               color: AppColors.onSurfaceVariant.withValues(alpha: 0.7),

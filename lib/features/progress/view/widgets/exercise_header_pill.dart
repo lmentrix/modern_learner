@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:modern_learner_production/core/l10n/app_text.dart';
 
 class ExerciseHeaderPill extends StatelessWidget {
-  const ExerciseHeaderPill({super.key, required this.label, required this.color});
+  const ExerciseHeaderPill({
+    super.key,
+    required this.label,
+    required this.color,
+  });
 
   final String label;
   final Color color;
@@ -17,7 +22,7 @@ class ExerciseHeaderPill extends StatelessWidget {
         border: Border.all(color: color.withValues(alpha: 0.32)),
       ),
       child: Text(
-        label,
+        context.tr(label),
         style: GoogleFonts.inter(
           fontSize: 12,
           fontWeight: FontWeight.w800,

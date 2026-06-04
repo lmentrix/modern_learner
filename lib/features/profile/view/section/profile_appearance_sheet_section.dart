@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:modern_learner_production/core/l10n/app_text.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 import 'package:modern_learner_production/features/profile/view/widgets/profile_appearance_option.dart';
 import 'package:modern_learner_production/features/profile/view/widgets/profile_sheet_handle.dart';
@@ -36,7 +37,7 @@ class ProfileAppearanceSheetSection extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           Text(
-            'THEME',
+            context.tr('THEME'),
             style: GoogleFonts.inter(
               fontSize: 10,
               fontWeight: FontWeight.w700,
@@ -77,7 +78,7 @@ class ProfileAppearanceSheetSection extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           Text(
-            'TEXT SIZE',
+            context.tr('TEXT SIZE'),
             style: GoogleFonts.inter(
               fontSize: 10,
               fontWeight: FontWeight.w700,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:modern_learner_production/core/l10n/app_text.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 
 class ProfileFooterStat extends StatelessWidget {
@@ -40,7 +41,7 @@ class ProfileFooterStat extends StatelessWidget {
               ),
             ),
             Text(
-              label,
+              context.tr(label),
               style: GoogleFonts.inter(
                 fontSize: 9,
                 color: AppColors.onSurfaceVariant,

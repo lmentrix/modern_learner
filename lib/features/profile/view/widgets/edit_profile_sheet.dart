@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:modern_learner_production/core/l10n/app_text.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 import 'package:modern_learner_production/features/profile/view/bloc/profile_bloc.dart';
 
@@ -39,9 +40,9 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
   void _handleSave() {
     final newName = _nameController.text.trim();
     if (newName.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Name cannot be empty')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.tr('Name cannot be empty'))),
+      );
       return;
     }
 
@@ -63,8 +64,8 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
         if (state.status == ProfileStatus.success) {
           Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Profile updated successfully'),
+            SnackBar(
+              content: Text(context.tr('Profile updated successfully')),
               backgroundColor: AppColors.primary,
             ),
           );
@@ -72,7 +73,9 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
           setState(() => _isLoading = false);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(state.errorMessage ?? 'Failed to update profile'),
+              content: Text(
+                context.tr(state.errorMessage ?? 'Failed to update profile'),
+              ),
               backgroundColor: AppColors.error,
             ),
           );
@@ -138,7 +141,7 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
         ),
         const SizedBox(width: 12),
         Text(
-          'Edit Profile',
+          context.tr('Edit Profile'),
           style: GoogleFonts.spaceGrotesk(
             fontSize: 18,
             fontWeight: FontWeight.w700,
@@ -180,7 +183,9 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                widget.currentName.isEmpty ? 'User' : widget.currentName,
+                widget.currentName.isEmpty
+                    ? context.tr('User')
+                    : widget.currentName,
                 style: GoogleFonts.spaceGrotesk(
                   fontSize: 17,
                   fontWeight: FontWeight.w700,
@@ -200,7 +205,7 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
         IconButton(
           onPressed: () {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Avatar upload coming soon')),
+              SnackBar(content: Text(context.tr('Avatar upload coming soon'))),
             );
           },
           icon: const Icon(Icons.camera_alt_outlined),
@@ -215,7 +220,7 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'NAME',
+          context.tr('NAME'),
           style: GoogleFonts.inter(
             fontSize: 10,
             fontWeight: FontWeight.w700,
@@ -229,7 +234,7 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
           enabled: !_isLoading,
           style: GoogleFonts.inter(fontSize: 15, color: AppColors.onSurface),
           decoration: InputDecoration(
-            hintText: 'Enter your name',
+            hintText: context.tr('Enter your name'),
             hintStyle: GoogleFonts.inter(
               fontSize: 15,
               color: AppColors.onSurfaceVariant,
@@ -261,7 +266,7 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'PROFILE',
+          context.tr('PROFILE'),
           style: GoogleFonts.inter(
             fontSize: 10,
             fontWeight: FontWeight.w700,
@@ -301,7 +306,7 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
         ),
         const SizedBox(height: 8),
         Text(
-          'Profile details are stored on this device.',
+          context.tr('Profile details are stored on this device.'),
           style: GoogleFonts.inter(
             fontSize: 11,
             color: AppColors.onSurfaceVariant,
@@ -338,7 +343,7 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
                   valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                 ),
               )
-            : const Text('Save Changes'),
+            : Text(context.tr('Save Changes')),
       ),
     );
   }

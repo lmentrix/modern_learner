@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:modern_learner_production/core/l10n/app_text.dart';
 import 'package:modern_learner_production/core/models/progress_course_selection.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 
-/// Delete course confirmation dialog.
 class HomeDeleteDialog extends StatelessWidget {
   const HomeDeleteDialog({
     super.key,
@@ -38,7 +38,7 @@ class HomeDeleteDialog extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Delete Course?',
+              context.tr('Delete Course?'),
               style: GoogleFonts.spaceGrotesk(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
@@ -49,7 +49,7 @@ class HomeDeleteDialog extends StatelessWidget {
         ],
       ),
       content: Text(
-        'Are you sure you want to delete "${course.topic}"?\n\nThis will remove the course from your continue learning list, but your progress will be saved if you create it again.',
+        '${context.tr('Are you sure you want to delete')} "${course.topic}"?\n\n${context.tr('This will remove the course from your continue learning list, but your progress will be saved if you create it again.')}',
         style: GoogleFonts.inter(
           fontSize: 14,
           color: AppColors.onSurfaceVariant,
@@ -63,7 +63,7 @@ class HomeDeleteDialog extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           ),
           child: Text(
-            'Cancel',
+            context.tr('Cancel'),
             style: GoogleFonts.inter(
               fontSize: 14,
               fontWeight: FontWeight.w600,
@@ -79,7 +79,7 @@ class HomeDeleteDialog extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           ),
           child: Text(
-            'Delete',
+            context.tr('Delete'),
             style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600),
           ),
         ),

@@ -133,7 +133,6 @@ class AchievementService {
         .eq('course_key', courseKey);
   }
 
-
   Future<List<ProfileCourseXpModel>> getCourseXp({String? userId}) async {
     final resolvedUserId = _resolveUserId(userId);
     final data = await supabase
@@ -278,11 +277,13 @@ class AchievementService {
     );
 
     if (isNewlyUnlocked) {
-      pushNotificationService.notifyAchievementUnlocked(
-        emoji: definition.emoji,
-        title: definition.title,
-        description: definition.description,
-      ).ignore();
+      pushNotificationService
+          .notifyAchievementUnlocked(
+            emoji: definition.emoji,
+            title: definition.title,
+            description: definition.description,
+          )
+          .ignore();
     }
   }
 

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:modern_learner_production/core/l10n/app_locale_controller.dart';
+import 'package:modern_learner_production/core/l10n/app_locale_option.dart';
 import 'package:modern_learner_production/core/profile/local_profile_service.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 import 'package:modern_learner_production/features/auth/service/auth_service.dart';
@@ -26,6 +28,7 @@ import 'package:modern_learner_production/features/profile/view/widgets/edit_pro
 import 'package:modern_learner_production/features/progress/service/course_xp_service.dart';
 import 'package:modern_learner_production/features/subscription/service/subscription_service.dart';
 import 'package:modern_learner_production/features/subscription/view/subscription_page.dart';
+import 'package:modern_learner_production/l10n/generated/app_localizations.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -106,11 +109,12 @@ class _ProfilePageState extends State<ProfilePage> {
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (context) => ProfileLanguageSheetSection(
-        selectedLanguage: _preferences.selectedLanguage,
-        onLanguageSelected: (selectedLanguage) {
+        selectedLocale: AppLocaleController.instance.locale,
+        onLanguageSelected: (selectedOption) {
+          AppLocaleController.instance.setLocale(selectedOption.locale);
           setState(() {
             _preferences = _preferences.copyWith(
-              selectedLanguage: selectedLanguage,
+              selectedLanguage: selectedOption.label,
             );
           });
         },
@@ -142,20 +146,21 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _logout() async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Log Out'),
-        content: const Text('Are you sure you want to log out?'),
+        title: Text(l10n.logOutConfirmTitle),
+        content: Text(l10n.logOutConfirmMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.redAccent),
-            child: const Text('Log Out'),
+            child: Text(l10n.logOut),
           ),
         ],
       ),
@@ -254,7 +259,11 @@ class _ProfilePageState extends State<ProfilePage> {
                   sliver: SliverToBoxAdapter(
                     child: ProfileSettingsSection(
                       identity: identity,
-                      preferences: _preferences,
+                      preferences: _preferences.copyWith(
+                        selectedLanguage: appLocaleOptionForLocale(
+                          AppLocaleController.instance.locale,
+                        ).label,
+                      ),
                       onAccountTap: _showAccountSheet,
                       onSubscriptionTap: _showSubscriptionPage,
                       onNotificationsTap: _showNotificationsSheet,

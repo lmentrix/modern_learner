@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:modern_learner_production/core/l10n/app_text.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 
 class ProfileToggleRow extends StatelessWidget {
@@ -30,7 +31,7 @@ class ProfileToggleRow extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                label,
+                context.tr(label),
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -38,7 +39,7 @@ class ProfileToggleRow extends StatelessWidget {
                 ),
               ),
               Text(
-                description,
+                context.tr(description),
                 style: GoogleFonts.inter(
                   fontSize: 12,
                   color: AppColors.onSurfaceVariant,

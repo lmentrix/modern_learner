@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:modern_learner_production/core/l10n/app_text.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 
 class ProfileSheetTitle extends StatelessWidget {
@@ -30,7 +31,7 @@ class ProfileSheetTitle extends StatelessWidget {
         ),
         const SizedBox(width: 12),
         Text(
-          title,
+          context.tr(title),
           style: GoogleFonts.spaceGrotesk(
             fontSize: 18,
             fontWeight: FontWeight.w700,

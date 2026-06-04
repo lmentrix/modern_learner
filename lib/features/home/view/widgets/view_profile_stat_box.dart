@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:modern_learner_production/core/l10n/app_text.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 
 class ViewProfileStatBox extends StatelessWidget {
@@ -55,7 +56,7 @@ class ViewProfileStatBox extends StatelessWidget {
           FittedBox(
             fit: BoxFit.scaleDown,
             child: Text(
-              label,
+              context.tr(label),
               style: GoogleFonts.inter(
                 fontSize: 10,
                 color: AppColors.onSurfaceVariant,

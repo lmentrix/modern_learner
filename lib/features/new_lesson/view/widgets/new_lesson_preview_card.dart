@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:modern_learner_production/core/l10n/app_text.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 import 'package:modern_learner_production/features/new_lesson/data/new_lesson_page_constants.dart';
 
@@ -16,7 +17,9 @@ class NewLessonPreviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final language = selectedLanguage ?? 'Pick a language';
+    final language = selectedLanguage == null
+        ? context.tr('Pick a language')
+        : context.tr(selectedLanguage!);
     final chapterCount = switch (selectedDifficulty) {
       'Intermediate' => 5,
       'Advanced' => 6,
@@ -62,7 +65,7 @@ class NewLessonPreviewCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Voice roadmap preview',
+                      context.tr('Voice roadmap preview'),
                       style: GoogleFonts.inter(
                         fontSize: 11,
                         fontWeight: FontWeight.w800,
@@ -86,7 +89,9 @@ class NewLessonPreviewCard extends StatelessWidget {
           ),
           const SizedBox(height: 18),
           Text(
-            'A focused speaking track with short drills, recall loops, and guided response practice tailored to your level.',
+            context.tr(
+              'A focused speaking track with short drills, recall loops, and guided response practice tailored to your level.',
+            ),
             style: GoogleFonts.inter(
               fontSize: 13,
               color: AppColors.onSurfaceVariant,
@@ -98,15 +103,15 @@ class NewLessonPreviewCard extends StatelessWidget {
             children: [
               Expanded(
                 child: _buildMetric(
-                  label: 'Difficulty',
-                  value: selectedDifficulty,
+                  label: context.tr('Difficulty'),
+                  value: context.tr(selectedDifficulty),
                   color: AppColors.tertiary,
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: _buildMetric(
-                  label: 'Chapters',
+                  label: context.tr('Chapters'),
                   value: '$chapterCount',
                   color: AppColors.secondary,
                 ),
@@ -114,7 +119,7 @@ class NewLessonPreviewCard extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: _buildMetric(
-                  label: 'Lessons',
+                  label: context.tr('Lessons'),
                   value: '$lessonCount',
                   color: AppColors.primary,
                 ),
