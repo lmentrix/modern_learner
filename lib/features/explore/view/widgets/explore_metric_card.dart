@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:modern_learner_production/core/l10n/app_text.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 
 class ExploreMetricCard extends StatelessWidget {
@@ -30,7 +31,7 @@ class ExploreMetricCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            label.toUpperCase(),
+            context.tr(label).toUpperCase(),
             style: GoogleFonts.inter(
               fontSize: 10,
               fontWeight: FontWeight.w800,
@@ -49,7 +50,7 @@ class ExploreMetricCard extends StatelessWidget {
           ),
           const SizedBox(height: 2),
           Text(
-            hint,
+            context.tr(hint),
             style: GoogleFonts.inter(
               fontSize: 11,
               color: AppColors.onSurfaceVariant,

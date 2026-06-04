@@ -73,11 +73,7 @@ class ExerciseHeader extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  Icons.flash_on_rounded,
-                  size: 16,
-                  color: accentColor,
-                ),
+                Icon(Icons.flash_on_rounded, size: 16, color: accentColor),
                 const SizedBox(width: 4),
                 Text(
                   '$correctAnswers',

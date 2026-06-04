@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:modern_learner_production/core/l10n/app_text.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 import 'package:modern_learner_production/features/home/view/widgets/home_profile_quick_action_row.dart';
 import 'package:modern_learner_production/features/home/view/widgets/home_profile_quick_stat.dart';
 
-/// Profile quick view bottom sheet widget.
 class HomeProfileSheet extends StatelessWidget {
   const HomeProfileSheet({
     super.key,
@@ -37,7 +37,6 @@ class HomeProfileSheet extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Handle
           Container(
             width: 36,
             height: 4,
@@ -47,7 +46,6 @@ class HomeProfileSheet extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          // Profile header
           Row(
             children: [
               Container(
@@ -82,7 +80,7 @@ class HomeProfileSheet extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      'Advanced Learner · LVL 8',
+                      '${context.tr('Advanced Learner')} · ${context.tr('LVL')} 8',
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         color: AppColors.onSurfaceVariant,
@@ -94,7 +92,6 @@ class HomeProfileSheet extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 24),
-          // Stats row
           const Row(
             children: [
               Expanded(
@@ -126,9 +123,8 @@ class HomeProfileSheet extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 24),
-          // Quick actions
           Text(
-            'QUICK ACTIONS',
+            context.tr('QUICK ACTIONS'),
             style: GoogleFonts.inter(
               fontSize: 10,
               fontWeight: FontWeight.w700,

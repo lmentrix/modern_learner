@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:modern_learner_production/core/router/app_router.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 import 'package:modern_learner_production/features/new_lesson/view/new_lesson_page.dart';
+import 'package:modern_learner_production/l10n/generated/app_localizations.dart';
 
 /// 全局主布局 - 包含唯一的底部导航栏
 class MainLayout extends StatelessWidget {
@@ -36,6 +37,8 @@ class _BottomNavigationBarWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return ClipRect(
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
@@ -57,21 +60,21 @@ class _BottomNavigationBarWidget extends StatelessWidget {
                 children: [
                   _NavItem(
                     icon: Icons.home_rounded,
-                    label: 'Home',
+                    label: l10n.navHome,
                     isActive: currentIndex == 0,
                     activeColor: AppColors.primary,
                     onTap: () => context.go(Routes.home),
                   ),
                   _NavItem(
                     icon: Icons.explore_rounded,
-                    label: 'Explore',
+                    label: l10n.navExplore,
                     isActive: currentIndex == 1,
                     activeColor: AppColors.primary,
                     onTap: () => context.go(Routes.explore),
                   ),
                   _NavItem(
                     icon: Icons.mic_rounded,
-                    label: 'New',
+                    label: l10n.navNew,
                     isActive: currentIndex == 2,
                     activeColor: AppColors.primary,
                     centerFab: true,
@@ -85,14 +88,14 @@ class _BottomNavigationBarWidget extends StatelessWidget {
                   ),
                   _NavItem(
                     icon: Icons.bar_chart_rounded,
-                    label: 'Progress',
+                    label: l10n.navProgress,
                     isActive: currentIndex == 3,
                     activeColor: AppColors.primary,
                     onTap: () => context.go(Routes.progress),
                   ),
                   _NavItem(
                     icon: Icons.person_rounded,
-                    label: 'Profile',
+                    label: l10n.navProfile,
                     isActive: currentIndex == 4,
                     activeColor: AppColors.primary,
                     onTap: () => context.go(Routes.profile),

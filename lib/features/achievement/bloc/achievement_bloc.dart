@@ -76,16 +76,18 @@ class AchievementBloc extends Bloc<AchievementEvent, AchievementState> {
     UserProgress progress,
   ) {
     final courseData = Map.fromEntries(
-      CourseXpService.instance.courseNotifiers.entries
-          .map((e) => MapEntry(e.key, e.value.value)),
+      CourseXpService.instance.courseNotifiers.entries.map(
+        (e) => MapEntry(e.key, e.value.value),
+      ),
     );
 
     return catalogue.map((a) {
       final courses = _unlockedBy(a, progress, courseData);
       return a.copyWith(
         unlockedByCourses: courses,
-        unlockedAt:
-            courses.isNotEmpty && a.unlockedAt == null ? DateTime.now() : a.unlockedAt,
+        unlockedAt: courses.isNotEmpty && a.unlockedAt == null
+            ? DateTime.now()
+            : a.unlockedAt,
       );
     }).toList();
   }
@@ -119,7 +121,9 @@ class AchievementBloc extends Bloc<AchievementEvent, AchievementState> {
         return progress.gems >= a.requirement ? ['global'] : [];
 
       case AchievementType.lesson:
-        return progress.completedLessons.length >= a.requirement ? ['global'] : [];
+        return progress.completedLessons.length >= a.requirement
+            ? ['global']
+            : [];
     }
   }
 }

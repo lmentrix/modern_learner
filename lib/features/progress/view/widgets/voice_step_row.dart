@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:modern_learner_production/core/l10n/app_text.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 import 'package:modern_learner_production/features/progress/service/request/exercise_request.dart';
 import 'package:modern_learner_production/features/progress/view/widgets/exercise_chip.dart';
@@ -627,7 +628,7 @@ class _IdleControls extends StatelessWidget {
         FilledButton.icon(
           onPressed: onListen,
           icon: const Icon(Icons.volume_up_rounded, size: 17),
-          label: const Text('Listen first'),
+          label: Text(context.tr('Listen first')),
           style: FilledButton.styleFrom(
             backgroundColor: accentColor,
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -723,7 +724,7 @@ class _PlayingControls extends StatelessWidget {
             OutlinedButton.icon(
               onPressed: onStop,
               icon: const Icon(Icons.stop_rounded, size: 15),
-              label: const Text('Stop'),
+              label: Text(context.tr('Stop')),
               style: OutlinedButton.styleFrom(
                 foregroundColor: accentColor,
                 side: BorderSide(color: accentColor.withValues(alpha: 0.40)),
@@ -759,7 +760,7 @@ class _ReadyControls extends StatelessWidget {
         OutlinedButton.icon(
           onPressed: onReplay,
           icon: const Icon(Icons.replay_rounded, size: 15),
-          label: const Text('Replay'),
+          label: Text(context.tr('Replay')),
           style: OutlinedButton.styleFrom(
             foregroundColor: accentColor,
             side: BorderSide(color: accentColor.withValues(alpha: 0.38)),
@@ -771,7 +772,7 @@ class _ReadyControls extends StatelessWidget {
           child: FilledButton.icon(
             onPressed: onSpeak,
             icon: const Icon(Icons.mic_rounded, size: 17),
-            label: Text(hasResult ? 'Speak again' : 'Speak now'),
+            label: Text(context.tr(hasResult ? 'Speak again' : 'Speak now')),
             style: FilledButton.styleFrom(
               backgroundColor: accentColor,
               padding: const EdgeInsets.symmetric(vertical: 12),
@@ -819,7 +820,7 @@ class _ListeningControls extends StatelessWidget {
             FilledButton.icon(
               onPressed: onStop,
               icon: const Icon(Icons.stop_rounded, size: 15),
-              label: const Text('Done'),
+              label: Text(context.tr('Done')),
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.error,
                 visualDensity: VisualDensity.compact,
@@ -960,7 +961,7 @@ class _ScoredControls extends StatelessWidget {
             OutlinedButton.icon(
               onPressed: onReplay,
               icon: const Icon(Icons.volume_up_rounded, size: 15),
-              label: const Text('Listen again'),
+              label: Text(context.tr('Listen again')),
               style: OutlinedButton.styleFrom(
                 foregroundColor: accentColor,
                 side: BorderSide(color: accentColor.withValues(alpha: 0.38)),
@@ -971,7 +972,7 @@ class _ScoredControls extends StatelessWidget {
             OutlinedButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.mic_rounded, size: 15),
-              label: const Text('Try again'),
+              label: Text(context.tr('Try again')),
               style: OutlinedButton.styleFrom(
                 foregroundColor: accentColor,
                 side: BorderSide(color: accentColor.withValues(alpha: 0.38)),

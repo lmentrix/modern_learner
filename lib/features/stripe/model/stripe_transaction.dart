@@ -23,22 +23,23 @@ class StripeTransaction {
       amountTotal != null ? amountTotal! / 100.0 : null;
 
   String get eventLabel => switch (eventType) {
-        'checkout.session.completed' => 'Subscription Started',
-        'customer.subscription.updated' => 'Subscription Updated',
-        'customer.subscription.deleted' => 'Subscription Canceled',
-        'invoice.payment_failed' => 'Payment Failed',
-        'invoice.payment_succeeded' => 'Payment Succeeded',
-        _ => eventType,
-      };
+    'checkout.session.completed' => 'Subscription Started',
+    'customer.subscription.updated' => 'Subscription Updated',
+    'customer.subscription.deleted' => 'Subscription Canceled',
+    'invoice.payment_failed' => 'Payment Failed',
+    'invoice.payment_succeeded' => 'Payment Succeeded',
+    _ => eventType,
+  };
 
   String get statusLabel => switch (status) {
-        'succeeded' => 'Succeeded',
-        'failed' => 'Failed',
-        'pending' => 'Pending',
-        'active' => 'Active',
-        'canceled' => 'Canceled',
-        _ => status ?? '—',
-      };
+    'succeeded' => 'Succeeded',
+    'failed' => 'Failed',
+    'pending' => 'Pending',
+    'active' => 'Active',
+    'canceled' => 'Canceled',
+    _ => status ?? '—',
+  };
 
-  bool get isFailure => status == 'failed' || eventType == 'invoice.payment_failed';
+  bool get isFailure =>
+      status == 'failed' || eventType == 'invoice.payment_failed';
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:modern_learner_production/core/l10n/app_text.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 
 class ExploreErrorState extends StatelessWidget {
@@ -21,7 +22,7 @@ class ExploreErrorState extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Research feed unavailable',
+            context.tr('Research feed unavailable'),
             style: GoogleFonts.spaceGrotesk(
               fontSize: 20,
               fontWeight: FontWeight.w700,
@@ -30,7 +31,9 @@ class ExploreErrorState extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'OpenAlex did not respond. Pull to refresh or retry below.',
+            context.tr(
+              'OpenAlex did not respond. Pull to refresh or retry below.',
+            ),
             style: GoogleFonts.inter(
               fontSize: 13,
               height: 1.5,
@@ -47,7 +50,7 @@ class ExploreErrorState extends StatelessWidget {
                 borderRadius: BorderRadius.circular(14),
               ),
             ),
-            child: const Text('Retry'),
+            child: Text(context.tr('Retry')),
           ),
         ],
       ),

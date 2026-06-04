@@ -3,10 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 
 class ExerciseHint extends StatelessWidget {
-  const ExerciseHint({
-    super.key,
-    required this.hint,
-  });
+  const ExerciseHint({super.key, required this.hint});
 
   final String hint;
 

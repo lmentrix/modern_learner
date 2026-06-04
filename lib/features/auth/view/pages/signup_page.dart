@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:modern_learner_production/core/l10n/app_text.dart';
 import 'package:modern_learner_production/core/router/app_router.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 import 'package:modern_learner_production/features/auth/service/auth_service.dart';
@@ -73,7 +74,7 @@ class _SignupPageState extends State<SignupPage> {
       return 'An account with this email already exists.';
     }
     if (msg.contains('network')) {
-      return 'Network error — check your connection.';
+      return 'Network error - check your connection.';
     }
     return 'Something went wrong. Please try again.';
   }
@@ -89,21 +90,21 @@ class _SignupPageState extends State<SignupPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 8),
-              _BackButton(),
+              const _BackButton(),
               const SizedBox(height: 32),
-              _Header(),
+              const _Header(),
               const SizedBox(height: 40),
               AuthTextField(
                 controller: _nameCtrl,
-                label: 'NAME',
-                hint: 'Your name',
+                label: context.tr('NAME'),
+                hint: context.tr('Your name'),
                 keyboardType: TextInputType.name,
                 textInputAction: TextInputAction.next,
               ),
               const SizedBox(height: 20),
               AuthTextField(
                 controller: _emailCtrl,
-                label: 'EMAIL',
+                label: context.tr('EMAIL'),
                 hint: 'you@example.com',
                 keyboardType: TextInputType.emailAddress,
                 textInputAction: TextInputAction.next,
@@ -111,7 +112,7 @@ class _SignupPageState extends State<SignupPage> {
               const SizedBox(height: 20),
               AuthTextField(
                 controller: _passwordCtrl,
-                label: 'PASSWORD',
+                label: context.tr('PASSWORD'),
                 hint: '••••••••',
                 obscure: _obscurePassword,
                 textInputAction: TextInputAction.next,
@@ -130,7 +131,7 @@ class _SignupPageState extends State<SignupPage> {
               const SizedBox(height: 20),
               AuthTextField(
                 controller: _confirmCtrl,
-                label: 'CONFIRM PASSWORD',
+                label: context.tr('CONFIRM PASSWORD'),
                 hint: '••••••••',
                 obscure: _obscureConfirm,
                 textInputAction: TextInputAction.done,
@@ -154,7 +155,7 @@ class _SignupPageState extends State<SignupPage> {
               const SizedBox(height: 32),
               _SignUpButton(loading: _loading, onTap: _signUp),
               const SizedBox(height: 24),
-              _SignInPrompt(),
+              const _SignInPrompt(),
             ],
           ),
         ),
@@ -164,6 +165,8 @@ class _SignupPageState extends State<SignupPage> {
 }
 
 class _BackButton extends StatelessWidget {
+  const _BackButton();
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -186,13 +189,15 @@ class _BackButton extends StatelessWidget {
 }
 
 class _Header extends StatelessWidget {
+  const _Header();
+
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Create account',
+          context.tr('Create account'),
           style: GoogleFonts.spaceGrotesk(
             fontSize: 32,
             fontWeight: FontWeight.w700,
@@ -202,7 +207,7 @@ class _Header extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          'Join and start your learning journey',
+          context.tr('Join and start your learning journey'),
           style: GoogleFonts.inter(
             fontSize: 15,
             color: AppColors.onSurfaceVariant,
@@ -236,7 +241,7 @@ class _ErrorBanner extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              message,
+              context.tr(message),
               style: GoogleFonts.inter(fontSize: 13, color: AppColors.error),
             ),
           ),
@@ -276,7 +281,7 @@ class _SignUpButton extends StatelessWidget {
                 ),
               )
             : Text(
-                'Create Account',
+                context.tr('Create Account'),
                 style: GoogleFonts.spaceGrotesk(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -288,13 +293,15 @@ class _SignUpButton extends StatelessWidget {
 }
 
 class _SignInPrompt extends StatelessWidget {
+  const _SignInPrompt();
+
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
-          'Already have an account? ',
+          context.tr('Already have an account? '),
           style: GoogleFonts.inter(
             fontSize: 14,
             color: AppColors.onSurfaceVariant,
@@ -303,7 +310,7 @@ class _SignInPrompt extends StatelessWidget {
         GestureDetector(
           onTap: () => context.go(Routes.login),
           child: Text(
-            'Sign In',
+            context.tr('Sign In'),
             style: GoogleFonts.inter(
               fontSize: 14,
               fontWeight: FontWeight.w600,

@@ -44,10 +44,11 @@ abstract final class ProfilePageData {
     ProfileOptionItem(emoji: '🇪🇸', label: 'Spanish'),
     ProfileOptionItem(emoji: '🇫🇷', label: 'French'),
     ProfileOptionItem(emoji: '🇩🇪', label: 'German'),
-    ProfileOptionItem(emoji: '🇯🇵', label: 'Japanese'),
-    ProfileOptionItem(emoji: '🇨🇳', label: 'Mandarin'),
     ProfileOptionItem(emoji: '🇮🇹', label: 'Italian'),
-    ProfileOptionItem(emoji: '🇧🇷', label: 'Portuguese'),
+    ProfileOptionItem(emoji: '🇵🇹', label: 'Portuguese'),
+    ProfileOptionItem(emoji: '🇯🇵', label: 'Japanese'),
+    ProfileOptionItem(emoji: '🇰🇷', label: 'Korean'),
+    ProfileOptionItem(emoji: '🇨🇳', label: 'Mandarin'),
   ];
 
   static const faqs = <ProfileFaqItem>[

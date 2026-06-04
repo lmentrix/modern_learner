@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:modern_learner_production/core/l10n/app_text.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 import 'package:modern_learner_production/features/progress/service/request/exercise_request.dart';
 import 'package:modern_learner_production/features/progress/view/helpers/exercise_helpers.dart';
@@ -122,7 +123,7 @@ class QuestionBlock extends StatelessWidget {
               controller: controller,
               onChanged: (_) => onAnswerSelected(key, controller.text),
               decoration: InputDecoration(
-                hintText: 'Type your answer…',
+                hintText: context.tr('Type your answer here...'),
                 filled: true,
                 fillColor: AppColors.surfaceContainer,
                 focusedBorder: exerciseInputBorder(accentColor),
@@ -169,7 +170,7 @@ class QuestionBlock extends StatelessWidget {
                 ),
                 const SizedBox(width: 5),
                 Text(
-                  isCorrect ? 'Correct' : 'Checked',
+                  context.tr(isCorrect ? 'Correct' : 'Checked'),
                   style: GoogleFonts.inter(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
@@ -275,7 +276,7 @@ class _CheckButtonState extends State<_CheckButton>
         child: OutlinedButton.icon(
           onPressed: widget.enabled ? widget.onTap : null,
           icon: const Icon(Icons.fact_check_rounded, size: 15),
-          label: const Text('Check'),
+          label: Text(context.tr('Check')),
           style: OutlinedButton.styleFrom(
             foregroundColor: widget.accentColor,
             side: BorderSide(color: widget.accentColor.withValues(alpha: 0.45)),

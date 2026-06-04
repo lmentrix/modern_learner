@@ -14,7 +14,6 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
 
   final LocalProfileService _localProfileService;
 
-
   ProfileEntity _currentProfile() {
     final identity = _localProfileService.currentIdentity;
     return ProfileEntity(

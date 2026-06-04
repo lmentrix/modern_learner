@@ -24,8 +24,18 @@ class _SubscriptionTransactionHistoryState
 
   String _formatDate(DateTime d) {
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     return '${months[d.month - 1]} ${d.day}, ${d.year}';
   }
@@ -38,9 +48,7 @@ class _SubscriptionTransactionHistoryState
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Padding(
             padding: EdgeInsets.all(24),
-            child: Center(
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
+            child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
           );
         }
 
@@ -62,10 +70,10 @@ class _SubscriptionTransactionHistoryState
                 ),
               ),
               const SizedBox(height: 12),
-              ...transactions.map((tx) => _TransactionTile(
-                    transaction: tx,
-                    formatDate: _formatDate,
-                  )),
+              ...transactions.map(
+                (tx) =>
+                    _TransactionTile(transaction: tx, formatDate: _formatDate),
+              ),
             ],
           ),
         );
@@ -75,10 +83,7 @@ class _SubscriptionTransactionHistoryState
 }
 
 class _TransactionTile extends StatelessWidget {
-  const _TransactionTile({
-    required this.transaction,
-    required this.formatDate,
-  });
+  const _TransactionTile({required this.transaction, required this.formatDate});
 
   final StripeTransaction transaction;
   final String Function(DateTime) formatDate;

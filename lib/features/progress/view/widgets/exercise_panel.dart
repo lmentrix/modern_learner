@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 
 class ExercisePanel extends StatelessWidget {
-  const ExercisePanel({super.key, required this.accentColor, required this.child});
+  const ExercisePanel({
+    super.key,
+    required this.accentColor,
+    required this.child,
+  });
 
   final Color accentColor;
   final Widget child;

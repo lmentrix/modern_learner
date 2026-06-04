@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:modern_learner_production/core/l10n/app_text.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 import 'package:modern_learner_production/features/new_lesson/data/new_lesson_page_constants.dart';
 
@@ -74,7 +75,7 @@ class NewLessonHeaderSection extends StatelessWidget {
                       ),
                     ),
                     child: Text(
-                      'VOICE LESSON',
+                      context.tr('VOICE LESSON'),
                       style: GoogleFonts.inter(
                         fontSize: 11,
                         fontWeight: FontWeight.w800,
@@ -85,7 +86,7 @@ class NewLessonHeaderSection extends StatelessWidget {
                   ),
                   const SizedBox(height: 14),
                   Text(
-                    'New Voice Lesson',
+                    context.tr('New Voice Lesson'),
                     style: GoogleFonts.spaceGrotesk(
                       fontSize: 34,
                       fontWeight: FontWeight.w800,
@@ -95,7 +96,9 @@ class NewLessonHeaderSection extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Choose the language and challenge level, then generate a roadmap built for short, focused speaking reps.',
+                    context.tr(
+                      'Choose the language and challenge level, then generate a roadmap built for short, focused speaking reps.',
+                    ),
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       color: AppColors.onSurfaceVariant,

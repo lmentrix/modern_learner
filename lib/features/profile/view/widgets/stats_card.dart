@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:modern_learner_production/core/l10n/app_text.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 
 class StatsCard extends StatefulWidget {
@@ -92,7 +93,7 @@ class _StatsCardState extends State<StatsCard>
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    widget.label,
+                    context.tr(widget.label),
                     style: GoogleFonts.inter(
                       fontSize: 10,
                       color: AppColors.onSurfaceVariant,

@@ -43,6 +43,7 @@ class ProgressCourseSelection extends Equatable {
   final Map<String, dynamic>? roadmapJson;
   final bool roadmapGenerated;
   final ProgressCourseType courseType;
+
   /// UUID from the Supabase `user_courses` table. Null until first remote sync.
   final String? courseId;
 

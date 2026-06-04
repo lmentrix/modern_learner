@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:modern_learner_production/core/l10n/app_text.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 
 class ExerciseAnswerOption extends StatelessWidget {
@@ -58,7 +59,7 @@ class ExerciseAnswerOption extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                option,
+                context.tr(option),
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,

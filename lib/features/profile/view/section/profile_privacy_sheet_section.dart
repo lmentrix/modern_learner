@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:modern_learner_production/core/l10n/app_text.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 import 'package:modern_learner_production/features/profile/data/profile_preferences.dart';
 import 'package:modern_learner_production/features/profile/view/widgets/profile_sheet_divider.dart';
@@ -116,7 +117,7 @@ class _ProfilePrivacySheetSectionState
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              child: const Text('Download My Data'),
+              child: Text(context.tr('Download My Data')),
             ),
           ),
         ],

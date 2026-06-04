@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:modern_learner_production/core/l10n/app_text.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 
 class ProfileAppearanceOption extends StatelessWidget {
@@ -37,7 +38,7 @@ class ProfileAppearanceOption extends StatelessWidget {
           Text(emoji, style: const TextStyle(fontSize: 22)),
           const SizedBox(height: 6),
           Text(
-            label,
+            context.tr(label),
             style: GoogleFonts.inter(
               fontSize: 13,
               fontWeight: FontWeight.w600,

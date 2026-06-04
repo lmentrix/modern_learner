@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:modern_learner_production/core/l10n/app_text.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 
 class AnswerOption extends StatefulWidget {
@@ -75,10 +76,7 @@ class _AnswerOptionState extends State<AnswerOption>
       vsync: this,
       duration: const Duration(milliseconds: 550),
     );
-    _shimmerAnim = CurvedAnimation(
-      parent: _shimmerCtrl,
-      curve: Curves.easeOut,
-    );
+    _shimmerAnim = CurvedAnimation(parent: _shimmerCtrl, curve: Curves.easeOut);
   }
 
   @override
@@ -91,14 +89,16 @@ class _AnswerOptionState extends State<AnswerOption>
       _bounceCtrl.forward(from: 0);
     }
 
-    final nowCorrect = widget.checked && widget.isCorrectAnswer && widget.selected;
+    final nowCorrect =
+        widget.checked && widget.isCorrectAnswer && widget.selected;
     final wasCorrect = old.checked && old.isCorrectAnswer && old.selected;
     if (nowCorrect && !wasCorrect) {
       HapticFeedback.mediumImpact();
       _shimmerCtrl.forward(from: 0);
     }
 
-    final nowWrong = widget.checked && widget.selected && !widget.isCorrectAnswer;
+    final nowWrong =
+        widget.checked && widget.selected && !widget.isCorrectAnswer;
     final wasWrong = old.checked && old.selected && !old.isCorrectAnswer;
     if (nowWrong && !wasWrong) {
       HapticFeedback.heavyImpact();
@@ -117,7 +117,8 @@ class _AnswerOptionState extends State<AnswerOption>
   @override
   Widget build(BuildContext context) {
     final showCorrect = widget.checked && widget.isCorrectAnswer;
-    final showWrong   = widget.checked && widget.selected && !widget.isCorrectAnswer;
+    final showWrong =
+        widget.checked && widget.selected && !widget.isCorrectAnswer;
     final tone = showCorrect
         ? AppColors.tertiary
         : showWrong
@@ -185,7 +186,9 @@ class _AnswerOptionState extends State<AnswerOption>
                           border: Border.all(
                             color: isActive
                                 ? tone.withValues(alpha: 0.50)
-                                : AppColors.outlineVariant.withValues(alpha: 0.25),
+                                : AppColors.outlineVariant.withValues(
+                                    alpha: 0.25,
+                                  ),
                           ),
                         ),
                         child: Icon(
@@ -203,11 +206,15 @@ class _AnswerOptionState extends State<AnswerOption>
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
-                          widget.label,
+                          context.tr(widget.label),
                           style: GoogleFonts.inter(
                             fontSize: 13,
-                            fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
-                            color: isActive ? AppColors.onSurface : AppColors.onSurfaceVariant,
+                            fontWeight: isActive
+                                ? FontWeight.w700
+                                : FontWeight.w500,
+                            color: isActive
+                                ? AppColors.onSurface
+                                : AppColors.onSurfaceVariant,
                             height: 1.35,
                           ),
                         ),
@@ -216,7 +223,11 @@ class _AnswerOptionState extends State<AnswerOption>
                       if (showCorrect)
                         Padding(
                           padding: const EdgeInsets.only(left: 6),
-                          child: Icon(Icons.auto_awesome_rounded, size: 14, color: tone),
+                          child: Icon(
+                            Icons.auto_awesome_rounded,
+                            size: 14,
+                            color: tone,
+                          ),
                         ),
                     ],
                   ),
@@ -239,9 +250,15 @@ class _AnswerOptionState extends State<AnswerOption>
                                   decoration: BoxDecoration(
                                     gradient: LinearGradient(
                                       colors: [
-                                        AppColors.tertiary.withValues(alpha: 0.0),
-                                        AppColors.tertiary.withValues(alpha: 0.18),
-                                        AppColors.tertiary.withValues(alpha: 0.0),
+                                        AppColors.tertiary.withValues(
+                                          alpha: 0.0,
+                                        ),
+                                        AppColors.tertiary.withValues(
+                                          alpha: 0.18,
+                                        ),
+                                        AppColors.tertiary.withValues(
+                                          alpha: 0.0,
+                                        ),
                                       ],
                                     ),
                                   ),
