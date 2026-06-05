@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:modern_learner_production/core/router/app_router.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
+import 'package:modern_learner_production/core/utils/responsive.dart';
 import 'package:modern_learner_production/features/explore/data/datasources/learning_subject_local_datasource.dart';
 import 'package:modern_learner_production/features/explore/data/repositories/learning_subject_repository_impl.dart';
 import 'package:modern_learner_production/features/explore/domain/usecases/get_all_learning_subjects.dart';
@@ -43,7 +44,7 @@ class ExplorePage extends StatelessWidget {
               const SliverToBoxAdapter(child: SizedBox(height: 24)),
               SliverPadding(
                 padding: EdgeInsets.symmetric(
-                  horizontal: MediaQuery.sizeOf(context).width >= 600 ? 28 : 20,
+                  horizontal: Responsive.hPad(context),
                 ),
                 sliver: SliverToBoxAdapter(
                   child: Text(
@@ -60,15 +61,13 @@ class ExplorePage extends StatelessWidget {
               const SliverToBoxAdapter(child: SizedBox(height: 6)),
               SliverPadding(
                 padding: EdgeInsets.symmetric(
-                  horizontal: MediaQuery.sizeOf(context).width >= 600 ? 28 : 20,
+                  horizontal: Responsive.hPad(context),
                 ),
                 sliver: SliverToBoxAdapter(
                   child: Text(
                     'Browse comprehensive subjects across science, humanities, arts, and more.',
                     style: GoogleFonts.inter(
-                      fontSize: MediaQuery.sizeOf(context).width >= 600
-                          ? 14
-                          : 13,
+                      fontSize: Responsive.bodySize(context) - 1,
                       height: 1.5,
                       color: AppColors.onSurfaceVariant,
                     ),

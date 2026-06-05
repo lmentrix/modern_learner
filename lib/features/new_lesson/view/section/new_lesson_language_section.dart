@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:modern_learner_production/core/utils/responsive.dart';
 import 'package:modern_learner_production/features/new_lesson/data/new_lesson_option_item.dart';
 import 'package:modern_learner_production/features/new_lesson/view/widgets/new_lesson_language_tile.dart';
 import 'package:modern_learner_production/features/new_lesson/view/widgets/new_lesson_section_heading.dart';
@@ -31,11 +32,11 @@ class NewLessonLanguageSection extends StatelessWidget {
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: options.length,
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: Responsive.gridCols(context),
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
-            childAspectRatio: 1.36,
+            childAspectRatio: Responsive.isTabletOrDesktop(context) ? 1.5 : 1.36,
           ),
           itemBuilder: (context, index) {
             final option = options[index];

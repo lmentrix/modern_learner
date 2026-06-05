@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
+import 'package:modern_learner_production/core/utils/responsive.dart';
 import 'package:modern_learner_production/features/home/view/widgets/arc_progress_painter.dart';
 import 'package:modern_learner_production/features/home/view/widgets/glass_card.dart';
 
@@ -50,21 +51,26 @@ class _ProgressOverviewCardState extends State<ProgressOverviewCard>
 
   @override
   Widget build(BuildContext context) {
+    final isWide = Responsive.isTabletOrDesktop(context);
+    final arcSize = isWide ? 140.0 : 120.0;
+    final rankFontSize = isWide ? 26.0 : 22.0;
+    final cardPadding = isWide ? 28.0 : 24.0;
+
     return GestureDetector(
       onTap: widget.onTap,
       child: GlassCard(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.all(cardPadding),
         child: Row(
           children: [
             // Arc progress
             SizedBox(
-              width: 120,
-              height: 120,
+              width: arcSize,
+              height: arcSize,
               child: Stack(
                 alignment: Alignment.center,
                 children: [
                   CustomPaint(
-                    size: const Size(120, 120),
+                    size: Size(arcSize, arcSize),
                     painter: ArcProgressPainter(
                       progress: widget.progress,
                       animation: _anim,
@@ -78,7 +84,7 @@ class _ProgressOverviewCardState extends State<ProgressOverviewCard>
                         builder: (_, _) => Text(
                           '${(widget.progress * _anim.value * 100).round()}%',
                           style: GoogleFonts.spaceGrotesk(
-                            fontSize: 22,
+                            fontSize: isWide ? 26.0 : 22.0,
                             fontWeight: FontWeight.w700,
                             color: AppColors.onSurface,
                           ),
@@ -87,7 +93,7 @@ class _ProgressOverviewCardState extends State<ProgressOverviewCard>
                       Text(
                         'overall',
                         style: GoogleFonts.inter(
-                          fontSize: 11,
+                          fontSize: isWide ? 12.0 : 11.0,
                           color: AppColors.onSurfaceVariant,
                         ),
                       ),
@@ -96,12 +102,11 @@ class _ProgressOverviewCardState extends State<ProgressOverviewCard>
                 ],
               ),
             ),
-            const SizedBox(width: 24),
+            SizedBox(width: isWide ? 28 : 24),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Level chip
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 10,
@@ -114,7 +119,7 @@ class _ProgressOverviewCardState extends State<ProgressOverviewCard>
                     child: Text(
                       'LEVEL ${widget.level}',
                       style: GoogleFonts.inter(
-                        fontSize: 11,
+                        fontSize: isWide ? 12.0 : 11.0,
                         fontWeight: FontWeight.w700,
                         color: AppColors.onPrimary,
                         letterSpacing: 1.2,
@@ -125,19 +130,18 @@ class _ProgressOverviewCardState extends State<ProgressOverviewCard>
                   Text(
                     widget.rankTitle,
                     style: GoogleFonts.spaceGrotesk(
-                      fontSize: 22,
+                      fontSize: rankFontSize,
                       fontWeight: FontWeight.w700,
                       color: AppColors.onSurface,
                       height: 1.2,
                     ),
                   ),
                   const SizedBox(height: 12),
-                  // XP bar
                   ClipRRect(
                     borderRadius: BorderRadius.circular(100),
                     child: LinearProgressIndicator(
                       value: widget.xp / widget.xpToNext,
-                      minHeight: 6,
+                      minHeight: isWide ? 8 : 6,
                       backgroundColor: AppColors.surfaceContainerHigh,
                       valueColor: const AlwaysStoppedAnimation<Color>(
                         AppColors.tertiary,
@@ -150,16 +154,19 @@ class _ProgressOverviewCardState extends State<ProgressOverviewCard>
                       Text(
                         '${widget.xp} XP',
                         style: GoogleFonts.inter(
-                          fontSize: 12,
+                          fontSize: isWide ? 13.0 : 12.0,
                           fontWeight: FontWeight.w600,
                           color: AppColors.tertiary,
                         ),
                       ),
-                      Text(
-                        ' / ${widget.xpToNext} to Level ${widget.level + 1}',
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          color: AppColors.onSurfaceVariant,
+                      Flexible(
+                        child: Text(
+                          ' / ${widget.xpToNext} to Level ${widget.level + 1}',
+                          style: GoogleFonts.inter(
+                            fontSize: isWide ? 13.0 : 12.0,
+                            color: AppColors.onSurfaceVariant,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],

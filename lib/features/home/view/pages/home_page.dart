@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:modern_learner_production/core/models/progress_course_selection.dart';
 import 'package:modern_learner_production/core/router/app_router.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
+import 'package:modern_learner_production/core/utils/responsive.dart';
 import 'package:modern_learner_production/features/explore/service/explore_courses_service.dart';
 import 'package:modern_learner_production/features/progress/service/course_xp_service.dart';
 import 'package:modern_learner_production/features/home/data/home_lesson_filter.dart';
@@ -301,6 +302,9 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    final hPad = Responsive.hPad(context);
+    final hPadding = EdgeInsets.symmetric(horizontal: hPad);
+
     return Scaffold(
       body: Container(
         color: AppColors.surface,
@@ -309,42 +313,55 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
             controller: _scrollCtrl,
             physics: const BouncingScrollPhysics(),
             slivers: [
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                sliver: SliverToBoxAdapter(
-                  child: FutureBuilder<String>(
-                    future: _profileNameFuture,
-                    builder: (context, snapshot) {
-                      final name = snapshot.data ?? 'Learner';
-
-                      return ValueListenableBuilder<bool>(
-                        valueListenable: SubscriptionService.instance.isVip,
-                        builder: (context, isVip, _) {
-                          return HomeHeader(
-                            displayName: name,
-                            isVip: isVip,
-                            onAvatarTap: _onAvatarTap,
-                            onStreakTap: () {},
-                          );
-                        },
-                      );
-                    },
-                  ),
+              // Header spans full width (handles its own centering)
+              SliverToBoxAdapter(
+                child: FutureBuilder<String>(
+                  future: _profileNameFuture,
+                  builder: (context, snapshot) {
+                    final name = snapshot.data ?? 'Learner';
+                    return ValueListenableBuilder<bool>(
+                      valueListenable: SubscriptionService.instance.isVip,
+                      builder: (context, isVip, _) {
+                        return HomeHeader(
+                          displayName: name,
+                          isVip: isVip,
+                          onAvatarTap: _onAvatarTap,
+                          onStreakTap: () {},
+                        );
+                      },
+                    );
+                  },
                 ),
               ),
 
               const SliverToBoxAdapter(child: SizedBox(height: 24)),
               SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+                padding: hPadding,
                 sliver: SliverToBoxAdapter(
-                  child: _buildProgressOverviewCard(context),
+                  child: Align(
+                    alignment: Alignment.topCenter,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(
+                        maxWidth: Responsive.maxContentWidth,
+                      ),
+                      child: _buildProgressOverviewCard(context),
+                    ),
+                  ),
                 ),
               ),
               const SliverToBoxAdapter(child: SizedBox(height: 32)),
-              const SliverPadding(
-                padding: EdgeInsets.symmetric(horizontal: 20),
+              SliverPadding(
+                padding: hPadding,
                 sliver: SliverToBoxAdapter(
-                  child: HomeSectionLabel(text: 'QUICK START'),
+                  child: Align(
+                    alignment: Alignment.topCenter,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(
+                        maxWidth: Responsive.maxContentWidth,
+                      ),
+                      child: const HomeSectionLabel(text: 'QUICK START'),
+                    ),
+                  ),
                 ),
               ),
               const SliverToBoxAdapter(child: SizedBox(height: 14)),
@@ -356,10 +373,18 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
               ),
               const SliverToBoxAdapter(child: SizedBox(height: 32)),
               SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+                padding: hPadding,
                 sliver: SliverToBoxAdapter(
-                  child: HomeContinueLearningHeaderSection(
-                    onDeleteAllTap: _showDeleteAllConfirmation,
+                  child: Align(
+                    alignment: Alignment.topCenter,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(
+                        maxWidth: Responsive.maxContentWidth,
+                      ),
+                      child: HomeContinueLearningHeaderSection(
+                        onDeleteAllTap: _showDeleteAllConfirmation,
+                      ),
+                    ),
                   ),
                 ),
               ),

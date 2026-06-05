@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'package:modern_learner_production/core/models/progress_course_selection.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
+import 'package:modern_learner_production/core/utils/responsive.dart';
 import 'package:modern_learner_production/features/progress/bloc/xp_bloc.dart';
 import 'package:modern_learner_production/features/progress/data/progress_module_step.dart';
 import 'package:modern_learner_production/features/progress/data/progress_page_data.dart';
@@ -100,8 +101,13 @@ class _CourseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isWide = Responsive.isTabletOrDesktop(context);
+    final iconSize = isWide ? 52.0 : 44.0;
+    final iconFontSize = isWide ? 26.0 : 22.0;
+    final titleFontSize = isWide ? 18.0 : 16.0;
+
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(isWide ? 20 : 16),
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLow,
         borderRadius: BorderRadius.circular(20),
@@ -111,10 +117,9 @@ class _CourseCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Icon box
           Container(
-            width: 44,
-            height: 44,
+            width: iconSize,
+            height: iconSize,
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(14),
@@ -122,12 +127,11 @@ class _CourseCard extends StatelessWidget {
             child: Center(
               child: Text(
                 isVoice ? '🎙️' : '📘',
-                style: const TextStyle(fontSize: 22),
+                style: TextStyle(fontSize: iconFontSize),
               ),
             ),
           ),
-          const SizedBox(width: 14),
-          // Title + meta
+          SizedBox(width: isWide ? 16 : 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -135,7 +139,7 @@ class _CourseCard extends StatelessWidget {
                 Text(
                   course.title,
                   style: GoogleFonts.spaceGrotesk(
-                    fontSize: 16,
+                    fontSize: titleFontSize,
                     fontWeight: FontWeight.w700,
                     color: AppColors.onSurface,
                     height: 1.1,
@@ -149,7 +153,7 @@ class _CourseCard extends StatelessWidget {
                     Text(
                       course.level,
                       style: GoogleFonts.inter(
-                        fontSize: 12,
+                        fontSize: isWide ? 13.0 : 12.0,
                         color: AppColors.onSurfaceVariant,
                       ),
                     ),
@@ -179,7 +183,6 @@ class _CourseCard extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 10),
-          // Level + XP
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -206,7 +209,7 @@ class _CourseCard extends StatelessWidget {
                 child: Text(
                   'LVL $level',
                   style: GoogleFonts.spaceGrotesk(
-                    fontSize: 11,
+                    fontSize: isWide ? 12.0 : 11.0,
                     fontWeight: FontWeight.w800,
                     color: Colors.black87,
                     letterSpacing: 0.5,
@@ -217,7 +220,7 @@ class _CourseCard extends StatelessWidget {
               Text(
                 '$totalXp XP',
                 style: GoogleFonts.spaceGrotesk(
-                  fontSize: 14,
+                  fontSize: isWide ? 16.0 : 14.0,
                   fontWeight: FontWeight.w700,
                   color: color,
                   height: 1.0,

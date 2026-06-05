@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:modern_learner_production/core/utils/responsive.dart';
 import 'package:modern_learner_production/features/explore/domain/entities/learning_subject.dart';
 import 'package:modern_learner_production/features/explore/view/bloc/learning_subjects_bloc.dart';
 import 'package:modern_learner_production/features/explore/view/bloc/learning_subjects_event.dart';
@@ -25,7 +26,7 @@ class LearningSubjectsCategoryFilter extends StatelessWidget {
         final active = state is LearningSubjectsLoaded
             ? state.activeCategory
             : null;
-        final hPad = MediaQuery.sizeOf(context).width >= 600 ? 28.0 : 20.0;
+        final hPad = Responsive.hPad(context);
         return SizedBox(
           height: 38,
           child: ListView(

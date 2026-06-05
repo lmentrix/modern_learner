@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:modern_learner_production/core/utils/responsive.dart';
 import 'package:modern_learner_production/core/models/progress_course_selection.dart';
 import 'package:modern_learner_production/core/router/app_router.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
@@ -37,6 +38,8 @@ class _NewLessonComposerSectionState extends State<NewLessonComposerSection> {
 
   @override
   Widget build(BuildContext context) {
+    final hPad = Responsive.hPad(context);
+
     return Material(
       color: AppColors.surface,
       child: Column(
@@ -46,32 +49,42 @@ class _NewLessonComposerSectionState extends State<NewLessonComposerSection> {
           Expanded(
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  NewLessonPreviewSection(
-                    selectedLanguage: _selectedLanguage,
-                    selectedDifficulty: _selectedDifficulty,
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    maxWidth: Responsive.maxContentWidth,
                   ),
-                  const SizedBox(height: 28),
-                  NewLessonLanguageSection(
-                    options: NewLessonPageData.languages,
-                    selectedLanguage: _selectedLanguage,
-                    onLanguageSelected: (value) {
-                      setState(() => _selectedLanguage = value);
-                    },
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(hPad, 4, hPad, 28),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        NewLessonPreviewSection(
+                          selectedLanguage: _selectedLanguage,
+                          selectedDifficulty: _selectedDifficulty,
+                        ),
+                        const SizedBox(height: 28),
+                        NewLessonLanguageSection(
+                          options: NewLessonPageData.languages,
+                          selectedLanguage: _selectedLanguage,
+                          onLanguageSelected: (value) {
+                            setState(() => _selectedLanguage = value);
+                          },
+                        ),
+                        const SizedBox(height: 28),
+                        NewLessonDifficultySection(
+                          options: NewLessonPageData.difficulties,
+                          selectedDifficulty: _selectedDifficulty,
+                          onDifficultySelected: (value) {
+                            setState(() => _selectedDifficulty = value);
+                          },
+                        ),
+                        const SizedBox(height: 36),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 28),
-                  NewLessonDifficultySection(
-                    options: NewLessonPageData.difficulties,
-                    selectedDifficulty: _selectedDifficulty,
-                    onDifficultySelected: (value) {
-                      setState(() => _selectedDifficulty = value);
-                    },
-                  ),
-                  const SizedBox(height: 36),
-                ],
+                ),
               ),
             ),
           ),

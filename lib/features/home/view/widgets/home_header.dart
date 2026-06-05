@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
+import 'package:modern_learner_production/core/utils/responsive.dart';
 import 'package:modern_learner_production/features/home/view/widgets/streak_badge.dart';
 
 class _VipBadge extends StatelessWidget {
@@ -117,8 +118,13 @@ class HomeHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final w = MediaQuery.sizeOf(context).width;
+    final hPad = Responsive.hPad(context);
+    final titleSize = w < 360 ? 22.0 : w >= 900 ? 34.0 : w >= 600 ? 30.0 : 28.0;
+    final avatarSize = w >= 600 ? 52.0 : 44.0;
+    final avatarFontSize = w >= 600 ? 22.0 : 18.0;
+
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
@@ -126,81 +132,90 @@ class HomeHeader extends StatelessWidget {
           colors: [Color(0xFF0E1020), AppColors.surface],
         ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+      child: Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: Responsive.maxContentWidth),
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(hPad, 16, hPad, 28),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Text(
-                      'Good morning,',
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        color: AppColors.onSurfaceVariant,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Good morning,',
+                            style: GoogleFonts.inter(
+                              fontSize: Responsive.bodySize(context),
+                              color: AppColors.onSurfaceVariant,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              Text(
+                                '$displayName 👋',
+                                style: GoogleFonts.spaceGrotesk(
+                                  fontSize: titleSize,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.onSurface,
+                                  height: 1.1,
+                                ),
+                              ),
+                              if (isVip) const _VipBadge(),
+                            ],
+                          ),
+                          if (isVip) ...[
+                            const SizedBox(height: 8),
+                            const _VipStatusPill(),
+                          ],
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        Text(
-                          '$displayName 👋',
-                          style: GoogleFonts.spaceGrotesk(
-                            fontSize: 28,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.onSurface,
-                            height: 1.1,
+                    GestureDetector(
+                      onTap: onAvatarTap,
+                      child: Container(
+                        width: avatarSize,
+                        height: avatarSize,
+                        decoration: BoxDecoration(
+                          gradient: AppColors.primaryGradient,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primaryDim.withValues(alpha: 0.3),
+                              blurRadius: 16,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Center(
+                          child: Text(
+                            _initial,
+                            style: GoogleFonts.spaceGrotesk(
+                              fontSize: avatarFontSize,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
-                        if (isVip) const _VipBadge(),
-                      ],
+                      ),
                     ),
-                    if (isVip) ...[
-                      const SizedBox(height: 8),
-                      const _VipStatusPill(),
-                    ],
                   ],
                 ),
-              ),
-              GestureDetector(
-                onTap: onAvatarTap,
-                child: Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    gradient: AppColors.primaryGradient,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primaryDim.withValues(alpha: 0.3),
-                        blurRadius: 16,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Center(
-                    child: Text(
-                      _initial,
-                      style: GoogleFonts.spaceGrotesk(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
+                const SizedBox(height: 16),
+                GestureDetector(onTap: onStreakTap, child: const StreakBadge()),
+              ],
+            ),
           ),
-          const SizedBox(height: 16),
-          GestureDetector(onTap: onStreakTap, child: const StreakBadge()),
-        ],
+        ),
       ),
     );
   }

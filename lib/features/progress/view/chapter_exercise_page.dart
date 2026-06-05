@@ -407,39 +407,34 @@ class _ChapterExercisePageState extends State<ChapterExercisePage> {
       physics: const BouncingScrollPhysics(),
       slivers: [
         SliverToBoxAdapter(
-          child: Expanded(
-            child: ExerciseHeader(
-              detail: detail,
-              accentColor: _accentColor,
-              checked: _checked,
-              score: score,
-              total: total,
-              answeredCount: _answeredCount,
-              streak: _streak,
-              onBack: () => Navigator.pop(context),
-            ),
+          child: ExerciseHeader(
+            detail: detail,
+            accentColor: _accentColor,
+            checked: _checked,
+            score: score,
+            total: total,
+            answeredCount: _answeredCount,
+            streak: _streak,
+            onBack: () => Navigator.pop(context),
           ),
         ),
         const SliverToBoxAdapter(child: SizedBox(height: 20)),
-        Expanded(
-          child: SliverPadding(
-            padding: ProfilePageConstants.pagePadding,
-            sliver: SliverToBoxAdapter(
-              child: ExerciseIntroCard(
-                detail: detail,
-                accentColor: _accentColor,
-              ),
+        SliverPadding(
+          padding: ProfilePageConstants.pagePadding,
+          sliver: SliverToBoxAdapter(
+            child: ExerciseIntroCard(
+              detail: detail,
+              accentColor: _accentColor,
             ),
           ),
         ),
         const SliverToBoxAdapter(
           child: SizedBox(height: ProfilePageConstants.sectionSpacing),
         ),
-        Expanded(
-          child: SliverPadding(
-            padding: ProfilePageConstants.pagePadding,
-            sliver: SliverToBoxAdapter(
-              child: detail.isVoice
+        SliverPadding(
+          padding: ProfilePageConstants.pagePadding,
+          sliver: SliverToBoxAdapter(
+            child: detail.isVoice
                   ? VoiceExerciseBody(
                       detail: detail,
                       accentColor: _accentColor,
@@ -521,21 +516,18 @@ class _ChapterExercisePageState extends State<ChapterExercisePage> {
                         unawaited(_saveProgress());
                       },
                     ),
-            ),
           ),
         ),
         const SliverToBoxAdapter(child: SizedBox(height: 18)),
-        Expanded(
-          child: SliverPadding(
-            padding: ProfilePageConstants.pagePadding,
-            sliver: SliverToBoxAdapter(
-              child: ExerciseActionCard(
-                checked: _checked,
-                score: score,
-                total: total,
-                accentColor: _accentColor,
-                onPrimaryAction: _handlePrimaryAction,
-              ),
+        SliverPadding(
+          padding: ProfilePageConstants.pagePadding,
+          sliver: SliverToBoxAdapter(
+            child: ExerciseActionCard(
+              checked: _checked,
+              score: score,
+              total: total,
+              accentColor: _accentColor,
+              onPrimaryAction: _handlePrimaryAction,
             ),
           ),
         ),

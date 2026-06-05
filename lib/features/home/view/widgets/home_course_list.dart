@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:modern_learner_production/core/models/progress_course_selection.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
+import 'package:modern_learner_production/core/utils/responsive.dart';
 import 'package:modern_learner_production/features/course/model/course__service_model.dart';
 import 'package:modern_learner_production/features/course/service/course_service.dart';
 import 'package:modern_learner_production/features/explore/data/models/progress_course_model.dart';
@@ -77,6 +78,37 @@ class _HomeCourseListState extends State<HomeCourseList> {
     );
   }
 
+  Widget _buildGrid(
+    BuildContext context,
+    Widget Function(ProgressCourseSelection) buildCard,
+  ) {
+    final cols = Responsive.isDesktop(context) ? 3 : 2;
+    final rows = <Widget>[];
+    for (int i = 0; i < _courses.length; i += cols) {
+      final rowItems = _courses.skip(i).take(cols).toList();
+      rows.add(
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              for (int j = 0; j < rowItems.length; j++) ...[
+                if (j > 0) const SizedBox(width: 12),
+                Expanded(child: buildCard(rowItems[j])),
+              ],
+              if (rowItems.length < cols)
+                ...List.generate(
+                  cols - rowItems.length,
+                  (_) => const Expanded(child: SizedBox.shrink()),
+                ),
+            ],
+          ),
+        ),
+      );
+    }
+    return Column(children: rows);
+  }
+
   static ProgressCourseSelection _toEntity(UserCourseModel m) =>
       ProgressCourseModel.fromRow({
         'id': m.id,
@@ -96,37 +128,52 @@ class _HomeCourseListState extends State<HomeCourseList> {
 
     if (_courses.isEmpty) return const SizedBox.shrink();
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Column(
-        children: _courses.map((course) {
-          final courseKey = progressCourseXpKey(course);
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: ValueListenableBuilder<CourseXpData>(
-              valueListenable: CourseXpService.instance.notifierFor(courseKey),
-              builder: (context, xpData, _) {
-                final progress = _courseProgress(course, xpData);
-                return GestureDetector(
-                  onLongPress: () => widget.onCourseLongPress(course),
-                  child: LessonCard(
-                    emoji: '🎓',
-                    title: course.topic,
-                    chapter: course.title,
-                    duration: course.level,
-                    progress: progress,
-                    accentColor: AppColors.primary,
-                    isNew: !course.roadmapGenerated,
-                    lessonType: course.roadmapGenerated
-                        ? (course.title == 'Languages' ? 'language' : 'school')
-                        : null,
-                    onTap: () => widget.onCourseTap(course),
-                  ),
-                );
-              },
+    final hPad = Responsive.hPad(context);
+    final isWide = Responsive.isTabletOrDesktop(context);
+
+    Widget buildCard(ProgressCourseSelection course) {
+      final courseKey = progressCourseXpKey(course);
+      return ValueListenableBuilder<CourseXpData>(
+        valueListenable: CourseXpService.instance.notifierFor(courseKey),
+        builder: (context, xpData, _) {
+          final progress = _courseProgress(course, xpData);
+          return GestureDetector(
+            onLongPress: () => widget.onCourseLongPress(course),
+            child: LessonCard(
+              emoji: '🎓',
+              title: course.topic,
+              chapter: course.title,
+              duration: course.level,
+              progress: progress,
+              accentColor: AppColors.primary,
+              isNew: !course.roadmapGenerated,
+              lessonType: course.roadmapGenerated
+                  ? (course.title == 'Languages' ? 'language' : 'school')
+                  : null,
+              onTap: () => widget.onCourseTap(course),
             ),
           );
-        }).toList(),
+        },
+      );
+    }
+
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: hPad),
+      child: Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: Responsive.maxContentWidth),
+          child: isWide
+              ? _buildGrid(context, buildCard)
+              : Column(
+                  children: _courses
+                      .map((c) => Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: buildCard(c),
+                          ))
+                      .toList(),
+                ),
+        ),
       ),
     );
   }

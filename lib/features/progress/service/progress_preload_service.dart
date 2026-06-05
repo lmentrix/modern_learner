@@ -1,14 +1,14 @@
 import 'dart:convert';
 
+import 'package:modern_learner_production/core/models/progress_course_selection.dart';
+import 'package:modern_learner_production/features/cache/generation_cache.dart';
 import 'package:modern_learner_production/features/course/model/course__service_model.dart';
 import 'package:modern_learner_production/features/course/service/course_service.dart';
 import 'package:modern_learner_production/features/explore/data/models/progress_course_model.dart';
 import 'package:modern_learner_production/features/explore/service/explore_courses_service.dart';
-import 'package:modern_learner_production/features/cache/generation_cache.dart';
 import 'package:modern_learner_production/features/progress/service/course_xp_service.dart';
 import 'package:modern_learner_production/features/progress/service/model/chapter_subcontent_model.dart';
 import 'package:modern_learner_production/features/roadmap/service/roadmap_service.dart';
-import 'package:modern_learner_production/core/models/progress_course_selection.dart';
 
 /// Pre-loads roadmap and chapter subcontent from the local DB into a shared
 /// in-memory cache so the progress page can render without a skeleton on first
