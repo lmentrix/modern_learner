@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'package:modern_learner_production/core/l10n/app_text.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
+import 'package:modern_learner_production/core/utils/responsive.dart';
 
 class HomeLessonQuickAccessCard extends StatelessWidget {
   const HomeLessonQuickAccessCard({
@@ -22,10 +23,15 @@ class HomeLessonQuickAccessCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isWide = Responsive.isTabletOrDesktop(context);
+    final cardPad = isWide ? 18.0 : 14.0;
+    final iconSize = isWide ? 44.0 : 36.0;
+    final iconFontSize = isWide ? 22.0 : 18.0;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(14),
+        padding: EdgeInsets.all(cardPad),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
@@ -44,29 +50,32 @@ class HomeLessonQuickAccessCard extends StatelessWidget {
             Row(
               children: [
                 Container(
-                  width: 36,
-                  height: 36,
+                  width: iconSize,
+                  height: iconSize,
                   decoration: BoxDecoration(
                     color: color.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Center(
-                    child: Text(emoji, style: const TextStyle(fontSize: 18)),
+                    child: Text(
+                      emoji,
+                      style: TextStyle(fontSize: iconFontSize),
+                    ),
                   ),
                 ),
                 const Spacer(),
                 Icon(
                   Icons.arrow_forward_ios_rounded,
-                  size: 14,
+                  size: isWide ? 16 : 14,
                   color: color.withValues(alpha: 0.6),
                 ),
               ],
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: isWide ? 14 : 10),
             Text(
               context.tr(title),
               style: GoogleFonts.spaceGrotesk(
-                fontSize: 14,
+                fontSize: isWide ? 16.0 : 14.0,
                 fontWeight: FontWeight.w700,
                 color: AppColors.onSurface,
               ),
@@ -77,7 +86,7 @@ class HomeLessonQuickAccessCard extends StatelessWidget {
             Text(
               context.tr(subtitle),
               style: GoogleFonts.inter(
-                fontSize: 11,
+                fontSize: isWide ? 12.0 : 11.0,
                 color: AppColors.onSurfaceVariant,
               ),
             ),

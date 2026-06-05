@@ -4,6 +4,7 @@ import 'package:modern_learner_production/core/l10n/app_locale_controller.dart';
 import 'package:modern_learner_production/core/l10n/app_locale_option.dart';
 import 'package:modern_learner_production/core/profile/local_profile_service.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
+import 'package:modern_learner_production/core/utils/responsive.dart';
 import 'package:modern_learner_production/features/auth/service/auth_service.dart';
 import 'package:modern_learner_production/features/profile/data/profile_identity.dart';
 import 'package:modern_learner_production/features/profile/data/profile_page_constants.dart';
@@ -191,6 +192,8 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    final pagePadding = Responsive.pagePadding(context);
+
     return ValueListenableBuilder<ProfileIdentity>(
       valueListenable: _profileService.identityListenable,
       builder: (context, identity, _) {
@@ -231,47 +234,83 @@ class _ProfilePageState extends State<ProfilePage> {
                 const SliverToBoxAdapter(
                   child: SizedBox(height: ProfilePageConstants.sectionSpacing),
                 ),
-                const SliverPadding(
-                  padding: ProfilePageConstants.pagePadding,
-                  sliver: SliverToBoxAdapter(child: ProfileStatsSection()),
-                ),
-                const SliverToBoxAdapter(
-                  child: SizedBox(height: ProfilePageConstants.sectionSpacing),
-                ),
-                const SliverPadding(
-                  padding: ProfilePageConstants.pagePadding,
+                SliverPadding(
+                  padding: pagePadding,
                   sliver: SliverToBoxAdapter(
-                    child: ProfileAchievementSection(),
+                    child: Align(
+                      alignment: Alignment.topCenter,
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(
+                          maxWidth: Responsive.maxContentWidth,
+                        ),
+                        child: const ProfileStatsSection(),
+                      ),
+                    ),
                   ),
                 ),
                 const SliverToBoxAdapter(
                   child: SizedBox(height: ProfilePageConstants.sectionSpacing),
                 ),
-                const SliverPadding(
-                  padding: ProfilePageConstants.pagePadding,
-                  sliver: SliverToBoxAdapter(child: ProfileActivitySection()),
+                SliverPadding(
+                  padding: pagePadding,
+                  sliver: SliverToBoxAdapter(
+                    child: Align(
+                      alignment: Alignment.topCenter,
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(
+                          maxWidth: Responsive.maxContentWidth,
+                        ),
+                        child: const ProfileAchievementSection(),
+                      ),
+                    ),
+                  ),
                 ),
                 const SliverToBoxAdapter(
                   child: SizedBox(height: ProfilePageConstants.sectionSpacing),
                 ),
                 SliverPadding(
-                  padding: ProfilePageConstants.pagePadding,
+                  padding: pagePadding,
                   sliver: SliverToBoxAdapter(
-                    child: ProfileSettingsSection(
-                      identity: identity,
-                      preferences: _preferences.copyWith(
-                        selectedLanguage: appLocaleOptionForLocale(
-                          AppLocaleController.instance.locale,
-                        ).label,
+                    child: Align(
+                      alignment: Alignment.topCenter,
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(
+                          maxWidth: Responsive.maxContentWidth,
+                        ),
+                        child: const ProfileActivitySection(),
                       ),
-                      onAccountTap: _showAccountSheet,
-                      onSubscriptionTap: _showSubscriptionPage,
-                      onNotificationsTap: _showNotificationsSheet,
-                      onAppearanceTap: _showAppearanceSheet,
-                      onLanguageTap: _showLanguageSheet,
-                      onPrivacyTap: _showPrivacySheet,
-                      onHelpTap: _showHelpSheet,
-                      onLogoutTap: _logout,
+                    ),
+                  ),
+                ),
+                const SliverToBoxAdapter(
+                  child: SizedBox(height: ProfilePageConstants.sectionSpacing),
+                ),
+                SliverPadding(
+                  padding: pagePadding,
+                  sliver: SliverToBoxAdapter(
+                    child: Align(
+                      alignment: Alignment.topCenter,
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(
+                          maxWidth: Responsive.maxContentWidth,
+                        ),
+                        child: ProfileSettingsSection(
+                          identity: identity,
+                          preferences: _preferences.copyWith(
+                            selectedLanguage: appLocaleOptionForLocale(
+                              AppLocaleController.instance.locale,
+                            ).label,
+                          ),
+                          onAccountTap: _showAccountSheet,
+                          onSubscriptionTap: _showSubscriptionPage,
+                          onNotificationsTap: _showNotificationsSheet,
+                          onAppearanceTap: _showAppearanceSheet,
+                          onLanguageTap: _showLanguageSheet,
+                          onPrivacyTap: _showPrivacySheet,
+                          onHelpTap: _showHelpSheet,
+                          onLogoutTap: _logout,
+                        ),
+                      ),
                     ),
                   ),
                 ),
