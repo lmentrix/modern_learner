@@ -77,6 +77,9 @@ abstract final class ApiConstants {
   static String get qwenTtsSynthesize =>
       _joinUrl(roadmapBaseUrl, '/qwen-tts/synthesize');
 
+  static String get qwenPronunciationScore =>
+      _joinUrl(roadmapBaseUrl, '/qwen-pronunciation/score');
+
   static String get openRouterApiKey => dotenv.env['OPENROUTER_API_KEY'] ?? '';
   static const String exploreSubjects = '/explore/subjects';
 }

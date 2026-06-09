@@ -8,6 +8,7 @@ import 'package:modern_learner_production/core/l10n/app_text.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 import 'package:modern_learner_production/features/progress/service/request/exercise_request.dart';
 import 'package:modern_learner_production/features/progress/view/widgets/exercise_chip.dart';
+import 'package:modern_learner_production/features/voice/service/qwen_pronunciation_service.dart';
 import 'package:modern_learner_production/features/voice/service/voice_pronunciation_scorer.dart';
 import 'package:modern_learner_production/features/voice/service/voice_recognition_service.dart';
 import 'package:modern_learner_production/features/voice/service/voice_tts_service.dart';
@@ -29,6 +30,9 @@ enum _Phase {
 
   /// Microphone is active, STT streaming.
   listening,
+
+  /// STT finished; waiting for Qwen AI scoring response.
+  aiScoring,
 
   /// Scored result ready.
   scored,
@@ -141,10 +145,12 @@ class _VoiceStepRowState extends State<VoiceStepRow>
     _posSub = VoiceTtsService.instance.positionStream.listen(_onPosition);
     _durSub = VoiceTtsService.instance.durationStream.listen(_onDuration);
 
-    unawaited(VoiceTtsService.instance.speak(
-      widget.step.prompt,
-      language: widget.language,
-    ));
+    unawaited(
+      VoiceTtsService.instance.speak(
+        widget.step.textForTts,
+        language: widget.language,
+      ),
+    );
   }
 
   void _onTtsEvent(VoiceTtsEvent event) {
@@ -252,11 +258,35 @@ class _VoiceStepRowState extends State<VoiceStepRow>
       return;
     }
 
-    final result = VoicePronunciationScorer.score(
+    // Show local score immediately as a placeholder while Qwen scores.
+    final localResult = VoicePronunciationScorer.score(
       expected: widget.step.prompt,
       spoken: _liveTranscription,
       sttConfidence: _liveConfidence,
     );
+
+    setState(() {
+      _phase = _Phase.aiScoring;
+      _result = localResult;
+    });
+
+    // Call Qwen for richer AI feedback, then replace the result.
+    unawaited(_scoreWithQwen(localResult));
+  }
+
+  Future<void> _scoreWithQwen(PronunciationResult localResult) async {
+    final qwenResult = await QwenPronunciationService.instance.score(
+      expected: widget.step.prompt,
+      spoken: _liveTranscription,
+      language: widget.language ?? 'English',
+      sttConfidence: _liveConfidence,
+    );
+
+    if (!mounted) return;
+
+    final result = qwenResult != null
+        ? qwenResult.toPronunciationResult(_liveTranscription)
+        : localResult;
 
     setState(() {
       _phase = _Phase.scored;
@@ -381,6 +411,7 @@ class _VoiceStepRowState extends State<VoiceStepRow>
         transcription: _liveTranscription,
         onStop: _stopSpeak,
       ),
+      _Phase.aiScoring => _AiScoringRow(accentColor: widget.accentColor),
       _Phase.scored when result != null => _ScoredControls(
         result: result,
         accentColor: widget.accentColor,
@@ -406,7 +437,9 @@ class _VoiceStepRowState extends State<VoiceStepRow>
           ? AppColors.tertiary.withValues(alpha: 0.04)
           : AppColors.error.withValues(alpha: 0.04);
     }
-    if (_phase == _Phase.playing || _phase == _Phase.listening) {
+    if (_phase == _Phase.playing ||
+        _phase == _Phase.listening ||
+        _phase == _Phase.aiScoring) {
       return widget.accentColor.withValues(alpha: 0.04);
     }
     return AppColors.surfaceContainerLow;
@@ -476,7 +509,7 @@ class _PhraseDisplay extends StatelessWidget {
     final word = words[i];
 
     // ── Scored mode: green = matched, muted = missed ──────────────────────
-    if (phase == _Phase.scored) {
+    if (phase == _Phase.scored || phase == _Phase.aiScoring) {
       final hit = matchedIndices.contains(i);
       return Container(
         padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -954,6 +987,25 @@ class _ScoredControls extends StatelessWidget {
             height: 1.45,
           ),
         ),
+        if ((result.encouragement ?? '').isNotEmpty) ...[
+          SizedBox(height: 6),
+          Row(
+            children: [
+              Icon(Icons.auto_awesome_rounded, size: 13, color: _scoreColor),
+              SizedBox(width: 5),
+              Expanded(
+                child: Text(
+                  result.encouragement!,
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    color: _scoreColor,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
         const SizedBox(height: 14),
 
         // Action row
@@ -981,6 +1033,38 @@ class _ScoredControls extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ],
+    );
+  }
+}
+
+// ── AI scoring row ────────────────────────────────────────────────────────────
+
+class _AiScoringRow extends StatelessWidget {
+  const _AiScoringRow({required this.accentColor});
+
+  final Color accentColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        SizedBox(
+          width: 16,
+          height: 16,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            valueColor: AlwaysStoppedAnimation(accentColor),
+          ),
+        ),
+        SizedBox(width: 10),
+        Text(
+          'AI is scoring your pronunciation…',
+          style: GoogleFonts.inter(
+            fontSize: 13,
+            color: AppColors.onSurfaceVariant,
+          ),
         ),
       ],
     );

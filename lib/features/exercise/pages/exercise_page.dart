@@ -25,6 +25,7 @@ class ExercisePage extends StatefulWidget {
     required this.sectionTitle,
     required this.accentColor,
     required this.emoji,
+    this.language,
   });
 
   final LessonType lessonType;
@@ -32,6 +33,7 @@ class ExercisePage extends StatefulWidget {
   final String sectionTitle;
   final Color accentColor;
   final String emoji;
+  final String? language;
 
   @override
   State<ExercisePage> createState() => _ExercisePageState();
@@ -226,6 +228,7 @@ class _ExercisePageState extends State<ExercisePage> {
                             answered: _answered,
                             isCorrect: _isCorrect,
                             onCheckAnswer: _checkAnswer,
+                            language: widget.language,
                           ),
                         ),
                       ),
