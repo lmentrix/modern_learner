@@ -108,6 +108,7 @@ class PronunciationResult {
     required this.matchedIndices,
     required this.transcription,
     required this.feedback,
+    this.encouragement,
   });
 
   /// 0.0 – 1.0
@@ -120,6 +121,9 @@ class PronunciationResult {
 
   final String transcription;
   final String feedback;
+
+  /// Optional AI-generated encouragement (set when Qwen scoring is available).
+  final String? encouragement;
 
   int get scorePercent => (score * 100).round();
 

@@ -526,12 +526,16 @@ class VoicePracticeStepModel {
     required this.stepNumber,
     required this.prompt,
     required this.coachingTip,
+    this.ttsText,
+    this.ttsAudioB64,
   });
 
   factory VoicePracticeStepModel.fromJson(Map<String, dynamic> json) {
     return VoicePracticeStepModel(
       stepNumber: _readInt(json, const ['step_number', 'stepNumber']) ?? 0,
       prompt: _readString(json, const ['prompt']) ?? '',
+      ttsText: _readString(json, const ['tts_text', 'ttsText']),
+      ttsAudioB64: _readString(json, const ['tts_audio_b64', 'ttsAudioB64']),
       coachingTip:
           _readString(json, const ['coaching_tip', 'coachingTip']) ?? '',
     );
@@ -539,7 +543,15 @@ class VoicePracticeStepModel {
 
   final int stepNumber;
   final String prompt;
+  final String? ttsText;
+  final String? ttsAudioB64;
   final String coachingTip;
+
+  String get textForTts {
+    final text = ttsText?.trim();
+    if (text != null && text.isNotEmpty) return text;
+    return prompt;
+  }
 }
 
 class VoiceVocabularyItemModel {
