@@ -125,7 +125,7 @@ class _StatCardSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+      padding: EdgeInsets.symmetric(vertical: 16, horizontal: 12),
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLow,
         borderRadius: BorderRadius.circular(20),
@@ -180,7 +180,7 @@ class ProfileAchievementSkeleton extends StatelessWidget {
 
   Widget _progressBarSkeleton() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(16),
@@ -208,9 +208,9 @@ class ProfileAchievementSkeleton extends StatelessWidget {
       height: 80,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        physics: const NeverScrollableScrollPhysics(),
+        physics: NeverScrollableScrollPhysics(),
         itemCount: 6,
-        separatorBuilder: (_, _) => const SizedBox(width: 10),
+        separatorBuilder: (_, _) => SizedBox(width: 10),
         itemBuilder: (_, __) => Container(
           width: 64,
           decoration: BoxDecoration(
@@ -233,7 +233,7 @@ class ProfileAchievementSkeleton extends StatelessWidget {
 
   Widget _courseXpCardSkeleton() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLow,
         borderRadius: BorderRadius.circular(20),
@@ -302,11 +302,11 @@ class ProfileActivitySkeleton extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (!hideLabel) ...[
-            const _SkeletonBox(width: 80, height: 11, borderRadius: 4),
-            const SizedBox(height: 14),
+            _SkeletonBox(width: 80, height: 11, borderRadius: 4),
+            SizedBox(height: 14),
           ],
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: AppColors.surfaceContainerLow,
               borderRadius: BorderRadius.circular(24),
@@ -393,7 +393,7 @@ class ProfileActivitySkeleton extends StatelessWidget {
                       child: Padding(
                         padding: EdgeInsets.only(left: i == 0 ? 0 : 8),
                         child: Container(
-                          padding: const EdgeInsets.all(10),
+                          padding: EdgeInsets.all(10),
                           decoration: BoxDecoration(
                             color: AppColors.surfaceContainerHigh,
                             borderRadius: BorderRadius.circular(12),

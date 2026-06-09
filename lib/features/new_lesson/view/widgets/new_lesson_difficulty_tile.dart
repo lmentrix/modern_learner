@@ -29,8 +29,8 @@ class NewLessonDifficultyTile extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(option.emoji, style: const TextStyle(fontSize: 22)),
-            const SizedBox(height: 16),
+            Text(option.emoji, style: TextStyle(fontSize: 22)),
+            SizedBox(height: 16),
             Text(
               context.tr(option.label),
               style: GoogleFonts.spaceGrotesk(
@@ -39,7 +39,7 @@ class NewLessonDifficultyTile extends StatelessWidget {
                 color: isSelected ? AppColors.tertiary : AppColors.onSurface,
               ),
             ),
-            const SizedBox(height: 6),
+            SizedBox(height: 6),
             Text(
               context.tr(option.detail),
               style: GoogleFonts.inter(

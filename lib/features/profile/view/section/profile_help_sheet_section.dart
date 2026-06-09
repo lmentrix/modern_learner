@@ -20,7 +20,7 @@ class ProfileHelpSheetSection extends StatelessWidget {
       minChildSize: 0.4,
       maxChildSize: 0.9,
       builder: (context, scrollController) => Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: AppColors.surfaceContainerHigh,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
@@ -33,14 +33,14 @@ class ProfileHelpSheetSection extends StatelessWidget {
             bottom: MediaQuery.of(context).padding.bottom + 24,
           ),
           children: [
-            const Center(child: ProfileSheetHandle()),
+            Center(child: ProfileSheetHandle()),
             const SizedBox(height: 20),
             const ProfileSheetTitle(
               title: 'Help & Support',
               icon: Icons.help_outline_rounded,
               color: _helpAccent,
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             Text(
               'FREQUENTLY ASKED',
               style: GoogleFonts.inter(
@@ -53,7 +53,7 @@ class ProfileHelpSheetSection extends StatelessWidget {
             const SizedBox(height: 12),
             for (final faq in ProfilePageData.faqs)
               ProfileFaqTile(question: faq.question, answer: faq.answer),
-            const SizedBox(height: 20),
+            SizedBox(height: 20),
             Text(
               'CONTACT',
               style: GoogleFonts.inter(

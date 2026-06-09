@@ -6,6 +6,6 @@ class NewLessonPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const NewLessonComposerSection();
+    return const NewLessonComposerSection(showVoiceNotificationToggle: true);
   }
 }

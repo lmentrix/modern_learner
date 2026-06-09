@@ -74,7 +74,7 @@ class _LessonTopicCardState extends State<LessonTopicCard>
           return Transform.scale(
             scale: _scaleAnim.value,
             child: Container(
-              padding: const EdgeInsets.all(18),
+              padding: EdgeInsets.all(18),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(26),
                 gradient: LinearGradient(
@@ -124,7 +124,7 @@ class _LessonTopicCardState extends State<LessonTopicCard>
                               ),
                           ],
                         ),
-                        const SizedBox(height: 14),
+                        SizedBox(height: 14),
                         Text(
                           widget.title,
                           style: GoogleFonts.spaceGrotesk(
@@ -134,7 +134,7 @@ class _LessonTopicCardState extends State<LessonTopicCard>
                             height: 1.1,
                           ),
                         ),
-                        const SizedBox(height: 6),
+                        SizedBox(height: 6),
                         Text(
                           widget.subtitle,
                           style: GoogleFonts.inter(
@@ -152,7 +152,7 @@ class _LessonTopicCardState extends State<LessonTopicCard>
                                 .take(3)
                                 .map(
                                   (title) => Container(
-                                    padding: const EdgeInsets.symmetric(
+                                    padding: EdgeInsets.symmetric(
                                       horizontal: 10,
                                       vertical: 6,
                                     ),
@@ -197,7 +197,7 @@ class _LessonTopicCardState extends State<LessonTopicCard>
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 10),
+                            SizedBox(width: 10),
                             Text(
                               'Open collection',
                               style: GoogleFonts.inter(

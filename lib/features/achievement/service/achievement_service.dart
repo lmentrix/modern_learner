@@ -1,6 +1,7 @@
 import 'package:modern_learner_production/core/supabase/supabase_service.dart';
 import 'package:modern_learner_production/features/achievement/model/achievement_model.dart';
-import 'package:modern_learner_production/main.dart';
+import 'package:modern_learner_production/features/profile/service/profile_notification_preferences_service.dart';
+import 'package:modern_learner_production/features/push_notification/service/push_notification_service_locator.dart';
 
 class AchievementService {
   AchievementService();
@@ -276,7 +277,11 @@ class AchievementService {
       ),
     );
 
-    if (isNewlyUnlocked) {
+    if (isNewlyUnlocked &&
+        ProfileNotificationPreferencesService
+            .instance
+            .preferences
+            .achievementAlerts) {
       pushNotificationService
           .notifyAchievementUnlocked(
             emoji: definition.emoji,

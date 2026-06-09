@@ -49,7 +49,7 @@ class _ProfileLanguageSheetSectionState
       minChildSize: 0.4,
       maxChildSize: 0.85,
       builder: (context, scrollController) => Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: AppColors.surfaceContainerHigh,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
@@ -62,14 +62,14 @@ class _ProfileLanguageSheetSectionState
             bottom: MediaQuery.of(context).padding.bottom + 24,
           ),
           children: [
-            const Center(child: ProfileSheetHandle()),
+            Center(child: ProfileSheetHandle()),
             const SizedBox(height: 20),
             ProfileSheetTitle(
               title: l10n.language,
               icon: Icons.language_rounded,
               color: _languageAccent,
             ),
-            const SizedBox(height: 6),
+            SizedBox(height: 6),
             Text(
               l10n.choosePreferredLanguage,
               style: GoogleFonts.inter(
@@ -114,8 +114,8 @@ class _LanguageOptionRow extends StatelessWidget {
       child: GestureDetector(
         onTap: () => onTap(option),
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+          duration: Duration(milliseconds: 150),
+          padding: EdgeInsets.symmetric(horizontal: 14, vertical: 13),
           decoration: BoxDecoration(
             color: isSelected
                 ? _ProfileLanguageSheetSectionState._languageAccent.withValues(
@@ -149,7 +149,7 @@ class _LanguageOptionRow extends StatelessWidget {
                           : AppColors.onSurfaceVariant,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  SizedBox(height: 2),
                   Text(
                     option.nativeName,
                     style: GoogleFonts.inter(

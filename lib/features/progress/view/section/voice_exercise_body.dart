@@ -76,7 +76,7 @@ class _VoiceExerciseBodyState extends State<VoiceExerciseBody>
 
   Color get _sessionColor {
     if (_sessionScore >= 0.78) return AppColors.tertiary;
-    if (_sessionScore >= 0.50) return const Color(0xFFFFD580);
+    if (_sessionScore >= 0.50) return Color(0xFFFFD580);
     return AppColors.error;
   }
 
@@ -112,8 +112,8 @@ class _VoiceExerciseBodyState extends State<VoiceExerciseBody>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const ExerciseLabel('Speaking practice'),
-              const SizedBox(height: 12),
+              ExerciseLabel('Speaking practice'),
+              SizedBox(height: 12),
               if ((widget.detail.speakingFocus ?? '').trim().isNotEmpty)
                 Text(
                   widget.detail.speakingFocus ?? '',
@@ -134,7 +134,7 @@ class _VoiceExerciseBodyState extends State<VoiceExerciseBody>
             ],
           ),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
 
         // ── Vocabulary panel ─────────────────────────────────────────────
         ExercisePanel(
@@ -151,7 +151,7 @@ class _VoiceExerciseBodyState extends State<VoiceExerciseBody>
 
         // ── Performance task ─────────────────────────────────────────────
         if ((widget.detail.performanceTask ?? '').trim().isNotEmpty) ...[
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           ExercisePanel(
             accentColor: AppColors.tertiary,
             child: ExerciseSmallNote(

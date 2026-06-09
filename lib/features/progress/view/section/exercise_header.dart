@@ -34,9 +34,7 @@ class ExerciseHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
-      decoration: const BoxDecoration(
-        gradient: ProfilePageConstants.headerGradient,
-      ),
+      decoration: BoxDecoration(gradient: ProfilePageConstants.headerGradient),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

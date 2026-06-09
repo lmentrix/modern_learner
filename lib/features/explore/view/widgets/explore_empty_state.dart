@@ -17,7 +17,7 @@ class ExploreEmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLow,
         borderRadius: BorderRadius.circular(28),
@@ -25,7 +25,7 @@ class ExploreEmptyState extends StatelessWidget {
       child: Column(
         children: [
           const Text('🔎', style: TextStyle(fontSize: 32)),
-          const SizedBox(height: 14),
+          SizedBox(height: 14),
           Text(
             hasSearchQuery
                 ? context.tr('No matching collections')

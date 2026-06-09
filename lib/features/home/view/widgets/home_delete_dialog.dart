@@ -35,7 +35,7 @@ class HomeDeleteDialog extends StatelessWidget {
               size: 24,
             ),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           Expanded(
             child: Text(
               context.tr('Delete Course?'),
@@ -60,7 +60,7 @@ class HomeDeleteDialog extends StatelessWidget {
         TextButton(
           onPressed: onCancel,
           style: TextButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           ),
           child: Text(
             context.tr('Cancel'),

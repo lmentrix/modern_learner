@@ -25,7 +25,7 @@ class ProfileCourseXpCardState extends State<ProfileCourseXpCard> {
     return GestureDetector(
       onTap: () => setState(() => _expanded = !_expanded),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 280),
+        duration: Duration(milliseconds: 280),
         curve: Curves.easeOutCubic,
         decoration: BoxDecoration(
           color: _expanded
@@ -190,7 +190,7 @@ class ProfileCourseXpCardState extends State<ProfileCourseXpCard> {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      SizedBox(height: 6),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [

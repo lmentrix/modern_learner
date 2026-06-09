@@ -14,12 +14,20 @@ import 'package:modern_learner_production/features/new_lesson/view/section/new_l
 import 'package:modern_learner_production/features/new_lesson/view/section/new_lesson_header_section.dart';
 import 'package:modern_learner_production/features/new_lesson/view/section/new_lesson_language_section.dart';
 import 'package:modern_learner_production/features/new_lesson/view/section/new_lesson_preview_section.dart';
+import 'package:modern_learner_production/features/profile/data/profile_preferences.dart';
+import 'package:modern_learner_production/features/profile/service/profile_notification_preferences_service.dart';
+import 'package:modern_learner_production/features/profile/view/widgets/notification_preference_switch.dart';
 import 'package:modern_learner_production/features/progress/service/cache/roadmap_id_cache.dart';
+import 'package:modern_learner_production/features/push_notification/service/push_notification_service_locator.dart';
 import 'package:modern_learner_production/features/roadmap/service/roadmap_service.dart';
-import 'package:modern_learner_production/main.dart';
 
 class NewLessonComposerSection extends StatefulWidget {
-  const NewLessonComposerSection({super.key});
+  const NewLessonComposerSection({
+    super.key,
+    this.showVoiceNotificationToggle = false,
+  });
+
+  final bool showVoiceNotificationToggle;
 
   @override
   State<NewLessonComposerSection> createState() =>
@@ -64,6 +72,22 @@ class _NewLessonComposerSectionState extends State<NewLessonComposerSection> {
                           selectedLanguage: _selectedLanguage,
                           selectedDifficulty: _selectedDifficulty,
                         ),
+                        if (widget.showVoiceNotificationToggle) ...[
+                          const SizedBox(height: 18),
+                          NotificationPreferenceSwitch(
+                            icon: Icons.record_voice_over_outlined,
+                            title: 'Voice lesson notifications',
+                            subtitle:
+                                'Notify me when a voice lesson is created.',
+                            valueOf: (preferences) =>
+                                preferences.voiceLessonCreationNotifications,
+                            copyWithValue:
+                                (ProfilePreferences preferences, bool value) =>
+                                    preferences.copyWith(
+                                      voiceLessonCreationNotifications: value,
+                                    ),
+                          ),
+                        ],
                         const SizedBox(height: 28),
                         NewLessonLanguageSection(
                           options: NewLessonPageData.languages,
@@ -102,7 +126,9 @@ class _NewLessonComposerSectionState extends State<NewLessonComposerSection> {
 
   Future<void> _onStart(BuildContext context) async {
     final selectedLanguage = _selectedLanguage;
-    if (selectedLanguage == null || selectedLanguage.trim().isEmpty || _isStarting) {
+    if (selectedLanguage == null ||
+        selectedLanguage.trim().isEmpty ||
+        _isStarting) {
       return;
     }
 
@@ -196,12 +222,17 @@ class _NewLessonComposerSectionState extends State<NewLessonComposerSection> {
 
     // ─────────────────────────────────────────────────────────────────────
 
-    unawaited(
-      pushNotificationService.notifyNewVoiceLesson(
-        language: selectedLanguage,
-        difficulty: _selectedDifficulty,
-      ),
-    );
+    if (ProfileNotificationPreferencesService
+        .instance
+        .preferences
+        .voiceLessonCreationNotifications) {
+      unawaited(
+        pushNotificationService.notifyNewVoiceLesson(
+          language: selectedLanguage,
+          difficulty: _selectedDifficulty,
+        ),
+      );
+    }
 
     if (!mounted) return;
     navigator.pop();

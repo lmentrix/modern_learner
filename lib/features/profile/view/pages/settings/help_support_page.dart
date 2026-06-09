@@ -124,8 +124,8 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
 
   Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-      decoration: const BoxDecoration(
+      padding: EdgeInsets.fromLTRB(20, 16, 20, 24),
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
@@ -136,10 +136,10 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
         children: [
           IconButton(
             onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back_ios_rounded),
+            icon: Icon(Icons.arrow_back_ios_rounded),
             color: AppColors.onSurface,
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: 8),
           Text(
             'Help & Support',
             style: GoogleFonts.spaceGrotesk(
@@ -155,7 +155,7 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
 
   Widget _buildSearchBar() {
     return Container(
-      padding: const EdgeInsets.all(4),
+      padding: EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLow,
         borderRadius: BorderRadius.circular(20),
@@ -166,9 +166,9 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
       ),
       child: Row(
         children: [
-          const SizedBox(width: 12),
-          const Icon(Icons.search_rounded, color: AppColors.onSurfaceVariant),
-          const SizedBox(width: 8),
+          SizedBox(width: 12),
+          Icon(Icons.search_rounded, color: AppColors.onSurfaceVariant),
+          SizedBox(width: 8),
           Expanded(
             child: TextField(
               controller: _searchCtrl,
@@ -183,14 +183,14 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
                   color: AppColors.onSurfaceVariant,
                 ),
                 border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                contentPadding: EdgeInsets.symmetric(vertical: 14),
               ),
             ),
           ),
           if (_searchCtrl.text.isNotEmpty)
             IconButton(
               onPressed: () => _searchCtrl.clear(),
-              icon: const Icon(Icons.clear_rounded, size: 20),
+              icon: Icon(Icons.clear_rounded, size: 20),
               color: AppColors.onSurfaceVariant,
             ),
           const SizedBox(width: 4),
@@ -210,7 +210,7 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
             onTap: () {},
           ),
         ),
-        const SizedBox(width: 12),
+        SizedBox(width: 12),
         Expanded(
           child: _QuickHelpCard(
             icon: Icons.email_outlined,
@@ -219,7 +219,7 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
             onTap: () {},
           ),
         ),
-        const SizedBox(width: 12),
+        SizedBox(width: 12),
         Expanded(
           child: _QuickHelpCard(
             icon: Icons.phone_outlined,
@@ -243,7 +243,7 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
           color: AppColors.primary,
           onTap: () {},
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
         _ContactTile(
           icon: Icons.email_rounded,
           title: 'Email Support',
@@ -251,7 +251,7 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
           color: AppColors.secondary,
           onTap: () {},
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
         _ContactTile(
           icon: Icons.forum_rounded,
           title: 'Community Forum',
@@ -265,7 +265,7 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
 
   Widget _buildAppInfo() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLow,
         borderRadius: BorderRadius.circular(24),
@@ -289,7 +289,7 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
               size: 32,
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           Text(
             'Modern Learner',
             style: GoogleFonts.spaceGrotesk(
@@ -298,7 +298,7 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
               color: AppColors.onSurface,
             ),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
           Text(
             'Version 2.4.1 (Build 156)',
             style: GoogleFonts.inter(
@@ -370,7 +370,7 @@ class _QuickHelpCard extends StatelessWidget {
               ),
               child: Icon(icon, color: color, size: 24),
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
             Text(
               label,
               style: GoogleFonts.inter(
@@ -410,8 +410,8 @@ class _FaqTileState extends State<_FaqTile> {
     return GestureDetector(
       onTap: () => setState(() => _isExpanded = !_isExpanded),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(16),
+        duration: Duration(milliseconds: 200),
+        padding: EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: AppColors.surfaceContainerLow,
           borderRadius: BorderRadius.circular(20),
@@ -433,7 +433,7 @@ class _FaqTileState extends State<_FaqTile> {
                   ),
                   child: Icon(widget.icon, color: widget.color, size: 20),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     widget.question,
@@ -446,8 +446,8 @@ class _FaqTileState extends State<_FaqTile> {
                 ),
                 AnimatedRotation(
                   turns: _isExpanded ? 0.5 : 0,
-                  duration: const Duration(milliseconds: 200),
-                  child: const Icon(
+                  duration: Duration(milliseconds: 200),
+                  child: Icon(
                     Icons.expand_more_rounded,
                     color: AppColors.onSurfaceVariant,
                     size: 24,
@@ -456,12 +456,12 @@ class _FaqTileState extends State<_FaqTile> {
               ],
             ),
             if (_isExpanded) ...[
-              const SizedBox(height: 12),
+              SizedBox(height: 12),
               Container(
                 height: 1,
                 color: AppColors.outlineVariant.withValues(alpha: 0.1),
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: 12),
               Text(
                 widget.answer,
                 style: GoogleFonts.inter(
@@ -499,7 +499,7 @@ class _ContactTile extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: AppColors.surfaceContainerLow,
           borderRadius: BorderRadius.circular(20),
@@ -535,9 +535,9 @@ class _ContactTile extends StatelessWidget {
                         ),
                       ),
                       if (badge != null) ...[
-                        const SizedBox(width: 8),
+                        SizedBox(width: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(
+                          padding: EdgeInsets.symmetric(
                             horizontal: 8,
                             vertical: 2,
                           ),
@@ -557,7 +557,7 @@ class _ContactTile extends StatelessWidget {
                       ],
                     ],
                   ),
-                  const SizedBox(height: 3),
+                  SizedBox(height: 3),
                   Text(
                     subtitle,
                     style: GoogleFonts.inter(
@@ -568,7 +568,7 @@ class _ContactTile extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(
+            Icon(
               Icons.chevron_right_rounded,
               color: AppColors.onSurfaceVariant,
               size: 24,
@@ -588,7 +588,7 @@ class _InfoChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(100),
@@ -628,7 +628,7 @@ class _Faq {
   final Color color;
 }
 
-const _faqs = [
+List<_Faq> get _faqs => [
   _Faq(
     question: 'How do I reset my progress?',
     answer:
@@ -641,7 +641,7 @@ const _faqs = [
     answer:
         'Your streak counts the number of consecutive days you complete at least one lesson. Complete a lesson before midnight to keep your streak alive!',
     icon: Icons.local_fire_department_rounded,
-    color: Color(0xFFFF9500),
+    color: const Color(0xFFFF9500),
   ),
   _Faq(
     question: 'Can I use the app offline?',

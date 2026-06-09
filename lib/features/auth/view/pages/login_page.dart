@@ -144,7 +144,7 @@ class _Header extends StatelessWidget {
             size: 26,
           ),
         ),
-        const SizedBox(height: 24),
+        SizedBox(height: 24),
         Text(
           context.tr('Welcome back'),
           style: GoogleFonts.spaceGrotesk(
@@ -154,7 +154,7 @@ class _Header extends StatelessWidget {
             height: 1.1,
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         Text(
           context.tr('Sign in to continue learning'),
           style: GoogleFonts.inter(
@@ -168,13 +168,13 @@ class _Header extends StatelessWidget {
 }
 
 class _ErrorBanner extends StatelessWidget {
-  const _ErrorBanner({required this.message});
+  _ErrorBanner({required this.message});
   final String message;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: AppColors.error.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
@@ -182,12 +182,8 @@ class _ErrorBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(
-            Icons.error_outline_rounded,
-            color: AppColors.error,
-            size: 18,
-          ),
-          const SizedBox(width: 10),
+          Icon(Icons.error_outline_rounded, color: AppColors.error, size: 18),
+          SizedBox(width: 10),
           Expanded(
             child: Text(
               context.tr(message),

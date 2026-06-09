@@ -46,7 +46,7 @@ class _ViewProfileSectionHeaderSectionState
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            const Spacer(),
+            Spacer(),
             GestureDetector(
               onTap: widget.onSeeAll,
               child: Text(

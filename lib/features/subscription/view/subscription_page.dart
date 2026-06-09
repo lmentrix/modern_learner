@@ -191,14 +191,14 @@ class _SubscriptionPageState extends State<SubscriptionPage>
                   color: AppColors.outlineVariant.withValues(alpha: 0.15),
                 ),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.arrow_back_ios_new_rounded,
                 size: 16,
                 color: AppColors.onSurfaceVariant,
               ),
             ),
           ),
-          const SizedBox(width: 14),
+          SizedBox(width: 14),
           Text(
             'Subscription',
             style: GoogleFonts.spaceGrotesk(
@@ -270,7 +270,7 @@ class _SubscriptionPageState extends State<SubscriptionPage>
                       style: GoogleFonts.spaceGrotesk(
                         fontSize: 22,
                         fontWeight: FontWeight.w800,
-                        color: const Color(0xFFFFD700),
+                        color: Color(0xFFFFD700),
                       ),
                     ),
                     Text(
@@ -297,7 +297,7 @@ class _SubscriptionPageState extends State<SubscriptionPage>
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 8, left: 4),
+                  padding: EdgeInsets.only(bottom: 8, left: 4),
                   child: Text(
                     '/ month',
                     style: GoogleFonts.inter(
@@ -308,7 +308,7 @@ class _SubscriptionPageState extends State<SubscriptionPage>
                 ),
               ],
             ),
-            const SizedBox(height: 6),
+            SizedBox(height: 6),
             Text(
               'Cancel anytime · No hidden fees',
               style: GoogleFonts.inter(
@@ -362,7 +362,7 @@ class _SubscriptionPageState extends State<SubscriptionPage>
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Text(
               'Thank you for your support. Enjoy all premium features.',
               style: GoogleFonts.inter(
@@ -413,24 +413,21 @@ class _SubscriptionPageState extends State<SubscriptionPage>
               ),
             ],
             if (info.cancelAtPeriodEnd) ...[
-              const SizedBox(height: 10),
+              SizedBox(height: 10),
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 10,
-                ),
+                padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
                   color: AppColors.error.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.info_outline_rounded,
                       size: 16,
                       color: AppColors.error,
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         'Your subscription will not renew after this period.',
@@ -586,7 +583,7 @@ class _SubscriptionPageState extends State<SubscriptionPage>
                 ),
               ),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
           ],
           Text(
             'Payment processed securely by Stripe.\nSubscription renews automatically. Cancel anytime.',
@@ -617,7 +614,7 @@ class _InfoRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLow,
         borderRadius: BorderRadius.circular(12),
@@ -625,7 +622,7 @@ class _InfoRow extends StatelessWidget {
       child: Row(
         children: [
           Icon(icon, size: 16, color: AppColors.onSurfaceVariant),
-          const SizedBox(width: 10),
+          SizedBox(width: 10),
           Text(
             label,
             style: GoogleFonts.inter(
@@ -633,7 +630,7 @@ class _InfoRow extends StatelessWidget {
               color: AppColors.onSurfaceVariant,
             ),
           ),
-          const Spacer(),
+          Spacer(),
           Text(
             value,
             style: GoogleFonts.inter(
@@ -662,7 +659,7 @@ class _FeatureRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLow,
         borderRadius: BorderRadius.circular(16),
@@ -694,7 +691,7 @@ class _FeatureRow extends StatelessWidget {
                     color: AppColors.onSurface,
                   ),
                 ),
-                const SizedBox(height: 2),
+                SizedBox(height: 2),
                 Text(
                   subtitle,
                   style: GoogleFonts.inter(

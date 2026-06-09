@@ -24,12 +24,16 @@ class PushNotificationService {
   final _localNotifications = FlutterLocalNotificationsPlugin();
   static const _channelId = 'course_created';
   static const _channelName = 'Course Created';
+  static const _dailyReminderNotificationId = 2401;
   int _notificationId = 0;
   bool _localReady = false;
+  bool _pushDeliveryEnabled = true;
 
   /// The resolved FCM registration token. Null until [initialize] completes.
   String? get token => _token;
   String? _token;
+
+  bool get pushDeliveryEnabled => _pushDeliveryEnabled;
 
   /// Emits every foreground notification.
   Stream<PushNotificationModel> get onMessage =>
@@ -56,7 +60,7 @@ class PushNotificationService {
     }
 
     await _initLocalNotifications();
-    await _requestPermission();
+    await requestPermission();
     await _resolveToken();
     _listenTokenRefresh();
   }
@@ -102,7 +106,7 @@ class PushNotificationService {
     required String title,
     required String description,
   }) async {
-    if (!_localReady) {
+    if (!_localReady || !_pushDeliveryEnabled) {
       _logger.w(
         '[FCM] Local notifications not ready — skipping achievement notification',
       );
@@ -139,7 +143,7 @@ class PushNotificationService {
     required String language,
     required String difficulty,
   }) async {
-    if (!_localReady) {
+    if (!_localReady || !_pushDeliveryEnabled) {
       _logger.w(
         '[FCM] Local notifications not ready — skipping voice lesson notification',
       );
@@ -178,7 +182,7 @@ class PushNotificationService {
     required String title,
     required String topic,
   }) async {
-    if (!_localReady) {
+    if (!_localReady || !_pushDeliveryEnabled) {
       _logger.w(
         '[FCM] Local notifications not ready — skipping course notification',
       );
@@ -210,11 +214,40 @@ class PushNotificationService {
     }
   }
 
+  Future<void> scheduleDailyReminderEvery24Hours() async {
+    if (!_localReady || !_pushDeliveryEnabled) return;
+
+    await requestPermission();
+    const androidDetails = AndroidNotificationDetails(
+      _channelId,
+      _channelName,
+      channelDescription: 'Daily learning reminders',
+      importance: Importance.high,
+      priority: Priority.high,
+    );
+    const details = NotificationDetails(android: androidDetails);
+
+    await _localNotifications.periodicallyShowWithDuration(
+      _dailyReminderNotificationId,
+      'Time to practice',
+      'Keep your streak moving with one lesson today.',
+      const Duration(hours: 24),
+      details,
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+    );
+    _logger.i('[FCM] Daily reminder scheduled every 24 hours');
+  }
+
+  Future<void> cancelDailyReminder() async {
+    await _localNotifications.cancel(_dailyReminderNotificationId);
+    _logger.i('[FCM] Daily reminder cancelled');
+  }
+
   // ---------------------------------------------------------------------------
   // Permission
   // ---------------------------------------------------------------------------
 
-  Future<void> _requestPermission() async {
+  Future<NotificationSettings> requestPermission() async {
     final settings = await _messaging.requestPermission(
       alert: true,
       badge: true,
@@ -222,6 +255,19 @@ class PushNotificationService {
       provisional: false,
     );
     _logger.i('[FCM] Permission: ${settings.authorizationStatus.name}');
+    return settings;
+  }
+
+  Future<void> setPushDeliveryEnabled(bool enabled) async {
+    _pushDeliveryEnabled = enabled;
+    if (enabled) {
+      await requestPermission();
+      _token = await _messaging.getToken();
+      await _persistToken(_token);
+      return;
+    }
+
+    await _clearPersistedToken();
   }
 
   // ---------------------------------------------------------------------------
@@ -280,6 +326,10 @@ class PushNotificationService {
   /// Clears the FCM token from `profiles` on sign-out so stale tokens are not
   /// used to send notifications after the user logs out.
   Future<void> onUserSignedOut() async {
+    await _clearPersistedToken();
+  }
+
+  Future<void> _clearPersistedToken() async {
     final userId = Supabase.instance.client.auth.currentUser?.id;
     if (userId == null) return;
     try {

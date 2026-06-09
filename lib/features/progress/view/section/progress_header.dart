@@ -30,12 +30,16 @@ class ProgressHeaderSection extends StatelessWidget {
   _LevelData _level(int xp) {
     int lvl = 1;
     for (int i = 1; i < _thresholds.length; i++) {
-      if (xp >= _thresholds[i]) lvl = i + 1;
-      else break;
+      if (xp >= _thresholds[i])
+        lvl = i + 1;
+      else
+        break;
     }
     lvl = lvl.clamp(1, _ranks.length);
     final floor = _thresholds[lvl - 1];
-    final ceil = lvl < _thresholds.length ? _thresholds[lvl] : _thresholds.last + 5000;
+    final ceil = lvl < _thresholds.length
+        ? _thresholds[lvl]
+        : _thresholds.last + 5000;
     final inLevel = xp - floor;
     final needed = ceil - floor;
     return _LevelData(
@@ -147,7 +151,7 @@ class _CourseCard extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: 4),
                 Row(
                   children: [
                     Text(
@@ -245,7 +249,7 @@ class _XpProgressCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLow,
         borderRadius: BorderRadius.circular(20),
@@ -288,20 +292,14 @@ class _XpProgressCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(999),
                 child: Stack(
                   children: [
-                    Container(
-                      height: 8,
-                      color: color.withValues(alpha: 0.12),
-                    ),
+                    Container(height: 8, color: color.withValues(alpha: 0.12)),
                     FractionallySizedBox(
                       widthFactor: value,
                       child: Container(
                         height: 8,
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
-                            colors: [
-                              color.withValues(alpha: 0.70),
-                              color,
-                            ],
+                            colors: [color.withValues(alpha: 0.70), color],
                           ),
                           borderRadius: BorderRadius.circular(999),
                           boxShadow: [
@@ -319,7 +317,7 @@ class _XpProgressCard extends StatelessWidget {
               );
             },
           ),
-          const SizedBox(height: 7),
+          SizedBox(height: 7),
           Text(
             '${d.xpInLevel} / ${d.xpNeeded} XP',
             style: GoogleFonts.inter(

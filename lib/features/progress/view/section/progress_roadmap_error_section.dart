@@ -15,10 +15,10 @@ class ProgressRoadmapErrorSection extends StatelessWidget {
     return SafeArea(
       child: Center(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
+          padding: EdgeInsets.symmetric(horizontal: 24),
           child: Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(24),
+            padding: EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: AppColors.surfaceContainerHigh,
               borderRadius: BorderRadius.circular(28),
@@ -36,13 +36,13 @@ class ProgressRoadmapErrorSection extends StatelessWidget {
                     color: AppColors.error.withValues(alpha: 0.12),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.wifi_off_rounded,
                     color: AppColors.error,
                     size: 28,
                   ),
                 ),
-                const SizedBox(height: 18),
+                SizedBox(height: 18),
                 Text(
                   'Roadmap unavailable',
                   textAlign: TextAlign.center,
@@ -53,7 +53,7 @@ class ProgressRoadmapErrorSection extends StatelessWidget {
                     height: 1.1,
                   ),
                 ),
-                const SizedBox(height: 10),
+                SizedBox(height: 10),
                 Text(
                   'The roadmap backend could not be reached or returned an invalid response. Check your connection and try again.',
                   textAlign: TextAlign.center,

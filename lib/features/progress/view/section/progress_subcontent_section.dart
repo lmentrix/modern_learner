@@ -24,7 +24,7 @@ class ProgressSubcontentSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final step = selectedStep;
     if (step == null) {
-      return const _StatusCard(
+      return _StatusCard(
         icon: Icons.touch_app_rounded,
         iconColor: AppColors.secondary,
         title: 'Tap a chapter to open the build',
@@ -79,7 +79,7 @@ class ProgressSubcontentSection extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(22),
+      padding: EdgeInsets.all(22),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -111,7 +111,7 @@ class ProgressSubcontentSection extends StatelessWidget {
               letterSpacing: 1.4,
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Text(
             payload.chapterTitle,
             style: GoogleFonts.spaceGrotesk(
@@ -121,7 +121,7 @@ class ProgressSubcontentSection extends StatelessWidget {
               height: 1.08,
             ),
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
           Text(
             payload.overview,
             style: GoogleFonts.inter(
@@ -139,7 +139,7 @@ class ProgressSubcontentSection extends StatelessWidget {
                 .toList(),
           ),
           if ((response?.message ?? '').trim().isNotEmpty) ...[
-            const SizedBox(height: 18),
+            SizedBox(height: 18),
             Text(
               response?.message ?? '',
               style: GoogleFonts.inter(
@@ -169,7 +169,7 @@ class ProgressSubcontentSection extends StatelessWidget {
 // ── Subcontent Card ───────────────────────────────────────────────────────────
 
 class _SubcontentCard extends StatelessWidget {
-  const _SubcontentCard({required this.item});
+  _SubcontentCard({required this.item});
 
   final ChapterSubcontentItemModel item;
 
@@ -181,9 +181,9 @@ class _SubcontentCard extends StatelessWidget {
         return AppColors.secondary;
       case 'quiz':
       case 'review':
-        return const Color(0xFFFF9500);
+        return Color(0xFFFF9500);
       case 'speaking':
-        return const Color(0xFF26C6DA);
+        return Color(0xFF26C6DA);
       default:
         return AppColors.tertiary;
     }
@@ -232,7 +232,7 @@ class _SubcontentCard extends StatelessWidget {
                       .map((chip) => _MetaChip(chip, color: typeColor))
                       .toList(),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
                 Text(
                   item.title,
                   style: GoogleFonts.spaceGrotesk(
@@ -241,7 +241,7 @@ class _SubcontentCard extends StatelessWidget {
                     color: AppColors.onSurface,
                   ),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
                 Text(
                   item.summary,
                   style: GoogleFonts.inter(
@@ -291,9 +291,9 @@ class _SubcontentCard extends StatelessWidget {
                   ),
                 ],
                 if ((item.teachingNote ?? '').trim().isNotEmpty) ...[
-                  const SizedBox(height: 14),
-                  const _SectionLabel(label: 'Teaching note'),
-                  const SizedBox(height: 6),
+                  SizedBox(height: 14),
+                  _SectionLabel(label: 'Teaching note'),
+                  SizedBox(height: 6),
                   Text(
                     item.teachingNote ?? '',
                     style: GoogleFonts.inter(
@@ -304,9 +304,9 @@ class _SubcontentCard extends StatelessWidget {
                   ),
                 ],
                 if ((item.speakingFocus ?? '').trim().isNotEmpty) ...[
-                  const SizedBox(height: 14),
-                  const _SectionLabel(label: 'Speaking focus'),
-                  const SizedBox(height: 6),
+                  SizedBox(height: 14),
+                  _SectionLabel(label: 'Speaking focus'),
+                  SizedBox(height: 6),
                   Text(
                     item.speakingFocus ?? '',
                     style: GoogleFonts.inter(
@@ -432,7 +432,7 @@ class _StatusCard extends StatelessWidget {
                               color: AppColors.onSurface,
                             ),
                           ),
-                          const SizedBox(height: 6),
+                          SizedBox(height: 6),
                           Text(
                             body,
                             style: GoogleFonts.inter(
@@ -499,13 +499,13 @@ class _BulletLine extends StatelessWidget {
           Container(
             width: 6,
             height: 6,
-            margin: const EdgeInsets.only(top: 7),
-            decoration: const BoxDecoration(
+            margin: EdgeInsets.only(top: 7),
+            decoration: BoxDecoration(
               color: AppColors.secondary,
               shape: BoxShape.circle,
             ),
           ),
-          const SizedBox(width: 10),
+          SizedBox(width: 10),
           Expanded(
             child: Text(
               text,
@@ -532,7 +532,7 @@ class _MetaChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = color;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: c != null
             ? c.withValues(alpha: 0.12)
@@ -560,7 +560,7 @@ class _TagChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: AppColors.secondary.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(999),

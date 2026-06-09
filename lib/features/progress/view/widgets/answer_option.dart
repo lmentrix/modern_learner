@@ -147,9 +147,9 @@ class _AnswerOptionState extends State<AnswerOption>
             onTap: widget.checked ? null : widget.onTap,
             borderRadius: BorderRadius.circular(16),
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
+              duration: Duration(milliseconds: 200),
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
               decoration: BoxDecoration(
                 color: isActive
                     ? tone.withValues(alpha: 0.11)

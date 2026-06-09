@@ -23,7 +23,7 @@ class HomeProfileQuickActionRow extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(14),
+        padding: EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: AppColors.surfaceContainerHighest.withValues(alpha: 0.4),
           borderRadius: BorderRadius.circular(12),
@@ -42,7 +42,7 @@ class HomeProfileQuickActionRow extends StatelessWidget {
               ),
               child: Icon(icon, color: accentColor, size: 18),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: 12),
             Text(
               context.tr(label),
               style: GoogleFonts.inter(
@@ -51,8 +51,8 @@ class HomeProfileQuickActionRow extends StatelessWidget {
                 color: AppColors.onSurface,
               ),
             ),
-            const Spacer(),
-            const Icon(
+            Spacer(),
+            Icon(
               Icons.chevron_right_rounded,
               color: AppColors.onSurfaceVariant,
               size: 20,

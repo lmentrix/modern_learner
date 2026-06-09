@@ -18,7 +18,7 @@ class NewLessonHeaderSection extends StatelessWidget {
     final titleSize = isWide ? 42.0 : 34.0;
 
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: NewLessonPageConstants.headerGradient,
       ),
       child: SafeArea(
@@ -26,7 +26,9 @@ class NewLessonHeaderSection extends StatelessWidget {
         child: Align(
           alignment: Alignment.topCenter,
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: Responsive.maxContentWidth),
+            constraints: const BoxConstraints(
+              maxWidth: Responsive.maxContentWidth,
+            ),
             child: Padding(
               padding: EdgeInsets.fromLTRB(hPad, 12, hPad, 24),
               child: Stack(
@@ -63,16 +65,16 @@ class NewLessonHeaderSection extends StatelessWidget {
                               color: Colors.white.withValues(alpha: 0.10),
                             ),
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.close_rounded,
                             color: AppColors.onSurfaceVariant,
                             size: 20,
                           ),
                         ),
                       ),
-                      const SizedBox(height: 22),
+                      SizedBox(height: 22),
                       Container(
-                        padding: const EdgeInsets.symmetric(
+                        padding: EdgeInsets.symmetric(
                           horizontal: 10,
                           vertical: 6,
                         ),
@@ -93,7 +95,7 @@ class NewLessonHeaderSection extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 14),
+                      SizedBox(height: 14),
                       Text(
                         context.tr('New Voice Lesson'),
                         style: GoogleFonts.spaceGrotesk(
@@ -103,7 +105,7 @@ class NewLessonHeaderSection extends StatelessWidget {
                           height: 1.0,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      SizedBox(height: 8),
                       Text(
                         context.tr(
                           'Choose the language and challenge level, then generate a roadmap built for short, focused speaking reps.',

@@ -54,7 +54,7 @@ class _BottomNavigationBarWidget extends StatelessWidget {
           ),
           child: SafeArea(
             child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
+              padding: EdgeInsets.symmetric(vertical: 8),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
@@ -82,7 +82,7 @@ class _BottomNavigationBarWidget extends StatelessWidget {
                         Navigator.of(context, rootNavigator: true).push(
                           MaterialPageRoute(
                             fullscreenDialog: true,
-                            builder: (_) => const NewLessonPage(),
+                            builder: (_) => NewLessonPage(),
                           ),
                         ),
                   ),
@@ -166,7 +166,7 @@ class _NavItem extends StatelessWidget {
             color: isActive ? activeColor : AppColors.onSurfaceVariant,
             size: 24,
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
           Text(
             label,
             style: GoogleFonts.inter(

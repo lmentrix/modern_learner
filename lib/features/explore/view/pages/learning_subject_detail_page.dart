@@ -71,7 +71,7 @@ class LearningSubjectDetailPage extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 28),
+                  SizedBox(height: 28),
                   Text(
                     'TOPICS IN THIS SUBJECT',
                     style: GoogleFonts.inter(
@@ -81,7 +81,7 @@ class LearningSubjectDetailPage extends StatelessWidget {
                       color: AppColors.onSurfaceVariant,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4),
                   Text(
                     'Tap a topic to create a focused course',
                     style: GoogleFonts.inter(

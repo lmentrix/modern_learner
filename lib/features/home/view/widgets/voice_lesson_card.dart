@@ -117,7 +117,7 @@ class _VoiceLessonCardState extends State<VoiceLessonCard>
                       VoiceLessonWaveformIndicator(color: widget.accentColor),
                   ],
                 ),
-                const SizedBox(height: 10),
+                SizedBox(height: 10),
                 Text(
                   widget.title,
                   style: GoogleFonts.spaceGrotesk(
@@ -128,7 +128,7 @@ class _VoiceLessonCardState extends State<VoiceLessonCard>
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: 4),
                 Text(
                   widget.subtitle,
                   style: GoogleFonts.inter(

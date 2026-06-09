@@ -341,14 +341,8 @@ class RoadmapService {
     try {
       await Future.wait([
         _client.from(_roadmapsTable).delete().eq('course_id', courseId),
-        _client
-            .from(_chapterProgressTable)
-            .delete()
-            .eq('course_id', courseId),
-        _client
-            .from(_chapterExercisesTable)
-            .delete()
-            .eq('course_id', courseId),
+        _client.from(_chapterProgressTable).delete().eq('course_id', courseId),
+        _client.from(_chapterExercisesTable).delete().eq('course_id', courseId),
         _client
             .from(_chapterExerciseProgressTable)
             .delete()

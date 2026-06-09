@@ -31,7 +31,7 @@ class ProfileFooterStat extends StatelessWidget {
         child: Column(
           children: [
             Icon(icon, color: color, size: 16),
-            const SizedBox(height: 5),
+            SizedBox(height: 5),
             Text(
               value,
               style: GoogleFonts.spaceGrotesk(

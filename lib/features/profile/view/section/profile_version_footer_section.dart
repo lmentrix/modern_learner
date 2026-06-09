@@ -5,7 +5,7 @@ import 'package:modern_learner_production/core/theme/app_colors.dart';
 import 'package:modern_learner_production/features/profile/data/profile_page_constants.dart';
 
 class ProfileVersionFooterSection extends StatelessWidget {
-  const ProfileVersionFooterSection({super.key});
+  ProfileVersionFooterSection({super.key});
 
   @override
   Widget build(BuildContext context) {

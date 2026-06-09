@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:modern_learner_production/core/theme/app_colors.dart';
+import 'package:modern_learner_production/core/theme/app_theme_controller.dart';
 import 'package:modern_learner_production/features/profile/data/profile_identity.dart';
 import 'package:modern_learner_production/features/profile/data/profile_preferences.dart';
 import 'package:modern_learner_production/features/profile/view/widgets/profile_on_off_chip.dart';
@@ -53,7 +54,7 @@ class ProfileSettingsSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         ProfileSectionLabel(text: l10n.settings),
-        const SizedBox(height: 14),
+        SizedBox(height: 14),
         SettingItem(
           icon: Icons.person_outline_rounded,
           title: l10n.account,
@@ -74,7 +75,7 @@ class ProfileSettingsSection extends StatelessWidget {
             );
           },
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         SettingItem(
           icon: Icons.notifications_outlined,
           title: l10n.notifications,
@@ -85,13 +86,18 @@ class ProfileSettingsSection extends StatelessWidget {
           trailing: ProfileOnOffChip(isOn: preferences.anyNotificationEnabled),
           onTap: onNotificationsTap,
         ),
-        const SizedBox(height: 8),
-        SettingItem(
-          icon: Icons.palette_outlined,
-          title: l10n.appearance,
-          subtitle: l10n.darkMediumText,
-          accentColor: AppColors.tertiaryContainer,
-          onTap: onAppearanceTap,
+        SizedBox(height: 8),
+        ValueListenableBuilder<AppThemePreference>(
+          valueListenable: AppThemeController.instance.preferenceListenable,
+          builder: (context, preference, _) {
+            return SettingItem(
+              icon: Icons.palette_outlined,
+              title: l10n.appearance,
+              subtitle: '${preference.label} · Medium text',
+              accentColor: AppColors.tertiaryContainer,
+              onTap: onAppearanceTap,
+            );
+          },
         ),
         const SizedBox(height: 8),
         SettingItem(

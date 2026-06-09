@@ -30,7 +30,7 @@ class NewLessonSectionHeading extends StatelessWidget {
             letterSpacing: 1.7,
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         Text(
           context.tr(title),
           style: GoogleFonts.spaceGrotesk(
@@ -40,7 +40,7 @@ class NewLessonSectionHeading extends StatelessWidget {
             height: 1.08,
           ),
         ),
-        const SizedBox(height: 6),
+        SizedBox(height: 6),
         Text(
           context.tr(subtitle),
           style: GoogleFonts.inter(

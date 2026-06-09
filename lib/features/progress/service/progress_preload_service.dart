@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:modern_learner_production/core/models/progress_course_selection.dart';
@@ -8,6 +9,8 @@ import 'package:modern_learner_production/features/explore/data/models/progress_
 import 'package:modern_learner_production/features/explore/service/explore_courses_service.dart';
 import 'package:modern_learner_production/features/progress/service/course_xp_service.dart';
 import 'package:modern_learner_production/features/progress/service/model/chapter_subcontent_model.dart';
+import 'package:modern_learner_production/features/progress/service/roadmap_generation_service.dart';
+import 'package:modern_learner_production/features/progress/service/roadmap_mock_guard.dart';
 import 'package:modern_learner_production/features/roadmap/service/roadmap_service.dart';
 
 /// Pre-loads roadmap and chapter subcontent from the local DB into a shared
@@ -67,6 +70,14 @@ class ProgressPreloadService {
       for (final course in courses) {
         await _preloadCourse(course);
       }
+
+      unawaited(
+        RoadmapGenerationService.instance.resumeMissingRoadmaps(
+          courses.where(
+            (course) => !isUsableRoadmapPayload(course.roadmapJson),
+          ),
+        ),
+      );
     } catch (_) {}
   }
 

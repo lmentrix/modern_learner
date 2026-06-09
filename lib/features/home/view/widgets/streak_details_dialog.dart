@@ -15,7 +15,7 @@ class StreakDetailsDialog extends StatelessWidget {
       backgroundColor: Colors.transparent,
       child: Container(
         width: double.infinity,
-        constraints: const BoxConstraints(maxWidth: 340),
+        constraints: BoxConstraints(maxWidth: 340),
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(24),
@@ -177,7 +177,7 @@ class StreakDetailsDialog extends StatelessWidget {
 
   Widget _buildCloseButton(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 20, left: 24, right: 24),
+      padding: EdgeInsets.only(bottom: 20, left: 24, right: 24),
       child: SizedBox(
         width: double.infinity,
         height: 48,

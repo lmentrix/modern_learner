@@ -19,7 +19,7 @@ class ExerciseQuestionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final content = exercise.content;
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLow,
         borderRadius: BorderRadius.circular(20),
@@ -58,7 +58,7 @@ class ExerciseQuestionCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           Text(
             exercise.question,
             style: GoogleFonts.spaceGrotesk(
@@ -69,9 +69,9 @@ class ExerciseQuestionCard extends StatelessWidget {
             ),
           ),
           if (content != null) ...[
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: AppColors.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(12),

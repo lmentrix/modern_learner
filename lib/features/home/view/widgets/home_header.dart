@@ -120,12 +120,18 @@ class HomeHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final w = MediaQuery.sizeOf(context).width;
     final hPad = Responsive.hPad(context);
-    final titleSize = w < 360 ? 22.0 : w >= 900 ? 34.0 : w >= 600 ? 30.0 : 28.0;
+    final titleSize = w < 360
+        ? 22.0
+        : w >= 900
+        ? 34.0
+        : w >= 600
+        ? 30.0
+        : 28.0;
     final avatarSize = w >= 600 ? 52.0 : 44.0;
     final avatarFontSize = w >= 600 ? 22.0 : 18.0;
 
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
@@ -135,7 +141,9 @@ class HomeHeader extends StatelessWidget {
       child: Align(
         alignment: Alignment.topCenter,
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: Responsive.maxContentWidth),
+          constraints: const BoxConstraints(
+            maxWidth: Responsive.maxContentWidth,
+          ),
           child: Padding(
             padding: EdgeInsets.fromLTRB(hPad, 16, hPad, 28),
             child: Column(
@@ -190,7 +198,9 @@ class HomeHeader extends StatelessWidget {
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.primaryDim.withValues(alpha: 0.3),
+                              color: AppColors.primaryDim.withValues(
+                                alpha: 0.3,
+                              ),
                               blurRadius: 16,
                               offset: const Offset(0, 4),
                             ),

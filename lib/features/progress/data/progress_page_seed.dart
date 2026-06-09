@@ -106,7 +106,7 @@ List<ProgressStatItem> _buildStatItems({
       label: 'Exercise XP',
       value: '$exerciseXp XP',
       detail: 'XP from practice work',
-      toneColor: const Color(0xFFFF9F43),
+      toneColor: Color(0xFFFF9F43),
     ),
     ProgressStatItem(
       icon: Icons.check_circle_outline_rounded,
@@ -164,7 +164,7 @@ List<ProgressModuleStep> _buildModuleSteps({
   final tones = <Color>[
     accentColor,
     AppColors.secondary,
-    const Color(0xFFFF9F43),
+    Color(0xFFFF9F43),
     AppColors.tertiary,
   ];
 
@@ -247,7 +247,7 @@ List<ProgressModuleStep> _fallbackModuleSteps({
   final tones = <Color>[
     accentColor,
     AppColors.secondary,
-    const Color(0xFFFF9F43),
+    Color(0xFFFF9F43),
     AppColors.tertiary,
   ];
 

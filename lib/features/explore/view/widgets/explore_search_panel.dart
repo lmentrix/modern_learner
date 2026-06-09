@@ -19,7 +19,7 @@ class ExploreSearchPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: EdgeInsets.all(18),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(28),
         gradient: LinearGradient(
@@ -59,7 +59,7 @@ class ExploreSearchPanel extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 14),
+          SizedBox(height: 14),
           Container(
             decoration: BoxDecoration(
               color: AppColors.surfaceContainerHighest.withValues(alpha: 0.6),
@@ -72,7 +72,7 @@ class ExploreSearchPanel extends StatelessWidget {
                 color: AppColors.onSurface,
               ),
               decoration: InputDecoration(
-                prefixIcon: const Icon(
+                prefixIcon: Icon(
                   Icons.search_rounded,
                   color: AppColors.onSurfaceVariant,
                 ),
@@ -99,8 +99,8 @@ class ExploreSearchPanel extends StatelessWidget {
                 return GestureDetector(
                   onTap: () => onCategorySelected(category),
                   child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 160),
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    duration: Duration(milliseconds: 160),
+                    padding: EdgeInsets.symmetric(horizontal: 16),
                     decoration: BoxDecoration(
                       gradient: isActive ? AppColors.primaryGradient : null,
                       color: isActive
@@ -122,7 +122,7 @@ class ExploreSearchPanel extends StatelessWidget {
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
                           color: isActive
-                              ? const Color(0xFF1A1028)
+                              ? Color(0xFF1A1028)
                               : AppColors.onSurfaceVariant,
                         ),
                       ),

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 
 class ProfileSheetDivider extends StatelessWidget {
-  const ProfileSheetDivider({super.key});
+  ProfileSheetDivider({super.key});
 
   @override
   Widget build(BuildContext context) {

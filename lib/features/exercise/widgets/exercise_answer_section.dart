@@ -75,7 +75,7 @@ class ExerciseAnswerSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (hint != null && !answered) ExerciseHint(hint: hint),
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
         TextField(
           enabled: !answered,
           decoration: InputDecoration(
@@ -224,12 +224,12 @@ class ExerciseAnswerSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (hint != null && !answered) ExerciseHint(hint: hint),
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
         ...(exercise.pairs ?? []).map(
           (pair) => Padding(
-            padding: const EdgeInsets.only(bottom: 10),
+            padding: EdgeInsets.only(bottom: 10),
             child: Container(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: AppColors.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(12),
@@ -256,8 +256,8 @@ class ExerciseAnswerSection extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         left,
-                        const SizedBox(height: 8),
-                        const Icon(
+                        SizedBox(height: 8),
+                        Icon(
                           Icons.arrow_downward_rounded,
                           size: 18,
                           color: AppColors.onSurfaceVariant,
@@ -270,8 +270,8 @@ class ExerciseAnswerSection extends StatelessWidget {
                   return Row(
                     children: [
                       Expanded(child: left),
-                      const SizedBox(width: 8),
-                      const Icon(
+                      SizedBox(width: 8),
+                      Icon(
                         Icons.arrow_forward_rounded,
                         size: 18,
                         color: AppColors.onSurfaceVariant,
@@ -365,7 +365,7 @@ class ExerciseAnswerSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (hint != null && !answered) ExerciseHint(hint: hint),
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
         TextField(
           enabled: !answered,
           maxLines: 5,

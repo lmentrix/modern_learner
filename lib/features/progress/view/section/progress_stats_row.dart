@@ -47,7 +47,7 @@ class ProgressStatsRow extends StatelessWidget {
                 accentColor: accentColor,
               ),
             ),
-            const SizedBox(width: 10),
+            SizedBox(width: 10),
             Expanded(
               child: StatsCard(
                 icon: Icons.layers_rounded,

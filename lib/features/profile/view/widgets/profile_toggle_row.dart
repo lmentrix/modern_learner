@@ -18,7 +18,7 @@ class ProfileToggleRow extends StatelessWidget {
   final String label;
   final String description;
   final bool value;
-  final ValueChanged<bool> onChanged;
+  final ValueChanged<bool>? onChanged;
 
   @override
   Widget build(BuildContext context) {

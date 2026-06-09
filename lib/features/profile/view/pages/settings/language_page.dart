@@ -94,8 +94,8 @@ class _LanguagePageState extends State<LanguagePage> {
 
   Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-      decoration: const BoxDecoration(
+      padding: EdgeInsets.fromLTRB(20, 16, 20, 24),
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
@@ -106,10 +106,10 @@ class _LanguagePageState extends State<LanguagePage> {
         children: [
           IconButton(
             onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back_ios_rounded),
+            icon: Icon(Icons.arrow_back_ios_rounded),
             color: AppColors.onSurface,
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: 8),
           Text(
             'Language',
             style: GoogleFonts.spaceGrotesk(
@@ -151,7 +151,7 @@ class _LanguagePageState extends State<LanguagePage> {
     return GestureDetector(
       onTap: () {},
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(20),
         decoration: BoxDecoration(
           border: Border.all(
             color: AppColors.outlineVariant.withValues(alpha: 0.2),
@@ -170,13 +170,13 @@ class _LanguagePageState extends State<LanguagePage> {
                 color: AppColors.primary.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.add_rounded,
                 color: AppColors.primary,
                 size: 24,
               ),
             ),
-            const SizedBox(width: 14),
+            SizedBox(width: 14),
             Text(
               'Add New Language',
               style: GoogleFonts.inter(
@@ -222,7 +222,7 @@ class _LanguageTile extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(16),
         decoration: BoxDecoration(
           gradient: isSelected ? AppColors.primaryGradient : null,
           color: isSelected
@@ -250,17 +250,17 @@ class _LanguageTile extends StatelessWidget {
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                       color: isSelected
-                          ? const Color(0xFF1A1028)
+                          ? Color(0xFF1A1028)
                           : AppColors.onSurface,
                     ),
                   ),
-                  const SizedBox(height: 3),
+                  SizedBox(height: 3),
                   Text(
                     nativeName,
                     style: GoogleFonts.inter(
                       fontSize: 12,
                       color: isSelected
-                          ? const Color(0xFF1A1028).withValues(alpha: 0.7)
+                          ? Color(0xFF1A1028).withValues(alpha: 0.7)
                           : AppColors.onSurfaceVariant,
                     ),
                   ),
@@ -305,7 +305,7 @@ class _LearningLanguageCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLow,
         borderRadius: BorderRadius.circular(24),
@@ -332,9 +332,9 @@ class _LearningLanguageCard extends StatelessWidget {
                         color: AppColors.onSurface,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(height: 4),
                     Container(
-                      padding: const EdgeInsets.symmetric(
+                      padding: EdgeInsets.symmetric(
                         horizontal: 10,
                         vertical: 4,
                       ),
@@ -356,19 +356,17 @@ class _LearningLanguageCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           ClipRRect(
             borderRadius: BorderRadius.circular(100),
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 6,
               backgroundColor: AppColors.surfaceContainerHigh,
-              valueColor: const AlwaysStoppedAnimation<Color>(
-                AppColors.primary,
-              ),
+              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
             ),
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [

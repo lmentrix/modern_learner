@@ -19,8 +19,8 @@ class LearningSubjectsFilterChip extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 160),
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        duration: Duration(milliseconds: 160),
+        padding: EdgeInsets.symmetric(horizontal: 16),
         decoration: BoxDecoration(
           gradient: isActive ? AppColors.primaryGradient : null,
           color: isActive
@@ -39,9 +39,7 @@ class LearningSubjectsFilterChip extends StatelessWidget {
             style: GoogleFonts.inter(
               fontSize: 12,
               fontWeight: FontWeight.w700,
-              color: isActive
-                  ? const Color(0xFF1A1028)
-                  : AppColors.onSurfaceVariant,
+              color: isActive ? Color(0xFF1A1028) : AppColors.onSurfaceVariant,
             ),
           ),
         ),

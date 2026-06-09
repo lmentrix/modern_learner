@@ -23,7 +23,7 @@ class TopicCardText extends StatelessWidget {
             height: 1.15,
           ),
         ),
-        const SizedBox(height: 4),
+        SizedBox(height: 4),
         Text(
           topic.description,
           style: GoogleFonts.inter(

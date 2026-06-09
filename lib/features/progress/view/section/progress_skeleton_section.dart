@@ -42,7 +42,7 @@ class _ProgressSkeletonSectionState extends State<ProgressSkeletonSection>
         return CustomScrollView(
           physics: const BouncingScrollPhysics(),
           slivers: [
-            const SliverToBoxAdapter(
+            SliverToBoxAdapter(
               child: SizedBox(height: ProgressPageConstants.sectionSpacing),
             ),
             SliverPadding(
@@ -51,7 +51,7 @@ class _ProgressSkeletonSectionState extends State<ProgressSkeletonSection>
                 child: _SkeletonHeader(shimmerValue: _shimmer.value),
               ),
             ),
-            const SliverToBoxAdapter(
+            SliverToBoxAdapter(
               child: SizedBox(height: ProgressPageConstants.sectionSpacing),
             ),
             SliverPadding(
@@ -60,7 +60,7 @@ class _ProgressSkeletonSectionState extends State<ProgressSkeletonSection>
                 child: _SkeletonStatsRow(shimmerValue: _shimmer.value),
               ),
             ),
-            const SliverToBoxAdapter(
+            SliverToBoxAdapter(
               child: SizedBox(height: ProgressPageConstants.sectionSpacing),
             ),
             SliverPadding(
@@ -235,7 +235,7 @@ class _SolarSystemPainter extends CustomPainter {
       phase: 0.15,
     ),
     // Venus-analog: warm golden, medium orbit
-    const _PlanetData(
+    _PlanetData(
       orbitRadius: 60,
       size: 5.5,
       speed: 2.9,
@@ -243,7 +243,7 @@ class _SolarSystemPainter extends CustomPainter {
       phase: 0.42,
     ),
     // Earth-analog: app tertiary (greenish glow)
-    const _PlanetData(
+    _PlanetData(
       orbitRadius: 86,
       size: 6.5,
       speed: 1.9,
@@ -753,8 +753,8 @@ class _ShimmerBox extends StatelessWidget {
   final double borderRadius;
 
   static Color _colorFor(double v) {
-    const base = AppColors.surfaceContainerHigh;
-    const highlight = AppColors.surfaceContainerHighest;
+    final base = AppColors.surfaceContainerHigh;
+    final highlight = AppColors.surfaceContainerHighest;
     return Color.lerp(base, highlight, v) ?? base;
   }
 

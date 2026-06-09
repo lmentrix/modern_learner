@@ -15,8 +15,8 @@ class ArcProgressPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2 - 10;
-    const startAngle = -math.pi * 0.75;
-    const sweepFull = math.pi * 1.5;
+    final startAngle = -math.pi * 0.75;
+    final sweepFull = math.pi * 1.5;
 
     // Track
     final trackPaint = Paint()
@@ -35,7 +35,7 @@ class ArcProgressPainter extends CustomPainter {
 
     // Glow behind progress arc
     final glowPaint = Paint()
-      ..shader = const LinearGradient(
+      ..shader = LinearGradient(
         colors: [AppColors.primaryDim, AppColors.primary],
       ).createShader(Rect.fromCircle(center: center, radius: radius))
       ..style = PaintingStyle.stroke
@@ -53,7 +53,7 @@ class ArcProgressPainter extends CustomPainter {
 
     // Crisp progress arc on top
     final progressPaint = Paint()
-      ..shader = const LinearGradient(
+      ..shader = LinearGradient(
         colors: [AppColors.primaryDim, AppColors.primary],
       ).createShader(Rect.fromCircle(center: center, radius: radius))
       ..style = PaintingStyle.stroke

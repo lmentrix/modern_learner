@@ -28,8 +28,8 @@ class CreateCourseLevelSelectorSection extends StatelessWidget {
             child: GestureDetector(
               onTap: () => onChanged(level),
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                padding: const EdgeInsets.symmetric(vertical: 14),
+                duration: Duration(milliseconds: 180),
+                padding: EdgeInsets.symmetric(vertical: 14),
                 decoration: BoxDecoration(
                   color: isSelected ? accent : AppColors.surfaceContainerLow,
                   borderRadius: BorderRadius.circular(14),
@@ -42,7 +42,7 @@ class CreateCourseLevelSelectorSection extends StatelessWidget {
                 child: Column(
                   children: [
                     Text(_emoji(level), style: const TextStyle(fontSize: 18)),
-                    const SizedBox(height: 6),
+                    SizedBox(height: 6),
                     Text(
                       _capitalize(level),
                       style: GoogleFonts.inter(

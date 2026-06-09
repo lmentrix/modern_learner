@@ -4,13 +4,13 @@ import 'package:modern_learner_production/core/theme/app_colors.dart';
 import 'package:modern_learner_production/features/achievement/model/achievement_model.dart';
 import 'package:modern_learner_production/features/profile/view/widgets/profile_course_xp_card.dart';
 
-const _courseColors = [
+List<Color> get _courseColors => [
   AppColors.primary,
   AppColors.secondary,
   AppColors.tertiary,
-  Color(0xFFFF9F43),
-  Color(0xFF26C6DA),
-  Color(0xFFCE93D8),
+  const Color(0xFFFF9F43),
+  const Color(0xFF26C6DA),
+  const Color(0xFFCE93D8),
 ];
 
 class ProfileCourseXpList extends StatelessWidget {
@@ -22,16 +22,16 @@ class ProfileCourseXpList extends StatelessWidget {
   Widget build(BuildContext context) {
     if (courseXp.isEmpty) {
       return Container(
-        padding: const EdgeInsets.symmetric(vertical: 24),
+        padding: EdgeInsets.symmetric(vertical: 24),
         alignment: Alignment.center,
         child: Column(
           children: [
-            const Icon(
+            Icon(
               Icons.auto_awesome_outlined,
               color: AppColors.onSurfaceVariant,
               size: 28,
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Text(
               'Complete exercises to start tracking\ncourse XP',
               textAlign: TextAlign.center,

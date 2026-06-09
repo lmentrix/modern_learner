@@ -13,7 +13,7 @@ class ExerciseChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = color;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: c != null
             ? c.withValues(alpha: 0.12)

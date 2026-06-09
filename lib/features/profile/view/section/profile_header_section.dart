@@ -91,7 +91,7 @@ class ProfileHeaderSection extends StatelessWidget {
                         color: AppColors.onSurface,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    SizedBox(height: 2),
                     Row(
                       children: [
                         Text(
@@ -101,9 +101,9 @@ class ProfileHeaderSection extends StatelessWidget {
                             color: AppColors.onSurfaceVariant,
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        SizedBox(width: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(
+                          padding: EdgeInsets.symmetric(
                             horizontal: 8,
                             vertical: 2,
                           ),
@@ -138,7 +138,7 @@ class ProfileHeaderSection extends StatelessWidget {
                       color: AppColors.outlineVariant.withValues(alpha: 0.15),
                     ),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.edit_rounded,
                     color: AppColors.onSurfaceVariant,
                     size: 17,

@@ -17,15 +17,15 @@ class TopicCardMeta extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         LevelPill(level: topic.difficulty, accent: accent),
-        const SizedBox(height: 6),
+        SizedBox(height: 6),
         Row(
           children: [
-            const Icon(
+            Icon(
               Icons.schedule_rounded,
               size: 12,
               color: AppColors.onSurfaceVariant,
             ),
-            const SizedBox(width: 3),
+            SizedBox(width: 3),
             Text(
               '${topic.estimatedMinutes}m',
               style: GoogleFonts.inter(

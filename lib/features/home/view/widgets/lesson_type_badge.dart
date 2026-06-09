@@ -12,7 +12,7 @@ class LessonTypeBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final isLanguage = lessonType == 'language';
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      padding: EdgeInsets.symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
         color: (isLanguage ? AppColors.primary : AppColors.secondary)
             .withValues(alpha: 0.15),

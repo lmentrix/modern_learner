@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:modern_learner_production/main.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:modern_learner_production/core/models/progress_course_selection.dart';
 import 'package:modern_learner_production/core/router/app_router.dart';
@@ -14,6 +13,8 @@ import 'package:modern_learner_production/features/explore/view/section/create_c
 import 'package:modern_learner_production/features/explore/view/section/create_course_level_selector_section.dart';
 import 'package:modern_learner_production/features/explore/view/section/create_course_preview_section.dart';
 import 'package:modern_learner_production/features/explore/view/widgets/create_course_section_label.dart';
+import 'package:modern_learner_production/features/profile/service/profile_notification_preferences_service.dart';
+import 'package:modern_learner_production/features/push_notification/service/push_notification_service_locator.dart';
 
 class CreateCoursePage extends StatefulWidget {
   const CreateCoursePage({super.key, required this.subject, this.topic});
@@ -79,12 +80,17 @@ class _CreateCoursePageState extends State<CreateCoursePage> {
       );
       ExploreCoursesService.instance.addCourse(course);
 
-      unawaited(
-        pushNotificationService.notifyNewCourse(
-          title: widget.subject.name,
-          topic: _topicName,
-        ),
-      );
+      if (ProfileNotificationPreferencesService
+          .instance
+          .preferences
+          .schoolCourseCreationNotifications) {
+        unawaited(
+          pushNotificationService.notifyNewCourse(
+            title: widget.subject.name,
+            topic: _topicName,
+          ),
+        );
+      }
 
       if (!mounted) return;
       context.go(Routes.home);
@@ -204,7 +210,7 @@ class _CreateCoursePageState extends State<CreateCoursePage> {
                             ),
                     ),
                   ),
-                  const SizedBox(height: 14),
+                  SizedBox(height: 14),
                   Center(
                     child: Text(
                       'Course will appear on your Home page',

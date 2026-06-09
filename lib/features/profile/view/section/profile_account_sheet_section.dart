@@ -21,7 +21,7 @@ class ProfileAccountSheetSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.surfaceContainerHigh,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -34,20 +34,20 @@ class ProfileAccountSheetSection extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const ProfileSheetHandle(),
-          const SizedBox(height: 20),
-          const ProfileSheetTitle(
+          ProfileSheetHandle(),
+          SizedBox(height: 20),
+          ProfileSheetTitle(
             title: 'Account',
             icon: Icons.person_outline_rounded,
             color: AppColors.primary,
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
           Row(
             children: [
               Container(
                 width: 60,
                 height: 60,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: AppColors.primaryGradient,
                 ),
@@ -99,7 +99,7 @@ class ProfileAccountSheetSection extends StatelessWidget {
             label: 'Member since',
             value: 'January 2024',
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
           SizedBox(
             width: double.infinity,
             height: 48,

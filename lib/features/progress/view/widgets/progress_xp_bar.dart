@@ -216,7 +216,7 @@ class ProgressXpBar extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -257,7 +257,7 @@ class ProgressXpBar extends StatelessWidget {
             _XpChip(
               icon: Icons.fitness_center_rounded,
               label: 'Exercise XP ${xpState.totalXp}',
-              color: const Color(0xFFFF9F43),
+              color: Color(0xFFFF9F43),
             ),
             _XpChip(
               icon: Icons.trending_up_rounded,
