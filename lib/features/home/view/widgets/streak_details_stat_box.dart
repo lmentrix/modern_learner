@@ -19,15 +19,15 @@ class StreakDetailsStatBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         children: [
-          Text(emoji, style: const TextStyle(fontSize: 24)),
-          const SizedBox(height: 8),
+          Text(emoji, style: TextStyle(fontSize: 24)),
+          SizedBox(height: 8),
           Text(
             value,
             style: GoogleFonts.spaceGrotesk(
@@ -36,7 +36,7 @@ class StreakDetailsStatBox extends StatelessWidget {
               color: AppColors.onSurface,
             ),
           ),
-          const SizedBox(height: 2),
+          SizedBox(height: 2),
           Text(
             context.tr(label),
             style: GoogleFonts.inter(

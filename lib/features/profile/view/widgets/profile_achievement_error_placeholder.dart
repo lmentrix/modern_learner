@@ -8,7 +8,7 @@ class ProfileAchievementErrorPlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 32),
+      padding: EdgeInsets.symmetric(vertical: 32),
       alignment: Alignment.center,
       child: Text(
         'Could not load achievements',

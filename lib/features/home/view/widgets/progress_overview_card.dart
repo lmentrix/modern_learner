@@ -108,10 +108,7 @@ class _ProgressOverviewCardState extends State<ProgressOverviewCard>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
+                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
                       gradient: AppColors.primaryGradient,
                       borderRadius: BorderRadius.circular(100),
@@ -126,7 +123,7 @@ class _ProgressOverviewCardState extends State<ProgressOverviewCard>
                       ),
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  SizedBox(height: 10),
                   Text(
                     widget.rankTitle,
                     style: GoogleFonts.spaceGrotesk(
@@ -136,19 +133,19 @@ class _ProgressOverviewCardState extends State<ProgressOverviewCard>
                       height: 1.2,
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(100),
                     child: LinearProgressIndicator(
                       value: widget.xp / widget.xpToNext,
                       minHeight: isWide ? 8 : 6,
                       backgroundColor: AppColors.surfaceContainerHigh,
-                      valueColor: const AlwaysStoppedAnimation<Color>(
+                      valueColor: AlwaysStoppedAnimation<Color>(
                         AppColors.tertiary,
                       ),
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  SizedBox(height: 6),
                   Row(
                     children: [
                       Text(

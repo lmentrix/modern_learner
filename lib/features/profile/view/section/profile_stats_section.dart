@@ -90,7 +90,7 @@ class _ProfileStatsSectionState extends State<ProfileStatsSection> {
                 accentColor: const Color(0xFFFF9500),
               ),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: 12),
             Expanded(
               child: StatsCard(
                 icon: Icons.star_rounded,
@@ -99,7 +99,7 @@ class _ProfileStatsSectionState extends State<ProfileStatsSection> {
                 accentColor: AppColors.tertiaryContainer,
               ),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: 12),
             Expanded(
               child: StatsCard(
                 icon: Icons.check_circle_rounded,

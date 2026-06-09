@@ -5,7 +5,7 @@ import 'package:modern_learner_production/features/achievement/model/achievement
 import 'package:modern_learner_production/features/profile/view/widgets/profile_achievement_detail_sheet.dart';
 
 class ProfileAchievementBadge extends StatelessWidget {
-  const ProfileAchievementBadge({required this.achievement, super.key});
+  ProfileAchievementBadge({required this.achievement, super.key});
 
   final Achievement achievement;
 
@@ -84,7 +84,7 @@ class ProfileAchievementBadge extends StatelessWidget {
                     ),
                   )
                 else
-                  const Icon(
+                  Icon(
                     Icons.lock_outline_rounded,
                     size: 10,
                     color: AppColors.onSurfaceVariant,
@@ -97,7 +97,7 @@ class ProfileAchievementBadge extends StatelessWidget {
               top: -5,
               right: -5,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                padding: EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                 decoration: BoxDecoration(
                   color: _rarityColor,
                   borderRadius: BorderRadius.circular(999),

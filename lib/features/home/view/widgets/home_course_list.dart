@@ -162,15 +162,19 @@ class _HomeCourseListState extends State<HomeCourseList> {
       child: Align(
         alignment: Alignment.topCenter,
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: Responsive.maxContentWidth),
+          constraints: const BoxConstraints(
+            maxWidth: Responsive.maxContentWidth,
+          ),
           child: isWide
               ? _buildGrid(context, buildCard)
               : Column(
                   children: _courses
-                      .map((c) => Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: buildCard(c),
-                          ))
+                      .map(
+                        (c) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: buildCard(c),
+                        ),
+                      )
                       .toList(),
                 ),
         ),

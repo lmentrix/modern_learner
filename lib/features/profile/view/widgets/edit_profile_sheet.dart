@@ -82,7 +82,7 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
         }
       },
       child: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: AppColors.surfaceContainerHigh,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
@@ -133,13 +133,9 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
             color: AppColors.primary.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: const Icon(
-            Icons.edit_outlined,
-            color: AppColors.primary,
-            size: 20,
-          ),
+          child: Icon(Icons.edit_outlined, color: AppColors.primary, size: 20),
         ),
-        const SizedBox(width: 12),
+        SizedBox(width: 12),
         Text(
           context.tr('Edit Profile'),
           style: GoogleFonts.spaceGrotesk(
@@ -162,7 +158,7 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
         Container(
           width: 60,
           height: 60,
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             shape: BoxShape.circle,
             gradient: AppColors.primaryGradient,
           ),
@@ -208,7 +204,7 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
               SnackBar(content: Text(context.tr('Avatar upload coming soon'))),
             );
           },
-          icon: const Icon(Icons.camera_alt_outlined),
+          icon: Icon(Icons.camera_alt_outlined),
           color: AppColors.primary,
         ),
       ],
@@ -228,7 +224,7 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
             letterSpacing: 1.5,
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         TextField(
           controller: _nameController,
           enabled: !_isLoading,
@@ -247,7 +243,7 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.primary, width: 2),
+              borderSide: BorderSide(color: AppColors.primary, width: 2),
             ),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
@@ -274,7 +270,7 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
             letterSpacing: 1.5,
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         TextField(
           enabled: false,
           style: GoogleFonts.inter(
@@ -293,18 +289,15 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none,
             ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 14,
-            ),
-            suffixIcon: const Icon(
+            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            suffixIcon: Icon(
               Icons.smartphone_rounded,
               size: 18,
               color: AppColors.onSurfaceVariant,
             ),
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         Text(
           context.tr('Profile details are stored on this device.'),
           style: GoogleFonts.inter(

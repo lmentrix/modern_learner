@@ -21,15 +21,15 @@ class HomeProfileQuickStat extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Column(
         children: [
-          Text(emoji, style: const TextStyle(fontSize: 20)),
-          const SizedBox(height: 6),
+          Text(emoji, style: TextStyle(fontSize: 20)),
+          SizedBox(height: 6),
           Text(
             value,
             style: GoogleFonts.spaceGrotesk(
@@ -38,7 +38,7 @@ class HomeProfileQuickStat extends StatelessWidget {
               color: AppColors.onSurface,
             ),
           ),
-          const SizedBox(height: 2),
+          SizedBox(height: 2),
           Text(
             context.tr(label),
             style: GoogleFonts.inter(

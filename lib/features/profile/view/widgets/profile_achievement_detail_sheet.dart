@@ -46,7 +46,7 @@ class ProfileAchievementDetailSheet extends StatelessWidget {
     final courses = achievement.unlockedByCourses;
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+      margin: EdgeInsets.fromLTRB(12, 0, 12, 12),
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLow,
         borderRadius: BorderRadius.circular(28),
@@ -61,7 +61,7 @@ class ProfileAchievementDetailSheet extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            margin: const EdgeInsets.only(top: 12),
+            margin: EdgeInsets.only(top: 12),
             width: 36,
             height: 4,
             decoration: BoxDecoration(
@@ -122,7 +122,7 @@ class ProfileAchievementDetailSheet extends StatelessWidget {
                                 label: _rarityLabel,
                                 color: rarityColor,
                               ),
-                              const SizedBox(width: 6),
+                              SizedBox(width: 6),
                               ProfileChip(
                                 label: _typeLabel,
                                 color: AppColors.secondary,
@@ -134,7 +134,7 @@ class ProfileAchievementDetailSheet extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 Text(
                   achievement.description,
                   style: GoogleFonts.inter(
@@ -143,7 +143,7 @@ class ProfileAchievementDetailSheet extends StatelessWidget {
                     height: 1.55,
                   ),
                 ),
-                const SizedBox(height: 14),
+                SizedBox(height: 14),
                 Row(
                   children: [
                     ProfileChip(
@@ -165,16 +165,16 @@ class ProfileAchievementDetailSheet extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 if (!unlocked) ...[
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.lock_outline_rounded,
                         size: 14,
                         color: AppColors.onSurfaceVariant,
                       ),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8),
                       Text(
                         'Not yet unlocked',
                         style: GoogleFonts.inter(

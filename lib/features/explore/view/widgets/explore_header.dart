@@ -28,7 +28,7 @@ class ExploreHeader extends StatelessWidget {
 
     return Container(
       padding: EdgeInsets.fromLTRB(hPad, 20, hPad, 30),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
@@ -39,7 +39,7 @@ class ExploreHeader extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
               color: AppColors.tertiary.withValues(alpha: 0.16),
               borderRadius: BorderRadius.circular(999),
@@ -57,7 +57,7 @@ class ExploreHeader extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           Text(
             'Browse research collections',
             style: GoogleFonts.spaceGrotesk(
@@ -67,7 +67,7 @@ class ExploreHeader extends StatelessWidget {
               height: 1.05,
             ),
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
           Text(
             'Live subject feeds from OpenAlex with search and category filtering for language, school, and research learning.',
             style: GoogleFonts.inter(

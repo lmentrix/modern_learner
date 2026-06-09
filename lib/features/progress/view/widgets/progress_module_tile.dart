@@ -49,9 +49,10 @@ class _ProgressModuleTileState extends State<ProgressModuleTile>
       vsync: this,
       duration: const Duration(milliseconds: 140),
     );
-    _scaleAnim = Tween<double>(begin: 1.0, end: 0.98).animate(
-      CurvedAnimation(parent: _pressCtrl, curve: Curves.easeInOut),
-    );
+    _scaleAnim = Tween<double>(
+      begin: 1.0,
+      end: 0.98,
+    ).animate(CurvedAnimation(parent: _pressCtrl, curve: Curves.easeInOut));
   }
 
   @override
@@ -74,26 +75,22 @@ class _ProgressModuleTileState extends State<ProgressModuleTile>
           children: [
             // ── Tile row ─────────────────────────────────────────────────
             GestureDetector(
-              onTapDown: step.isLocked
-                  ? null
-                  : (_) => _pressCtrl.forward(),
+              onTapDown: step.isLocked ? null : (_) => _pressCtrl.forward(),
               onTapUp: step.isLocked
                   ? null
                   : (_) {
                       _pressCtrl.reverse();
                       widget.onTap?.call();
                     },
-              onTapCancel: step.isLocked
-                  ? null
-                  : () => _pressCtrl.reverse(),
+              onTapCancel: step.isLocked ? null : () => _pressCtrl.reverse(),
               child: AnimatedBuilder(
                 animation: _pressCtrl,
                 builder: (context, child) =>
                     Transform.scale(scale: _scaleAnim.value, child: child),
                 child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 260),
+                  duration: Duration(milliseconds: 260),
                   curve: Curves.easeOutCubic,
-                  padding: const EdgeInsets.all(16),
+                  padding: EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: widget.isSelected
                         ? step.toneColor.withValues(alpha: 0.06)
@@ -141,7 +138,7 @@ class _ProgressModuleTileState extends State<ProgressModuleTile>
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                 ),
-                                const SizedBox(height: 3),
+                                SizedBox(height: 3),
                                 Text(
                                   '${step.durationLabel} · ${step.lessonCountLabel}',
                                   style: GoogleFonts.inter(
@@ -161,7 +158,7 @@ class _ProgressModuleTileState extends State<ProgressModuleTile>
                               const SizedBox(height: 6),
                               AnimatedRotation(
                                 turns: widget.isSelected ? 0.5 : 0.0,
-                                duration: const Duration(milliseconds: 260),
+                                duration: Duration(milliseconds: 260),
                                 curve: Curves.easeOutCubic,
                                 child: Icon(
                                   Icons.keyboard_arrow_down_rounded,
@@ -189,14 +186,15 @@ class _ProgressModuleTileState extends State<ProgressModuleTile>
                                     AppColors.surfaceContainerHighest,
                                 valueColor: AlwaysStoppedAnimation<Color>(
                                   step.isLocked
-                                      ? AppColors.onSurfaceVariant
-                                          .withValues(alpha: 0.25)
+                                      ? AppColors.onSurfaceVariant.withValues(
+                                          alpha: 0.25,
+                                        )
                                       : step.toneColor,
                                 ),
                               ),
                             ),
                           ),
-                          const SizedBox(width: 10),
+                          SizedBox(width: 10),
                           Text(
                             '${(step.progress * 100).round()}%',
                             style: GoogleFonts.spaceGrotesk(
@@ -252,7 +250,7 @@ class _ProgressModuleTileState extends State<ProgressModuleTile>
 // ── Icon Box ──────────────────────────────────────────────────────────────────
 
 class _IconBox extends StatelessWidget {
-  const _IconBox({required this.step, required this.isSelected});
+  _IconBox({required this.step, required this.isSelected});
 
   final ProgressModuleStep step;
   final bool isSelected;
@@ -354,7 +352,7 @@ class _ExpandedDetail extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
         Text(
           step.detail,
           style: GoogleFonts.inter(
@@ -446,9 +444,11 @@ class _SubcontentPanel extends StatelessWidget {
   Widget build(BuildContext context) => _buildBody();
 
   Widget _buildBody() {
-    if (isLoading) return _LoadingRow(step: step, isGenerating: !isLoadingFromCache);
+    if (isLoading)
+      return _LoadingRow(step: step, isGenerating: !isLoadingFromCache);
     final error = errorMessage;
-    if (error != null) return _ErrorRow(step: step, message: error, onRetry: onRetry);
+    if (error != null)
+      return _ErrorRow(step: step, message: error, onRetry: onRetry);
     final payload = response?.chapterSubcontent;
     if (payload == null) {
       return _ErrorRow(
@@ -470,11 +470,13 @@ class _SubcontentPanel extends StatelessWidget {
               item: payload.subcontents[i],
               accent: step.toneColor,
               isCompleted:
-                  payload.subcontents[i].subcontentNumber <= completedSubcontents,
+                  payload.subcontents[i].subcontentNumber <=
+                  completedSubcontents,
               isLocked:
                   payload.subcontents[i].subcontentNumber >
                   completedSubcontents + 1,
-              onTap: onSubcontentTap == null ||
+              onTap:
+                  onSubcontentTap == null ||
                       payload.subcontents[i].subcontentNumber >
                           completedSubcontents + 1
                   ? null
@@ -510,7 +512,7 @@ class _LoadingRow extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 10),
+          SizedBox(width: 10),
           Text(
             isGenerating
                 ? 'Building chapter ${step.chapterNumber}…'
@@ -542,15 +544,11 @@ class _ErrorRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: 4, vertical: 8),
       child: Row(
         children: [
-          const Icon(
-            Icons.error_outline_rounded,
-            size: 14,
-            color: AppColors.error,
-          ),
-          const SizedBox(width: 8),
+          Icon(Icons.error_outline_rounded, size: 14, color: AppColors.error),
+          SizedBox(width: 8),
           Expanded(
             child: Text(
               message,
@@ -609,11 +607,11 @@ class _SubcontentRow extends StatelessWidget {
         return AppColors.secondary;
       case 'quiz':
       case 'review':
-        return const Color(0xFFFF9500);
+        return Color(0xFFFF9500);
       case 'speaking':
-        return const Color(0xFF26C6DA);
+        return Color(0xFF26C6DA);
       case 'chapter_checkpoint':
-        return const Color(0xFF9C27B0);
+        return Color(0xFF9C27B0);
       default:
         return AppColors.tertiary;
     }
@@ -636,7 +634,7 @@ class _SubcontentRow extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(14),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+            padding: EdgeInsets.symmetric(horizontal: 14, vertical: 11),
             decoration: BoxDecoration(
               color: AppColors.surfaceContainer,
               borderRadius: BorderRadius.circular(14),
@@ -660,7 +658,7 @@ class _SubcontentRow extends StatelessWidget {
                   ),
                   child: Center(
                     child: isCompleted
-                        ? const Icon(
+                        ? Icon(
                             Icons.check_rounded,
                             size: 13,
                             color: AppColors.tertiary,

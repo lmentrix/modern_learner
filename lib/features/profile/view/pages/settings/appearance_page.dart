@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:modern_learner_production/core/theme/app_colors.dart';
+import 'package:modern_learner_production/core/theme/app_theme_controller.dart';
 
 class AppearancePage extends StatefulWidget {
   const AppearancePage({super.key});
@@ -12,7 +13,6 @@ class AppearancePage extends StatefulWidget {
 
 class _AppearancePageState extends State<AppearancePage> {
   final _scrollCtrl = ScrollController();
-  String _selectedTheme = 'dark';
   double _textScale = 1.0;
 
   @override
@@ -100,8 +100,8 @@ class _AppearancePageState extends State<AppearancePage> {
 
   Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-      decoration: const BoxDecoration(
+      padding: EdgeInsets.fromLTRB(20, 16, 20, 24),
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
@@ -112,10 +112,10 @@ class _AppearancePageState extends State<AppearancePage> {
         children: [
           IconButton(
             onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back_ios_rounded),
+            icon: Icon(Icons.arrow_back_ios_rounded),
             color: AppColors.onSurface,
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: 8),
           Text(
             'Appearance',
             style: GoogleFonts.spaceGrotesk(
@@ -130,38 +130,49 @@ class _AppearancePageState extends State<AppearancePage> {
   }
 
   Widget _buildThemeSelection() {
-    return Column(
-      children: [
-        _ThemeOption(
-          icon: Icons.dark_mode_rounded,
-          title: 'Dark',
-          subtitle: 'Easy on the eyes',
-          isSelected: _selectedTheme == 'dark',
-          onTap: () => setState(() => _selectedTheme = 'dark'),
-        ),
-        const SizedBox(height: 12),
-        _ThemeOption(
-          icon: Icons.light_mode_rounded,
-          title: 'Light',
-          subtitle: 'Classic bright theme',
-          isSelected: _selectedTheme == 'light',
-          onTap: () => setState(() => _selectedTheme = 'light'),
-        ),
-        const SizedBox(height: 12),
-        _ThemeOption(
-          icon: Icons.auto_mode_rounded,
-          title: 'System',
-          subtitle: 'Follow device settings',
-          isSelected: _selectedTheme == 'system',
-          onTap: () => setState(() => _selectedTheme = 'system'),
-        ),
-      ],
+    return ValueListenableBuilder<AppThemePreference>(
+      valueListenable: AppThemeController.instance.preferenceListenable,
+      builder: (context, preference, _) {
+        return Column(
+          children: [
+            _ThemeOption(
+              icon: Icons.dark_mode_rounded,
+              title: 'Dark',
+              subtitle: 'Easy on the eyes',
+              isSelected: preference == AppThemePreference.dark,
+              onTap: () => AppThemeController.instance.setPreference(
+                AppThemePreference.dark,
+              ),
+            ),
+            const SizedBox(height: 12),
+            _ThemeOption(
+              icon: Icons.light_mode_rounded,
+              title: 'Light',
+              subtitle: 'Classic bright theme',
+              isSelected: preference == AppThemePreference.light,
+              onTap: () => AppThemeController.instance.setPreference(
+                AppThemePreference.light,
+              ),
+            ),
+            const SizedBox(height: 12),
+            _ThemeOption(
+              icon: Icons.auto_mode_rounded,
+              title: 'System',
+              subtitle: 'Follow device settings',
+              isSelected: preference == AppThemePreference.system,
+              onTap: () => AppThemeController.instance.setPreference(
+                AppThemePreference.system,
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
   Widget _buildTextSizeSlider() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLow,
         borderRadius: BorderRadius.circular(24),
@@ -181,7 +192,7 @@ class _AppearancePageState extends State<AppearancePage> {
                   color: AppColors.primary.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.text_fields_rounded,
                   color: AppColors.primary,
                   size: 22,
@@ -200,7 +211,7 @@ class _AppearancePageState extends State<AppearancePage> {
                         color: AppColors.onSurface,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(height: 4),
                     Text(
                       '${((_textScale - 0.8) * 100).round()}% larger',
                       style: GoogleFonts.inter(
@@ -213,7 +224,7 @@ class _AppearancePageState extends State<AppearancePage> {
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: 20),
           Slider(
             value: _textScale,
             min: 0.8,
@@ -278,7 +289,7 @@ class _ThemeOption extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(16),
         decoration: BoxDecoration(
           gradient: isSelected ? AppColors.primaryGradient : null,
           color: isSelected
@@ -299,14 +310,14 @@ class _ThemeOption extends StatelessWidget {
               height: 44,
               decoration: BoxDecoration(
                 color: isSelected
-                    ? const Color(0xFF1A1028).withValues(alpha: 0.2)
+                    ? Color(0xFF1A1028).withValues(alpha: 0.2)
                     : AppColors.surfaceContainerHigh,
                 borderRadius: BorderRadius.circular(14),
               ),
               child: Icon(
                 icon,
                 color: isSelected
-                    ? const Color(0xFF1A1028)
+                    ? Color(0xFF1A1028)
                     : AppColors.onSurfaceVariant,
                 size: 22,
               ),
@@ -322,17 +333,17 @@ class _ThemeOption extends StatelessWidget {
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                       color: isSelected
-                          ? const Color(0xFF1A1028)
+                          ? Color(0xFF1A1028)
                           : AppColors.onSurface,
                     ),
                   ),
-                  const SizedBox(height: 3),
+                  SizedBox(height: 3),
                   Text(
                     subtitle,
                     style: GoogleFonts.inter(
                       fontSize: 12,
                       color: isSelected
-                          ? const Color(0xFF1A1028).withValues(alpha: 0.7)
+                          ? Color(0xFF1A1028).withValues(alpha: 0.7)
                           : AppColors.onSurfaceVariant,
                     ),
                   ),
@@ -344,7 +355,7 @@ class _ThemeOption extends StatelessWidget {
               height: 24,
               decoration: BoxDecoration(
                 color: isSelected
-                    ? const Color(0xFF1A1028)
+                    ? Color(0xFF1A1028)
                     : AppColors.surfaceContainerHigh,
                 shape: BoxShape.circle,
                 border: Border.all(
@@ -386,7 +397,7 @@ class _DisplayOptionTile extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: AppColors.surfaceContainerLow,
           borderRadius: BorderRadius.circular(20),
@@ -406,7 +417,7 @@ class _DisplayOptionTile extends StatelessWidget {
               ),
               child: Icon(icon, color: color, size: 22),
             ),
-            const SizedBox(width: 14),
+            SizedBox(width: 14),
             Expanded(
               child: Text(
                 title,
@@ -417,7 +428,7 @@ class _DisplayOptionTile extends StatelessWidget {
                 ),
               ),
             ),
-            const Icon(
+            Icon(
               Icons.chevron_right_rounded,
               color: AppColors.onSurfaceVariant,
               size: 24,
@@ -441,7 +452,7 @@ class _DisplayItem {
   final Color color;
 }
 
-const _displayOptions = [
+List<_DisplayItem> get _displayOptions => [
   _DisplayItem(
     icon: Icons.animation_rounded,
     title: 'Motion & Animations',

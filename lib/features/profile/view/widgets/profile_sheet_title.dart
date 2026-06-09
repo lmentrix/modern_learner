@@ -29,7 +29,7 @@ class ProfileSheetTitle extends StatelessWidget {
           ),
           child: Icon(icon, color: color, size: 20),
         ),
-        const SizedBox(width: 12),
+        SizedBox(width: 12),
         Text(
           context.tr(title),
           style: GoogleFonts.spaceGrotesk(

@@ -32,7 +32,7 @@ class ExploreWorkInfo extends StatelessWidget {
             height: 1.15,
           ),
         ),
-        const SizedBox(height: 6),
+        SizedBox(height: 6),
         Text(
           work.authors,
           style: GoogleFonts.inter(
@@ -42,7 +42,7 @@ class ExploreWorkInfo extends StatelessWidget {
           ),
         ),
         if (sourceName != null && sourceName.isNotEmpty) ...[
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
           Text(
             sourceName,
             style: GoogleFonts.inter(

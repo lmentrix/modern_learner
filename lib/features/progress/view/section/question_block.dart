@@ -54,8 +54,8 @@ class QuestionBlock extends StatelessWidget {
         : selected != null;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.all(14),
+      margin: EdgeInsets.only(bottom: 14),
+      padding: EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: isChecked
             ? (isCorrect ? AppColors.tertiary : AppColors.error).withValues(
@@ -117,7 +117,7 @@ class QuestionBlock extends StatelessWidget {
               text: question.clue ?? '',
             ),
           ],
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           if (isFillBlank)
             TextField(
               controller: controller,
@@ -168,7 +168,7 @@ class QuestionBlock extends StatelessWidget {
                   size: 15,
                   color: isCorrect ? AppColors.tertiary : AppColors.error,
                 ),
-                const SizedBox(width: 5),
+                SizedBox(width: 5),
                 Text(
                   context.tr(isCorrect ? 'Correct' : 'Checked'),
                   style: GoogleFonts.inter(

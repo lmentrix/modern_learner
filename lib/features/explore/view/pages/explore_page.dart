@@ -15,6 +15,8 @@ import 'package:modern_learner_production/features/explore/view/bloc/learning_su
 import 'package:modern_learner_production/features/explore/view/section/learning_subjects_category_filter_section.dart';
 import 'package:modern_learner_production/features/explore/view/section/learning_subjects_grid_section.dart';
 import 'package:modern_learner_production/features/explore/view/widgets/explore_header.dart';
+import 'package:modern_learner_production/features/profile/data/profile_preferences.dart';
+import 'package:modern_learner_production/features/profile/view/widgets/notification_preference_switch.dart';
 
 class ExplorePage extends StatelessWidget {
   const ExplorePage({super.key});
@@ -30,7 +32,7 @@ class ExplorePage extends StatelessWidget {
           getAllSubjects: GetAllLearningSubjects(repo),
           getByCategory: GetSubjectsByCategory(repo),
           searchSubjects: SearchLearningSubjects(repo),
-        )..add(const LoadLearningSubjects());
+        )..add(LoadLearningSubjects());
       },
       child: Container(
         color: AppColors.surface,
@@ -71,6 +73,26 @@ class ExplorePage extends StatelessWidget {
                       height: 1.5,
                       color: AppColors.onSurfaceVariant,
                     ),
+                  ),
+                ),
+              ),
+              const SliverToBoxAdapter(child: SizedBox(height: 16)),
+              SliverPadding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: Responsive.hPad(context),
+                ),
+                sliver: SliverToBoxAdapter(
+                  child: NotificationPreferenceSwitch(
+                    icon: Icons.school_outlined,
+                    title: 'School lesson notifications',
+                    subtitle: 'Notify me when a school course is created.',
+                    valueOf: (preferences) =>
+                        preferences.schoolCourseCreationNotifications,
+                    copyWithValue:
+                        (ProfilePreferences preferences, bool value) =>
+                            preferences.copyWith(
+                              schoolCourseCreationNotifications: value,
+                            ),
                   ),
                 ),
               ),

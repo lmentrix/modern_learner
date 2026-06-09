@@ -8,7 +8,7 @@ import 'package:modern_learner_production/features/profile/data/profile_option_i
 import 'package:modern_learner_production/features/profile/data/profile_stat_item.dart';
 
 abstract final class ProfilePageData {
-  static const stats = <ProfileStatItem>[
+  static List<ProfileStatItem> get stats => <ProfileStatItem>[
     ProfileStatItem(
       icon: Icons.local_fire_department_rounded,
       label: 'Day Streak',
@@ -74,7 +74,7 @@ abstract final class ProfilePageData {
     ),
   ];
 
-  static const contacts = <ProfileContactItem>[
+  static List<ProfileContactItem> get contacts => <ProfileContactItem>[
     ProfileContactItem(
       icon: Icons.email_outlined,
       label: 'Email Support',

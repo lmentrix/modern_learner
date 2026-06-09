@@ -25,7 +25,7 @@ class HomeLessonQuickAccess extends StatelessWidget {
       child: Align(
         alignment: Alignment.topCenter,
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: Responsive.maxContentWidth),
+          constraints: BoxConstraints(maxWidth: Responsive.maxContentWidth),
           child: Row(
             children: [
               Expanded(

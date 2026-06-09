@@ -37,7 +37,7 @@ class ExerciseGroupHeader extends StatelessWidget {
                   color: AppColors.onSurface,
                 ),
               ),
-              const SizedBox(height: 5),
+              SizedBox(height: 5),
               Text(
                 group.instructions,
                 style: GoogleFonts.inter(

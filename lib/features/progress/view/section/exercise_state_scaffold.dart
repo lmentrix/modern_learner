@@ -38,7 +38,7 @@ class ExerciseStateScaffold extends StatelessWidget {
           SliverToBoxAdapter(
             child: Container(
               padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 gradient: ProfilePageConstants.headerGradient,
               ),
               child: Row(
@@ -90,7 +90,7 @@ class ExerciseStateScaffold extends StatelessWidget {
                               color: AppColors.onSurface,
                             ),
                           ),
-                          const SizedBox(height: 6),
+                          SizedBox(height: 6),
                           Text(
                             message,
                             style: GoogleFonts.inter(

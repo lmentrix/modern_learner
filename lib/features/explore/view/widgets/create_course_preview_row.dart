@@ -23,7 +23,7 @@ class CreateCoursePreviewRow extends StatelessWidget {
     return Row(
       children: [
         Icon(icon, size: 16, color: accent),
-        const SizedBox(width: 10),
+        SizedBox(width: 10),
         Text(
           '${context.tr(label)}: ',
           style: GoogleFonts.inter(

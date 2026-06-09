@@ -20,10 +20,10 @@ import 'package:modern_learner_production/features/progress/service/course_xp_se
 import 'package:modern_learner_production/features/progress/service/model/chapter_subcontent_model.dart';
 import 'package:modern_learner_production/features/progress/service/model/roadmap_model.dart';
 import 'package:modern_learner_production/features/progress/service/progress_preload_service.dart';
+import 'package:modern_learner_production/features/progress/service/roadmap_generation_service.dart';
 import 'package:modern_learner_production/features/progress/service/roadmap_mock_guard.dart';
 import 'package:modern_learner_production/features/progress/service/request/chapter_subcontent.dart';
 import 'package:modern_learner_production/features/progress/service/request/exercise_request.dart';
-import 'package:modern_learner_production/features/progress/service/request/progress_request.dart';
 import 'package:modern_learner_production/features/progress/view/section/progress_empty_state_section.dart';
 import 'package:modern_learner_production/features/progress/view/section/progress_roadmap_error_section.dart';
 import 'package:modern_learner_production/features/progress/view/section/progress_header.dart';
@@ -32,6 +32,7 @@ import 'package:modern_learner_production/features/progress/view/section/progres
 import 'package:modern_learner_production/features/progress/view/section/progress_stats_row.dart';
 import 'package:modern_learner_production/features/roadmap/model/roadmap_model.dart';
 import 'package:modern_learner_production/features/roadmap/service/roadmap_service.dart';
+import 'package:modern_learner_production/features/subscription/service/subscription_service.dart';
 
 class ProgressViewPage extends StatefulWidget {
   const ProgressViewPage({super.key, this.initialCourseSelection});
@@ -43,6 +44,8 @@ class ProgressViewPage extends StatefulWidget {
 }
 
 class _ProgressViewPageState extends State<ProgressViewPage> {
+  static const int _freeChapterLimit = 4;
+
   final Map<String, XpBloc> _xpBlocByCourse = {};
   final Set<String> _dbLoadedCourses = {};
   final Set<String> _roadmapRefreshInFlight = {};
@@ -66,7 +69,19 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
   final Map<String, int> _completedSubcontentsByCourseChapter = {};
 
   @override
+  void initState() {
+    super.initState();
+    RoadmapGenerationService.instance.revision.addListener(
+      _handleRoadmapGenerationRevision,
+    );
+    unawaited(SubscriptionService.instance.refresh());
+  }
+
+  @override
   void dispose() {
+    RoadmapGenerationService.instance.revision.removeListener(
+      _handleRoadmapGenerationRevision,
+    );
     for (final bloc in _xpBlocByCourse.values) {
       bloc.close();
     }
@@ -78,180 +93,208 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
     return _xpBlocByCourse.putIfAbsent(key, () => XpBloc(courseKey: key));
   }
 
+  void _handleRoadmapGenerationRevision() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<List<ProgressCourseSelection>>(
-      valueListenable: ExploreCoursesService.instance.courses,
-      builder: (context, courses, child) {
-        final selectedCourse = _withoutMockRoadmap(
-          _resolveSelectedCourse(courses),
-        );
-
-        if (selectedCourse == null) {
-          return const Material(
-            color: AppColors.surface,
-            child: ProgressEmptyStateSection(),
-          );
-        }
-
-        _syncSelectedCourse(selectedCourse);
-
-        final courseKey = _courseKey(selectedCourse);
-
-        // Show skeleton while the initial DB/generation load is in progress.
-        if (_isDbLoading) {
-          return const Material(
-            color: AppColors.surface,
-            child: ProgressSkeletonSection(),
-          );
-        }
-
-        // If loading finished but we still have no real roadmap chapters, it
-        // means generation failed (network error, backend unavailable, mock
-        // response rejected). Show skeleton while a retry is in flight,
-        // otherwise show an error state. NEVER fall through to the generic
-        // fallback steps — they look like mock data to the user.
-        if (!isUsableRoadmapPayload(selectedCourse.roadmapJson)) {
-          if (_roadmapRefreshInFlight.contains(courseKey)) {
-            return const Material(
-              color: AppColors.surface,
-              child: ProgressSkeletonSection(),
+    return ValueListenableBuilder<bool>(
+      valueListenable: SubscriptionService.instance.isVip,
+      builder: (context, isVip, child) {
+        return ValueListenableBuilder<List<ProgressCourseSelection>>(
+          valueListenable: ExploreCoursesService.instance.courses,
+          builder: (context, courses, child) {
+            final selectedCourse = _withoutMockRoadmap(
+              _resolveSelectedCourse(courses),
             );
-          }
-          return Material(
-            color: AppColors.surface,
-            child: ProgressRoadmapErrorSection(
-              onRetry: () {
-                final key = _courseKey(selectedCourse);
-                _roadmapRefreshAttempted.remove(key);
-                setState(() => _isDbLoading = true);
-                _startRoadmapRefresh(selectedCourse);
-              },
-            ),
-          );
-        }
 
-        final navState = ProgressNavigationState.instance;
-        final pageData = buildProgressPageData(
-          course: selectedCourse,
-          unlockedChapterLimit: _unlockedChapterLimit(selectedCourse),
-          chapterProgressOverrides: _chapterProgressOverrides(selectedCourse),
-        );
-        if (navState.hasSelection) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (navState.hasSelection) {
-              navState.clearSelection();
+            if (selectedCourse == null) {
+              return Material(
+                color: AppColors.surface,
+                child: const ProgressEmptyStateSection(),
+              );
             }
-          });
-        }
 
-        final pagePadding = Responsive.pagePadding(context);
+            _syncSelectedCourse(selectedCourse);
+            _syncVipChapterAccess(isVip);
 
-        return BlocProvider.value(
-          value: _xpBlocFor(selectedCourse),
-          child: LearningActivityScope(
-            child: Material(
-              color: AppColors.surface,
-              child: CustomScrollView(
-                physics: const BouncingScrollPhysics(),
-                slivers: [
-                  const SliverToBoxAdapter(
-                    child: SizedBox(
-                      height: ProgressPageConstants.sectionSpacing,
-                    ),
-                  ),
-                  SliverPadding(
-                    padding: pagePadding,
-                    sliver: SliverToBoxAdapter(
-                      child: Align(
-                        alignment: Alignment.topCenter,
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(
-                            maxWidth: Responsive.maxContentWidth,
-                          ),
-                          child: ProgressHeaderSection(data: pageData),
+            final courseKey = _courseKey(selectedCourse);
+
+            // Show skeleton while the initial DB/generation load is in progress.
+            if (_isDbLoading) {
+              return Material(
+                color: AppColors.surface,
+                child: const ProgressSkeletonSection(),
+              );
+            }
+
+            // If loading finished but we still have no real roadmap chapters, it
+            // means generation failed (network error, backend unavailable, mock
+            // response rejected). Show skeleton while a retry is in flight,
+            // otherwise show an error state. NEVER fall through to the generic
+            // fallback steps — they look like mock data to the user.
+            if (!isUsableRoadmapPayload(selectedCourse.roadmapJson)) {
+              if (_roadmapRefreshInFlight.contains(courseKey) ||
+                  RoadmapGenerationService.instance.isGenerating(
+                    selectedCourse,
+                  )) {
+                return Material(
+                  color: AppColors.surface,
+                  child: const ProgressSkeletonSection(),
+                );
+              }
+              return Material(
+                color: AppColors.surface,
+                child: ProgressRoadmapErrorSection(
+                  onRetry: () {
+                    final key = _courseKey(selectedCourse);
+                    _roadmapRefreshAttempted.remove(key);
+                    setState(() => _isDbLoading = true);
+                    _startRoadmapRefresh(selectedCourse);
+                  },
+                ),
+              );
+            }
+
+            final navState = ProgressNavigationState.instance;
+            final pageData = buildProgressPageData(
+              course: selectedCourse,
+              unlockedChapterLimit: _effectiveUnlockedChapterLimit(
+                selectedCourse,
+                isVip: isVip,
+              ),
+              chapterProgressOverrides: _chapterProgressOverrides(
+                selectedCourse,
+              ),
+            );
+            if (navState.hasSelection) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (navState.hasSelection) {
+                  navState.clearSelection();
+                }
+              });
+            }
+
+            final pagePadding = Responsive.pagePadding(context);
+
+            return BlocProvider.value(
+              value: _xpBlocFor(selectedCourse),
+              child: LearningActivityScope(
+                child: Material(
+                  color: AppColors.surface,
+                  child: CustomScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    slivers: [
+                      SliverToBoxAdapter(
+                        child: SizedBox(
+                          height: ProgressPageConstants.sectionSpacing,
                         ),
                       ),
-                    ),
-                  ),
-
-                  const SliverToBoxAdapter(
-                    child: SizedBox(
-                      height: ProgressPageConstants.sectionSpacing,
-                    ),
-                  ),
-                  SliverPadding(
-                    padding: pagePadding,
-                    sliver: SliverToBoxAdapter(
-                      child: Align(
-                        alignment: Alignment.topCenter,
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(
-                            maxWidth: Responsive.maxContentWidth,
-                          ),
-                          child: ProgressStatsRow(
-                            moduleSteps: pageData.moduleSteps,
-                            accentColor: pageData.snapshot.accentColor,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  const SliverToBoxAdapter(
-                    child: SizedBox(
-                      height: ProgressPageConstants.sectionSpacing,
-                    ),
-                  ),
-                  SliverPadding(
-                    padding: pagePadding,
-                    sliver: SliverToBoxAdapter(
-                      child: Align(
-                        alignment: Alignment.topCenter,
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(
-                            maxWidth: Responsive.maxContentWidth,
-                          ),
-                          child: ProgressJourneySection(
-                            data: pageData,
-                            selectedChapterId: _selectedChapterId,
-                            onChapterTap: (step) =>
-                                _handleChapterTap(selectedCourse, step),
-                            chapterSubcontentResponse: _chapterSubcontentResponse,
-                            isLoadingChapterSubcontent: _isLoadingChapterSubcontent,
-                            isLoadingFromCache: _isSubcontentFromCache,
-                            chapterSubcontentError: _chapterSubcontentError,
-                            onRetryTap: _selectedChapterId == null
-                                ? null
-                                : () {
-                                    final step = pageData.moduleSteps
-                                        .where((s) => s.id == _selectedChapterId)
-                                        .cast<ProgressModuleStep?>()
-                                        .firstOrNull;
-                                    if (step != null) {
-                                      _retryChapterFetch(selectedCourse, step);
-                                    }
-                                  },
-                            onSubcontentTap: (item) => _openChapterExercise(
-                              selectedCourse,
-                              item,
-                              pageData.moduleSteps,
+                      SliverPadding(
+                        padding: pagePadding,
+                        sliver: SliverToBoxAdapter(
+                          child: Align(
+                            alignment: Alignment.topCenter,
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(
+                                maxWidth: Responsive.maxContentWidth,
+                              ),
+                              child: ProgressHeaderSection(data: pageData),
                             ),
-                            completedSubcontentsInCurrentChapter:
-                                _completedSubcontentsForSelectedChapter(
+                          ),
+                        ),
+                      ),
+
+                      SliverToBoxAdapter(
+                        child: SizedBox(
+                          height: ProgressPageConstants.sectionSpacing,
+                        ),
+                      ),
+                      SliverPadding(
+                        padding: pagePadding,
+                        sliver: SliverToBoxAdapter(
+                          child: Align(
+                            alignment: Alignment.topCenter,
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(
+                                maxWidth: Responsive.maxContentWidth,
+                              ),
+                              child: ProgressStatsRow(
+                                moduleSteps: pageData.moduleSteps,
+                                accentColor: pageData.snapshot.accentColor,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      SliverToBoxAdapter(
+                        child: SizedBox(
+                          height: ProgressPageConstants.sectionSpacing,
+                        ),
+                      ),
+                      SliverPadding(
+                        padding: pagePadding,
+                        sliver: SliverToBoxAdapter(
+                          child: Align(
+                            alignment: Alignment.topCenter,
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(
+                                maxWidth: Responsive.maxContentWidth,
+                              ),
+                              child: ProgressJourneySection(
+                                data: pageData,
+                                isVip: isVip,
+                                selectedChapterId: _selectedChapterId,
+                                onChapterTap: (step) =>
+                                    _handleChapterTap(selectedCourse, step),
+                                chapterSubcontentResponse:
+                                    _chapterSubcontentResponse,
+                                isLoadingChapterSubcontent:
+                                    _isLoadingChapterSubcontent,
+                                isLoadingFromCache: _isSubcontentFromCache,
+                                chapterSubcontentError: _chapterSubcontentError,
+                                onRetryTap: _selectedChapterId == null
+                                    ? null
+                                    : () {
+                                        final step = pageData.moduleSteps
+                                            .where(
+                                              (s) => s.id == _selectedChapterId,
+                                            )
+                                            .cast<ProgressModuleStep?>()
+                                            .firstOrNull;
+                                        if (step != null) {
+                                          _retryChapterFetch(
+                                            selectedCourse,
+                                            step,
+                                          );
+                                        }
+                                      },
+                                onSubcontentTap: (item) => _openChapterExercise(
                                   selectedCourse,
+                                  item,
                                   pageData.moduleSteps,
                                 ),
+                                completedSubcontentsInCurrentChapter:
+                                    _completedSubcontentsForSelectedChapter(
+                                      selectedCourse,
+                                      pageData.moduleSteps,
+                                    ),
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
+                      const SliverToBoxAdapter(child: SizedBox(height: 110)),
+                    ],
                   ),
-                  const SliverToBoxAdapter(child: SizedBox(height: 110)),
-                ],
+                ),
               ),
-            ),
-          ),
+            );
+          },
         );
       },
     );
@@ -537,6 +580,10 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
     ProgressCourseSelection course,
     ProgressModuleStep step,
   ) async {
+    if (!_canOpenChapter(step.chapterNumber)) {
+      return;
+    }
+
     final cacheEntryKey = _chapterCacheKey(course, step);
     final requestToken = ++_chapterSubcontentRequestToken;
 
@@ -602,53 +649,10 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
   Future<RoadmapResponseModel> _resolveOrGenerateRoadmap(
     ProgressCourseSelection course, {
     bool forceRegenerate = false,
-  }) async {
-    final existingResponse = forceRegenerate
-        ? null
-        : _extractRoadmapResponse(course.roadmapJson);
-    if (existingResponse != null &&
-        !_isStaleRoadmapResponse(existingResponse)) {
-      return existingResponse;
-    }
-
-    final request = RoadmapGenerateRequestModel(
-      roadmapMode: course.courseType == ProgressCourseType.voice
-          ? 'voice'
-          : 'school',
-      topic: course.topic,
-      language: course.roadmapLanguage,
-      level: course.level,
-      nativeLanguage: course.nativeLanguage,
-    );
-
-    final generatedResponse = await fetchProgress(
-      request,
-      bypassCache: forceRegenerate,
-    );
-
-    // Store the raw backend JSON so it can be forwarded verbatim to
-    // /ai/chapter-content/generate as the `roadmap` field.
-    final updatedCourse = course.copyWith(
-      roadmapJson: generatedResponse.rawJson ?? generatedResponse.toJson(),
-      roadmapGenerated: true,
-    );
-    await ExploreCoursesService.instance.updateCourse(updatedCourse);
-
-    final courseId = course.courseId;
-    if (courseId != null) {
-      unawaited(() async {
-        try {
-          await RoadmapService.instance.saveRoadmap(
-            response: generatedResponse,
-            request: request,
-            courseId: courseId,
-          );
-        } catch (_) {}
-      }());
-    }
-
-    return generatedResponse;
-  }
+  }) => RoadmapGenerationService.instance.ensureRoadmap(
+    course,
+    forceRegenerate: forceRegenerate,
+  );
 
   Future<void> _openChapterExercise(
     ProgressCourseSelection course,
@@ -732,6 +736,41 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
     );
   }
 
+  int _effectiveUnlockedChapterLimit(
+    ProgressCourseSelection course, {
+    required bool isVip,
+  }) {
+    final unlockedLimit = _unlockedChapterLimit(course);
+    if (isVip) {
+      return unlockedLimit;
+    }
+    return unlockedLimit.clamp(1, _freeChapterLimit);
+  }
+
+  bool _canOpenChapter(int chapterNumber) {
+    return SubscriptionService.instance.isVip.value ||
+        chapterNumber <= _freeChapterLimit;
+  }
+
+  void _syncVipChapterAccess(bool isVip) {
+    if (isVip || _selectedChapterNumber == null) {
+      return;
+    }
+    if (_selectedChapterNumber! <= _freeChapterLimit) {
+      return;
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || SubscriptionService.instance.isVip.value) {
+        return;
+      }
+      if (_selectedChapterNumber != null &&
+          _selectedChapterNumber! > _freeChapterLimit) {
+        setState(() => _resetChapterSubcontentState(clearCache: false));
+      }
+    });
+  }
+
   int _completedSubcontentsForSelectedChapter(
     ProgressCourseSelection course,
     List<ProgressModuleStep> steps,
@@ -809,6 +848,7 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
     final currentLimit = _unlockedChapterLimitByCourse[courseKey] ?? 1;
     final nextLimit = chapterNumber + 1;
     if (nextLimit <= currentLimit) return;
+    if (!_canOpenChapter(nextLimit)) return;
 
     setState(() {
       _unlockedChapterLimitByCourse[courseKey] = nextLimit;
@@ -858,7 +898,10 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
     final roadmapResponse = _extractRoadmapResponse(course.roadmapJson);
     if (roadmapResponse == null) return;
 
-    final limit = _unlockedChapterLimit(course);
+    final limit = _effectiveUnlockedChapterLimit(
+      course,
+      isVip: SubscriptionService.instance.isVip.value,
+    );
     final courseId = course.courseId;
     final roadmapId = roadmapResponse.roadmap.id;
     final courseKey = _courseKey(course);

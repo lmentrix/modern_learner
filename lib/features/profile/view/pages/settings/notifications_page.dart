@@ -155,8 +155,8 @@ class _NotificationsPageState extends State<NotificationsPage> {
 
   Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-      decoration: const BoxDecoration(
+      padding: EdgeInsets.fromLTRB(20, 16, 20, 24),
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
@@ -167,10 +167,10 @@ class _NotificationsPageState extends State<NotificationsPage> {
         children: [
           IconButton(
             onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back_ios_rounded),
+            icon: Icon(Icons.arrow_back_ios_rounded),
             color: AppColors.onSurface,
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: 8),
           Text(
             'Notifications',
             style: GoogleFonts.spaceGrotesk(
@@ -186,7 +186,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
 
   Widget _buildQuietHours() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLow,
         borderRadius: BorderRadius.circular(24),
@@ -206,7 +206,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                   color: AppColors.primary.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.bedtime_rounded,
                   color: AppColors.primary,
                   size: 22,
@@ -225,7 +225,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                         color: AppColors.onSurface,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(height: 4),
                     Text(
                       'No notifications during selected time',
                       style: GoogleFonts.inter(
@@ -292,7 +292,7 @@ class _NotificationTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLow,
         borderRadius: BorderRadius.circular(20),
@@ -325,7 +325,7 @@ class _NotificationTile extends StatelessWidget {
                     color: AppColors.onSurface,
                   ),
                 ),
-                const SizedBox(height: 3),
+                SizedBox(height: 3),
                 Text(
                   subtitle,
                   style: GoogleFonts.inter(
@@ -356,7 +356,7 @@ class _TimeSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(16),
@@ -372,7 +372,7 @@ class _TimeSelector extends StatelessWidget {
               color: AppColors.onSurfaceVariant,
             ),
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: 6),
           Row(
             children: [
               Text(
@@ -383,8 +383,8 @@ class _TimeSelector extends StatelessWidget {
                   color: AppColors.onSurface,
                 ),
               ),
-              const Spacer(),
-              const Icon(
+              Spacer(),
+              Icon(
                 Icons.chevron_right_rounded,
                 color: AppColors.onSurfaceVariant,
                 size: 20,
@@ -409,7 +409,7 @@ class _NotificationItem {
   final Color color;
 }
 
-const _notificationItems = [
+List<_NotificationItem> get _notificationItems => [
   _NotificationItem(
     icon: Icons.notifications_active_rounded,
     title: 'Daily Reminder',
@@ -432,11 +432,11 @@ const _notificationItems = [
     icon: Icons.people_outline_rounded,
     title: 'Social Updates',
     subtitle: 'Friend activity and challenges',
-    color: Color(0xFFFF6B9D),
+    color: const Color(0xFFFF6B9D),
   ),
 ];
 
-const _emailItems = [
+List<_NotificationItem> get _emailItems => [
   _NotificationItem(
     icon: Icons.calendar_today_rounded,
     title: 'Weekly Digest',

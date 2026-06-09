@@ -167,8 +167,8 @@ class _PrivacyPageState extends State<PrivacyPage> {
 
   Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-      decoration: const BoxDecoration(
+      padding: EdgeInsets.fromLTRB(20, 16, 20, 24),
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
@@ -179,10 +179,10 @@ class _PrivacyPageState extends State<PrivacyPage> {
         children: [
           IconButton(
             onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back_ios_rounded),
+            icon: Icon(Icons.arrow_back_ios_rounded),
             color: AppColors.onSurface,
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: 8),
           Text(
             'Privacy',
             style: GoogleFonts.spaceGrotesk(
@@ -198,7 +198,7 @@ class _PrivacyPageState extends State<PrivacyPage> {
 
   Widget _buildPrivacyStatus() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topRight,
@@ -245,7 +245,7 @@ class _PrivacyPageState extends State<PrivacyPage> {
                         color: AppColors.onSurface,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(height: 4),
                     Text(
                       'Last updated: 2 days ago',
                       style: GoogleFonts.inter(
@@ -307,7 +307,7 @@ class _PrivacyTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLow,
         borderRadius: BorderRadius.circular(20),
@@ -340,7 +340,7 @@ class _PrivacyTile extends StatelessWidget {
                     color: AppColors.onSurface,
                   ),
                 ),
-                const SizedBox(height: 3),
+                SizedBox(height: 3),
                 Text(
                   subtitle,
                   style: GoogleFonts.inter(
@@ -381,7 +381,7 @@ class _DataPrivacyTile extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: AppColors.surfaceContainerLow,
           borderRadius: BorderRadius.circular(20),
@@ -401,7 +401,7 @@ class _DataPrivacyTile extends StatelessWidget {
               ),
               child: Icon(icon, color: color, size: 22),
             ),
-            const SizedBox(width: 14),
+            SizedBox(width: 14),
             Expanded(
               child: Text(
                 title,
@@ -412,7 +412,7 @@ class _DataPrivacyTile extends StatelessWidget {
                 ),
               ),
             ),
-            const Icon(
+            Icon(
               Icons.chevron_right_rounded,
               color: AppColors.onSurfaceVariant,
               size: 24,
@@ -437,7 +437,7 @@ class _PrivacyStat extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerHigh.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
@@ -445,7 +445,7 @@ class _PrivacyStat extends StatelessWidget {
       child: Row(
         children: [
           Icon(icon, size: 18, color: AppColors.onSurfaceVariant),
-          const SizedBox(width: 10),
+          SizedBox(width: 10),
           Text(
             label,
             style: GoogleFonts.inter(
@@ -453,7 +453,7 @@ class _PrivacyStat extends StatelessWidget {
               color: AppColors.onSurfaceVariant,
             ),
           ),
-          const Spacer(),
+          Spacer(),
           Text(
             value,
             style: GoogleFonts.inter(
@@ -480,7 +480,7 @@ class _VisibilityItem {
   final Color color;
 }
 
-const _visibilityItems = [
+List<_VisibilityItem> get _visibilityItems => [
   _VisibilityItem(
     icon: Icons.person_outline_rounded,
     title: 'Profile Visibility',
@@ -513,7 +513,7 @@ class _DataItem {
   final Color color;
 }
 
-const _dataItems = [
+List<_DataItem> get _dataItems => [
   _DataItem(
     icon: Icons.download_rounded,
     title: 'Download My Data',
@@ -534,7 +534,7 @@ const _dataItems = [
   ),
 ];
 
-const _legalItems = [
+List<_DataItem> get _legalItems => [
   _DataItem(
     icon: Icons.description_rounded,
     title: 'Privacy Policy',
@@ -551,6 +551,6 @@ const _legalItems = [
     icon: Icons.cookie_rounded,
     title: 'Cookie Policy',
     subtitle: 'How we use cookies',
-    color: Color(0xFFFF9500),
+    color: const Color(0xFFFF9500),
   ),
 ];

@@ -21,7 +21,7 @@ class ExploreMetricCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLow,
         borderRadius: BorderRadius.circular(20),
@@ -39,7 +39,7 @@ class ExploreMetricCard extends StatelessWidget {
               color: accentColor,
             ),
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
           Text(
             value,
             style: GoogleFonts.spaceGrotesk(
@@ -48,7 +48,7 @@ class ExploreMetricCard extends StatelessWidget {
               color: AppColors.onSurface,
             ),
           ),
-          const SizedBox(height: 2),
+          SizedBox(height: 2),
           Text(
             context.tr(hint),
             style: GoogleFonts.inter(

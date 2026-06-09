@@ -79,13 +79,13 @@ class _ActivityCard extends StatelessWidget {
 
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: 1),
-      duration: const Duration(milliseconds: 800),
+      duration: Duration(milliseconds: 800),
       curve: Curves.easeOutCubic,
       builder: (context, progress, child) {
         return Opacity(
           opacity: progress,
           child: Container(
-            padding: const EdgeInsets.all(20),
+            padding: EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: AppColors.surfaceContainerLow,
               borderRadius: BorderRadius.circular(24),
@@ -110,7 +110,7 @@ class _ActivityCard extends StatelessWidget {
                               color: AppColors.onSurface,
                             ),
                           ),
-                          const SizedBox(height: 2),
+                          SizedBox(height: 2),
                           Text(
                             'This week',
                             style: GoogleFonts.inter(
@@ -125,14 +125,14 @@ class _ActivityCard extends StatelessWidget {
                       visualDensity: VisualDensity.compact,
                       tooltip: 'Refresh',
                       onPressed: isLoading ? null : onRefresh,
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.refresh_rounded,
                         color: AppColors.onSurfaceVariant,
                         size: 18,
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(
+                      padding: EdgeInsets.symmetric(
                         horizontal: 12,
                         vertical: 6,
                       ),
@@ -221,7 +221,7 @@ class _ActivityCard extends StatelessWidget {
                                   ),
                                   decoration: BoxDecoration(
                                     gradient: isToday || isMax
-                                        ? const LinearGradient(
+                                        ? LinearGradient(
                                             begin: Alignment.topCenter,
                                             end: Alignment.bottomCenter,
                                             colors: [
@@ -246,7 +246,7 @@ class _ActivityCard extends StatelessWidget {
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 8),
+                            SizedBox(height: 8),
                             Container(
                               width: 26,
                               height: 26,
@@ -295,7 +295,7 @@ class _ActivityCard extends StatelessWidget {
                       icon: Icons.local_fire_department_rounded,
                       color: const Color(0xFFFF9500),
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8),
                     ProfileFooterStat(
                       label: 'Daily avg',
                       value: LearningActivitySummary.formatMinutes(
@@ -304,7 +304,7 @@ class _ActivityCard extends StatelessWidget {
                       icon: Icons.trending_up_rounded,
                       color: AppColors.primary,
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8),
                     ProfileFooterStat(
                       label: 'Days active',
                       value: '${summary.daysActive}/7',

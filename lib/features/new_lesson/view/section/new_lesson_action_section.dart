@@ -68,7 +68,7 @@ class NewLessonActionSection extends StatelessWidget {
           GestureDetector(
             onTap: canStart ? onStart : null,
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
+              duration: Duration(milliseconds: 200),
               height: 58,
               decoration: BoxDecoration(
                 gradient: canStart
@@ -78,7 +78,7 @@ class NewLessonActionSection extends StatelessWidget {
                           AppColors.primary.withValues(alpha: 0.76),
                         ],
                       )
-                    : const LinearGradient(
+                    : LinearGradient(
                         colors: [
                           AppColors.surfaceContainerHigh,
                           AppColors.surfaceContainerHigh,
@@ -118,7 +118,7 @@ class NewLessonActionSection extends StatelessWidget {
                               : AppColors.onSurfaceVariant,
                           size: 18,
                         ),
-                  const SizedBox(width: 10),
+                  SizedBox(width: 10),
                   Text(
                     actionLabel,
                     style: GoogleFonts.spaceGrotesk(

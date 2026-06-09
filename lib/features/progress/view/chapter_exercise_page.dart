@@ -422,100 +422,97 @@ class _ChapterExercisePageState extends State<ChapterExercisePage> {
         SliverPadding(
           padding: ProfilePageConstants.pagePadding,
           sliver: SliverToBoxAdapter(
-            child: ExerciseIntroCard(
-              detail: detail,
-              accentColor: _accentColor,
-            ),
+            child: ExerciseIntroCard(detail: detail, accentColor: _accentColor),
           ),
         ),
-        const SliverToBoxAdapter(
+        SliverToBoxAdapter(
           child: SizedBox(height: ProfilePageConstants.sectionSpacing),
         ),
         SliverPadding(
           padding: ProfilePageConstants.pagePadding,
           sliver: SliverToBoxAdapter(
             child: detail.isVoice
-                  ? VoiceExerciseBody(
-                      detail: detail,
-                      accentColor: _accentColor,
-                      checkedVoiceStepKeys: _checkedVoiceStepKeys,
-                      onVoiceStepChecked: (key) {
-                        setState(() => _checkedVoiceStepKeys.add(key));
-                        unawaited(_saveProgress());
-                      },
-                    )
-                  : SchoolExerciseBody(
-                      detail: detail,
-                      accentColor: _accentColor,
-                      checked: _checked,
-                      checkedQuestionKeys: _checkedQuestionKeys,
-                      checkedMatchKeys: _checkedMatchKeys,
-                      selectedAnswers: _selectedAnswers,
-                      matchingAnswers: _matchingAnswers,
-                      activeMatchKey: _activeMatchKey,
-                      textControllers: _textControllers,
-                      onAnswerSelected: (key, answer) {
-                        setState(() {
-                          _selectedAnswers[key] = answer;
-                          _checked = false;
-                          _checkedQuestionKeys.remove(key);
-                        });
-                        unawaited(_saveProgress());
-                      },
-                      onMatchLeftSelected: (key) {
-                        setState(() {
-                          _activeMatchKey = _activeMatchKey == key ? null : key;
-                          _checked = false;
-                        });
-                        unawaited(_saveProgress());
-                      },
-                      onMatchRightSelected: (answer) {
-                        final activeKey = _activeMatchKey;
-                        if (activeKey == null) return;
-                        setState(() {
-                          _matchingAnswers.removeWhere(
-                            (k, v) => k != activeKey && v == answer,
-                          );
-                          _matchingAnswers[activeKey] = answer;
-                          _activeMatchKey = null;
-                          _checked = false;
-                          _checkedMatchKeys.remove(activeKey);
-                        });
-                        unawaited(_saveProgress());
-                      },
-                      onMatchCleared: (key) {
-                        setState(() {
-                          _matchingAnswers.remove(key);
-                          _checkedMatchKeys.remove(key);
-                          if (_activeMatchKey == key) _activeMatchKey = null;
-                          _checked = false;
-                        });
-                        unawaited(_saveProgress());
-                      },
-                      onQuestionChecked: (key, {required bool isCorrect}) {
-                        setState(() {
-                          _checkedQuestionKeys.add(key);
-                          _answeredCount =
-                              _checkedQuestionKeys.length +
-                              _checkedMatchKeys.length;
-                          if (isCorrect) {
-                            _streak++;
-                          } else {
-                            _streak = 0;
-                          }
-                        });
-                        unawaited(_saveProgress());
-                      },
-                      onMatchChecked: (key) {
-                        setState(() {
-                          _checkedMatchKeys.add(key);
-                          _answeredCount =
-                              _checkedQuestionKeys.length +
-                              _checkedMatchKeys.length;
-                        });
-                        unawaited(_saveProgress());
-                      },
-                    ),
+                ? VoiceExerciseBody(
+                    detail: detail,
+                    accentColor: _accentColor,
+                    checkedVoiceStepKeys: _checkedVoiceStepKeys,
+                    onVoiceStepChecked: (key) {
+                      setState(() => _checkedVoiceStepKeys.add(key));
+                      unawaited(_saveProgress());
+                    },
+                  )
+                : SchoolExerciseBody(
+                    detail: detail,
+                    accentColor: _accentColor,
+                    checked: _checked,
+                    checkedQuestionKeys: _checkedQuestionKeys,
+                    checkedMatchKeys: _checkedMatchKeys,
+                    selectedAnswers: _selectedAnswers,
+                    matchingAnswers: _matchingAnswers,
+                    activeMatchKey: _activeMatchKey,
+                    textControllers: _textControllers,
+                    onAnswerSelected: (key, answer) {
+                      setState(() {
+                        _selectedAnswers[key] = answer;
+                        _checked = false;
+                        _checkedQuestionKeys.remove(key);
+                      });
+                      unawaited(_saveProgress());
+                    },
+                    onMatchLeftSelected: (key) {
+                      setState(() {
+                        _activeMatchKey = _activeMatchKey == key ? null : key;
+                        _checked = false;
+                      });
+                      unawaited(_saveProgress());
+                    },
+                    onMatchRightSelected: (answer) {
+                      final activeKey = _activeMatchKey;
+                      if (activeKey == null) return;
+                      setState(() {
+                        _matchingAnswers.removeWhere(
+                          (k, v) => k != activeKey && v == answer,
+                        );
+                        _matchingAnswers[activeKey] = answer;
+                        _activeMatchKey = null;
+                        _checked = false;
+                        _checkedMatchKeys.remove(activeKey);
+                      });
+                      unawaited(_saveProgress());
+                    },
+                    onMatchCleared: (key) {
+                      setState(() {
+                        _matchingAnswers.remove(key);
+                        _checkedMatchKeys.remove(key);
+                        if (_activeMatchKey == key) _activeMatchKey = null;
+                        _checked = false;
+                      });
+                      unawaited(_saveProgress());
+                    },
+                    onQuestionChecked: (key, {required bool isCorrect}) {
+                      setState(() {
+                        _checkedQuestionKeys.add(key);
+                        _answeredCount =
+                            _checkedQuestionKeys.length +
+                            _checkedMatchKeys.length;
+                        if (isCorrect) {
+                          _streak++;
+                        } else {
+                          _streak = 0;
+                        }
+                      });
+                      unawaited(_saveProgress());
+                    },
+                    onMatchChecked: (key) {
+                      setState(() {
+                        _checkedMatchKeys.add(key);
+                        _answeredCount =
+                            _checkedQuestionKeys.length +
+                            _checkedMatchKeys.length;
+                      });
+                      unawaited(_saveProgress());
+                    },
+                  ),
           ),
         ),
         const SliverToBoxAdapter(child: SizedBox(height: 18)),

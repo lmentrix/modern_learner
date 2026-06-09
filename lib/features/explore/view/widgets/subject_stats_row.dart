@@ -41,7 +41,7 @@ class SubjectStatsRow extends StatelessWidget {
                   accent: accent,
                 ),
               ),
-              const SizedBox(width: 10),
+              SizedBox(width: 10),
               Expanded(
                 child: SubjectStatCard(
                   label: 'EST. TIME',
@@ -51,7 +51,7 @@ class SubjectStatsRow extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
           Row(
             children: [
               Expanded(
@@ -84,7 +84,7 @@ class SubjectStatsRow extends StatelessWidget {
             accent: accent,
           ),
         ),
-        const SizedBox(width: 10),
+        SizedBox(width: 10),
         Expanded(
           child: SubjectStatCard(
             label: 'EST. TIME',
@@ -92,7 +92,7 @@ class SubjectStatsRow extends StatelessWidget {
             accent: AppColors.secondary,
           ),
         ),
-        const SizedBox(width: 10),
+        SizedBox(width: 10),
         Expanded(
           child: SubjectStatCard(
             label: 'BEGINNER',

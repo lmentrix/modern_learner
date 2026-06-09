@@ -21,7 +21,7 @@ class ViewProfileStatBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+      padding: EdgeInsets.symmetric(vertical: 16, horizontal: 8),
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLow,
         borderRadius: BorderRadius.circular(20),
@@ -40,7 +40,7 @@ class ViewProfileStatBox extends StatelessWidget {
             ),
             child: Icon(icon, color: color, size: 20),
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
           FittedBox(
             fit: BoxFit.scaleDown,
             child: Text(
@@ -52,7 +52,7 @@ class ViewProfileStatBox extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 2),
+          SizedBox(height: 2),
           FittedBox(
             fit: BoxFit.scaleDown,
             child: Text(

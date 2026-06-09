@@ -76,8 +76,8 @@ class LearningTopicDetailPage extends StatelessWidget {
                             color: accent,
                           ),
                         ),
-                        const SizedBox(width: 4),
-                        const Icon(
+                        SizedBox(width: 4),
+                        Icon(
                           Icons.chevron_right_rounded,
                           size: 16,
                           color: AppColors.onSurfaceVariant,
@@ -118,7 +118,7 @@ class LearningTopicDetailPage extends StatelessWidget {
                             color: accent,
                           ),
                         ),
-                        const SizedBox(height: 10),
+                        SizedBox(height: 10),
                         Text(
                           topic.description,
                           style: GoogleFonts.inter(
@@ -131,7 +131,7 @@ class LearningTopicDetailPage extends StatelessWidget {
                     ),
                   ),
 
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24),
 
                   Text(
                     'WHAT YOU\'LL LEARN',
@@ -163,7 +163,7 @@ class LearningTopicDetailPage extends StatelessWidget {
                               color: accent,
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          SizedBox(width: 12),
                           Expanded(
                             child: Text(
                               point,

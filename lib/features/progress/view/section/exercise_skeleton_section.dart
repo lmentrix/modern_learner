@@ -86,7 +86,7 @@ class _ExerciseSkeletonSectionState extends State<ExerciseSkeletonSection>
                   ),
                 ),
               ),
-              const SliverToBoxAdapter(
+              SliverToBoxAdapter(
                 child: SizedBox(height: ProfilePageConstants.sectionSpacing),
               ),
 
@@ -106,7 +106,7 @@ class _ExerciseSkeletonSectionState extends State<ExerciseSkeletonSection>
                   ),
                 ),
               ),
-              const SliverToBoxAdapter(
+              SliverToBoxAdapter(
                 child: SizedBox(height: ProfilePageConstants.sectionSpacing),
               ),
 
@@ -126,7 +126,7 @@ class _ExerciseSkeletonSectionState extends State<ExerciseSkeletonSection>
                   ),
                 ),
               ),
-              const SliverToBoxAdapter(
+              SliverToBoxAdapter(
                 child: SizedBox(height: ProfilePageConstants.sectionSpacing),
               ),
 
@@ -192,9 +192,7 @@ class _SkeletonHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 14, 20, 28),
-      decoration: const BoxDecoration(
-        gradient: ProfilePageConstants.headerGradient,
-      ),
+      decoration: BoxDecoration(gradient: ProfilePageConstants.headerGradient),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -275,7 +273,7 @@ class _SkeletonPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(18),
+      padding: EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: AppColors.surfaceContainer,
         borderRadius: BorderRadius.circular(24),
@@ -528,7 +526,7 @@ class _SkeletonAnswerOption extends StatelessWidget {
   Widget build(BuildContext context) {
     final labelWidths = [140.0, 100.0, 160.0, 120.0];
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+      padding: EdgeInsets.symmetric(horizontal: 14, vertical: 13),
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLow,
         borderRadius: BorderRadius.circular(14),
@@ -580,7 +578,7 @@ class _SkeletonFillBlank extends StatelessWidget {
           height: 14,
           borderRadius: 5,
         ),
-        const SizedBox(height: 10),
+        SizedBox(height: 10),
         // Text field placeholder
         Container(
           height: 48,

@@ -9,7 +9,7 @@ class ExploreSkeletonList extends StatelessWidget {
   Widget build(BuildContext context) {
     return SliverList.separated(
       itemCount: 4,
-      separatorBuilder: (context, index) => const SizedBox(height: 14),
+      separatorBuilder: (context, index) => SizedBox(height: 14),
       itemBuilder: (context, index) => Container(
         height: 180,
         decoration: BoxDecoration(

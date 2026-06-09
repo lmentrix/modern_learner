@@ -27,19 +27,19 @@ class ViewProfileHeroSection extends StatelessWidget {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: isVip
-              ? [const Color(0xFF1A1200), AppColors.surface]
-              : [const Color(0xFF0E1020), AppColors.surface],
+              ? [Color(0xFF1A1200), AppColors.surface]
+              : [Color(0xFF0E1020), AppColors.surface],
         ),
       ),
       child: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+            padding: EdgeInsets.fromLTRB(8, 8, 8, 0),
             child: Row(
               children: [
                 IconButton(
                   onPressed: onBackTap,
-                  icon: const Icon(Icons.arrow_back_ios_rounded),
+                  icon: Icon(Icons.arrow_back_ios_rounded),
                   color: AppColors.onSurface,
                 ),
               ],
@@ -54,20 +54,17 @@ class ViewProfileHeroSection extends StatelessWidget {
                 height: 90,
                 decoration: BoxDecoration(
                   gradient: isVip
-                      ? const LinearGradient(
+                      ? LinearGradient(
                           colors: [Color(0xFFFFD700), Color(0xFFFF8C00)],
                         )
                       : AppColors.primaryGradient,
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color:
-                          (isVip
-                                  ? const Color(0xFFFFD700)
-                                  : AppColors.primaryDim)
-                              .withValues(alpha: 0.35),
+                      color: (isVip ? Color(0xFFFFD700) : AppColors.primaryDim)
+                          .withValues(alpha: 0.35),
                       blurRadius: 24,
-                      offset: const Offset(0, 8),
+                      offset: Offset(0, 8),
                     ),
                   ],
                   border: Border.all(color: AppColors.surface, width: 3),
@@ -103,9 +100,9 @@ class ViewProfileHeroSection extends StatelessWidget {
                 ),
             ],
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: EdgeInsets.symmetric(horizontal: 20),
             child: Text(
               displayName,
               style: GoogleFonts.spaceGrotesk(
@@ -117,9 +114,9 @@ class ViewProfileHeroSection extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: EdgeInsets.symmetric(horizontal: 20),
             child: Text(
               email,
               style: GoogleFonts.inter(
@@ -137,10 +134,7 @@ class ViewProfileHeroSection extends StatelessWidget {
             runSpacing: 6,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 5,
-                ),
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                 decoration: BoxDecoration(
                   gradient: AppColors.primaryGradient,
                   borderRadius: BorderRadius.circular(100),

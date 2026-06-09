@@ -33,7 +33,7 @@ class NewLessonPreviewCard extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: NewLessonPageConstants.previewGradient,
         borderRadius: BorderRadius.circular(28),
@@ -73,7 +73,7 @@ class NewLessonPreviewCard extends StatelessWidget {
                         letterSpacing: 1.4,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(height: 4),
                     Text(
                       language,
                       style: GoogleFonts.spaceGrotesk(
@@ -87,7 +87,7 @@ class NewLessonPreviewCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 18),
+          SizedBox(height: 18),
           Text(
             context.tr(
               'A focused speaking track with short drills, recall loops, and guided response practice tailored to your level.',
@@ -98,7 +98,7 @@ class NewLessonPreviewCard extends StatelessWidget {
               height: 1.5,
             ),
           ),
-          const SizedBox(height: 18),
+          SizedBox(height: 18),
           Row(
             children: [
               Expanded(
@@ -108,7 +108,7 @@ class NewLessonPreviewCard extends StatelessWidget {
                   color: AppColors.tertiary,
                 ),
               ),
-              const SizedBox(width: 10),
+              SizedBox(width: 10),
               Expanded(
                 child: _buildMetric(
                   label: context.tr('Chapters'),
@@ -116,7 +116,7 @@ class NewLessonPreviewCard extends StatelessWidget {
                   color: AppColors.secondary,
                 ),
               ),
-              const SizedBox(width: 10),
+              SizedBox(width: 10),
               Expanded(
                 child: _buildMetric(
                   label: context.tr('Lessons'),

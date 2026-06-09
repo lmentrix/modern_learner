@@ -8,9 +8,9 @@ class ViewProfileStatsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Row(
+    return Row(
       children: [
-        Expanded(
+        const Expanded(
           child: ViewProfileStatBox(
             icon: Icons.local_fire_department_rounded,
             value: '14',
@@ -18,7 +18,7 @@ class ViewProfileStatsSection extends StatelessWidget {
             color: Color(0xFFFF9500),
           ),
         ),
-        SizedBox(width: 12),
+        const SizedBox(width: 12),
         Expanded(
           child: ViewProfileStatBox(
             icon: Icons.star_rounded,
@@ -27,7 +27,7 @@ class ViewProfileStatsSection extends StatelessWidget {
             color: AppColors.tertiaryContainer,
           ),
         ),
-        SizedBox(width: 12),
+        const SizedBox(width: 12),
         Expanded(
           child: ViewProfileStatBox(
             icon: Icons.check_circle_rounded,

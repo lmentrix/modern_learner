@@ -59,7 +59,7 @@ class _TopicCardState extends State<TopicCard>
       child: ScaleTransition(
         scale: _scale,
         child: Container(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: AppColors.surfaceContainerLow,
             borderRadius: BorderRadius.circular(22),

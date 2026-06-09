@@ -36,7 +36,9 @@ class NewLessonLanguageSection extends StatelessWidget {
             crossAxisCount: Responsive.gridCols(context),
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
-            childAspectRatio: Responsive.isTabletOrDesktop(context) ? 1.5 : 1.36,
+            childAspectRatio: Responsive.isTabletOrDesktop(context)
+                ? 1.5
+                : 1.36,
           ),
           itemBuilder: (context, index) {
             final option = options[index];

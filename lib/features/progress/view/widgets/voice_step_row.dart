@@ -474,7 +474,7 @@ class _PhraseDisplay extends StatelessWidget {
     if (phase == _Phase.scored) {
       final hit = matchedIndices.contains(i);
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
           color: hit
               ? AppColors.tertiary.withValues(alpha: 0.14)
@@ -498,12 +498,8 @@ class _PhraseDisplay extends StatelessWidget {
               ),
             ),
             if (hit) ...[
-              const SizedBox(width: 3),
-              const Icon(
-                Icons.check_rounded,
-                size: 12,
-                color: AppColors.tertiary,
-              ),
+              SizedBox(width: 3),
+              Icon(Icons.check_rounded, size: 12, color: AppColors.tertiary),
             ],
           ],
         ),
@@ -575,12 +571,12 @@ class _TipRow extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Icon(
+        Icon(
           Icons.tips_and_updates_rounded,
           size: 14,
           color: AppColors.onSurfaceVariant,
         ),
-        const SizedBox(width: 6),
+        SizedBox(width: 6),
         Expanded(
           child: Text(
             tip,
@@ -616,7 +612,7 @@ class _IdleControls extends StatelessWidget {
       children: [
         if (ttsErrored)
           Padding(
-            padding: const EdgeInsets.only(bottom: 8),
+            padding: EdgeInsets.only(bottom: 8),
             child: Text(
               'Audio unavailable — you can still practice by speaking.',
               style: GoogleFonts.inter(
@@ -658,7 +654,7 @@ class _LoadingTtsRow extends StatelessWidget {
             valueColor: AlwaysStoppedAnimation(accentColor),
           ),
         ),
-        const SizedBox(width: 10),
+        SizedBox(width: 10),
         Text(
           'Generating audio…',
           style: GoogleFonts.inter(
@@ -710,7 +706,7 @@ class _PlayingControls extends StatelessWidget {
             valueColor: AlwaysStoppedAnimation(accentColor),
           ),
         ),
-        const SizedBox(height: 6),
+        SizedBox(height: 6),
         Row(
           children: [
             Text(
@@ -807,7 +803,7 @@ class _ListeningControls extends StatelessWidget {
         Row(
           children: [
             _Waveform(controller: waveCtrl, color: AppColors.error, bars: 8),
-            const SizedBox(width: 12),
+            SizedBox(width: 12),
             Text(
               'Listening…',
               style: GoogleFonts.inter(
@@ -816,10 +812,10 @@ class _ListeningControls extends StatelessWidget {
                 color: AppColors.error,
               ),
             ),
-            const Spacer(),
+            Spacer(),
             FilledButton.icon(
               onPressed: onStop,
-              icon: const Icon(Icons.stop_rounded, size: 15),
+              icon: Icon(Icons.stop_rounded, size: 15),
               label: Text(context.tr('Done')),
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.error,
@@ -829,10 +825,10 @@ class _ListeningControls extends StatelessWidget {
           ],
         ),
         if (transcription.isNotEmpty) ...[
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 9),
             decoration: BoxDecoration(
               color: AppColors.surfaceContainer,
               borderRadius: BorderRadius.circular(12),
@@ -875,7 +871,7 @@ class _ScoredControls extends StatelessWidget {
 
   Color get _scoreColor {
     if (result.score >= 0.78) return AppColors.tertiary;
-    if (result.score >= 0.50) return const Color(0xFFFFD580);
+    if (result.score >= 0.50) return Color(0xFFFFD580);
     return AppColors.error;
   }
 
@@ -931,7 +927,7 @@ class _ScoredControls extends StatelessWidget {
             );
           },
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
 
         // Matched word count
         Text(
@@ -941,7 +937,7 @@ class _ScoredControls extends StatelessWidget {
             color: AppColors.onSurfaceVariant,
           ),
         ),
-        const SizedBox(height: 6),
+        SizedBox(height: 6),
 
         // Feedback
         Text(

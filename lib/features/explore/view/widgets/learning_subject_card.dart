@@ -92,7 +92,7 @@ class _LearningSubjectCardState extends State<LearningSubjectCard>
                   ),
                 ],
               ),
-              const SizedBox(height: 10),
+              SizedBox(height: 10),
               Text(
                 subject.name,
                 style: GoogleFonts.spaceGrotesk(
@@ -104,7 +104,7 @@ class _LearningSubjectCardState extends State<LearningSubjectCard>
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 6),
+              SizedBox(height: 6),
               Text(
                 subject.description,
                 style: GoogleFonts.inter(
@@ -137,7 +137,7 @@ class _LearningSubjectCardState extends State<LearningSubjectCard>
                       ),
                     ),
                   ),
-                  const Spacer(),
+                  Spacer(),
                   Text(
                     '${subject.topicCount} topics',
                     style: GoogleFonts.inter(

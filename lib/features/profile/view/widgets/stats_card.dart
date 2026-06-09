@@ -58,7 +58,7 @@ class _StatsCardState extends State<StatsCard>
           return Transform.scale(
             scale: _scaleAnim.value,
             child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+              padding: EdgeInsets.symmetric(vertical: 16, horizontal: 12),
               decoration: BoxDecoration(
                 color: AppColors.surfaceContainerLow,
                 borderRadius: BorderRadius.circular(20),
@@ -82,7 +82,7 @@ class _StatsCardState extends State<StatsCard>
                       size: 20,
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  SizedBox(height: 10),
                   Text(
                     widget.value,
                     style: GoogleFonts.spaceGrotesk(
@@ -91,7 +91,7 @@ class _StatsCardState extends State<StatsCard>
                       color: AppColors.onSurface,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  SizedBox(height: 2),
                   Text(
                     context.tr(widget.label),
                     style: GoogleFonts.inter(

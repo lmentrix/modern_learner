@@ -31,7 +31,7 @@ class ExploreMetricsRow extends StatelessWidget {
             accentColor: AppColors.primary,
           ),
         ),
-        const SizedBox(width: 10),
+        SizedBox(width: 10),
         Expanded(
           child: ExploreMetricCard(
             label: 'Papers',
@@ -40,7 +40,7 @@ class ExploreMetricsRow extends StatelessWidget {
             accentColor: AppColors.secondary,
           ),
         ),
-        const SizedBox(width: 10),
+        SizedBox(width: 10),
         Expanded(
           child: ExploreMetricCard(
             label: 'Source',

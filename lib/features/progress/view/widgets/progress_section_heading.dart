@@ -60,7 +60,7 @@ class ProgressSectionHeading extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: 8),
               Text(
                 title,
                 style: GoogleFonts.spaceGrotesk(
@@ -70,7 +70,7 @@ class ProgressSectionHeading extends StatelessWidget {
                   height: 1.05,
                 ),
               ),
-              const SizedBox(height: 5),
+              SizedBox(height: 5),
               Text(
                 subtitle,
                 style: GoogleFonts.inter(

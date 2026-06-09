@@ -25,9 +25,9 @@ class _ProfileFaqTileState extends State<ProfileFaqTile> {
     return GestureDetector(
       onTap: () => setState(() => _expanded = !_expanded),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(14),
+        duration: Duration(milliseconds: 200),
+        margin: EdgeInsets.only(bottom: 8),
+        padding: EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: _expanded
               ? AppColors.surfaceContainerHighest.withValues(alpha: 0.6)
@@ -64,7 +64,7 @@ class _ProfileFaqTileState extends State<ProfileFaqTile> {
               ],
             ),
             if (_expanded) ...[
-              const SizedBox(height: 10),
+              SizedBox(height: 10),
               Text(
                 widget.answer,
                 style: GoogleFonts.inter(

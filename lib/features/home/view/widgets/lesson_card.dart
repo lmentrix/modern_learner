@@ -127,7 +127,7 @@ class _LessonCardState extends State<LessonCard>
                             ],
                             if (widget.isNew)
                               Container(
-                                padding: const EdgeInsets.symmetric(
+                                padding: EdgeInsets.symmetric(
                                   horizontal: 8,
                                   vertical: 3,
                                 ),
@@ -146,7 +146,7 @@ class _LessonCardState extends State<LessonCard>
                               ),
                           ],
                         ),
-                        const SizedBox(height: 4),
+                        SizedBox(height: 4),
                         Text(
                           '${widget.chapter} · ${widget.duration}',
                           style: GoogleFonts.inter(
@@ -190,7 +190,7 @@ class _LessonCardState extends State<LessonCard>
                       ],
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  SizedBox(width: 12),
                   if (widget.onLongPress != null)
                     Icon(
                       Icons.more_vert_rounded,
@@ -198,7 +198,7 @@ class _LessonCardState extends State<LessonCard>
                       color: AppColors.onSurfaceVariant.withValues(alpha: 0.5),
                     )
                   else
-                    const Icon(
+                    Icon(
                       Icons.arrow_forward_ios_rounded,
                       size: 14,
                       color: AppColors.onSurfaceVariant,

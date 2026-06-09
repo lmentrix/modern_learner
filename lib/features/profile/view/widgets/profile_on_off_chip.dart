@@ -11,7 +11,7 @@ class ProfileOnOffChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: isOn
             ? AppColors.tertiary.withValues(alpha: 0.12)

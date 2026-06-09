@@ -28,7 +28,7 @@ class LibrarySubjectSheetHeader extends StatelessWidget {
                     color: AppColors.onSurface,
                   ),
                 ),
-                const SizedBox(height: 6),
+                SizedBox(height: 6),
                 Text(
                   '${subject.category} · ${formatCount(subject.workCount)} works on OpenAlex',
                   style: GoogleFonts.inter(
@@ -37,7 +37,7 @@ class LibrarySubjectSheetHeader extends StatelessWidget {
                   ),
                 ),
                 if (subject.description.isNotEmpty) ...[
-                  const SizedBox(height: 10),
+                  SizedBox(height: 10),
                   Text(
                     subject.description,
                     style: GoogleFonts.inter(

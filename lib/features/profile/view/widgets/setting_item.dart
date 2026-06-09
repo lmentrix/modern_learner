@@ -65,7 +65,7 @@ class _SettingItemState extends State<SettingItem>
           return Transform.scale(
             scale: _scaleAnim.value,
             child: Container(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: AppColors.surfaceContainerLow,
                 borderRadius: BorderRadius.circular(20),
@@ -104,7 +104,7 @@ class _SettingItemState extends State<SettingItem>
                             color: AppColors.onSurface,
                           ),
                         ),
-                        const SizedBox(height: 3),
+                        SizedBox(height: 3),
                         Text(
                           context.tr(widget.subtitle),
                           style: GoogleFonts.inter(
@@ -117,7 +117,7 @@ class _SettingItemState extends State<SettingItem>
                   ),
                   // Trailing
                   widget.trailing ??
-                      const Icon(
+                      Icon(
                         Icons.chevron_right_rounded,
                         size: 24,
                         color: AppColors.onSurfaceVariant,

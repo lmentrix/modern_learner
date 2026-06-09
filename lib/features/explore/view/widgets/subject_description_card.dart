@@ -16,7 +16,7 @@ class SubjectDescriptionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
         gradient: LinearGradient(
@@ -41,7 +41,7 @@ class SubjectDescriptionCard extends StatelessWidget {
               color: accent,
             ),
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
           Text(
             subject.description,
             style: GoogleFonts.inter(

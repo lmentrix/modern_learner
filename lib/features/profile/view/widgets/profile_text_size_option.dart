@@ -19,7 +19,7 @@ class ProfileTextSizeOption extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12),
+      padding: EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
         color: isSelected
             ? AppColors.primary.withValues(alpha: 0.1)
@@ -43,7 +43,7 @@ class ProfileTextSizeOption extends StatelessWidget {
                   : AppColors.onSurfaceVariant,
             ),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
           Text(
             context.tr(label),
             style: GoogleFonts.inter(

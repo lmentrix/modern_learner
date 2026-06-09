@@ -3,18 +3,19 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'package:modern_learner_production/core/l10n/app_text.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
+import 'package:modern_learner_production/core/theme/app_theme_controller.dart';
 import 'package:modern_learner_production/features/profile/view/widgets/profile_appearance_option.dart';
 import 'package:modern_learner_production/features/profile/view/widgets/profile_sheet_handle.dart';
 import 'package:modern_learner_production/features/profile/view/widgets/profile_sheet_title.dart';
 import 'package:modern_learner_production/features/profile/view/widgets/profile_text_size_option.dart';
 
 class ProfileAppearanceSheetSection extends StatelessWidget {
-  const ProfileAppearanceSheetSection({super.key});
+  ProfileAppearanceSheetSection({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.surfaceContainerHigh,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -28,14 +29,14 @@ class ProfileAppearanceSheetSection extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Center(child: ProfileSheetHandle()),
-          const SizedBox(height: 20),
-          const ProfileSheetTitle(
+          Center(child: ProfileSheetHandle()),
+          SizedBox(height: 20),
+          ProfileSheetTitle(
             title: 'Appearance',
             icon: Icons.palette_outlined,
             color: AppColors.tertiaryContainer,
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
           Text(
             context.tr('THEME'),
             style: GoogleFonts.inter(
@@ -46,37 +47,51 @@ class ProfileAppearanceSheetSection extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
-          const Row(
-            children: [
-              Expanded(
-                child: ProfileAppearanceOption(
-                  label: 'Dark',
-                  emoji: '🌑',
-                  isSelected: true,
-                  color: AppColors.primary,
-                ),
-              ),
-              SizedBox(width: 10),
-              Expanded(
-                child: ProfileAppearanceOption(
-                  label: 'Light',
-                  emoji: '☀️',
-                  isSelected: false,
-                  color: AppColors.primary,
-                ),
-              ),
-              SizedBox(width: 10),
-              Expanded(
-                child: ProfileAppearanceOption(
-                  label: 'System',
-                  emoji: '⚙️',
-                  isSelected: false,
-                  color: AppColors.primary,
-                ),
-              ),
-            ],
+          ValueListenableBuilder<AppThemePreference>(
+            valueListenable: AppThemeController.instance.preferenceListenable,
+            builder: (context, preference, _) {
+              return Row(
+                children: [
+                  Expanded(
+                    child: ProfileAppearanceOption(
+                      label: 'Dark',
+                      emoji: 'D',
+                      isSelected: preference == AppThemePreference.dark,
+                      color: AppColors.primary,
+                      onTap: () => AppThemeController.instance.setPreference(
+                        AppThemePreference.dark,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: ProfileAppearanceOption(
+                      label: 'Light',
+                      emoji: 'L',
+                      isSelected: preference == AppThemePreference.light,
+                      color: AppColors.primary,
+                      onTap: () => AppThemeController.instance.setPreference(
+                        AppThemePreference.light,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: ProfileAppearanceOption(
+                      label: 'System',
+                      emoji: 'S',
+                      isSelected: preference == AppThemePreference.system,
+                      color: AppColors.primary,
+                      onTap: () => AppThemeController.instance.setPreference(
+                        AppThemePreference.system,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
           Text(
             context.tr('TEXT SIZE'),
             style: GoogleFonts.inter(

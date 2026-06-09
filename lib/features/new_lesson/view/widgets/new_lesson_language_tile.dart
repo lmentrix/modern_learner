@@ -55,7 +55,7 @@ class NewLessonLanguageTile extends StatelessWidget {
                           : AppColors.onSurface,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  SizedBox(height: 2),
                   Text(
                     context.tr(option.detail),
                     style: GoogleFonts.inter(

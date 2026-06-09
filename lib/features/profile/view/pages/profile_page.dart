@@ -10,6 +10,7 @@ import 'package:modern_learner_production/features/profile/data/profile_identity
 import 'package:modern_learner_production/features/profile/data/profile_page_constants.dart';
 import 'package:modern_learner_production/features/profile/data/profile_preferences.dart';
 import 'package:modern_learner_production/features/profile/model/profile_moderl.dart';
+import 'package:modern_learner_production/features/profile/service/profile_notification_preferences_service.dart';
 import 'package:modern_learner_production/features/profile/service/profile_service.dart';
 import 'package:modern_learner_production/features/profile/state/learning_activity_monitor.dart';
 import 'package:modern_learner_production/features/profile/view/bloc/profile_bloc.dart';
@@ -41,7 +42,10 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   final _scrollController = ScrollController();
   final _profileService = LocalProfileService.instance;
-  ProfilePreferences _preferences = const ProfilePreferences();
+  final _notificationPreferencesService =
+      ProfileNotificationPreferencesService.instance;
+  ProfilePreferences _preferences =
+      ProfileNotificationPreferencesService.instance.preferences;
   late final Future<ProfileModel?> _supabaseProfile;
 
   @override
@@ -50,6 +54,12 @@ class _ProfilePageState extends State<ProfilePage> {
     _supabaseProfile = ProfileService().getCurrentProfile();
     LearningActivityMonitor.instance.refresh();
     SubscriptionService.instance.refresh();
+    _notificationPreferencesService.init().then((_) {
+      if (!mounted) return;
+      setState(() {
+        _preferences = _notificationPreferencesService.preferences;
+      });
+    });
   }
 
   @override
@@ -100,7 +110,7 @@ class _ProfilePageState extends State<ProfilePage> {
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (context) => const ProfileAppearanceSheetSection(),
+      builder: (context) => ProfileAppearanceSheetSection(),
     );
   }
 
@@ -231,7 +241,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     },
                   ),
                 ),
-                const SliverToBoxAdapter(
+                SliverToBoxAdapter(
                   child: SizedBox(height: ProfilePageConstants.sectionSpacing),
                 ),
                 SliverPadding(
@@ -248,7 +258,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                   ),
                 ),
-                const SliverToBoxAdapter(
+                SliverToBoxAdapter(
                   child: SizedBox(height: ProfilePageConstants.sectionSpacing),
                 ),
                 SliverPadding(
@@ -265,7 +275,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                   ),
                 ),
-                const SliverToBoxAdapter(
+                SliverToBoxAdapter(
                   child: SizedBox(height: ProfilePageConstants.sectionSpacing),
                 ),
                 SliverPadding(
@@ -282,7 +292,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                   ),
                 ),
-                const SliverToBoxAdapter(
+                SliverToBoxAdapter(
                   child: SizedBox(height: ProfilePageConstants.sectionSpacing),
                 ),
                 SliverPadding(
@@ -315,7 +325,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                 ),
                 const SliverToBoxAdapter(child: SizedBox(height: 20)),
-                const SliverToBoxAdapter(
+                SliverToBoxAdapter(
                   child: Center(child: ProfileVersionFooterSection()),
                 ),
                 const SliverToBoxAdapter(child: SizedBox(height: 100)),

@@ -9,18 +9,18 @@ class LearningSubjectsEmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SliverPadding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: EdgeInsets.symmetric(horizontal: 20),
       sliver: SliverToBoxAdapter(
         child: Container(
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.all(24),
           decoration: BoxDecoration(
             color: AppColors.surfaceContainerLow,
             borderRadius: BorderRadius.circular(24),
           ),
           child: Column(
             children: [
-              const Text('🔎', style: TextStyle(fontSize: 28)),
-              const SizedBox(height: 10),
+              Text('🔎', style: TextStyle(fontSize: 28)),
+              SizedBox(height: 10),
               Text(
                 'No subjects match that filter',
                 style: GoogleFonts.spaceGrotesk(

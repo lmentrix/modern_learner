@@ -12,16 +12,14 @@ class ProgressEmptyStateSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-        gradient: ProgressPageConstants.headerGradient,
-      ),
+      decoration: BoxDecoration(gradient: ProgressPageConstants.headerGradient),
       child: SafeArea(
         child: Center(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: EdgeInsets.symmetric(horizontal: 20),
             child: Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(24),
+              padding: EdgeInsets.all(24),
               decoration: BoxDecoration(
                 color: AppColors.surfaceContainerHigh,
                 borderRadius: BorderRadius.circular(28),
@@ -35,7 +33,7 @@ class ProgressEmptyStateSection extends StatelessWidget {
                   Container(
                     width: 68,
                     height: 68,
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       gradient: AppColors.primaryGradient,
                       shape: BoxShape.circle,
                     ),
@@ -45,7 +43,7 @@ class ProgressEmptyStateSection extends StatelessWidget {
                       size: 32,
                     ),
                   ),
-                  const SizedBox(height: 18),
+                  SizedBox(height: 18),
                   Text(
                     ProgressPageConstants.emptyTitle,
                     textAlign: TextAlign.center,
@@ -56,7 +54,7 @@ class ProgressEmptyStateSection extends StatelessWidget {
                       height: 1.1,
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  SizedBox(height: 10),
                   Text(
                     ProgressPageConstants.emptyBody,
                     textAlign: TextAlign.center,
@@ -66,7 +64,7 @@ class ProgressEmptyStateSection extends StatelessWidget {
                       height: 1.55,
                     ),
                   ),
-                  const SizedBox(height: 22),
+                  SizedBox(height: 22),
                   SizedBox(
                     width: double.infinity,
                     height: 52,

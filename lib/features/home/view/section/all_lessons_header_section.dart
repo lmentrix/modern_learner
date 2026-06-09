@@ -31,14 +31,14 @@ class AllLessonsHeaderSection extends StatelessWidget {
                   color: AppColors.outlineVariant.withValues(alpha: 0.3),
                 ),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.arrow_back_rounded,
                 size: 20,
                 color: AppColors.onSurface,
               ),
             ),
           ),
-          const SizedBox(width: 16),
+          SizedBox(width: 16),
           Text(
             title,
             style: GoogleFonts.spaceGrotesk(

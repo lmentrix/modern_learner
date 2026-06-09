@@ -41,8 +41,8 @@ class MatchPromptCard extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(18),
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.all(14),
+          duration: Duration(milliseconds: 180),
+          padding: EdgeInsets.all(14),
           decoration: BoxDecoration(
             color: (isActive || hasAnswer)
                 ? tone.withValues(alpha: 0.10)
@@ -73,7 +73,7 @@ class MatchPromptCard extends StatelessWidget {
                       ? null
                       : IconButton(
                           onPressed: onClear,
-                          icon: const Icon(Icons.close_rounded, size: 16),
+                          icon: Icon(Icons.close_rounded, size: 16),
                           color: AppColors.onSurfaceVariant,
                           constraints: const BoxConstraints(
                             minWidth: 32,
@@ -113,12 +113,9 @@ class MatchPromptCard extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
+                duration: Duration(milliseconds: 180),
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 10,
-                ),
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 decoration: BoxDecoration(
                   color: AppColors.surfaceContainer,
                   borderRadius: BorderRadius.circular(14),

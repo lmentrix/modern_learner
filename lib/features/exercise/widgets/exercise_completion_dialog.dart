@@ -27,7 +27,7 @@ class ExerciseCompletionDialog extends StatelessWidget {
     return Dialog(
       backgroundColor: Colors.transparent,
       child: Container(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.all(24),
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(24),
@@ -42,7 +42,7 @@ class ExerciseCompletionDialog extends StatelessWidget {
                 shape: BoxShape.circle,
                 gradient: LinearGradient(
                   colors: isPerfect
-                      ? [const Color(0xFFFFD700), const Color(0xFFFFA500)]
+                      ? [Color(0xFFFFD700), Color(0xFFFFA500)]
                       : isGood
                       ? [accentColor.withValues(alpha: 0.5), accentColor]
                       : [AppColors.outlineVariant, AppColors.onSurfaceVariant],
@@ -72,7 +72,7 @@ class ExerciseCompletionDialog extends StatelessWidget {
                 color: AppColors.onSurface,
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Text(
               'You got $correctAnswers out of $totalQuestions correct',
               style: GoogleFonts.inter(

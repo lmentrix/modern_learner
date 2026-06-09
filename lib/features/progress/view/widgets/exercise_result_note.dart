@@ -143,7 +143,7 @@ class _ExerciseResultNoteState extends State<ExerciseResultNote>
                         ),
                       ],
                       if (widget.explanation.trim().isNotEmpty) ...[
-                        const SizedBox(height: 6),
+                        SizedBox(height: 6),
                         Text(
                           widget.explanation,
                           style: GoogleFonts.inter(

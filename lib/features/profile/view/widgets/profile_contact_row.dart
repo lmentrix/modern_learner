@@ -20,7 +20,7 @@ class ProfileContactRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerHighest.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(14),
@@ -60,8 +60,8 @@ class ProfileContactRow extends StatelessWidget {
               ),
             ],
           ),
-          const Spacer(),
-          const Icon(
+          Spacer(),
+          Icon(
             Icons.chevron_right_rounded,
             color: AppColors.onSurfaceVariant,
             size: 20,

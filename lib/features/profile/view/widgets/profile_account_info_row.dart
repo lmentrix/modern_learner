@@ -19,7 +19,7 @@ class ProfileAccountInfoRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(12),
@@ -27,7 +27,7 @@ class ProfileAccountInfoRow extends StatelessWidget {
       child: Row(
         children: [
           Icon(icon, size: 17, color: AppColors.onSurfaceVariant),
-          const SizedBox(width: 10),
+          SizedBox(width: 10),
           Text(
             context.tr(label),
             style: GoogleFonts.inter(
@@ -35,7 +35,7 @@ class ProfileAccountInfoRow extends StatelessWidget {
               color: AppColors.onSurfaceVariant,
             ),
           ),
-          const Spacer(),
+          Spacer(),
           Text(
             value,
             style: GoogleFonts.inter(

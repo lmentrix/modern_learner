@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 import 'package:modern_learner_production/features/profile/data/profile_preferences.dart';
+import 'package:modern_learner_production/features/profile/service/profile_notification_preferences_service.dart';
 import 'package:modern_learner_production/features/profile/view/widgets/profile_sheet_divider.dart';
 import 'package:modern_learner_production/features/profile/view/widgets/profile_sheet_handle.dart';
 import 'package:modern_learner_production/features/profile/view/widgets/profile_sheet_title.dart';
@@ -25,6 +26,7 @@ class ProfileNotificationsSheetSection extends StatefulWidget {
 class _ProfileNotificationsSheetSectionState
     extends State<ProfileNotificationsSheetSection> {
   late ProfilePreferences _preferences;
+  bool _isUpdating = false;
 
   @override
   void initState() {
@@ -32,15 +34,34 @@ class _ProfileNotificationsSheetSectionState
     _preferences = widget.preferences;
   }
 
-  void _updatePreferences(ProfilePreferences preferences) {
+  Future<void> _updatePreferences(ProfilePreferences preferences) async {
+    final previous = _preferences;
     setState(() => _preferences = preferences);
     widget.onPreferencesChanged(preferences);
+
+    setState(() => _isUpdating = true);
+    try {
+      await ProfileNotificationPreferencesService.instance.update(preferences);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _preferences = previous);
+      widget.onPreferencesChanged(previous);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Unable to update notification settings.'),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isUpdating = false);
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.surfaceContainerHigh,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -53,45 +74,107 @@ class _ProfileNotificationsSheetSectionState
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const ProfileSheetHandle(),
+          ProfileSheetHandle(),
           const SizedBox(height: 20),
-          const ProfileSheetTitle(
+          ProfileSheetTitle(
             title: 'Notifications',
             icon: Icons.notifications_outlined,
             color: AppColors.secondary,
           ),
           const SizedBox(height: 24),
-          ProfileToggleRow(
-            emoji: '🔔',
+          _NotificationToggle(
+            emoji: '24',
             label: 'Daily Reminder',
             description: 'Get reminded to practice each day',
             value: _preferences.dailyReminder,
-            onChanged: (value) {
-              _updatePreferences(_preferences.copyWith(dailyReminder: value));
-            },
+            isUpdating: _isUpdating,
+            onChanged: (value) =>
+                _updatePreferences(_preferences.copyWith(dailyReminder: value)),
           ),
-          const ProfileSheetDivider(),
-          ProfileToggleRow(
-            emoji: '🔥',
+          ProfileSheetDivider(),
+          _NotificationToggle(
+            emoji: 'XP',
+            label: 'Achievement Alerts',
+            description: 'Notify when an achievement unlocks',
+            value: _preferences.achievementAlerts,
+            isUpdating: _isUpdating,
+            onChanged: (value) => _updatePreferences(
+              _preferences.copyWith(achievementAlerts: value),
+            ),
+          ),
+          ProfileSheetDivider(),
+          _NotificationToggle(
+            emoji: 'ST',
             label: 'Streak Alerts',
             description: 'Know when your streak is at risk',
             value: _preferences.streakAlerts,
-            onChanged: (value) {
-              _updatePreferences(_preferences.copyWith(streakAlerts: value));
-            },
+            isUpdating: _isUpdating,
+            onChanged: (value) =>
+                _updatePreferences(_preferences.copyWith(streakAlerts: value)),
           ),
-          const ProfileSheetDivider(),
-          ProfileToggleRow(
-            emoji: '📊',
+          ProfileSheetDivider(),
+          _NotificationToggle(
+            emoji: 'WK',
             label: 'Weekly Digest',
             description: 'A summary of your weekly progress',
             value: _preferences.weeklyDigest,
-            onChanged: (value) {
-              _updatePreferences(_preferences.copyWith(weeklyDigest: value));
-            },
+            isUpdating: _isUpdating,
+            onChanged: (value) =>
+                _updatePreferences(_preferences.copyWith(weeklyDigest: value)),
+          ),
+          ProfileSheetDivider(),
+          _NotificationToggle(
+            emoji: 'SC',
+            label: 'School Lesson Created',
+            description: 'Notify when a school course is created',
+            value: _preferences.schoolCourseCreationNotifications,
+            isUpdating: _isUpdating,
+            onChanged: (value) => _updatePreferences(
+              _preferences.copyWith(schoolCourseCreationNotifications: value),
+            ),
+          ),
+          ProfileSheetDivider(),
+          _NotificationToggle(
+            emoji: 'VC',
+            label: 'Voice Lesson Created',
+            description: 'Notify when a voice lesson is created',
+            value: _preferences.voiceLessonCreationNotifications,
+            isUpdating: _isUpdating,
+            onChanged: (value) => _updatePreferences(
+              _preferences.copyWith(voiceLessonCreationNotifications: value),
+            ),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _NotificationToggle extends StatelessWidget {
+  const _NotificationToggle({
+    required this.emoji,
+    required this.label,
+    required this.description,
+    required this.value,
+    required this.isUpdating,
+    required this.onChanged,
+  });
+
+  final String emoji;
+  final String label;
+  final String description;
+  final bool value;
+  final bool isUpdating;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return ProfileToggleRow(
+      emoji: emoji,
+      label: label,
+      description: description,
+      value: value,
+      onChanged: isUpdating ? null : onChanged,
     );
   }
 }

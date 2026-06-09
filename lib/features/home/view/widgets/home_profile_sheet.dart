@@ -24,7 +24,7 @@ class HomeProfileSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.surfaceContainerHigh,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -45,13 +45,13 @@ class HomeProfileSheet extends StatelessWidget {
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: 20),
           Row(
             children: [
               Container(
                 width: 60,
                 height: 60,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   gradient: AppColors.primaryGradient,
                   shape: BoxShape.circle,
                 ),
@@ -122,7 +122,7 @@ class HomeProfileSheet extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
           Text(
             context.tr('QUICK ACTIONS'),
             style: GoogleFonts.inter(
@@ -132,14 +132,14 @@ class HomeProfileSheet extends StatelessWidget {
               letterSpacing: 1.5,
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           HomeProfileQuickActionRow(
             icon: Icons.person_outline_rounded,
             label: 'View Profile',
             accentColor: AppColors.primary,
             onTap: onProfileTap,
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           HomeProfileQuickActionRow(
             icon: Icons.settings_rounded,
             label: 'Settings',

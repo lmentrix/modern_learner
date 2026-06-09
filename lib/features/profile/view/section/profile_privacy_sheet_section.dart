@@ -44,7 +44,7 @@ class _ProfilePrivacySheetSectionState
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.surfaceContainerHigh,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -57,7 +57,7 @@ class _ProfilePrivacySheetSectionState
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const ProfileSheetHandle(),
+          ProfileSheetHandle(),
           const SizedBox(height: 20),
           const ProfileSheetTitle(
             title: 'Privacy',
@@ -74,7 +74,7 @@ class _ProfilePrivacySheetSectionState
               _updatePreferences(_preferences.copyWith(shareProgress: value));
             },
           ),
-          const ProfileSheetDivider(),
+          ProfileSheetDivider(),
           ProfileToggleRow(
             emoji: '🏅',
             label: 'Show in Leaderboard',
@@ -86,7 +86,7 @@ class _ProfilePrivacySheetSectionState
               );
             },
           ),
-          const ProfileSheetDivider(),
+          ProfileSheetDivider(),
           ProfileToggleRow(
             emoji: '📊',
             label: 'Usage Analytics',
@@ -98,7 +98,7 @@ class _ProfilePrivacySheetSectionState
               );
             },
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: 20),
           SizedBox(
             width: double.infinity,
             height: 44,

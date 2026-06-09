@@ -82,7 +82,7 @@ class HomeLessonQuickAccessCard extends StatelessWidget {
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 4),
+            SizedBox(height: 4),
             Text(
               context.tr(subtitle),
               style: GoogleFonts.inter(

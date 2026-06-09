@@ -83,7 +83,7 @@ class _SubscriptionTransactionHistoryState
 }
 
 class _TransactionTile extends StatelessWidget {
-  const _TransactionTile({required this.transaction, required this.formatDate});
+  _TransactionTile({required this.transaction, required this.formatDate});
 
   final StripeTransaction transaction;
   final String Function(DateTime) formatDate;
@@ -91,12 +91,12 @@ class _TransactionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isFailure = transaction.isFailure;
-    final color = isFailure ? AppColors.error : const Color(0xFF00DC82);
+    final color = isFailure ? AppColors.error : Color(0xFF00DC82);
     final amount = transaction.amountInDollars;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      margin: EdgeInsets.only(bottom: 8),
+      padding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLow,
         borderRadius: BorderRadius.circular(14),
@@ -134,7 +134,7 @@ class _TransactionTile extends StatelessWidget {
                     color: AppColors.onSurface,
                   ),
                 ),
-                const SizedBox(height: 2),
+                SizedBox(height: 2),
                 Text(
                   formatDate(transaction.createdAt),
                   style: GoogleFonts.inter(
