@@ -16,12 +16,14 @@ class VoiceExerciseBody extends StatefulWidget {
     required this.accentColor,
     required this.checkedVoiceStepKeys,
     required this.onVoiceStepChecked,
+    this.language,
   });
 
   final ChapterExerciseDetailModel detail;
   final Color accentColor;
   final Set<String> checkedVoiceStepKeys;
   final ValueChanged<String> onVoiceStepChecked;
+  final String? language;
 
   @override
   State<VoiceExerciseBody> createState() => _VoiceExerciseBodyState();
@@ -129,6 +131,7 @@ class _VoiceExerciseBodyState extends State<VoiceExerciseBody>
                   step: step,
                   accentColor: widget.accentColor,
                   onScored: (result) => _onStepScored(step.stepNumber, result),
+                  language: widget.language,
                 );
               }),
             ],
