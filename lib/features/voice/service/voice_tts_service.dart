@@ -69,31 +69,90 @@ class VoiceTtsService {
 
   // ── Public API ─────────────────────────────────────────────────────────────
 
+  /// Maps a lesson [language] name to the best Qwen TTS voice and a BCP-47
+  /// locale for the device-TTS fallback.
+  static ({String qwenVoice, String locale, String languageType}) _resolveLanguage(
+    String language,
+  ) {
+    switch (language.toLowerCase()) {
+      case 'spanish':
+      case 'español':
+        return (qwenVoice: 'Serena', locale: 'es-ES', languageType: 'Spanish');
+      case 'french':
+      case 'français':
+        return (qwenVoice: 'Chloé', locale: 'fr-FR', languageType: 'French');
+      case 'german':
+      case 'deutsch':
+        return (qwenVoice: 'Petra', locale: 'de-DE', languageType: 'German');
+      case 'italian':
+      case 'italiano':
+        return (qwenVoice: 'Aurora', locale: 'it-IT', languageType: 'Italian');
+      case 'portuguese':
+      case 'português':
+        return (qwenVoice: 'Valentina', locale: 'pt-BR', languageType: 'Portuguese');
+      case 'japanese':
+      case '日本語':
+        return (qwenVoice: 'Hanako', locale: 'ja-JP', languageType: 'Japanese');
+      case 'korean':
+      case '한국어':
+        return (qwenVoice: 'Jisoo', locale: 'ko-KR', languageType: 'Korean');
+      case 'chinese':
+      case 'mandarin':
+      case '中文':
+        return (qwenVoice: 'Longhua', locale: 'zh-CN', languageType: 'Chinese');
+      case 'russian':
+      case 'русский':
+        return (qwenVoice: 'Katya', locale: 'ru-RU', languageType: 'Russian');
+      default:
+        return (qwenVoice: 'Cherry', locale: 'en-US', languageType: 'English');
+    }
+  }
+
   Future<void> speak(
     String text, {
     String voice = 'Kore',
     String model = 'google/gemini-3.1-flash-tts-preview',
+    String qwenVoice = 'Cherry',
+    /// Target language of the lesson (e.g. 'Spanish', 'French'). When set,
+    /// overrides [qwenVoice] and the device-TTS locale automatically.
+    String? language,
   }) async {
     await stop();
     _eventCtrl.add(VoiceTtsEvent.loading());
 
-    // Path 1 — OpenRouter direct (requires OPENROUTER_API_KEY in .env).
+    final lang = _resolveLanguage(language ?? '');
+    final resolvedQwenVoice = language != null ? lang.qwenVoice : qwenVoice;
+    final resolvedLocale = lang.locale;
+    final resolvedLanguageType = lang.languageType;
+
+    // Path 1 — Qwen TTS via FastAPI backend.
+    final bytes = await _fetchQwenTts(
+      text,
+      voice: resolvedQwenVoice,
+      languageType: resolvedLanguageType,
+    );
+    if (bytes != null && bytes.isNotEmpty) {
+      await _playWithAudioPlayer(bytes);
+      return;
+    }
+
+    // Path 2 — OpenRouter direct (requires OPENROUTER_API_KEY in .env).
     final apiKey = ApiConstants.openRouterApiKey.trim();
     if (apiKey.isNotEmpty) {
-      final bytes = await _fetchOpenRouter(
+      final orBytes = await _fetchOpenRouter(
         text,
         apiKey: apiKey,
         voice: voice,
         model: model,
       );
-      if (bytes != null && bytes.isNotEmpty) {
-        await _playWithAudioPlayer(bytes);
+      if (orBytes != null && orBytes.isNotEmpty) {
+        await _playWithAudioPlayer(orBytes);
         return;
       }
     }
 
-    // Path 2 — Device TTS (always available).
-    await _playWithDeviceTts(text);
+    // Path 3 — Device TTS (always available).
+    await _playWithDeviceTts(text, locale: resolvedLocale);
   }
 
   Future<void> stop() async {
@@ -173,9 +232,9 @@ class VoiceTtsService {
 
   // ── Path 2: Device TTS + timer-based position estimator ───────────────────
 
-  Future<void> _playWithDeviceTts(String text) async {
+  Future<void> _playWithDeviceTts(String text, {String locale = 'en-US'}) async {
     try {
-      await _ensureDeviceTtsReady();
+      await _ensureDeviceTtsReady(locale: locale);
 
       // Estimate total duration: ~420 ms per word at normal rate.
       final wordCount = math.max(
@@ -227,13 +286,49 @@ class VoiceTtsService {
     }
   }
 
-  Future<void> _ensureDeviceTtsReady() async {
-    if (_deviceTtsReady) return;
-    await _deviceTts.setLanguage('en-US');
+  String _deviceTtsLocale = '';
+
+  Future<void> _ensureDeviceTtsReady({String locale = 'en-US'}) async {
+    if (_deviceTtsReady && _deviceTtsLocale == locale) return;
+    await _deviceTts.setLanguage(locale);
+    _deviceTtsLocale = locale;
     await _deviceTts.setSpeechRate(0.48);
     await _deviceTts.setVolume(1.0);
     await _deviceTts.setPitch(1.05);
     _deviceTtsReady = true;
+  }
+
+  // ── Qwen TTS via FastAPI backend ──────────────────────────────────────────
+
+  Future<List<int>?> _fetchQwenTts(
+    String text, {
+    required String voice,
+    String languageType = 'Auto',
+  }) async {
+    final url = ApiConstants.qwenTtsSynthesize.trim();
+    if (url.isEmpty) return null;
+    try {
+      final response = await http
+          .post(
+            Uri.parse(url),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'text': text,
+              'voice': voice,
+              'language_type': languageType,
+            }),
+          )
+          .timeout(const Duration(seconds: 30));
+      if (response.statusCode != 200) return null;
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      final output = body['output'] as Map<String, dynamic>?;
+      final audio = output?['audio'] as Map<String, dynamic>?;
+      final data = audio?['data'] as String?;
+      if (data == null || data.isEmpty) return null;
+      return base64Decode(data);
+    } catch (_) {
+      return null;
+    }
   }
 
   // ── OpenRouter HTTP fetch ──────────────────────────────────────────────────

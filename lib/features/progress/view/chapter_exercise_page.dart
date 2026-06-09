@@ -436,6 +436,7 @@ class _ChapterExercisePageState extends State<ChapterExercisePage> {
                     detail: detail,
                     accentColor: _accentColor,
                     checkedVoiceStepKeys: _checkedVoiceStepKeys,
+                    language: widget.args.context?.targetLanguage,
                     onVoiceStepChecked: (key) {
                       setState(() => _checkedVoiceStepKeys.add(key));
                       unawaited(_saveProgress());

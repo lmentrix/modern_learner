@@ -42,11 +42,13 @@ class VoiceStepRow extends StatefulWidget {
     required this.step,
     required this.accentColor,
     required this.onScored,
+    this.language,
   });
 
   final VoicePracticeStepModel step;
   final Color accentColor;
   final ValueChanged<PronunciationResult> onScored;
+  final String? language;
 
   @override
   State<VoiceStepRow> createState() => _VoiceStepRowState();
@@ -139,7 +141,10 @@ class _VoiceStepRowState extends State<VoiceStepRow>
     _posSub = VoiceTtsService.instance.positionStream.listen(_onPosition);
     _durSub = VoiceTtsService.instance.durationStream.listen(_onDuration);
 
-    unawaited(VoiceTtsService.instance.speak(widget.step.prompt));
+    unawaited(VoiceTtsService.instance.speak(
+      widget.step.prompt,
+      language: widget.language,
+    ));
   }
 
   void _onTtsEvent(VoiceTtsEvent event) {
