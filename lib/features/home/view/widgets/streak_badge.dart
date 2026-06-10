@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:modern_learner_production/features/profile/state/learning_activity_monitor.dart';
+import 'package:modern_learner_production/features/profile/service/streak_service.dart';
 
 class StreakBadge extends StatelessWidget {
   const StreakBadge({super.key, this.count});
@@ -14,10 +14,10 @@ class StreakBadge extends StatelessWidget {
       return _StreakBadgeContent(count: fixedCount);
     }
 
-    return ValueListenableBuilder<LearningActivityMonitorState>(
-      valueListenable: LearningActivityMonitor.instance.state,
-      builder: (context, state, child) {
-        return _StreakBadgeContent(count: state.currentStreakDays);
+    return ValueListenableBuilder<int>(
+      valueListenable: StreakService.instance.currentStreak,
+      builder: (context, streak, child) {
+        return _StreakBadgeContent(count: streak);
       },
     );
   }

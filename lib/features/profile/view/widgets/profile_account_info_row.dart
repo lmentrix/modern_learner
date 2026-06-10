@@ -19,7 +19,7 @@ class ProfileAccountInfoRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(12),
@@ -27,21 +27,30 @@ class ProfileAccountInfoRow extends StatelessWidget {
       child: Row(
         children: [
           Icon(icon, size: 17, color: AppColors.onSurfaceVariant),
-          SizedBox(width: 10),
-          Text(
-            context.tr(label),
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              color: AppColors.onSurfaceVariant,
+          const SizedBox(width: 10),
+          Flexible(
+            child: Text(
+              context.tr(label),
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                color: AppColors.onSurfaceVariant,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
-          Spacer(),
-          Text(
-            value,
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: AppColors.onSurface,
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              value,
+              textAlign: TextAlign.end,
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppColors.onSurface,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],

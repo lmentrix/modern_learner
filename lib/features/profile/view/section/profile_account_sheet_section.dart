@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-
 import 'package:modern_learner_production/core/l10n/app_text.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 import 'package:modern_learner_production/features/profile/data/profile_identity.dart';
@@ -20,10 +19,15 @@ class ProfileAccountSheetSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final displayName = identity.displayName.trim();
+    final avatarInitial = displayName.isEmpty
+        ? '?'
+        : displayName[0].toUpperCase();
+
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerHigh,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       padding: EdgeInsets.only(
         top: 12,
@@ -35,13 +39,13 @@ class ProfileAccountSheetSection extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           ProfileSheetHandle(),
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           ProfileSheetTitle(
             title: 'Account',
             icon: Icons.person_outline_rounded,
             color: AppColors.primary,
           ),
-          SizedBox(height: 24),
+          const SizedBox(height: 24),
           Row(
             children: [
               Container(
@@ -53,7 +57,7 @@ class ProfileAccountSheetSection extends StatelessWidget {
                 ),
                 child: Center(
                   child: Text(
-                    identity.initial,
+                    avatarInitial,
                     style: GoogleFonts.spaceGrotesk(
                       fontSize: 26,
                       fontWeight: FontWeight.w700,
@@ -74,6 +78,8 @@ class ProfileAccountSheetSection extends StatelessWidget {
                         fontWeight: FontWeight.w700,
                         color: AppColors.onSurface,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     Text(
                       identity.email,
@@ -81,6 +87,8 @@ class ProfileAccountSheetSection extends StatelessWidget {
                         fontSize: 13,
                         color: AppColors.onSurfaceVariant,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
@@ -99,7 +107,7 @@ class ProfileAccountSheetSection extends StatelessWidget {
             label: 'Member since',
             value: 'January 2024',
           ),
-          SizedBox(height: 24),
+          const SizedBox(height: 24),
           SizedBox(
             width: double.infinity,
             height: 48,

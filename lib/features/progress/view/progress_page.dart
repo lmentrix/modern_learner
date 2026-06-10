@@ -20,14 +20,14 @@ import 'package:modern_learner_production/features/progress/service/course_xp_se
 import 'package:modern_learner_production/features/progress/service/model/chapter_subcontent_model.dart';
 import 'package:modern_learner_production/features/progress/service/model/roadmap_model.dart';
 import 'package:modern_learner_production/features/progress/service/progress_preload_service.dart';
-import 'package:modern_learner_production/features/progress/service/roadmap_generation_service.dart';
-import 'package:modern_learner_production/features/progress/service/roadmap_mock_guard.dart';
 import 'package:modern_learner_production/features/progress/service/request/chapter_subcontent.dart';
 import 'package:modern_learner_production/features/progress/service/request/exercise_request.dart';
+import 'package:modern_learner_production/features/progress/service/roadmap_generation_service.dart';
+import 'package:modern_learner_production/features/progress/service/roadmap_mock_guard.dart';
 import 'package:modern_learner_production/features/progress/view/section/progress_empty_state_section.dart';
-import 'package:modern_learner_production/features/progress/view/section/progress_roadmap_error_section.dart';
 import 'package:modern_learner_production/features/progress/view/section/progress_header.dart';
 import 'package:modern_learner_production/features/progress/view/section/progress_journey_section.dart';
+import 'package:modern_learner_production/features/progress/view/section/progress_roadmap_error_section.dart';
 import 'package:modern_learner_production/features/progress/view/section/progress_skeleton_section.dart';
 import 'package:modern_learner_production/features/progress/view/section/progress_stats_row.dart';
 import 'package:modern_learner_production/features/roadmap/model/roadmap_model.dart';

@@ -46,7 +46,7 @@ class ProfileAchievementDetailSheet extends StatelessWidget {
     final courses = achievement.unlockedByCourses;
 
     return Container(
-      margin: EdgeInsets.fromLTRB(12, 0, 12, 12),
+      margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLow,
         borderRadius: BorderRadius.circular(28),
@@ -61,7 +61,7 @@ class ProfileAchievementDetailSheet extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            margin: EdgeInsets.only(top: 12),
+            margin: const EdgeInsets.only(top: 12),
             width: 36,
             height: 4,
             decoration: BoxDecoration(
@@ -122,7 +122,7 @@ class ProfileAchievementDetailSheet extends StatelessWidget {
                                 label: _rarityLabel,
                                 color: rarityColor,
                               ),
-                              SizedBox(width: 6),
+                              const SizedBox(width: 6),
                               ProfileChip(
                                 label: _typeLabel,
                                 color: AppColors.secondary,
@@ -134,7 +134,7 @@ class ProfileAchievementDetailSheet extends StatelessWidget {
                     ),
                   ],
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 Text(
                   achievement.description,
                   style: GoogleFonts.inter(
@@ -143,7 +143,7 @@ class ProfileAchievementDetailSheet extends StatelessWidget {
                     height: 1.55,
                   ),
                 ),
-                SizedBox(height: 14),
+                const SizedBox(height: 14),
                 Row(
                   children: [
                     ProfileChip(
@@ -165,7 +165,7 @@ class ProfileAchievementDetailSheet extends StatelessWidget {
                     ),
                   ),
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 if (!unlocked) ...[
                   Row(
                     children: [
@@ -174,9 +174,27 @@ class ProfileAchievementDetailSheet extends StatelessWidget {
                         size: 14,
                         color: AppColors.onSurfaceVariant,
                       ),
-                      SizedBox(width: 8),
+                      const SizedBox(width: 8),
                       Text(
                         'Not yet unlocked',
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          color: AppColors.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ] else if (courses.isEmpty) ...[
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.check_circle_outline_rounded,
+                        size: 14,
+                        color: rarityColor,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Previously unlocked',
                         style: GoogleFonts.inter(
                           fontSize: 13,
                           color: AppColors.onSurfaceVariant,
