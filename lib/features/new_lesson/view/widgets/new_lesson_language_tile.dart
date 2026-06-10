@@ -18,11 +18,41 @@ class NewLessonLanguageTile extends StatelessWidget {
   final bool isSelected;
   final VoidCallback onTap;
 
+  IconData _languageIcon(String label) {
+    return switch (label) {
+      'English' => Icons.language_rounded,
+      'Spanish' => Icons.forum_rounded,
+      'French' => Icons.travel_explore_rounded,
+      'German' => Icons.account_tree_rounded,
+      'Japanese' => Icons.graphic_eq_rounded,
+      'Mandarin' => Icons.record_voice_over_rounded,
+      'Italian' => Icons.music_note_rounded,
+      'Portuguese' => Icons.waves_rounded,
+      _ => Icons.mic_rounded,
+    };
+  }
+
+  Color _languageColor(String label) {
+    return switch (label) {
+      'English' => AppColors.primary,
+      'Spanish' => const Color(0xFFFF9F43),
+      'French' => AppColors.secondary,
+      'German' => const Color(0xFF26C6DA),
+      'Japanese' => const Color(0xFFFF6E84),
+      'Mandarin' => AppColors.tertiary,
+      'Italian' => const Color(0xFF5FD068),
+      'Portuguese' => const Color(0xFF00BCD4),
+      _ => AppColors.primary,
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
+    final accent = _languageColor(option.label);
+
     return NewLessonSelectableChip(
       isSelected: isSelected,
-      accentColor: AppColors.primary,
+      accentColor: accent,
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
@@ -32,12 +62,18 @@ class NewLessonLanguageTile extends StatelessWidget {
               width: 42,
               height: 42,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.04),
-                borderRadius: BorderRadius.circular(14),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    accent.withValues(alpha: 0.20),
+                    accent.withValues(alpha: 0.08),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(13),
+                border: Border.all(color: accent.withValues(alpha: 0.18)),
               ),
-              child: Center(
-                child: Text(option.emoji, style: const TextStyle(fontSize: 22)),
-              ),
+              child: Icon(_languageIcon(option.label), color: accent, size: 21),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -50,12 +86,10 @@ class NewLessonLanguageTile extends StatelessWidget {
                     style: GoogleFonts.spaceGrotesk(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
-                      color: isSelected
-                          ? AppColors.primary
-                          : AppColors.onSurface,
+                      color: isSelected ? accent : AppColors.onSurface,
                     ),
                   ),
-                  SizedBox(height: 2),
+                  const SizedBox(height: 3),
                   Text(
                     context.tr(option.detail),
                     style: GoogleFonts.inter(
@@ -71,7 +105,7 @@ class NewLessonLanguageTile extends StatelessWidget {
                   ? Icons.check_circle_rounded
                   : Icons.radio_button_unchecked_rounded,
               color: isSelected
-                  ? AppColors.primary
+                  ? accent
                   : AppColors.onSurfaceVariant.withValues(alpha: 0.6),
               size: 20,
             ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:modern_learner_production/core/utils/responsive.dart';
 import 'package:modern_learner_production/features/new_lesson/data/new_lesson_option_item.dart';
 import 'package:modern_learner_production/features/new_lesson/view/widgets/new_lesson_difficulty_tile.dart';
 import 'package:modern_learner_production/features/new_lesson/view/widgets/new_lesson_section_heading.dart';
@@ -28,23 +29,44 @@ class NewLessonDifficultySection extends StatelessWidget {
               'Choose how hard the speaking roadmap should push. This affects pace, lesson density, and the kind of responses you will practice.',
         ),
         const SizedBox(height: 18),
-        Row(
-          children: options
-              .map(
-                (option) => Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.only(
-                      right: option == options.last ? 0 : 12,
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final stack =
+                constraints.maxWidth < 560 || Responsive.isCompact(context);
+            if (stack) {
+              return Column(
+                children: [
+                  for (int i = 0; i < options.length; i++) ...[
+                    NewLessonDifficultyTile(
+                      option: options[i],
+                      isSelected: selectedDifficulty == options[i].label,
+                      onTap: () => onDifficultySelected(options[i].label),
                     ),
-                    child: NewLessonDifficultyTile(
-                      option: option,
-                      isSelected: selectedDifficulty == option.label,
-                      onTap: () => onDifficultySelected(option.label),
+                    if (i != options.length - 1) const SizedBox(height: 10),
+                  ],
+                ],
+              );
+            }
+
+            return Row(
+              children: options
+                  .map(
+                    (option) => Expanded(
+                      child: Padding(
+                        padding: EdgeInsets.only(
+                          right: option == options.last ? 0 : 12,
+                        ),
+                        child: NewLessonDifficultyTile(
+                          option: option,
+                          isSelected: selectedDifficulty == option.label,
+                          onTap: () => onDifficultySelected(option.label),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              )
-              .toList(),
+                  )
+                  .toList(),
+            );
+          },
         ),
       ],
     );

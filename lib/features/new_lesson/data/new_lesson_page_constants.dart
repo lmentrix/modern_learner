@@ -3,17 +3,27 @@ import 'package:flutter/material.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
 
 abstract final class NewLessonPageConstants {
-  static EdgeInsets pagePadding = EdgeInsets.symmetric(horizontal: 20);
+  static EdgeInsets pagePadding = const EdgeInsets.symmetric(horizontal: 20);
 
   static LinearGradient get headerGradient => LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
-    colors: [Color(0xFF14182E), AppColors.surface],
+    colors: [
+      AppColors.surfaceContainerLow.withValues(alpha: 0.78),
+      AppColors.surfaceContainerLow.withValues(alpha: 0.36),
+      AppColors.surface,
+    ],
+    stops: const [0, 0.62, 1],
   );
 
-  static LinearGradient get previewGradient => const LinearGradient(
+  static LinearGradient get previewGradient => LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF232846), Color(0xFF171A29)],
+    colors: [
+      AppColors.surfaceContainerLow,
+      AppColors.surfaceContainerLow,
+      AppColors.surfaceContainer,
+    ],
+    stops: const [0, 0.68, 1],
   );
 }

@@ -14,20 +14,11 @@ import 'package:modern_learner_production/features/new_lesson/view/section/new_l
 import 'package:modern_learner_production/features/new_lesson/view/section/new_lesson_header_section.dart';
 import 'package:modern_learner_production/features/new_lesson/view/section/new_lesson_language_section.dart';
 import 'package:modern_learner_production/features/new_lesson/view/section/new_lesson_preview_section.dart';
-import 'package:modern_learner_production/features/profile/data/profile_preferences.dart';
-import 'package:modern_learner_production/features/profile/service/profile_notification_preferences_service.dart';
-import 'package:modern_learner_production/features/profile/view/widgets/notification_preference_switch.dart';
 import 'package:modern_learner_production/features/progress/service/cache/roadmap_id_cache.dart';
-import 'package:modern_learner_production/features/push_notification/service/push_notification_service_locator.dart';
 import 'package:modern_learner_production/features/roadmap/service/roadmap_service.dart';
 
 class NewLessonComposerSection extends StatefulWidget {
-  const NewLessonComposerSection({
-    super.key,
-    this.showVoiceNotificationToggle = false,
-  });
-
-  final bool showVoiceNotificationToggle;
+  const NewLessonComposerSection({super.key});
 
   @override
   State<NewLessonComposerSection> createState() =>
@@ -50,76 +41,97 @@ class _NewLessonComposerSectionState extends State<NewLessonComposerSection> {
 
     return Material(
       color: AppColors.surface,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          NewLessonHeaderSection(onClose: () => Navigator.of(context).pop()),
-          Expanded(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Align(
-                alignment: Alignment.topCenter,
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(
-                    maxWidth: Responsive.maxContentWidth,
-                  ),
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(hPad, 4, hPad, 28),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        NewLessonPreviewSection(
-                          selectedLanguage: _selectedLanguage,
-                          selectedDifficulty: _selectedDifficulty,
-                        ),
-                        if (widget.showVoiceNotificationToggle) ...[
-                          const SizedBox(height: 18),
-                          NotificationPreferenceSwitch(
-                            icon: Icons.record_voice_over_outlined,
-                            title: 'Voice lesson notifications',
-                            subtitle:
-                                'Notify me when a voice lesson is created.',
-                            valueOf: (preferences) =>
-                                preferences.voiceLessonCreationNotifications,
-                            copyWithValue:
-                                (ProfilePreferences preferences, bool value) =>
-                                    preferences.copyWith(
-                                      voiceLessonCreationNotifications: value,
-                                    ),
-                          ),
-                        ],
-                        const SizedBox(height: 28),
-                        NewLessonLanguageSection(
-                          options: NewLessonPageData.languages,
-                          selectedLanguage: _selectedLanguage,
-                          onLanguageSelected: (value) {
-                            setState(() => _selectedLanguage = value);
-                          },
-                        ),
-                        const SizedBox(height: 28),
-                        NewLessonDifficultySection(
-                          options: NewLessonPageData.difficulties,
-                          selectedDifficulty: _selectedDifficulty,
-                          onDifficultySelected: (value) {
-                            setState(() => _selectedDifficulty = value);
-                          },
-                        ),
-                        const SizedBox(height: 36),
-                      ],
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              AppColors.surfaceContainerLow.withValues(alpha: 0.58),
+              AppColors.surface,
+              AppColors.surface,
+            ],
+            stops: const [0, 0.34, 1],
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            NewLessonHeaderSection(onClose: () => Navigator.of(context).pop()),
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      maxWidth: Responsive.maxContentWidth,
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(hPad, 8, hPad, 30),
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final isWide = constraints.maxWidth >= 820;
+                          final preview = NewLessonPreviewSection(
+                            selectedLanguage: _selectedLanguage,
+                            selectedDifficulty: _selectedDifficulty,
+                          );
+                          final choices = Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              NewLessonLanguageSection(
+                                options: NewLessonPageData.languages,
+                                selectedLanguage: _selectedLanguage,
+                                onLanguageSelected: (value) {
+                                  setState(() => _selectedLanguage = value);
+                                },
+                              ),
+                              const SizedBox(height: 28),
+                              NewLessonDifficultySection(
+                                options: NewLessonPageData.difficulties,
+                                selectedDifficulty: _selectedDifficulty,
+                                onDifficultySelected: (value) {
+                                  setState(() => _selectedDifficulty = value);
+                                },
+                              ),
+                            ],
+                          );
+
+                          if (isWide) {
+                            return Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(flex: 4, child: preview),
+                                const SizedBox(width: 20),
+                                Expanded(flex: 5, child: choices),
+                              ],
+                            );
+                          }
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              preview,
+                              const SizedBox(height: 28),
+                              choices,
+                            ],
+                          );
+                        },
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
-          NewLessonActionSection(
-            canStart: _canStart,
-            isStarting: _isStarting,
-            selectedLanguage: _selectedLanguage,
-            selectedDifficulty: _selectedDifficulty,
-            onStart: () => _onStart(context).ignore(),
-          ),
-        ],
+            NewLessonActionSection(
+              canStart: _canStart,
+              isStarting: _isStarting,
+              selectedLanguage: _selectedLanguage,
+              selectedDifficulty: _selectedDifficulty,
+              onStart: () => _onStart(context).ignore(),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -221,18 +233,6 @@ class _NewLessonComposerSectionState extends State<NewLessonComposerSection> {
     }
 
     // ─────────────────────────────────────────────────────────────────────
-
-    if (ProfileNotificationPreferencesService
-        .instance
-        .preferences
-        .voiceLessonCreationNotifications) {
-      unawaited(
-        pushNotificationService.notifyNewVoiceLesson(
-          language: selectedLanguage,
-          difficulty: _selectedDifficulty,
-        ),
-      );
-    }
 
     if (!mounted) return;
     navigator.pop();
