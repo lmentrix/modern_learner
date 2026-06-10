@@ -103,12 +103,24 @@ class _ProgressModuleTileState extends State<ProgressModuleTile>
                     curve: Curves.easeOutCubic,
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: widget.isSelected
-                          ? step.toneColor.withValues(alpha: 0.06)
-                          : _isHovered
-                          ? AppColors.surfaceContainer
-                          : AppColors.surfaceContainerLow,
-                      borderRadius: BorderRadius.circular(18),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: widget.isSelected || _isHovered
+                            ? [
+                                step.toneColor.withValues(
+                                  alpha: widget.isSelected ? 0.20 : 0.14,
+                                ),
+                                AppColors.surfaceContainerLow,
+                                AppColors.surface.withValues(alpha: 0.90),
+                              ]
+                            : [
+                                step.toneColor.withValues(alpha: 0.08),
+                                AppColors.surfaceContainerLow,
+                                AppColors.surface.withValues(alpha: 0.92),
+                              ],
+                      ),
+                      borderRadius: BorderRadius.circular(24),
                       border: Border.all(
                         color: widget.isSelected
                             ? step.toneColor.withValues(alpha: 0.60)
@@ -125,11 +137,17 @@ class _ProgressModuleTileState extends State<ProgressModuleTile>
                                 color: step.toneColor.withValues(
                                   alpha: widget.isSelected ? 0.13 : 0.08,
                                 ),
-                                blurRadius: widget.isSelected ? 22 : 16,
-                                offset: const Offset(0, 8),
+                                blurRadius: 16,
+                                offset: const Offset(0, 6),
                               ),
                             ]
-                          : null,
+                          : [
+                              BoxShadow(
+                                color: step.toneColor.withValues(alpha: 0.05),
+                                blurRadius: 12,
+                                offset: const Offset(0, 5),
+                              ),
+                            ],
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
