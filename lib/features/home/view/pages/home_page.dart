@@ -8,13 +8,11 @@ import 'package:modern_learner_production/core/theme/app_colors.dart';
 import 'package:modern_learner_production/core/utils/responsive.dart';
 import 'package:modern_learner_production/features/explore/service/explore_courses_service.dart';
 import 'package:modern_learner_production/features/progress/service/course_xp_service.dart';
-import 'package:modern_learner_production/features/home/data/home_lesson_filter.dart';
-import 'package:modern_learner_production/features/home/view/pages/all_lessons_page.dart';
 import 'package:modern_learner_production/features/home/view/section/home_continue_learning_header_section.dart';
 import 'package:modern_learner_production/features/home/view/widgets/home_course_list.dart';
 import 'package:modern_learner_production/features/home/view/widgets/home_delete_dialog.dart';
 import 'package:modern_learner_production/features/home/view/widgets/home_header.dart';
-import 'package:modern_learner_production/features/home/view/widgets/home_lesson_quick_access.dart';
+import 'package:modern_learner_production/features/home/view/widgets/home_leaderboard.dart';
 import 'package:modern_learner_production/features/home/view/widgets/home_section_label.dart';
 import 'package:modern_learner_production/features/home/view/widgets/progress_overview_card.dart';
 import 'package:modern_learner_production/features/profile/service/profile_service.dart';
@@ -115,7 +113,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                 size: 24,
               ),
             ),
-            SizedBox(width: 12),
+            const SizedBox(width: 12),
             Expanded(
               child: Text(
                 'Delete All Courses?',
@@ -176,24 +174,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   Future<void> _deleteAllCourses() async {
     await ExploreCoursesService.instance.removeAllCourses();
-  }
-
-  void _openVoiceLessonPage() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const AllLessonsPage(filter: LessonFilter.voice),
-      ),
-    );
-  }
-
-  void _openSchoolLessonPage() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const AllLessonsPage(filter: LessonFilter.school),
-      ),
-    );
   }
 
   void _onAvatarTap() {}
@@ -359,16 +339,24 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                       constraints: const BoxConstraints(
                         maxWidth: Responsive.maxContentWidth,
                       ),
-                      child: const HomeSectionLabel(text: 'QUICK START'),
+                      child: const HomeSectionLabel(text: 'LEADERBOARD'),
                     ),
                   ),
                 ),
               ),
               const SliverToBoxAdapter(child: SizedBox(height: 14)),
-              SliverToBoxAdapter(
-                child: HomeLessonQuickAccess(
-                  onVoiceLessonTap: _openVoiceLessonPage,
-                  onSchoolLessonTap: _openSchoolLessonPage,
+              SliverPadding(
+                padding: hPadding,
+                sliver: SliverToBoxAdapter(
+                  child: Align(
+                    alignment: Alignment.topCenter,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(
+                        maxWidth: Responsive.maxContentWidth,
+                      ),
+                      child: const HomeLeaderboard(),
+                    ),
+                  ),
                 ),
               ),
               const SliverToBoxAdapter(child: SizedBox(height: 32)),
