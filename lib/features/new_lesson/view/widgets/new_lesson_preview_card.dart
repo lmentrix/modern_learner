@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'package:modern_learner_production/core/l10n/app_text.dart';
 import 'package:modern_learner_production/core/theme/app_colors.dart';
+import 'package:modern_learner_production/core/utils/responsive.dart';
 import 'package:modern_learner_production/features/new_lesson/data/new_lesson_page_constants.dart';
 
 class NewLessonPreviewCard extends StatelessWidget {
@@ -30,16 +31,27 @@ class NewLessonPreviewCard extends StatelessWidget {
       'Advanced' => 24,
       _ => 12,
     };
+    final ready = selectedLanguage != null;
+    final compact = Responsive.isCompact(context);
 
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(20),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: NewLessonPageConstants.previewGradient,
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: AppColors.outlineVariant.withValues(alpha: 0.18),
+          color: ready
+              ? AppColors.primary.withValues(alpha: 0.14)
+              : AppColors.outlineVariant.withValues(alpha: 0.12),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.surfaceContainerLowest.withValues(alpha: 0.10),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -50,11 +62,18 @@ class NewLessonPreviewCard extends StatelessWidget {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  gradient: AppColors.primaryGradient,
-                  borderRadius: BorderRadius.circular(16),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      AppColors.primary,
+                      AppColors.tertiary.withValues(alpha: 0.76),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(14),
                 ),
                 child: const Icon(
-                  Icons.mic_external_on_rounded,
+                  Icons.route_rounded,
                   color: Colors.white,
                   size: 24,
                 ),
@@ -73,13 +92,20 @@ class NewLessonPreviewCard extends StatelessWidget {
                         letterSpacing: 1.4,
                       ),
                     ),
-                    SizedBox(height: 4),
-                    Text(
-                      language,
-                      style: GoogleFonts.spaceGrotesk(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.onSurface,
+                    const SizedBox(height: 4),
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 220),
+                      child: Text(
+                        language,
+                        key: ValueKey(language),
+                        style: GoogleFonts.spaceGrotesk(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.onSurface,
+                          height: 1.05,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
@@ -87,10 +113,10 @@ class NewLessonPreviewCard extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: 18),
+          const SizedBox(height: 18),
           Text(
             context.tr(
-              'A focused speaking track with short drills, recall loops, and guided response practice tailored to your level.',
+              'Short drills, recall loops, and guided response practice tailored to your level.',
             ),
             style: GoogleFonts.inter(
               fontSize: 13,
@@ -98,30 +124,94 @@ class NewLessonPreviewCard extends StatelessWidget {
               height: 1.5,
             ),
           ),
-          SizedBox(height: 18),
-          Row(
-            children: [
-              Expanded(
-                child: _buildMetric(
+          const SizedBox(height: 18),
+          if (compact)
+            Column(
+              children: [
+                _buildMetric(
                   label: context.tr('Difficulty'),
                   value: context.tr(selectedDifficulty),
                   color: AppColors.tertiary,
+                  icon: Icons.tune_rounded,
                 ),
-              ),
-              SizedBox(width: 10),
-              Expanded(
-                child: _buildMetric(
-                  label: context.tr('Chapters'),
-                  value: '$chapterCount',
-                  color: AppColors.secondary,
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildMetric(
+                        label: context.tr('Chapters'),
+                        value: '$chapterCount',
+                        color: AppColors.secondary,
+                        icon: Icons.layers_rounded,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _buildMetric(
+                        label: context.tr('Lessons'),
+                        value: '$lessonCount',
+                        color: AppColors.primary,
+                        icon: Icons.bolt_rounded,
+                      ),
+                    ),
+                  ],
                 ),
+              ],
+            )
+          else
+            Row(
+              children: [
+                Expanded(
+                  child: _buildMetric(
+                    label: context.tr('Difficulty'),
+                    value: context.tr(selectedDifficulty),
+                    color: AppColors.tertiary,
+                    icon: Icons.tune_rounded,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _buildMetric(
+                    label: context.tr('Chapters'),
+                    value: '$chapterCount',
+                    color: AppColors.secondary,
+                    icon: Icons.layers_rounded,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _buildMetric(
+                    label: context.tr('Lessons'),
+                    value: '$lessonCount',
+                    color: AppColors.primary,
+                    icon: Icons.bolt_rounded,
+                  ),
+                ),
+              ],
+            ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Icon(
+                ready
+                    ? Icons.check_circle_rounded
+                    : Icons.radio_button_unchecked,
+                size: 17,
+                color: ready ? AppColors.tertiary : AppColors.onSurfaceVariant,
               ),
-              SizedBox(width: 10),
+              const SizedBox(width: 8),
               Expanded(
-                child: _buildMetric(
-                  label: context.tr('Lessons'),
-                  value: '$lessonCount',
-                  color: AppColors.primary,
+                child: Text(
+                  ready
+                      ? context.tr('Ready to generate')
+                      : context.tr('Waiting for language selection'),
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: ready
+                        ? AppColors.tertiary
+                        : AppColors.onSurfaceVariant,
+                  ),
                 ),
               ),
             ],
@@ -135,16 +225,20 @@ class NewLessonPreviewCard extends StatelessWidget {
     required String label,
     required String value,
     required Color color,
+    required IconData icon,
   }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(18),
+        color: color.withValues(alpha: 0.09),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withValues(alpha: 0.14)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Icon(icon, size: 15, color: color),
+          const SizedBox(height: 8),
           Text(
             label,
             style: GoogleFonts.inter(
@@ -153,12 +247,18 @@ class NewLessonPreviewCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 6),
-          Text(
-            value,
-            style: GoogleFonts.spaceGrotesk(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: color,
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 220),
+            child: Text(
+              value,
+              key: ValueKey(value),
+              style: GoogleFonts.spaceGrotesk(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
