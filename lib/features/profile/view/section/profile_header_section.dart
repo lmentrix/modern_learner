@@ -50,7 +50,12 @@ class ProfileHeaderSection extends StatelessWidget {
     final isWide = Responsive.isTabletOrDesktop(context);
     final avatarSize = isWide ? 64.0 : 52.0;
     final avatarFontSize = isWide ? 28.0 : 22.0;
+    final editBadgeSize = isWide ? 24.0 : 22.0;
     final nameFontSize = isWide ? 20.0 : 17.0;
+    final displayName = identity.displayName.trim();
+    final avatarInitial = displayName.isEmpty
+        ? '?'
+        : displayName[0].toUpperCase();
 
     return Align(
       alignment: Alignment.topCenter,
@@ -58,94 +63,111 @@ class ProfileHeaderSection extends StatelessWidget {
         constraints: const BoxConstraints(maxWidth: Responsive.maxContentWidth),
         child: Padding(
           padding: EdgeInsets.fromLTRB(hPad, 12, hPad, 14),
-          child: Row(
-            children: [
-              Container(
-                width: avatarSize,
-                height: avatarSize,
-                decoration: BoxDecoration(
-                  color: _letterColor(identity.displayName),
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Text(
-                    identity.displayName[0].toUpperCase(),
-                    style: GoogleFonts.spaceGrotesk(
-                      fontSize: avatarFontSize,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(width: isWide ? 18 : 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      identity.displayName,
-                      style: GoogleFonts.spaceGrotesk(
-                        fontSize: nameFontSize,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.onSurface,
-                      ),
-                    ),
-                    SizedBox(height: 2),
-                    Row(
-                      children: [
-                        Text(
-                          ProfilePageConstants.roleLabel,
-                          style: GoogleFonts.inter(
-                            fontSize: isWide ? 13.0 : 12.0,
-                            color: AppColors.onSurfaceVariant,
-                          ),
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: onEditTap,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                SizedBox(
+                  width: avatarSize,
+                  height: avatarSize,
+                  child: Stack(
+                    children: [
+                      Container(
+                        width: avatarSize,
+                        height: avatarSize,
+                        decoration: BoxDecoration(
+                          color: _letterColor(displayName),
+                          shape: BoxShape.circle,
                         ),
-                        SizedBox(width: 8),
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            gradient: AppColors.primaryGradient,
-                            borderRadius: BorderRadius.circular(100),
-                          ),
+                        child: Center(
                           child: Text(
-                            ProfilePageConstants.levelLabel,
-                            style: GoogleFonts.inter(
-                              fontSize: 9,
+                            avatarInitial,
+                            style: GoogleFonts.spaceGrotesk(
+                              fontSize: avatarFontSize,
                               fontWeight: FontWeight.w700,
-                              color: const Color(0xFF1A1028),
-                              letterSpacing: 1.0,
+                              color: Colors.white,
                             ),
                           ),
                         ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              GestureDetector(
-                onTap: onEditTap,
-                child: Container(
-                  width: isWide ? 42 : 36,
-                  height: isWide ? 42 : 36,
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceContainerHigh,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: AppColors.outlineVariant.withValues(alpha: 0.15),
-                    ),
+                      ),
+                      Positioned(
+                        right: 0,
+                        bottom: 0,
+                        child: Container(
+                          width: editBadgeSize,
+                          height: editBadgeSize,
+                          decoration: BoxDecoration(
+                            color: AppColors.surfaceContainerHigh,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: AppColors.surface,
+                              width: 2,
+                            ),
+                          ),
+                          child: Icon(
+                            Icons.edit_rounded,
+                            color: AppColors.onSurfaceVariant,
+                            size: isWide ? 12 : 11,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  child: Icon(
-                    Icons.edit_rounded,
-                    color: AppColors.onSurfaceVariant,
-                    size: 17,
+                ),
+                SizedBox(width: isWide ? 18 : 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        identity.displayName,
+                        style: GoogleFonts.spaceGrotesk(
+                          fontSize: nameFontSize,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.onSurface,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          Text(
+                            ProfilePageConstants.roleLabel,
+                            style: GoogleFonts.inter(
+                              fontSize: isWide ? 13.0 : 12.0,
+                              color: AppColors.onSurfaceVariant,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              gradient: AppColors.primaryGradient,
+                              borderRadius: BorderRadius.circular(100),
+                            ),
+                            child: Text(
+                              ProfilePageConstants.levelLabel,
+                              style: GoogleFonts.inter(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFF1A1028),
+                                letterSpacing: 1.0,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:modern_learner_production/features/profile/data/learning_activity_summary.dart';
 import 'package:modern_learner_production/features/profile/service/learning_activity_service.dart';
+import 'package:modern_learner_production/features/profile/service/streak_service.dart';
 
 class LearningActivityMonitorState {
   const LearningActivityMonitorState({
@@ -19,7 +20,7 @@ class LearningActivityMonitorState {
   final bool isLoading;
   final Object? error;
 
-  int get currentStreakDays => summary.currentStreakDays;
+  int get currentStreakDays => StreakService.instance.currentStreak.value;
 
   String get bestDayFormatted =>
       LearningActivitySummary.formatMinutes(summary.bestDayMinutes);
@@ -56,10 +57,15 @@ class LearningActivityMonitor {
 
     try {
       await LearningActivityService.instance.flushPending();
-      final summary = await LearningActivityService.instance.fetchCurrentWeek();
+      final results = await Future.wait([
+        LearningActivityService.instance.fetchCurrentWeek(),
+        StreakService.instance.fetchAndUpdate(),
+      ]);
       if (token != _requestToken) return;
 
-      state.value = LearningActivityMonitorState(summary: summary);
+      state.value = LearningActivityMonitorState(
+        summary: results[0] as LearningActivitySummary,
+      );
     } catch (error) {
       if (token != _requestToken) return;
 

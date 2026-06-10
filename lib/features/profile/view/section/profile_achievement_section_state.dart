@@ -3,6 +3,8 @@ import 'package:modern_learner_production/core/models/user_progress.dart';
 import 'package:modern_learner_production/features/achievement/data/achievemenet_data.dart';
 import 'package:modern_learner_production/features/achievement/model/achievement_model.dart';
 import 'package:modern_learner_production/features/achievement/service/achievement_service.dart';
+import 'package:modern_learner_production/features/course/model/course__service_model.dart';
+import 'package:modern_learner_production/features/course/service/course_service.dart';
 import 'package:modern_learner_production/features/profile/service/streak_service.dart';
 import 'package:modern_learner_production/features/profile/view/section/profile_achievement_section.dart';
 import 'package:modern_learner_production/features/profile/view/widgets/profile_achievement_badge_row.dart';
@@ -18,6 +20,9 @@ class ProfileAchievementSectionState extends State<ProfileAchievementSection> {
 
   List<Achievement> _achievements = [];
   List<ProfileCourseXpModel> _courseXp = [];
+  Set<String> _activeCourseKeys = const {};
+  Set<String> _activeCourseKeyPrefixes = const {};
+  bool _activeCoursesLoaded = false;
   bool _loading = true;
   bool _hasError = false;
 
@@ -64,17 +69,21 @@ class ProfileAchievementSectionState extends State<ProfileAchievementSection> {
         (e) => MapEntry(e.key, e.value.value),
       ),
     );
-    final userProgress = _buildUserProgress(courseData);
+    final activeCourseData = _filterActiveCourseData(courseData);
+    final userProgress = _buildUserProgress(activeCourseData);
 
     final evaluated = AchievementCatalogue.all.map((a) {
       final existing = _achievements.firstWhere(
         (e) => e.id == a.id,
         orElse: () => a,
       );
-      final courses = _unlockedBy(a, userProgress, courseData);
+      final courses = _unlockedBy(a, userProgress, activeCourseData);
       final nowUnlocked = courses.isNotEmpty;
+      final existingCourses = _visibleUnlockedByCourses(
+        existing.unlockedByCourses,
+      );
       return a.copyWith(
-        unlockedByCourses: nowUnlocked ? courses : existing.unlockedByCourses,
+        unlockedByCourses: nowUnlocked ? courses : existingCourses,
         unlockedAt: nowUnlocked && existing.unlockedAt == null
             ? DateTime.now()
             : existing.unlockedAt,
@@ -142,15 +151,29 @@ class ProfileAchievementSectionState extends State<ProfileAchievementSection> {
     });
 
     try {
-      await CourseXpService.instance.syncToSupabase();
+      await Future.wait([
+        CourseXpService.instance.syncToSupabase(),
+        StreakService.instance.fetchAndUpdate(),
+      ]);
 
       final results = await Future.wait([
         _service.getUnlockedProgress(),
         _service.getCourseXp(),
+        CourseService.instance.fetchCourses(),
       ]);
 
       final progress = results[0] as List<UserAchievementProgressModel>;
       final courseXp = results[1] as List<ProfileCourseXpModel>;
+      final activeCourses = results[2] as List<UserCourseModel>;
+      final activeCourseKeys = courseXp
+          .map((row) => row.courseKey)
+          .where(
+            (courseKey) => _matchesAnyActiveCourse(courseKey, activeCourses),
+          )
+          .toSet();
+      final activeCourseKeyPrefixes = activeCourses
+          .map(_courseKeyPrefixForActiveCourse)
+          .toSet();
 
       final progressByKey = <String, List<UserAchievementProgressModel>>{};
       for (final p in progress) {
@@ -160,7 +183,10 @@ class ProfileAchievementSectionState extends State<ProfileAchievementSection> {
       final achievements = AchievementCatalogue.all.map((a) {
         final rows = progressByKey[a.id] ?? [];
         final unlockedRows = rows.where((r) => r.isUnlocked).toList();
-        final unlockedByCourses = unlockedRows.map((r) => r.courseKey).toList();
+        final unlockedByCourses = _visibleUnlockedByCourses(
+          unlockedRows.map((r) => r.courseKey),
+          activeCourseKeys: activeCourseKeys,
+        );
         final unlockedDates = unlockedRows
             .map((r) => r.unlockedAt)
             .whereType<DateTime>();
@@ -176,7 +202,12 @@ class ProfileAchievementSectionState extends State<ProfileAchievementSection> {
       if (!mounted) return;
       setState(() {
         _achievements = achievements;
-        _courseXp = courseXp;
+        _courseXp = courseXp
+            .where((row) => activeCourseKeys.contains(row.courseKey))
+            .toList(growable: false);
+        _activeCourseKeys = activeCourseKeys;
+        _activeCourseKeyPrefixes = activeCourseKeyPrefixes;
+        _activeCoursesLoaded = true;
         _loading = false;
       });
 
@@ -221,5 +252,58 @@ class ProfileAchievementSectionState extends State<ProfileAchievementSection> {
         ProfileCourseXpList(courseXp: _courseXp),
       ],
     );
+  }
+
+  List<String> _visibleUnlockedByCourses(
+    Iterable<String> courseKeys, {
+    Set<String>? activeCourseKeys,
+  }) {
+    final visibleCourseKeys = activeCourseKeys ?? _activeCourseKeys;
+    return courseKeys
+        .where((courseKey) {
+          return courseKey == 'global' ||
+              visibleCourseKeys.contains(courseKey) ||
+              _matchesActiveCoursePrefix(courseKey);
+        })
+        .toSet()
+        .toList(growable: false);
+  }
+
+  Map<String, CourseXpData> _filterActiveCourseData(
+    Map<String, CourseXpData> courseData,
+  ) {
+    if (!_activeCoursesLoaded) return courseData;
+    return Map.fromEntries(
+      courseData.entries.where((entry) {
+        return _activeCourseKeys.contains(entry.key) ||
+            _matchesActiveCoursePrefix(entry.key);
+      }),
+    );
+  }
+
+  bool _matchesAnyActiveCourse(
+    String courseKey,
+    List<UserCourseModel> activeCourses,
+  ) {
+    return activeCourses.any((course) {
+      return courseKey.startsWith(
+        '${_courseKeyPrefixForActiveCourse(course)}::',
+      );
+    });
+  }
+
+  bool _matchesActiveCoursePrefix(String courseKey) {
+    return _activeCourseKeyPrefixes.any(
+      (prefix) => courseKey.startsWith('$prefix::'),
+    );
+  }
+
+  String _courseKeyPrefixForActiveCourse(UserCourseModel course) {
+    return [
+      course.title,
+      course.topic,
+      course.level,
+      course.nativeLanguage,
+    ].join('::');
   }
 }

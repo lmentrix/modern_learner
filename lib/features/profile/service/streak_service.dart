@@ -29,7 +29,7 @@ class StreakService {
         .map((r) => r['activity_date'] as String)
         .toList();
 
-    final streak = _computeStreak(dates);
+    final streak = computeStreakForDates(dates);
     currentStreak.value = streak;
     _loaded = true;
     return streak;
@@ -37,9 +37,13 @@ class StreakService {
 
   bool get isLoaded => _loaded;
 
-  static int _computeStreak(List<String> sortedDatesDesc) {
+  @visibleForTesting
+  static int computeStreakForDates(
+    List<String> sortedDatesDesc, {
+    DateTime? now,
+  }) {
     if (sortedDatesDesc.isEmpty) return 0;
-    final today = DateTime.now();
+    final today = now ?? DateTime.now();
     final todayKey = _dateKey(today);
     final yesterdayKey = _dateKey(today.subtract(const Duration(days: 1)));
 
