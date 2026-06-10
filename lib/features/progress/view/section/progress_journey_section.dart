@@ -56,6 +56,16 @@ class ProgressJourneySection extends StatelessWidget {
             if (isVip) ...[const Spacer(), const _VipUnlockedBadge()],
           ],
         ),
+        const SizedBox(height: 6),
+        Text(
+          'CHAPTER PATH 路 UNLOCKED EXERCISES',
+          style: GoogleFonts.inter(
+            fontSize: 11,
+            fontWeight: FontWeight.w800,
+            color: AppColors.onSurfaceVariant,
+            letterSpacing: 1.7,
+          ),
+        ),
         const SizedBox(height: 14),
         _RoadmapOverview(
           completed: completed,
@@ -122,9 +132,24 @@ class _RoadmapOverview extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow.withValues(alpha: 0.86),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: accent.withValues(alpha: 0.14)),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            accent.withValues(alpha: 0.18),
+            AppColors.surfaceContainerLow,
+            AppColors.surface.withValues(alpha: 0.90),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: accent.withValues(alpha: 0.28)),
+        boxShadow: [
+          BoxShadow(
+            color: accent.withValues(alpha: 0.08),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

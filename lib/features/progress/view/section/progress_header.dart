@@ -130,19 +130,18 @@ class _CourseCard extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            color.withValues(alpha: 0.14),
+            color.withValues(alpha: 0.22),
             AppColors.surfaceContainerLow,
-            AppColors.surfaceContainer,
+            AppColors.surface.withValues(alpha: 0.90),
           ],
-          stops: const [0.0, 0.48, 1.0],
         ),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: color.withValues(alpha: 0.18)),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: color.withValues(alpha: 0.28)),
         boxShadow: [
           BoxShadow(
             color: color.withValues(alpha: 0.10),
-            blurRadius: 22,
-            offset: const Offset(0, 12),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
@@ -153,7 +152,7 @@ class _CourseCard extends StatelessWidget {
             height: iconSize,
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(16),
               border: Border.all(color: color.withValues(alpha: 0.22)),
             ),
             child: Icon(
@@ -294,14 +293,22 @@ class _XpProgressCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: color.withValues(alpha: 0.16)),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            color.withValues(alpha: 0.12),
+            AppColors.surfaceContainerLow,
+            AppColors.surface.withValues(alpha: 0.92),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: color.withValues(alpha: 0.22)),
         boxShadow: [
           BoxShadow(
-            color: color.withValues(alpha: 0.06),
-            blurRadius: 18,
-            offset: const Offset(0, 10),
+            color: color.withValues(alpha: 0.08),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
           ),
         ],
       ),

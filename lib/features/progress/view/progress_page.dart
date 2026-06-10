@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:modern_learner_production/core/models/progress_course_selection.dart';
 import 'package:modern_learner_production/core/router/app_router.dart';
 import 'package:modern_learner_production/core/state/progress_navigation_state.dart';
@@ -14,6 +15,7 @@ import 'package:modern_learner_production/features/profile/view/widgets/learning
 import 'package:modern_learner_production/features/progress/bloc/xp_bloc.dart';
 import 'package:modern_learner_production/features/progress/data/progress_module_step.dart';
 import 'package:modern_learner_production/features/progress/data/progress_page_constants.dart';
+import 'package:modern_learner_production/features/progress/data/progress_page_data.dart';
 import 'package:modern_learner_production/features/progress/data/progress_page_seed.dart';
 import 'package:modern_learner_production/features/progress/service/cache/roadmap_id_cache.dart';
 import 'package:modern_learner_production/features/progress/service/course_xp_service.dart';
@@ -185,27 +187,16 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
               child: LearningActivityScope(
                 child: Material(
                   color: AppColors.surface,
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          pageData.snapshot.accentColor.withValues(alpha: 0.08),
-                          AppColors.surface,
-                          AppColors.secondary.withValues(alpha: 0.05),
-                        ],
-                        stops: const [0.0, 0.42, 1.0],
-                      ),
-                    ),
+                  child: SafeArea(
                     child: CustomScrollView(
-                      physics: const BouncingScrollPhysics(),
+                      physics: const AlwaysScrollableScrollPhysics(
+                        parent: BouncingScrollPhysics(),
+                      ),
                       slivers: [
                         SliverToBoxAdapter(
-                          child: SizedBox(
-                            height: ProgressPageConstants.sectionSpacing,
-                          ),
+                          child: _ProgressExploreHeader(data: pageData),
                         ),
+                        const SliverToBoxAdapter(child: SizedBox(height: 24)),
                         SliverPadding(
                           padding: pagePadding,
                           sliver: SliverToBoxAdapter(
@@ -990,6 +981,101 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
     if (clearCache) {
       _chapterSubcontentCache.clear();
     }
+  }
+}
+
+class _ProgressExploreHeader extends StatelessWidget {
+  const _ProgressExploreHeader({required this.data});
+
+  final ProgressPageData data;
+
+  @override
+  Widget build(BuildContext context) {
+    final w = MediaQuery.sizeOf(context).width;
+    final hPad = w < 380
+        ? 16.0
+        : w >= 600
+        ? 28.0
+        : 20.0;
+    final titleSize = w < 360
+        ? 24.0
+        : w < 380
+        ? 28.0
+        : w >= 600
+        ? 38.0
+        : 32.0;
+    final bodySize = Responsive.bodySize(context);
+    final course = data.course;
+    final accent = data.snapshot.accentColor;
+    final mode = course.courseType == ProgressCourseType.voice
+        ? 'voice roadmap'
+        : 'school roadmap';
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            accent.withValues(alpha: 0.16),
+            const Color(0xFF0E1020),
+            AppColors.surface,
+          ],
+          stops: const [0, 0.46, 1],
+        ),
+      ),
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(hPad, 20, hPad, 30),
+        child: Responsive.centred(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(color: accent.withValues(alpha: 0.28)),
+                ),
+                child: Text(
+                  'PROGRESS TRACKER',
+                  style: GoogleFonts.inter(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.1,
+                    color: accent,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                course.title,
+                style: GoogleFonts.spaceGrotesk(
+                  fontSize: titleSize,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.onSurface,
+                  height: 1.05,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'Follow your $mode chapter path, XP growth, and next unlocked exercises.',
+                style: GoogleFonts.inter(
+                  fontSize: bodySize,
+                  height: 1.6,
+                  color: AppColors.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 
