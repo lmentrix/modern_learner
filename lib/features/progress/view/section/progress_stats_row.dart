@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:modern_learner_production/core/theme/app_colors.dart';
+import 'package:modern_learner_production/core/utils/responsive.dart';
 import 'package:modern_learner_production/features/profile/view/widgets/stats_card.dart';
 import 'package:modern_learner_production/features/progress/bloc/xp_bloc.dart';
 import 'package:modern_learner_production/features/progress/data/progress_module_step.dart';
@@ -37,34 +38,44 @@ class ProgressStatsRow extends StatelessWidget {
             .length;
         final totalChapters = moduleSteps.length;
 
+        final cards = [
+          StatsCard(
+            icon: Icons.bolt_rounded,
+            label: 'Course XP',
+            value: _formatXp(totalXp),
+            accentColor: accentColor,
+          ),
+          StatsCard(
+            icon: Icons.layers_rounded,
+            label: 'Chapters',
+            value: '$completedChapters/$totalChapters',
+            accentColor: AppColors.secondary,
+          ),
+          StatsCard(
+            icon: Icons.fitness_center_rounded,
+            label: 'Exercises',
+            value: '${xpState.exercisesCompleted}',
+            accentColor: const Color(0xFFFF9F43),
+          ),
+        ];
+
+        if (Responsive.isCompact(context)) {
+          return Column(
+            children: [
+              for (int i = 0; i < cards.length; i++) ...[
+                cards[i],
+                if (i != cards.length - 1) const SizedBox(height: 10),
+              ],
+            ],
+          );
+        }
+
         return Row(
           children: [
-            Expanded(
-              child: StatsCard(
-                icon: Icons.bolt_rounded,
-                label: 'Course XP',
-                value: _formatXp(totalXp),
-                accentColor: accentColor,
-              ),
-            ),
-            SizedBox(width: 10),
-            Expanded(
-              child: StatsCard(
-                icon: Icons.layers_rounded,
-                label: 'Chapters',
-                value: '$completedChapters/$totalChapters',
-                accentColor: AppColors.secondary,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: StatsCard(
-                icon: Icons.fitness_center_rounded,
-                label: 'Exercises',
-                value: '${xpState.exercisesCompleted}',
-                accentColor: const Color(0xFFFF9F43),
-              ),
-            ),
+            for (int i = 0; i < cards.length; i++) ...[
+              Expanded(child: cards[i]),
+              if (i != cards.length - 1) const SizedBox(width: 10),
+            ],
           ],
         );
       },

@@ -28,12 +28,13 @@ class ProgressHeaderSection extends StatelessWidget {
   ];
 
   _LevelData _level(int xp) {
-    int lvl = 1;
-    for (int i = 1; i < _thresholds.length; i++) {
-      if (xp >= _thresholds[i])
+    var lvl = 1;
+    for (var i = 1; i < _thresholds.length; i++) {
+      if (xp >= _thresholds[i]) {
         lvl = i + 1;
-      else
+      } else {
         break;
+      }
     }
     lvl = lvl.clamp(1, _ranks.length);
     final floor = _thresholds[lvl - 1];
@@ -52,8 +53,10 @@ class ProgressHeaderSection extends StatelessWidget {
     );
   }
 
-  int _chapterXp(List<ProgressModuleStep> steps) =>
-      steps.fold(0, (s, st) => s + (st.progress * _xpPerChapter).round());
+  int _chapterXp(List<ProgressModuleStep> steps) => steps.fold(
+    0,
+    (sum, step) => sum + (step.progress * _xpPerChapter).round(),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -62,31 +65,42 @@ class ProgressHeaderSection extends StatelessWidget {
         final course = data.course;
         final color = data.snapshot.accentColor;
         final isVoice = course.courseType == ProgressCourseType.voice;
-        final chXp = _chapterXp(data.moduleSteps);
-        final d = _level(chXp + xpState.totalXp);
+        final chapterXp = _chapterXp(data.moduleSteps);
+        final levelData = _level(chapterXp + xpState.totalXp);
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Course identity card ───────────────────────────────────────
-            _CourseCard(
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final isWideHeader = constraints.maxWidth >= 720;
+            final courseCard = _CourseCard(
               course: course,
               color: color,
               isVoice: isVoice,
-              level: d.level,
-              totalXp: d.totalXp,
-            ),
-            const SizedBox(height: 10),
-            // ── XP progress card ───────────────────────────────────────────
-            _XpProgressCard(d: d, color: color),
-          ],
+              level: levelData.level,
+              totalXp: levelData.totalXp,
+            );
+            final xpCard = _XpProgressCard(data: levelData, color: color);
+
+            if (isWideHeader) {
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(flex: 3, child: courseCard),
+                  const SizedBox(width: 12),
+                  Expanded(flex: 2, child: xpCard),
+                ],
+              );
+            }
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [courseCard, const SizedBox(height: 10), xpCard],
+            );
+          },
         );
       },
     );
   }
 }
-
-// ── Course identity card ──────────────────────────────────────────────────────
 
 class _CourseCard extends StatelessWidget {
   const _CourseCard({
@@ -106,18 +120,31 @@ class _CourseCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isWide = Responsive.isTabletOrDesktop(context);
-    final iconSize = isWide ? 52.0 : 44.0;
-    final iconFontSize = isWide ? 26.0 : 22.0;
-    final titleFontSize = isWide ? 18.0 : 16.0;
+    final iconSize = isWide ? 56.0 : 46.0;
+    final titleFontSize = isWide ? 19.0 : 16.0;
 
     return Container(
       padding: EdgeInsets.all(isWide ? 20 : 16),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: AppColors.outlineVariant.withValues(alpha: 0.10),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            color.withValues(alpha: 0.14),
+            AppColors.surfaceContainerLow,
+            AppColors.surfaceContainer,
+          ],
+          stops: const [0.0, 0.48, 1.0],
         ),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: color.withValues(alpha: 0.18)),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.10),
+            blurRadius: 22,
+            offset: const Offset(0, 12),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -125,19 +152,20 @@ class _CourseCard extends StatelessWidget {
             width: iconSize,
             height: iconSize,
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.12),
+              color: color.withValues(alpha: 0.14),
               borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: color.withValues(alpha: 0.22)),
             ),
-            child: Center(
-              child: Text(
-                isVoice ? '🎙️' : '📘',
-                style: TextStyle(fontSize: iconFontSize),
-              ),
+            child: Icon(
+              isVoice ? Icons.mic_rounded : Icons.school_rounded,
+              color: color,
+              size: isWide ? 27 : 23,
             ),
           ),
           SizedBox(width: isWide ? 16 : 14),
           Expanded(
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
@@ -148,38 +176,22 @@ class _CourseCard extends StatelessWidget {
                     color: AppColors.onSurface,
                     height: 1.1,
                   ),
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                SizedBox(height: 4),
-                Row(
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
                   children: [
-                    Text(
-                      course.level,
-                      style: GoogleFonts.inter(
-                        fontSize: isWide ? 13.0 : 12.0,
-                        color: AppColors.onSurfaceVariant,
-                      ),
+                    _MetaChip(label: course.level, color: AppColors.secondary),
+                    _MetaChip(
+                      label: isVoice ? 'Voice' : 'School',
+                      color: color,
                     ),
-                    const SizedBox(width: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 7,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: color.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Text(
-                        isVoice ? 'VOICE' : 'SCHOOL',
-                        style: GoogleFonts.inter(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w800,
-                          color: color,
-                          letterSpacing: 1.0,
-                        ),
-                      ),
+                    _MetaChip(
+                      label: course.roadmapLanguage,
+                      color: AppColors.tertiary,
                     ),
                   ],
                 ),
@@ -188,25 +200,26 @@ class _CourseCard extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 10,
-                  vertical: 4,
+                  vertical: 5,
                 ),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [color, color.withValues(alpha: 0.60)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
+                    colors: [color, AppColors.tertiary.withValues(alpha: 0.78)],
                   ),
                   borderRadius: BorderRadius.circular(999),
                   boxShadow: [
                     BoxShadow(
-                      color: color.withValues(alpha: 0.35),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
+                      color: color.withValues(alpha: 0.30),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
@@ -215,19 +228,23 @@ class _CourseCard extends StatelessWidget {
                   style: GoogleFonts.spaceGrotesk(
                     fontSize: isWide ? 12.0 : 11.0,
                     fontWeight: FontWeight.w800,
-                    color: Colors.black87,
-                    letterSpacing: 0.5,
+                    color: AppColors.surfaceContainerLowest,
+                    letterSpacing: 0,
                   ),
                 ),
               ),
-              const SizedBox(height: 5),
-              Text(
-                '$totalXp XP',
-                style: GoogleFonts.spaceGrotesk(
-                  fontSize: isWide ? 16.0 : 14.0,
-                  fontWeight: FontWeight.w700,
-                  color: color,
-                  height: 1.0,
+              const SizedBox(height: 6),
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 220),
+                child: Text(
+                  '$totalXp XP',
+                  key: ValueKey(totalXp),
+                  style: GoogleFonts.spaceGrotesk(
+                    fontSize: isWide ? 16.0 : 14.0,
+                    fontWeight: FontWeight.w700,
+                    color: color,
+                    height: 1,
+                  ),
                 ),
               ),
             ],
@@ -238,77 +255,123 @@ class _CourseCard extends StatelessWidget {
   }
 }
 
-// ── XP progress card ──────────────────────────────────────────────────────────
+class _MetaChip extends StatelessWidget {
+  const _MetaChip({required this.label, required this.color});
 
-class _XpProgressCard extends StatelessWidget {
-  const _XpProgressCard({required this.d, required this.color});
-
-  final _LevelData d;
+  final String label;
   final Color color;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: AppColors.outlineVariant.withValues(alpha: 0.10),
+        color: color.withValues(alpha: 0.11),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: 0.18)),
+      ),
+      child: Text(
+        label,
+        style: GoogleFonts.inter(
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          color: color,
+          height: 1,
         ),
       ),
+    );
+  }
+}
+
+class _XpProgressCard extends StatelessWidget {
+  const _XpProgressCard({required this.data, required this.color});
+
+  final _LevelData data;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: color.withValues(alpha: 0.16)),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.06),
+            blurRadius: 18,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                d.rank,
-                style: GoogleFonts.spaceGrotesk(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.onSurface,
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.13),
+                  borderRadius: BorderRadius.circular(11),
                 ),
+                child: Icon(Icons.auto_graph_rounded, color: color, size: 18),
               ),
-              Text(
-                '${d.xpNeeded - d.xpInLevel} XP → LVL ${d.level + 1}',
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: color.withValues(alpha: 0.85),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      data.rank,
+                      style: GoogleFonts.spaceGrotesk(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${data.xpNeeded - data.xpInLevel} XP to LVL ${data.level + 1}',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: color.withValues(alpha: 0.88),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 14),
           TweenAnimationBuilder<double>(
-            key: ValueKey(d.totalXp),
-            tween: Tween(begin: 0.0, end: d.progress),
+            key: ValueKey(data.totalXp),
+            tween: Tween(begin: 0, end: data.progress),
             duration: const Duration(milliseconds: 900),
             curve: Curves.easeOutCubic,
-            builder: (_, value, __) {
+            builder: (context, value, child) {
               return ClipRRect(
                 borderRadius: BorderRadius.circular(999),
                 child: Stack(
                   children: [
-                    Container(height: 8, color: color.withValues(alpha: 0.12)),
+                    Container(height: 9, color: color.withValues(alpha: 0.12)),
                     FractionallySizedBox(
                       widthFactor: value,
                       child: Container(
-                        height: 8,
+                        height: 9,
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
-                            colors: [color.withValues(alpha: 0.70), color],
+                            colors: [
+                              color.withValues(alpha: 0.68),
+                              color,
+                              AppColors.tertiary.withValues(alpha: 0.80),
+                            ],
                           ),
                           borderRadius: BorderRadius.circular(999),
-                          boxShadow: [
-                            BoxShadow(
-                              color: color.withValues(alpha: 0.45),
-                              blurRadius: 6,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
                         ),
                       ),
                     ),
@@ -317,11 +380,12 @@ class _XpProgressCard extends StatelessWidget {
               );
             },
           ),
-          SizedBox(height: 7),
+          const SizedBox(height: 8),
           Text(
-            '${d.xpInLevel} / ${d.xpNeeded} XP',
+            '${data.xpInLevel} / ${data.xpNeeded} XP',
             style: GoogleFonts.inter(
               fontSize: 11,
+              fontWeight: FontWeight.w600,
               color: AppColors.onSurfaceVariant,
             ),
           ),
@@ -330,8 +394,6 @@ class _XpProgressCard extends StatelessWidget {
     );
   }
 }
-
-// ── Data class ────────────────────────────────────────────────────────────────
 
 class _LevelData {
   const _LevelData({

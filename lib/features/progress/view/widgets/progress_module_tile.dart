@@ -41,6 +41,7 @@ class _ProgressModuleTileState extends State<ProgressModuleTile>
     with SingleTickerProviderStateMixin {
   late final AnimationController _pressCtrl;
   late final Animation<double> _scaleAnim;
+  bool _isHovered = false;
 
   @override
   void initState() {
@@ -74,148 +75,165 @@ class _ProgressModuleTileState extends State<ProgressModuleTile>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ── Tile row ─────────────────────────────────────────────────
-            GestureDetector(
-              onTapDown: step.isLocked ? null : (_) => _pressCtrl.forward(),
-              onTapUp: step.isLocked
+            MouseRegion(
+              cursor: step.isLocked
+                  ? SystemMouseCursors.basic
+                  : SystemMouseCursors.click,
+              onEnter: step.isLocked
                   ? null
-                  : (_) {
-                      _pressCtrl.reverse();
-                      widget.onTap?.call();
-                    },
-              onTapCancel: step.isLocked ? null : () => _pressCtrl.reverse(),
-              child: AnimatedBuilder(
-                animation: _pressCtrl,
-                builder: (context, child) =>
-                    Transform.scale(scale: _scaleAnim.value, child: child),
-                child: AnimatedContainer(
-                  duration: Duration(milliseconds: 260),
-                  curve: Curves.easeOutCubic,
-                  padding: EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: widget.isSelected
-                        ? step.toneColor.withValues(alpha: 0.06)
-                        : AppColors.surfaceContainerLow,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
+                  : (_) => setState(() => _isHovered = true),
+              onExit: step.isLocked
+                  ? null
+                  : (_) => setState(() => _isHovered = false),
+              child: GestureDetector(
+                onTapDown: step.isLocked ? null : (_) => _pressCtrl.forward(),
+                onTapUp: step.isLocked
+                    ? null
+                    : (_) {
+                        _pressCtrl.reverse();
+                        widget.onTap?.call();
+                      },
+                onTapCancel: step.isLocked ? null : () => _pressCtrl.reverse(),
+                child: AnimatedBuilder(
+                  animation: _pressCtrl,
+                  builder: (context, child) =>
+                      Transform.scale(scale: _scaleAnim.value, child: child),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 260),
+                    curve: Curves.easeOutCubic,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
                       color: widget.isSelected
-                          ? step.toneColor.withValues(alpha: 0.60)
-                          : step.isCurrent
-                          ? step.toneColor.withValues(alpha: 0.25)
-                          : AppColors.outlineVariant.withValues(alpha: 0.10),
-                      width: widget.isSelected || step.isCurrent ? 1.5 : 1,
-                    ),
-                    boxShadow: widget.isSelected
-                        ? [
-                            BoxShadow(
-                              color: step.toneColor.withValues(alpha: 0.12),
-                              blurRadius: 20,
-                              offset: const Offset(0, 6),
-                            ),
-                          ]
-                        : null,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          // ── Icon box ─────────────────────────────────────
-                          _IconBox(step: step, isSelected: widget.isSelected),
-                          const SizedBox(width: 14),
-                          // ── Text column ──────────────────────────────────
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  step.title,
-                                  style: GoogleFonts.spaceGrotesk(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.onSurface,
-                                    height: 1.1,
-                                  ),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
+                          ? step.toneColor.withValues(alpha: 0.06)
+                          : _isHovered
+                          ? AppColors.surfaceContainer
+                          : AppColors.surfaceContainerLow,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(
+                        color: widget.isSelected
+                            ? step.toneColor.withValues(alpha: 0.60)
+                            : _isHovered
+                            ? step.toneColor.withValues(alpha: 0.28)
+                            : step.isCurrent
+                            ? step.toneColor.withValues(alpha: 0.25)
+                            : AppColors.outlineVariant.withValues(alpha: 0.10),
+                        width: widget.isSelected || step.isCurrent ? 1.5 : 1,
+                      ),
+                      boxShadow: widget.isSelected || _isHovered
+                          ? [
+                              BoxShadow(
+                                color: step.toneColor.withValues(
+                                  alpha: widget.isSelected ? 0.13 : 0.08,
                                 ),
-                                SizedBox(height: 3),
-                                Text(
-                                  '${step.durationLabel} · ${step.lessonCountLabel}',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 12,
-                                    color: AppColors.onSurfaceVariant,
+                                blurRadius: widget.isSelected ? 22 : 16,
+                                offset: const Offset(0, 8),
+                              ),
+                            ]
+                          : null,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            // ── Icon box ─────────────────────────────────────
+                            _IconBox(step: step, isSelected: widget.isSelected),
+                            const SizedBox(width: 14),
+                            // ── Text column ──────────────────────────────────
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    step.title,
+                                    style: GoogleFonts.spaceGrotesk(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.onSurface,
+                                      height: 1.1,
+                                    ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 3),
+                                  Text(
+                                    '${step.durationLabel} · ${step.lessonCountLabel}',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 12,
+                                      color: AppColors.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            // ── Status + chevron ─────────────────────────────
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                _StatusPill(step: step),
+                                const SizedBox(height: 6),
+                                AnimatedRotation(
+                                  turns: widget.isSelected ? 0.5 : 0.0,
+                                  duration: const Duration(milliseconds: 260),
+                                  curve: Curves.easeOutCubic,
+                                  child: Icon(
+                                    Icons.keyboard_arrow_down_rounded,
+                                    size: 20,
+                                    color: step.isLocked
+                                        ? AppColors.onSurfaceVariant
+                                        : step.toneColor,
                                   ),
                                 ),
                               ],
                             ),
-                          ),
-                          const SizedBox(width: 10),
-                          // ── Status + chevron ─────────────────────────────
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              _StatusPill(step: step),
-                              const SizedBox(height: 6),
-                              AnimatedRotation(
-                                turns: widget.isSelected ? 0.5 : 0.0,
-                                duration: Duration(milliseconds: 260),
-                                curve: Curves.easeOutCubic,
-                                child: Icon(
-                                  Icons.keyboard_arrow_down_rounded,
-                                  size: 20,
-                                  color: step.isLocked
-                                      ? AppColors.onSurfaceVariant
-                                      : step.toneColor,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      // ── Progress bar ────────────────────────────────────
-                      const SizedBox(height: 14),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(999),
-                              child: LinearProgressIndicator(
-                                value: step.progress,
-                                minHeight: 4,
-                                backgroundColor:
-                                    AppColors.surfaceContainerHighest,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  step.isLocked
-                                      ? AppColors.onSurfaceVariant.withValues(
-                                          alpha: 0.25,
-                                        )
-                                      : step.toneColor,
+                          ],
+                        ),
+                        // ── Progress bar ────────────────────────────────────
+                        const SizedBox(height: 14),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(999),
+                                child: LinearProgressIndicator(
+                                  value: step.progress,
+                                  minHeight: 4,
+                                  backgroundColor:
+                                      AppColors.surfaceContainerHighest,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    step.isLocked
+                                        ? AppColors.onSurfaceVariant.withValues(
+                                            alpha: 0.25,
+                                          )
+                                        : step.toneColor,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          SizedBox(width: 10),
-                          Text(
-                            '${(step.progress * 100).round()}%',
-                            style: GoogleFonts.spaceGrotesk(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: step.isLocked
-                                  ? AppColors.onSurfaceVariant
-                                  : AppColors.onSurface,
+                            const SizedBox(width: 10),
+                            Text(
+                              '${(step.progress * 100).round()}%',
+                              style: GoogleFonts.spaceGrotesk(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: step.isLocked
+                                    ? AppColors.onSurfaceVariant
+                                    : AppColors.onSurface,
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                      // ── Expanded detail ─────────────────────────────────
-                      AnimatedSize(
-                        duration: const Duration(milliseconds: 260),
-                        curve: Curves.easeOutCubic,
-                        child: widget.isSelected
-                            ? _ExpandedDetail(step: step)
-                            : const SizedBox.shrink(),
-                      ),
-                    ],
+                          ],
+                        ),
+                        // ── Expanded detail ─────────────────────────────────
+                        AnimatedSize(
+                          duration: const Duration(milliseconds: 260),
+                          curve: Curves.easeOutCubic,
+                          child: widget.isSelected
+                              ? _ExpandedDetail(step: step)
+                              : const SizedBox.shrink(),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -250,7 +268,7 @@ class _ProgressModuleTileState extends State<ProgressModuleTile>
 // ── Icon Box ──────────────────────────────────────────────────────────────────
 
 class _IconBox extends StatelessWidget {
-  _IconBox({required this.step, required this.isSelected});
+  const _IconBox({required this.step, required this.isSelected});
 
   final ProgressModuleStep step;
   final bool isSelected;
@@ -352,7 +370,7 @@ class _ExpandedDetail extends StatelessWidget {
             ),
           ),
         ),
-        SizedBox(height: 12),
+        const SizedBox(height: 12),
         Text(
           step.detail,
           style: GoogleFonts.inter(
@@ -444,11 +462,13 @@ class _SubcontentPanel extends StatelessWidget {
   Widget build(BuildContext context) => _buildBody();
 
   Widget _buildBody() {
-    if (isLoading)
+    if (isLoading) {
       return _LoadingRow(step: step, isGenerating: !isLoadingFromCache);
+    }
     final error = errorMessage;
-    if (error != null)
+    if (error != null) {
       return _ErrorRow(step: step, message: error, onRetry: onRetry);
+    }
     final payload = response?.chapterSubcontent;
     if (payload == null) {
       return _ErrorRow(
@@ -512,7 +532,7 @@ class _LoadingRow extends StatelessWidget {
               ),
             ),
           ),
-          SizedBox(width: 10),
+          const SizedBox(width: 10),
           Text(
             isGenerating
                 ? 'Building chapter ${step.chapterNumber}…'
@@ -544,11 +564,11 @@ class _ErrorRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
       child: Row(
         children: [
           Icon(Icons.error_outline_rounded, size: 14, color: AppColors.error),
-          SizedBox(width: 8),
+          const SizedBox(width: 8),
           Expanded(
             child: Text(
               message,
@@ -607,11 +627,11 @@ class _SubcontentRow extends StatelessWidget {
         return AppColors.secondary;
       case 'quiz':
       case 'review':
-        return Color(0xFFFF9500);
+        return const Color(0xFFFF9500);
       case 'speaking':
-        return Color(0xFF26C6DA);
+        return const Color(0xFF26C6DA);
       case 'chapter_checkpoint':
-        return Color(0xFF9C27B0);
+        return const Color(0xFF9C27B0);
       default:
         return AppColors.tertiary;
     }
@@ -634,9 +654,11 @@ class _SubcontentRow extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(14),
           child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
             decoration: BoxDecoration(
-              color: AppColors.surfaceContainer,
+              color: isLocked
+                  ? AppColors.surfaceContainerLow
+                  : AppColors.surfaceContainer,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
                 color: isCompleted
