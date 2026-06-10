@@ -185,111 +185,128 @@ class _ProgressViewPageState extends State<ProgressViewPage> {
               child: LearningActivityScope(
                 child: Material(
                   color: AppColors.surface,
-                  child: CustomScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    slivers: [
-                      SliverToBoxAdapter(
-                        child: SizedBox(
-                          height: ProgressPageConstants.sectionSpacing,
-                        ),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          pageData.snapshot.accentColor.withValues(alpha: 0.08),
+                          AppColors.surface,
+                          AppColors.secondary.withValues(alpha: 0.05),
+                        ],
+                        stops: const [0.0, 0.42, 1.0],
                       ),
-                      SliverPadding(
-                        padding: pagePadding,
-                        sliver: SliverToBoxAdapter(
-                          child: Align(
-                            alignment: Alignment.topCenter,
-                            child: ConstrainedBox(
-                              constraints: const BoxConstraints(
-                                maxWidth: Responsive.maxContentWidth,
-                              ),
-                              child: ProgressHeaderSection(data: pageData),
-                            ),
+                    ),
+                    child: CustomScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      slivers: [
+                        SliverToBoxAdapter(
+                          child: SizedBox(
+                            height: ProgressPageConstants.sectionSpacing,
                           ),
                         ),
-                      ),
-
-                      SliverToBoxAdapter(
-                        child: SizedBox(
-                          height: ProgressPageConstants.sectionSpacing,
-                        ),
-                      ),
-                      SliverPadding(
-                        padding: pagePadding,
-                        sliver: SliverToBoxAdapter(
-                          child: Align(
-                            alignment: Alignment.topCenter,
-                            child: ConstrainedBox(
-                              constraints: const BoxConstraints(
-                                maxWidth: Responsive.maxContentWidth,
-                              ),
-                              child: ProgressStatsRow(
-                                moduleSteps: pageData.moduleSteps,
-                                accentColor: pageData.snapshot.accentColor,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      SliverToBoxAdapter(
-                        child: SizedBox(
-                          height: ProgressPageConstants.sectionSpacing,
-                        ),
-                      ),
-                      SliverPadding(
-                        padding: pagePadding,
-                        sliver: SliverToBoxAdapter(
-                          child: Align(
-                            alignment: Alignment.topCenter,
-                            child: ConstrainedBox(
-                              constraints: const BoxConstraints(
-                                maxWidth: Responsive.maxContentWidth,
-                              ),
-                              child: ProgressJourneySection(
-                                data: pageData,
-                                isVip: isVip,
-                                selectedChapterId: _selectedChapterId,
-                                onChapterTap: (step) =>
-                                    _handleChapterTap(selectedCourse, step),
-                                chapterSubcontentResponse:
-                                    _chapterSubcontentResponse,
-                                isLoadingChapterSubcontent:
-                                    _isLoadingChapterSubcontent,
-                                isLoadingFromCache: _isSubcontentFromCache,
-                                chapterSubcontentError: _chapterSubcontentError,
-                                onRetryTap: _selectedChapterId == null
-                                    ? null
-                                    : () {
-                                        final step = pageData.moduleSteps
-                                            .where(
-                                              (s) => s.id == _selectedChapterId,
-                                            )
-                                            .cast<ProgressModuleStep?>()
-                                            .firstOrNull;
-                                        if (step != null) {
-                                          _retryChapterFetch(
-                                            selectedCourse,
-                                            step,
-                                          );
-                                        }
-                                      },
-                                onSubcontentTap: (item) => _openChapterExercise(
-                                  selectedCourse,
-                                  item,
-                                  pageData.moduleSteps,
+                        SliverPadding(
+                          padding: pagePadding,
+                          sliver: SliverToBoxAdapter(
+                            child: Align(
+                              alignment: Alignment.topCenter,
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  maxWidth: Responsive.maxContentWidth,
                                 ),
-                                completedSubcontentsInCurrentChapter:
-                                    _completedSubcontentsForSelectedChapter(
-                                      selectedCourse,
-                                      pageData.moduleSteps,
-                                    ),
+                                child: ProgressHeaderSection(data: pageData),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                      const SliverToBoxAdapter(child: SizedBox(height: 110)),
-                    ],
+
+                        SliverToBoxAdapter(
+                          child: SizedBox(
+                            height: ProgressPageConstants.sectionSpacing,
+                          ),
+                        ),
+                        SliverPadding(
+                          padding: pagePadding,
+                          sliver: SliverToBoxAdapter(
+                            child: Align(
+                              alignment: Alignment.topCenter,
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  maxWidth: Responsive.maxContentWidth,
+                                ),
+                                child: ProgressStatsRow(
+                                  moduleSteps: pageData.moduleSteps,
+                                  accentColor: pageData.snapshot.accentColor,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        SliverToBoxAdapter(
+                          child: SizedBox(
+                            height: ProgressPageConstants.sectionSpacing,
+                          ),
+                        ),
+                        SliverPadding(
+                          padding: pagePadding,
+                          sliver: SliverToBoxAdapter(
+                            child: Align(
+                              alignment: Alignment.topCenter,
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  maxWidth: Responsive.maxContentWidth,
+                                ),
+                                child: ProgressJourneySection(
+                                  data: pageData,
+                                  isVip: isVip,
+                                  selectedChapterId: _selectedChapterId,
+                                  onChapterTap: (step) =>
+                                      _handleChapterTap(selectedCourse, step),
+                                  chapterSubcontentResponse:
+                                      _chapterSubcontentResponse,
+                                  isLoadingChapterSubcontent:
+                                      _isLoadingChapterSubcontent,
+                                  isLoadingFromCache: _isSubcontentFromCache,
+                                  chapterSubcontentError:
+                                      _chapterSubcontentError,
+                                  onRetryTap: _selectedChapterId == null
+                                      ? null
+                                      : () {
+                                          final step = pageData.moduleSteps
+                                              .where(
+                                                (s) =>
+                                                    s.id == _selectedChapterId,
+                                              )
+                                              .cast<ProgressModuleStep?>()
+                                              .firstOrNull;
+                                          if (step != null) {
+                                            _retryChapterFetch(
+                                              selectedCourse,
+                                              step,
+                                            );
+                                          }
+                                        },
+                                  onSubcontentTap: (item) =>
+                                      _openChapterExercise(
+                                        selectedCourse,
+                                        item,
+                                        pageData.moduleSteps,
+                                      ),
+                                  completedSubcontentsInCurrentChapter:
+                                      _completedSubcontentsForSelectedChapter(
+                                        selectedCourse,
+                                        pageData.moduleSteps,
+                                      ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SliverToBoxAdapter(child: SizedBox(height: 110)),
+                      ],
+                    ),
                   ),
                 ),
               ),
