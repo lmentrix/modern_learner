@@ -18,7 +18,7 @@ class LocalProfileService {
     final user = AuthService.instance.currentUser;
     if (user == null) return;
 
-    final email = user.email ?? '';
+    final email = user.email;
     final profile = await ProfileService().getCurrentProfile();
     identityListenable.value = ProfileIdentity(
       displayName: profile?.name ?? email.split('@').first,

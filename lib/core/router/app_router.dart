@@ -55,7 +55,6 @@ abstract final class AppRouter {
       final isAuthenticated = AuthService.instance.isAuthenticated;
       final isPublic = Routes.isPublic(state.matchedLocation);
 
-      if (!isAuthenticated && !isPublic) return Routes.login;
       if (isAuthenticated && isPublic) return Routes.home;
       return null;
     },

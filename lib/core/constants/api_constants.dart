@@ -35,7 +35,8 @@ abstract final class ApiConstants {
     return '$normalizedBase$path';
   }
 
-  static String get supabaseUrl => dotenv.env['SUPABASE_URL'] ?? '';
+  static String get supabaseUrl =>
+      _normalizeBaseUrl(dotenv.env['SUPABASE_URL'] ?? '');
   static String get supabasePublishableKey =>
       dotenv.env['PUBLISHABLE_KEY'] ?? '';
 
