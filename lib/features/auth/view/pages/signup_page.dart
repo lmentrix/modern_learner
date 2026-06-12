@@ -59,8 +59,12 @@ class _SignupPageState extends State<SignupPage> {
     });
 
     try {
-      await AuthService.instance.signUp(email: email, password: password);
-      if (mounted) context.go(Routes.login);
+      await AuthService.instance.signUp(
+        email: email,
+        password: password,
+        displayName: name,
+      );
+      if (mounted) context.go(Routes.home);
     } catch (e) {
       if (mounted) setState(() => _error = _friendly(e));
     } finally {

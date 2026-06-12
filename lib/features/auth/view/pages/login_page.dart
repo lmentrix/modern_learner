@@ -113,6 +113,8 @@ class _LoginPageState extends State<LoginPage> {
               ],
               const SizedBox(height: 32),
               _SignInButton(loading: _loading, onTap: _signIn),
+              const SizedBox(height: 12),
+              const _ContinueAsGuestButton(),
               const SizedBox(height: 24),
               const _SignUpPrompt(),
             ],
@@ -232,6 +234,34 @@ class _SignInButton extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                 ),
               ),
+      ),
+    );
+  }
+}
+
+class _ContinueAsGuestButton extends StatelessWidget {
+  const _ContinueAsGuestButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 48,
+      child: TextButton(
+        onPressed: () => context.go(Routes.home),
+        style: TextButton.styleFrom(
+          foregroundColor: AppColors.primary,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
+        child: Text(
+          context.tr('Continue without signing in'),
+          style: GoogleFonts.spaceGrotesk(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ),
     );
   }

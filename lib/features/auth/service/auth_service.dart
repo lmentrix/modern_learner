@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:modern_learner_production/core/supabase/supabase_service.dart';
 import 'package:modern_learner_production/features/auth/model/auth_user_model.dart';
+import 'package:modern_learner_production/features/profile/service/profile_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AuthService {
@@ -13,27 +15,34 @@ class AuthService {
     return user == null ? null : AuthUserModel.fromSupabase(user);
   }
 
-  bool get isAuthenticated => supabase.auth.currentUser != null;
+  bool get isAuthenticated => supabase.auth.currentSession != null;
 
   Future<AuthUserModel> signUp({
     required String email,
     required String password,
+    String? displayName,
   }) async {
+    final normalizedDisplayName = displayName?.trim();
     final response = await supabase.auth.signUp(
       email: email,
       password: password,
+      data: {
+        if (normalizedDisplayName != null && normalizedDisplayName.isNotEmpty)
+          'display_name': normalizedDisplayName,
+      },
     );
 
     final user = response.user;
-    if (user == null) throw Exception('Sign-up failed — no user returned.');
+    if (user == null) throw Exception('Sign-up failed: no user returned.');
 
-    // When email confirmation is disabled, a genuine new signup returns a
-    // session immediately. A null session means the email is already registered
-    // (Supabase returns user_repeated_signup with no session).
+    // Local Supabase has email confirmations disabled by default, so new
+    // signups should return a session immediately. A null session usually
+    // means the email already exists.
     if (response.session == null) {
       throw Exception('Email already registered. Please sign in instead.');
     }
 
+    await _ensureLocalProfile(user, displayName: normalizedDisplayName);
     return AuthUserModel.fromSupabase(user);
   }
 
@@ -47,11 +56,41 @@ class AuthService {
     );
 
     final user = response.user;
-    if (user == null) throw Exception('Sign-in failed — no user returned.');
+    if (user == null) throw Exception('Sign-in failed: no user returned.');
+
+    await _ensureLocalProfile(user);
     return AuthUserModel.fromSupabase(user);
   }
 
   Future<void> signOut() async {
     await supabase.auth.signOut();
+  }
+
+  Future<void> _ensureLocalProfile(User user, {String? displayName}) async {
+    final email = user.email ?? '';
+    if (email.isEmpty) return;
+
+    final metadataName = (user.userMetadata?['display_name'] as String?)
+        ?.trim();
+    final resolvedName = displayName?.trim().isNotEmpty == true
+        ? displayName!.trim()
+        : metadataName?.isNotEmpty == true
+        ? metadataName!
+        : email.split('@').first;
+
+    try {
+      final service = ProfileService();
+      final existing = await service.getCurrentProfile();
+      if (existing != null) return;
+
+      await service.createProfile(
+        id: user.id,
+        email: email,
+        name: resolvedName,
+      );
+    } catch (error, stackTrace) {
+      debugPrint('Local profile bootstrap skipped: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    }
   }
 }
