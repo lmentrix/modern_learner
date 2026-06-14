@@ -125,16 +125,27 @@ class RoadmapGenerationService {
         );
 
     try {
+      // Save roadmap first so we have its Supabase UUID as a fallback roadmapId.
+      final savedRoadmap = await RoadmapService.instance.saveRoadmap(
+        response: response,
+        request: effectiveRequest,
+        courseId: courseId,
+      );
+
+      final roadmapId = response.roadmap.id ?? savedRoadmap.id;
+
       await Future.wait([
-        RoadmapService.instance.saveRoadmap(
-          response: response,
-          request: effectiveRequest,
-          courseId: courseId,
-        ),
         CourseService.instance.updateCourse(
           courseId,
           UpdateUserCourseRequest(roadmapJson: rawRoadmapJson),
         ),
+        if (roadmapId.trim().isNotEmpty)
+          RoadmapService.instance.saveChapterMetadata(
+            response: response,
+            roadmapId: roadmapId,
+            courseKey: _courseKey(course),
+            courseId: courseId,
+          ),
       ]);
     } catch (_) {}
   }

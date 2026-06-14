@@ -1,4 +1,4 @@
-import 'dart:async';
+import 'dart:async' show TimeoutException, unawaited;
 import 'dart:convert';
 import 'dart:io';
 
@@ -118,9 +118,6 @@ Future<http.Response> _postChapterExercise(
           )
           .timeout(ApiConstants.receiveTimeout);
 
-      if (response.statusCode == 404 && !isLast) {
-        continue;
-      }
       return response;
     } on SocketException catch (error) {
       lastConnectionError = error;
@@ -131,6 +128,15 @@ Future<http.Response> _postChapterExercise(
     } on http.ClientException catch (error) {
       lastConnectionError = error;
       if (isLast) rethrow;
+    } on TimeoutException catch (error) {
+      lastConnectionError = error;
+      if (isLast) {
+        throw ChapterExerciseRequestException(
+          'The chapter detail API timed out after '
+          '${ApiConstants.receiveTimeout.inSeconds}s. '
+          'The backend may be overloaded. Original error: $error',
+        );
+      }
     }
   }
 
@@ -152,17 +158,9 @@ List<Uri> _chapterExerciseUris() {
   final normalizedBaseUrl = baseUrl.endsWith('/')
       ? baseUrl.substring(0, baseUrl.length - 1)
       : baseUrl;
-  final configuredUrl = ApiConstants.openRouterChapterDetailGenerate.trim();
-  final configuredUri = Uri.tryParse(configuredUrl);
-  final hasAbsoluteConfiguredUrl =
-      configuredUri != null &&
-      configuredUri.hasScheme &&
-      configuredUri.host.isNotEmpty;
-  final endpointUrl = hasAbsoluteConfiguredUrl
-      ? configuredUrl
-      : '$normalizedBaseUrl/openrouter/chapter-detail/generate';
-
-  final primary = Uri.parse(endpointUrl);
+  final primary = Uri.parse(
+    '$normalizedBaseUrl/openrouter/chapter-detail/generate',
+  );
   final fallback = Uri.parse(
     '$_fallbackRoadmapBaseUrl/openrouter/chapter-detail/generate',
   );

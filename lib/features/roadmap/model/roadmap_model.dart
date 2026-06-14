@@ -107,6 +107,7 @@ class UpsertRoadmapRequest {
     this.statusCode,
     required this.mocked,
     required this.roadmapJson,
+    required this.generatedRoadmapJson,
     this.usage,
     this.rawContent,
     this.prompt,
@@ -129,6 +130,7 @@ class UpsertRoadmapRequest {
   final int? statusCode;
   final bool mocked;
   final Map<String, dynamic> roadmapJson;
+  final Map<String, dynamic> generatedRoadmapJson;
   final Map<String, dynamic>? usage;
   final String? rawContent;
   final String? prompt;
@@ -151,6 +153,7 @@ class UpsertRoadmapRequest {
     if (statusCode != null) 'status_code': statusCode,
     'mocked': mocked,
     'roadmap_json': roadmapJson,
+    'generated_roadmap_json': generatedRoadmapJson,
     if (usage != null) 'usage': usage,
     if (rawContent != null) 'raw_content': rawContent,
     if (prompt != null) 'prompt': prompt,

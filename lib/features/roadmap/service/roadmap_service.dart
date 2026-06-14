@@ -53,6 +53,7 @@ class RoadmapService {
       statusCode: response.statusCode,
       mocked: response.mocked,
       roadmapJson: response.roadmap.toJson(),
+      generatedRoadmapJson: response.rawJson ?? response.toJson(),
       usage: response.usage?.toJson(),
       rawContent: response.rawContent,
       prompt: response.prompt,
@@ -169,6 +170,50 @@ class RoadmapService {
     }
 
     return RoadmapChapterProgressDbModel.fromJson(rows.first);
+  }
+
+  /// Saves one metadata-only row per chapter (no subcontent) to
+  /// `roadmap_chapter_progress`, using upsert so existing rows are preserved.
+  /// Called right after a roadmap is persisted so the DB reflects the full
+  /// chapter list immediately — before any subcontent is generated.
+  Future<void> saveChapterMetadata({
+    required api.RoadmapResponseModel response,
+    required String roadmapId,
+    required String courseKey,
+    required String courseId,
+    String? userId,
+  }) async {
+    final resolvedUserId =
+        userId ?? _client.auth.currentUser?.id ?? (throw _noUserError());
+
+    final chapters = response.roadmap.chapters;
+    if (chapters.isEmpty) return;
+
+    final cacheWindow = _freshCacheWindow();
+    final rows = chapters
+        .where((ch) => ch.chapterNumber > 0)
+        .map(
+          (ch) => {
+            ...UpsertChapterProgressRequest(
+              userId: resolvedUserId,
+              roadmapId: roadmapId,
+              courseKey: courseKey,
+              chapterNumber: ch.chapterNumber,
+              chapterTitle: ch.title,
+              overview: ch.description,
+              courseId: courseId,
+            ).toJson(),
+            ...cacheWindow,
+          },
+        )
+        .toList();
+
+    if (rows.isEmpty) return;
+
+    await _client
+        .from(_chapterProgressTable)
+        .upsert(rows, onConflict: 'user_id,roadmap_id,chapter_number')
+        .select();
   }
 
   /// Fetches all chapter progress rows for a given [courseId].

@@ -25,6 +25,7 @@ create table if not exists public.roadmaps (
   status_code integer,
   mocked boolean not null default false,
   roadmap_json jsonb not null,
+  generated_roadmap_json jsonb not null default '{}'::jsonb,
   usage jsonb,
   raw_content text,
   prompt text,
