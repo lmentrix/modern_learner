@@ -5,6 +5,7 @@ import 'package:modern_learner_production/home/view/home_page.dart';
 import 'package:modern_learner_production/profile/view/profile_page.dart';
 import 'package:modern_learner_production/progress/view/progress_page.dart';
 import 'package:modern_learner_production/study/view/study_page.dart';
+import 'package:modern_learner_production/voice/view/voice_page.dart';
 
 // ── Route names ────────────────────────────────────────────────────────────
 abstract final class AppRoutes {
@@ -13,19 +14,6 @@ abstract final class AppRoutes {
   static const mic = '/mic';
   static const progress = '/progress';
   static const profile = '/profile';
-}
-
-// ── Placeholder screens ────────────────────────────────────────────────────
-class _PlaceholderScreen extends StatelessWidget {
-  const _PlaceholderScreen({required this.label});
-  final String label;
-
-  @override
-  Widget build(BuildContext context) => Scaffold(
-        body: Center(
-          child: Text(label, style: Theme.of(context).textTheme.headlineMedium),
-        ),
-      );
 }
 
 // ── Shell with AppBottomNavBar ─────────────────────────────────────────────
@@ -72,7 +60,7 @@ final appRouter = GoRouter(
         StatefulShellBranch(routes: [
           GoRoute(
             path: AppRoutes.mic,
-            builder: (_, __) => const _PlaceholderScreen(label: 'Mic'),
+            builder: (_, __) => const VoicePage(),
           ),
         ]),
         StatefulShellBranch(routes: [
