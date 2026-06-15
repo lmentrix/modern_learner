@@ -5,15 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl.dart' as intl;
 
-import 'app_localizations_de.dart';
 import 'app_localizations_en.dart';
-import 'app_localizations_es.dart';
-import 'app_localizations_fr.dart';
-import 'app_localizations_it.dart';
-import 'app_localizations_ja.dart';
-import 'app_localizations_ko.dart';
-import 'app_localizations_pt.dart';
-import 'app_localizations_zh.dart';
 
 // ignore_for_file: type=lint
 
@@ -100,233 +92,13 @@ abstract class AppLocalizations {
       ];
 
   /// A list of this localizations delegate's supported locales.
-  static const List<Locale> supportedLocales = <Locale>[
-    Locale('de'),
-    Locale('en'),
-    Locale('es'),
-    Locale('fr'),
-    Locale('it'),
-    Locale('ja'),
-    Locale('ko'),
-    Locale('pt'),
-    Locale('zh'),
-  ];
+  static const List<Locale> supportedLocales = <Locale>[Locale('en')];
 
-  /// No description provided for @appTitle.
+  /// The application title
   ///
   /// In en, this message translates to:
   /// **'Modern Learner'**
   String get appTitle;
-
-  /// No description provided for @navHome.
-  ///
-  /// In en, this message translates to:
-  /// **'Home'**
-  String get navHome;
-
-  /// No description provided for @navExplore.
-  ///
-  /// In en, this message translates to:
-  /// **'Explore'**
-  String get navExplore;
-
-  /// No description provided for @navNew.
-  ///
-  /// In en, this message translates to:
-  /// **'New'**
-  String get navNew;
-
-  /// No description provided for @navProgress.
-  ///
-  /// In en, this message translates to:
-  /// **'Progress'**
-  String get navProgress;
-
-  /// No description provided for @navProfile.
-  ///
-  /// In en, this message translates to:
-  /// **'Profile'**
-  String get navProfile;
-
-  /// No description provided for @settings.
-  ///
-  /// In en, this message translates to:
-  /// **'SETTINGS'**
-  String get settings;
-
-  /// No description provided for @account.
-  ///
-  /// In en, this message translates to:
-  /// **'Account'**
-  String get account;
-
-  /// No description provided for @subscription.
-  ///
-  /// In en, this message translates to:
-  /// **'Subscription'**
-  String get subscription;
-
-  /// No description provided for @vipActive.
-  ///
-  /// In en, this message translates to:
-  /// **'VIP - Active'**
-  String get vipActive;
-
-  /// No description provided for @upgradeToVip.
-  ///
-  /// In en, this message translates to:
-  /// **'Upgrade to VIP'**
-  String get upgradeToVip;
-
-  /// No description provided for @notifications.
-  ///
-  /// In en, this message translates to:
-  /// **'Notifications'**
-  String get notifications;
-
-  /// No description provided for @remindersActive.
-  ///
-  /// In en, this message translates to:
-  /// **'Reminders active'**
-  String get remindersActive;
-
-  /// No description provided for @allNotificationsOff.
-  ///
-  /// In en, this message translates to:
-  /// **'All notifications off'**
-  String get allNotificationsOff;
-
-  /// No description provided for @appearance.
-  ///
-  /// In en, this message translates to:
-  /// **'Appearance'**
-  String get appearance;
-
-  /// No description provided for @darkMediumText.
-  ///
-  /// In en, this message translates to:
-  /// **'Dark · Medium text'**
-  String get darkMediumText;
-
-  /// No description provided for @language.
-  ///
-  /// In en, this message translates to:
-  /// **'Language'**
-  String get language;
-
-  /// No description provided for @privacy.
-  ///
-  /// In en, this message translates to:
-  /// **'Privacy'**
-  String get privacy;
-
-  /// No description provided for @privacySubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Data & visibility controls'**
-  String get privacySubtitle;
-
-  /// No description provided for @helpSupport.
-  ///
-  /// In en, this message translates to:
-  /// **'Help & Support'**
-  String get helpSupport;
-
-  /// No description provided for @helpSupportSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'FAQs and contact us'**
-  String get helpSupportSubtitle;
-
-  /// No description provided for @logOut.
-  ///
-  /// In en, this message translates to:
-  /// **'Log Out'**
-  String get logOut;
-
-  /// No description provided for @logOutSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Sign out of your account'**
-  String get logOutSubtitle;
-
-  /// No description provided for @logOutConfirmTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Log Out'**
-  String get logOutConfirmTitle;
-
-  /// No description provided for @logOutConfirmMessage.
-  ///
-  /// In en, this message translates to:
-  /// **'Are you sure you want to log out?'**
-  String get logOutConfirmMessage;
-
-  /// No description provided for @cancel.
-  ///
-  /// In en, this message translates to:
-  /// **'Cancel'**
-  String get cancel;
-
-  /// No description provided for @choosePreferredLanguage.
-  ///
-  /// In en, this message translates to:
-  /// **'Choose your preferred app language'**
-  String get choosePreferredLanguage;
-
-  /// No description provided for @englishUs.
-  ///
-  /// In en, this message translates to:
-  /// **'English (US)'**
-  String get englishUs;
-
-  /// No description provided for @spanish.
-  ///
-  /// In en, this message translates to:
-  /// **'Spanish'**
-  String get spanish;
-
-  /// No description provided for @french.
-  ///
-  /// In en, this message translates to:
-  /// **'French'**
-  String get french;
-
-  /// No description provided for @german.
-  ///
-  /// In en, this message translates to:
-  /// **'German'**
-  String get german;
-
-  /// No description provided for @italian.
-  ///
-  /// In en, this message translates to:
-  /// **'Italian'**
-  String get italian;
-
-  /// No description provided for @portuguese.
-  ///
-  /// In en, this message translates to:
-  /// **'Portuguese'**
-  String get portuguese;
-
-  /// No description provided for @japanese.
-  ///
-  /// In en, this message translates to:
-  /// **'Japanese'**
-  String get japanese;
-
-  /// No description provided for @korean.
-  ///
-  /// In en, this message translates to:
-  /// **'Korean'**
-  String get korean;
-
-  /// No description provided for @mandarin.
-  ///
-  /// In en, this message translates to:
-  /// **'Mandarin'**
-  String get mandarin;
 }
 
 class _AppLocalizationsDelegate
@@ -339,17 +111,8 @@ class _AppLocalizationsDelegate
   }
 
   @override
-  bool isSupported(Locale locale) => <String>[
-    'de',
-    'en',
-    'es',
-    'fr',
-    'it',
-    'ja',
-    'ko',
-    'pt',
-    'zh',
-  ].contains(locale.languageCode);
+  bool isSupported(Locale locale) =>
+      <String>['en'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -358,24 +121,8 @@ class _AppLocalizationsDelegate
 AppLocalizations lookupAppLocalizations(Locale locale) {
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
-    case 'de':
-      return AppLocalizationsDe();
     case 'en':
       return AppLocalizationsEn();
-    case 'es':
-      return AppLocalizationsEs();
-    case 'fr':
-      return AppLocalizationsFr();
-    case 'it':
-      return AppLocalizationsIt();
-    case 'ja':
-      return AppLocalizationsJa();
-    case 'ko':
-      return AppLocalizationsKo();
-    case 'pt':
-      return AppLocalizationsPt();
-    case 'zh':
-      return AppLocalizationsZh();
   }
 
   throw FlutterError(

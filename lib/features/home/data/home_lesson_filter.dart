@@ -1,1 +1,0 @@
-enum LessonFilter { voice, school }
