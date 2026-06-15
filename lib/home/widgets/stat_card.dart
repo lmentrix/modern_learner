@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:modern_learner_production/home/model/home_models.dart';
 import 'package:modern_learner_production/theme/theme.dart';
 
@@ -45,7 +46,6 @@ class _StatCardState extends State<StatCard>
 
   @override
   Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
     final bg = Color(widget.stat.cardColor);
 
     return Container(
@@ -75,34 +75,53 @@ class _StatCardState extends State<StatCard>
                   color: EduColors.textPrimary,
                 ),
               ),
-              Icon(Icons.north_east_rounded, size: 18, color: EduColors.textSecondary),
+              const Icon(Icons.north_east_rounded,
+                  size: 18, color: EduColors.textSecondary),
             ],
           ),
           const SizedBox(height: EduSpacing.s3),
-          Text(widget.stat.label, style: tt.labelLarge),
+
+          // Label in Caveat — the subtle sketch touch
+          Text(
+            widget.stat.label,
+            style: GoogleFonts.caveat(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: EduColors.textSecondary,
+            ),
+          ),
           const SizedBox(height: EduSpacing.s1),
+
+          // Big number stays crisp (data should read cleanly)
           AnimatedBuilder(
             animation: _counter,
             builder: (context, _) => Text(
               '${_counter.value}',
-              style: GoogleFontsHelper.dataNumber,
+              style: _dataNumber,
             ),
           ),
-          Text(widget.stat.unit, style: tt.bodySmall),
+
+          // Unit in Caveat
+          Text(
+            widget.stat.unit,
+            style: GoogleFonts.caveat(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: EduColors.textSecondary,
+            ),
+          ),
         ],
       ),
     );
   }
 }
 
-// Inline helper so we don't need a full import from google_fonts here
-abstract final class GoogleFontsHelper {
-  static const dataNumber = TextStyle(
-    fontFamily: 'PlusJakartaSans',
-    fontSize: 44,
-    fontWeight: FontWeight.w700,
-    height: 1.0,
-    color: EduColors.textPrimary,
-    fontFamilyFallback: ['sans-serif'],
-  );
-}
+// Data numbers stay in PlusJakartaSans — they should read as precise metrics
+const _dataNumber = TextStyle(
+  fontFamily: 'PlusJakartaSans',
+  fontSize: 44,
+  fontWeight: FontWeight.w700,
+  height: 1.0,
+  color: EduColors.textPrimary,
+  fontFamilyFallback: ['sans-serif'],
+);

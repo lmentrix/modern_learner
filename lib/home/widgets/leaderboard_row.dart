@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:modern_learner_production/home/model/home_models.dart';
 import 'package:modern_learner_production/theme/theme.dart';
 
@@ -14,9 +15,8 @@ class LeaderboardRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
     final isMe = user.isCurrentUser;
-    final pct = user.xp / maxXp;
+    final pct  = user.xp / maxXp;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -26,25 +26,28 @@ class LeaderboardRow extends StatelessWidget {
             : Colors.transparent,
         borderRadius: EduRadius.borderMd,
         border: isMe
-            ? Border.all(color: EduColors.primary.withValues(alpha: 0.22), width: 1)
+            ? Border.all(
+                color: EduColors.primary.withValues(alpha: 0.22), width: 1)
             : null,
       ),
       child: Row(
         children: [
-          // Rank
+          // Rank in Caveat — feels like a hand-written number
           SizedBox(
-            width: 24,
+            width: 28,
             child: Text(
               '#${user.rank}',
-              style: tt.labelLarge?.copyWith(
-                color: user.rank <= 3 ? EduColors.primary : EduColors.textSecondary,
+              style: GoogleFonts.caveat(
+                fontSize: 17,
                 fontWeight: FontWeight.w700,
+                color: user.rank <= 3
+                    ? EduColors.primary
+                    : EduColors.textSecondary,
               ),
             ),
           ),
-          const SizedBox(width: EduSpacing.s2),
 
-          // Avatar
+          // Avatar — unchanged structure
           Container(
             width: 36,
             height: 36,
@@ -55,24 +58,25 @@ class LeaderboardRow extends StatelessWidget {
             alignment: Alignment.center,
             child: Text(
               user.initials,
-              style: tt.labelLarge?.copyWith(
-                color: EduColors.textPrimary,
+              style: GoogleFonts.caveat(
+                fontSize: 15,
                 fontWeight: FontWeight.w700,
-                fontSize: 11,
+                color: EduColors.textPrimary,
               ),
             ),
           ),
           const SizedBox(width: EduSpacing.s3),
 
-          // Name + bar
+          // Name + progress bar
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   isMe ? 'You' : user.name,
-                  style: tt.titleSmall?.copyWith(
-                    fontWeight: isMe ? FontWeight.w700 : FontWeight.w600,
+                  style: GoogleFonts.caveat(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
                     color: isMe ? EduColors.primary : EduColors.textPrimary,
                   ),
                 ),
@@ -93,12 +97,13 @@ class LeaderboardRow extends StatelessWidget {
           ),
           const SizedBox(width: EduSpacing.s3),
 
-          // XP
+          // XP annotation in Caveat
           Text(
             '${user.xp} xp',
-            style: tt.labelLarge?.copyWith(
+            style: GoogleFonts.caveat(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
               color: isMe ? EduColors.primary : EduColors.textSecondary,
-              fontWeight: FontWeight.w600,
             ),
           ),
         ],

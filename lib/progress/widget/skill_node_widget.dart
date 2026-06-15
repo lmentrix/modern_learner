@@ -101,7 +101,7 @@ class _SkillNodeWidgetState extends State<SkillNodeWidget>
               seed:        widget.index,
             ),
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(8, 10, 8, 8),
+              padding: const EdgeInsets.fromLTRB(8, 8, 8, 6),
               child: Column(
                 children: [
                   // ── Icon in a sketched circle ─────────────────────────
@@ -113,13 +113,13 @@ class _SkillNodeWidgetState extends State<SkillNodeWidget>
                     unlocked:   unlocked,
                     inProgress: inProgress,
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
 
                   // ── Title ─────────────────────────────────────────────
                   Text(
                     node.title,
                     style: GoogleFonts.caveat(
-                      fontSize: 12.5,
+                      fontSize: 14,
                       fontWeight: FontWeight.w700,
                       color: locked
                           ? const Color(0xFF94A3B8)
@@ -132,7 +132,7 @@ class _SkillNodeWidgetState extends State<SkillNodeWidget>
                   ),
 
                   // ── XP badge ─────────────────────────────────────────
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 2),
                   _XpAnnotation(
                     xp:       node.xpReward,
                     ink:      ink,
@@ -288,8 +288,8 @@ class _XpAnnotation extends StatelessWidget {
     return Text(
       '+$xp XP',
       style: GoogleFonts.caveat(
-        fontSize: 11,
-        fontWeight: FontWeight.w600,
+        fontSize: 13,
+        fontWeight: FontWeight.w700,
         color: locked
             ? const Color(0xFFB0BAC8)
             : unlocked

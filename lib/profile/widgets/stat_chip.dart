@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:modern_learner_production/profile/model/profile_models.dart';
 import 'package:modern_learner_production/theme/theme.dart';
 
@@ -46,41 +47,92 @@ class _StatChipState extends State<StatChip>
 
   @override
   Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
     final bg = Color(widget.stat.accentColor);
     final suffix = widget.stat.value.replaceAll(RegExp(r'[0-9]'), '');
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-      decoration: BoxDecoration(
-        color: EduColors.surface,
-        borderRadius: EduRadius.borderXl,
-        boxShadow: EduColors.shadowCard,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(color: bg, borderRadius: EduRadius.borderMd),
-            child: Icon(
-              IconData(widget.stat.icon, fontFamily: 'MaterialIcons'),
-              size: 18,
-              color: EduColors.textPrimary,
+    return CustomPaint(
+      painter: _SketchChipBorder(inkColor: bg),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        decoration: BoxDecoration(
+          color: EduColors.surface,
+          borderRadius: EduRadius.borderXl,
+          boxShadow: EduColors.shadowCard,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(color: bg, borderRadius: EduRadius.borderMd),
+              child: Icon(
+                IconData(widget.stat.icon, fontFamily: 'MaterialIcons'),
+                size: 18,
+                color: EduColors.textPrimary,
+              ),
             ),
-          ),
-          const SizedBox(height: EduSpacing.s3),
-          AnimatedBuilder(
-            animation: _count,
-            builder: (context, _) => Text(
-              '${_count.value}$suffix',
-              style: tt.headlineMedium?.copyWith(fontWeight: FontWeight.w800),
+            const SizedBox(height: EduSpacing.s3),
+            AnimatedBuilder(
+              animation: _count,
+              builder: (context, _) => Text(
+                '${_count.value}$suffix',
+                style: GoogleFonts.caveat(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w700,
+                  color: EduColors.textPrimary,
+                  height: 1.1,
+                ),
+              ),
             ),
-          ),
-          Text(widget.stat.label, style: tt.labelLarge),
-        ],
+            Text(
+              widget.stat.label,
+              style: GoogleFonts.caveat(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: EduColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
+}
+
+class _SketchChipBorder extends CustomPainter {
+  const _SketchChipBorder({required this.inkColor});
+  final Color inkColor;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const r = 16.0;
+    // Tiny top-left accent corner that looks like a pencil mark
+    canvas.drawPath(
+      Path()
+        ..moveTo(r + 4, 2)
+        ..quadraticBezierTo(r * 0.5, 1.5, 2, r + 4),
+      Paint()
+        ..color = inkColor.withValues(alpha: 0.30)
+        ..strokeWidth = 1.8
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round,
+    );
+    // Bottom-right accent
+    canvas.drawPath(
+      Path()
+        ..moveTo(size.width - r - 4, size.height - 2)
+        ..quadraticBezierTo(
+            size.width - r * 0.5, size.height - 1.5,
+            size.width - 2, size.height - r - 4),
+      Paint()
+        ..color = inkColor.withValues(alpha: 0.18)
+        ..strokeWidth = 1.3
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_SketchChipBorder old) => old.inkColor != inkColor;
 }

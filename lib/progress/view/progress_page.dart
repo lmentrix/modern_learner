@@ -1,4 +1,6 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:modern_learner_production/progress/section/achievements_section.dart';
 import 'package:modern_learner_production/progress/section/progress_header_section.dart';
 import 'package:modern_learner_production/progress/section/saved_notes_section.dart';
@@ -68,8 +70,6 @@ class _ProgressPageState extends State<ProgressPage>
 
   @override
   Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-
     return Scaffold(
       backgroundColor: EduColors.bg,
       body: CustomScrollView(
@@ -84,14 +84,35 @@ class _ProgressPageState extends State<ProgressPage>
                   EduSpacing.s6, EduSpacing.s5, EduSpacing.s6, EduSpacing.s5,
                 ),
                 child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Progress', style: tt.displaySmall),
-                          Text('Your learning journey so far.',
-                              style: tt.bodyMedium),
+                          Text(
+                            'Progress',
+                            style: GoogleFonts.caveat(
+                              fontSize: 32,
+                              fontWeight: FontWeight.w700,
+                              color: EduColors.textPrimary,
+                              height: 1.1,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          CustomPaint(
+                            painter: _PageTitleUnderlinePainter(),
+                            size: const Size(110, 6),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Your learning journey so far.',
+                            style: GoogleFonts.caveat(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: EduColors.textSecondary,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -143,4 +164,66 @@ class _ProgressPageState extends State<ProgressPage>
       ),
     );
   }
+}
+
+// ── Hand-drawn underline for page title ───────────────────────────────────────
+
+class _PageTitleUnderlinePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final ul = Paint()
+      ..color = EduColors.primary.withValues(alpha: 0.70)
+      ..strokeWidth = 2.4
+      ..strokeCap = StrokeCap.round;
+
+    // Main wobble stroke
+    canvas.drawPath(
+      Path()
+        ..moveTo(0, size.height * 0.5)
+        ..quadraticBezierTo(
+            size.width * 0.32, size.height * 0.0,
+            size.width * 0.68, size.height * 0.8)
+        ..lineTo(size.width, size.height * 0.3),
+      ul,
+    );
+    // Shadow line
+    canvas.drawPath(
+      Path()
+        ..moveTo(1.5, size.height * 0.9)
+        ..quadraticBezierTo(
+            size.width * 0.38, size.height * 0.4,
+            size.width * 0.72, size.height * 1.0)
+        ..lineTo(size.width, size.height * 0.65),
+      ul
+        ..color = EduColors.primary.withValues(alpha: 0.20)
+        ..strokeWidth = 1.5,
+    );
+
+    // Tiny decorative star at the end
+    final cx = size.width + 8;
+    final cy = size.height * 0.4;
+    const r = 4.5;
+    final inner = r * 0.42;
+    final path = Path();
+    for (var i = 0; i < 5; i++) {
+      final outerAngle = -math.pi / 2 + i * 2 * math.pi / 5;
+      final innerAngle = outerAngle + math.pi / 5;
+      final px = cx + r * math.cos(outerAngle);
+      final py = cy + r * math.sin(outerAngle);
+      final ix = cx + inner * math.cos(innerAngle);
+      final iy = cy + inner * math.sin(innerAngle);
+      i == 0 ? path.moveTo(px, py) : path.lineTo(px, py);
+      path.lineTo(ix, iy);
+    }
+    path.close();
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = const Color(0xFFF59E0B).withValues(alpha: 0.75)
+        ..style = PaintingStyle.fill,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_PageTitleUnderlinePainter old) => false;
 }

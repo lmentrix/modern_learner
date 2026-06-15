@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:modern_learner_production/progress/data/progress_data.dart';
 import 'package:modern_learner_production/progress/widget/achievement_badge.dart';
 import 'package:modern_learner_production/theme/theme.dart';
@@ -45,7 +46,6 @@ class _AchievementsSectionState extends State<AchievementsSection>
 
   @override
   Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
     final unlockedCount = achievements.where((a) => a.unlocked).length;
 
     return FadeTransition(
@@ -58,18 +58,44 @@ class _AchievementsSectionState extends State<AchievementsSection>
             Padding(
               padding: EduSpacing.pagePadding,
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text('Achievements', style: tt.headlineSmall),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Achievements',
+                        style: GoogleFonts.caveat(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          color: EduColors.textPrimary,
+                        ),
+                      ),
+                      CustomPaint(
+                        painter: _SketchAccentLine(width: 100),
+                        size: const Size(100, 5),
+                      ),
+                    ],
+                  ),
                   const SizedBox(width: EduSpacing.s2),
+                  const SizedBox(height: 4),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                     decoration: BoxDecoration(
                       color: const Color(0xFFFDE68A).withValues(alpha: 0.4),
                       borderRadius: EduRadius.borderPill,
+                      border: Border.all(
+                        color: const Color(0xFFF59E0B).withValues(alpha: 0.35),
+                      ),
                     ),
                     child: Text(
                       '$unlockedCount/${achievements.length}',
-                      style: tt.labelMedium?.copyWith(color: const Color(0xFFF59E0B)),
+                      style: GoogleFonts.caveat(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFFF59E0B),
+                      ),
                     ),
                   ),
                 ],
@@ -92,4 +118,29 @@ class _AchievementsSectionState extends State<AchievementsSection>
       ),
     );
   }
+}
+
+class _SketchAccentLine extends CustomPainter {
+  const _SketchAccentLine({required this.width});
+  final double width;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.drawPath(
+      Path()
+        ..moveTo(0, size.height * 0.6)
+        ..quadraticBezierTo(
+            width * 0.30, size.height * 0.1,
+            width * 0.62, size.height * 0.7)
+        ..lineTo(width * 0.90, size.height * 0.3),
+      Paint()
+        ..color = EduColors.primary.withValues(alpha: 0.40)
+        ..strokeWidth = 1.5
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_SketchAccentLine old) => false;
 }

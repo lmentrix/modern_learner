@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:modern_learner_production/progress/data/progress_data.dart';
 import 'package:modern_learner_production/progress/widget/saved_note_tile.dart';
 import 'package:modern_learner_production/theme/theme.dart';
@@ -60,8 +61,6 @@ class _SavedNotesSectionState extends State<SavedNotesSection>
 
   @override
   Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -69,12 +68,36 @@ class _SavedNotesSectionState extends State<SavedNotesSection>
           padding: EduSpacing.pagePadding,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text('Saved Notes', style: tt.headlineSmall),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Saved Notes',
+                    style: GoogleFonts.caveat(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: EduColors.textPrimary,
+                    ),
+                  ),
+                  CustomPaint(
+                    painter: _SketchAccentLine(width: 90),
+                    size: const Size(90, 5),
+                  ),
+                ],
+              ),
               TextButton(
                 onPressed: () {},
-                child: Text('View all',
-                    style: tt.labelLarge?.copyWith(color: EduColors.primary)),
+                child: Text(
+                  'View all',
+                  style: GoogleFonts.caveat(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: EduColors.primary,
+                  ),
+                ),
               ),
             ],
           ),
@@ -96,4 +119,29 @@ class _SavedNotesSectionState extends State<SavedNotesSection>
       ],
     );
   }
+}
+
+class _SketchAccentLine extends CustomPainter {
+  const _SketchAccentLine({required this.width});
+  final double width;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.drawPath(
+      Path()
+        ..moveTo(0, size.height * 0.6)
+        ..quadraticBezierTo(
+            width * 0.30, size.height * 0.1,
+            width * 0.62, size.height * 0.7)
+        ..lineTo(width * 0.90, size.height * 0.3),
+      Paint()
+        ..color = EduColors.primary.withValues(alpha: 0.40)
+        ..strokeWidth = 1.5
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_SketchAccentLine old) => false;
 }

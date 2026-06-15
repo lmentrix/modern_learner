@@ -1,4 +1,6 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:modern_learner_production/profile/section/learning_activity_section.dart';
 import 'package:modern_learner_production/profile/section/profile_header_section.dart';
 import 'package:modern_learner_production/profile/section/settings_section.dart';
@@ -81,9 +83,27 @@ class _ProfilePageState extends State<ProfilePage>
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Text('Profile',
-                        style: Theme.of(context).textTheme.displaySmall),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Profile',
+                          style: GoogleFonts.caveat(
+                            fontSize: 32,
+                            fontWeight: FontWeight.w700,
+                            color: EduColors.textPrimary,
+                            height: 1.1,
+                          ),
+                        ),
+                        CustomPaint(
+                          painter: _PageTitleUnderline(),
+                          size: const Size(80, 6),
+                        ),
+                      ],
+                    ),
                     Row(
                       children: [
                         _IconBtn(icon: Icons.notifications_none_rounded, onTap: () {}),
@@ -120,6 +140,63 @@ class _ProfilePageState extends State<ProfilePage>
       ),
     );
   }
+}
+
+class _PageTitleUnderline extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = EduColors.primary.withValues(alpha: 0.65)
+      ..strokeWidth = 2.3
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+    canvas.drawPath(
+      Path()
+        ..moveTo(0, size.height * 0.55)
+        ..quadraticBezierTo(
+            size.width * 0.32, size.height * 0.05,
+            size.width * 0.68, size.height * 0.80)
+        ..lineTo(size.width, size.height * 0.30),
+      paint,
+    );
+    canvas.drawPath(
+      Path()
+        ..moveTo(1.5, size.height * 0.95)
+        ..quadraticBezierTo(
+            size.width * 0.38, size.height * 0.50,
+            size.width * 0.72, size.height * 1.0)
+        ..lineTo(size.width, size.height * 0.70),
+      paint
+        ..color = EduColors.primary.withValues(alpha: 0.18)
+        ..strokeWidth = 1.4,
+    );
+    // star decoration
+    final cx = size.width + 8.0;
+    final cy = size.height * 0.45;
+    const r = 4.5;
+    final inner = r * 0.42;
+    final path = Path();
+    for (var i = 0; i < 5; i++) {
+      final oa = -math.pi / 2 + i * 2 * math.pi / 5;
+      final ia = oa + math.pi / 5;
+      final px = cx + r * math.cos(oa);
+      final py = cy + r * math.sin(oa);
+      final ix = cx + inner * math.cos(ia);
+      final iy = cy + inner * math.sin(ia);
+      i == 0 ? path.moveTo(px, py) : path.lineTo(px, py);
+      path.lineTo(ix, iy);
+    }
+    path.close();
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = const Color(0xFFF59E0B).withValues(alpha: 0.75)
+        ..style = PaintingStyle.fill,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_PageTitleUnderline old) => false;
 }
 
 class _IconBtn extends StatelessWidget {

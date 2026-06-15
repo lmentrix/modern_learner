@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:modern_learner_production/profile/data/profile_data.dart';
 import 'package:modern_learner_production/profile/model/profile_models.dart';
 import 'package:modern_learner_production/theme/theme.dart';
@@ -54,7 +55,6 @@ class _ActivityGridState extends State<ActivityGrid>
 
   @override
   Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
     // Arrange into 10 columns of 7 rows (Mon–Sun)
     const cols = 10;
     const rows = 7;
@@ -69,10 +69,24 @@ class _ActivityGridState extends State<ActivityGrid>
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Last 10 weeks', style: tt.labelMedium),
+                Text(
+                  'Last 10 weeks',
+                  style: GoogleFonts.caveat(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: EduColors.textSecondary,
+                  ),
+                ),
                 Row(
                   children: [
-                    Text('Less', style: tt.labelSmall),
+                    Text(
+                      'Less',
+                      style: GoogleFonts.caveat(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: EduColors.textSecondary,
+                      ),
+                    ),
                     const SizedBox(width: 4),
                     ...List.generate(4, (i) => Container(
                           width: 10,
@@ -84,7 +98,14 @@ class _ActivityGridState extends State<ActivityGrid>
                           ),
                         )),
                     const SizedBox(width: 4),
-                    Text('More', style: tt.labelSmall),
+                    Text(
+                      'More',
+                      style: GoogleFonts.caveat(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: EduColors.textSecondary,
+                      ),
+                    ),
                   ],
                 ),
               ],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:modern_learner_production/home/data/home_data.dart';
 import 'package:modern_learner_production/home/widgets/stat_card.dart';
 import 'package:modern_learner_production/theme/theme.dart';
@@ -13,9 +14,9 @@ class QuickStatsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
+        const Padding(
           padding: EduSpacing.pagePadding,
-          child: Text('Quick stats', style: Theme.of(context).textTheme.headlineSmall),
+          child: _SketchSectionTitle(label: 'Quick stats'),
         ),
         const SizedBox(height: EduSpacing.s4),
         Padding(
@@ -36,4 +37,59 @@ class QuickStatsSection extends StatelessWidget {
       ],
     );
   }
+}
+
+// ── Shared sketch section title used across home sections ─────────────────────
+
+class _SketchSectionTitle extends StatelessWidget {
+  const _SketchSectionTitle({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.caveat(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            color: EduColors.textPrimary,
+          ),
+        ),
+        // Very subtle wavy accent line — just a hint of the sketch style
+        CustomPaint(
+          painter: _ThinAccentLinePainter(),
+          size: Size(label.length * 7.2, 5),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Thin accent line (barely-there wave, not dramatic) ───────────────────────
+
+class _ThinAccentLinePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.drawPath(
+      Path()
+        ..moveTo(0, size.height * 0.6)
+        ..quadraticBezierTo(
+            size.width * 0.30, size.height * 0.1,
+            size.width * 0.62, size.height * 0.7)
+        ..lineTo(size.width * 0.90, size.height * 0.3),
+      Paint()
+        ..color = EduColors.primary.withValues(alpha: 0.40)
+        ..strokeWidth = 1.5
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_ThinAccentLinePainter old) => false;
 }

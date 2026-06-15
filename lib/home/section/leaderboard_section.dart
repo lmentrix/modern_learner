@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:modern_learner_production/home/data/home_data.dart';
 import 'package:modern_learner_production/home/widgets/leaderboard_row.dart';
 import 'package:modern_learner_production/theme/theme.dart';
@@ -21,7 +22,6 @@ class _LeaderboardSectionState extends State<LeaderboardSection>
   @override
   void initState() {
     super.initState();
-
     _ctrls = List.generate(
       mockLeaderboard.length,
       (_) => AnimationController(
@@ -29,13 +29,11 @@ class _LeaderboardSectionState extends State<LeaderboardSection>
         duration: const Duration(milliseconds: 350),
       ),
     );
-
     _slides = _ctrls
         .map((c) => Tween<double>(begin: 32, end: 0).animate(
               CurvedAnimation(parent: c, curve: Curves.easeOut),
             ))
         .toList();
-
     _fades = _ctrls
         .map((c) => CurvedAnimation(parent: c, curve: Curves.easeOut))
         .toList();
@@ -65,7 +63,6 @@ class _LeaderboardSectionState extends State<LeaderboardSection>
 
   @override
   Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
     final maxXp = mockLeaderboard.first.xp;
 
     return Column(
@@ -74,19 +71,42 @@ class _LeaderboardSectionState extends State<LeaderboardSection>
         Padding(
           padding: EduSpacing.pagePadding,
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text('Leaderboard', style: tt.headlineSmall),
-              TextButton(
-                onPressed: () {},
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Leaderboard',
+                    style: GoogleFonts.caveat(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: EduColors.textPrimary,
+                    ),
+                  ),
+                  CustomPaint(
+                    painter: _ThinAccentLine(),
+                    size: const Size(96, 5),
+                  ),
+                ],
+              ),
+              const Spacer(),
+              GestureDetector(
+                onTap: () {},
                 child: Text(
-                  'See all',
-                  style: tt.labelLarge?.copyWith(color: EduColors.primary),
+                  'See all →',
+                  style: GoogleFonts.caveat(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: EduColors.primary,
+                  ),
                 ),
               ),
             ],
           ),
         ),
+        const SizedBox(height: EduSpacing.s2),
         Container(
           margin: const EdgeInsets.symmetric(horizontal: EduSpacing.s6),
           padding: const EdgeInsets.symmetric(vertical: EduSpacing.s3),
@@ -121,4 +141,26 @@ class _LeaderboardSectionState extends State<LeaderboardSection>
       ],
     );
   }
+}
+
+class _ThinAccentLine extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.drawPath(
+      Path()
+        ..moveTo(0, size.height * 0.6)
+        ..quadraticBezierTo(
+            size.width * 0.30, size.height * 0.1,
+            size.width * 0.62, size.height * 0.7)
+        ..lineTo(size.width * 0.90, size.height * 0.3),
+      Paint()
+        ..color = EduColors.primary.withValues(alpha: 0.40)
+        ..strokeWidth = 1.5
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_ThinAccentLine old) => false;
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:modern_learner_production/profile/data/profile_data.dart';
 import 'package:modern_learner_production/profile/widgets/settings_tile_widget.dart';
 import 'package:modern_learner_production/theme/theme.dart';
@@ -45,8 +46,6 @@ class _SettingsSectionState extends State<SettingsSection>
 
   @override
   Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-
     return FadeTransition(
       opacity: _fade,
       child: SlideTransition(
@@ -56,7 +55,25 @@ class _SettingsSectionState extends State<SettingsSection>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Settings', style: tt.headlineSmall),
+              // Sketch section title
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Settings',
+                    style: GoogleFonts.caveat(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: EduColors.textPrimary,
+                    ),
+                  ),
+                  CustomPaint(
+                    painter: _SketchAccentLine(width: 64),
+                    size: const Size(64, 5),
+                  ),
+                ],
+              ),
               const SizedBox(height: EduSpacing.s4),
               ...List.generate(settingsSections.length, (si) {
                 final section = settingsSections[si];
@@ -72,10 +89,11 @@ class _SettingsSectionState extends State<SettingsSection>
                             top: si == 0 ? 0 : EduSpacing.s4),
                         child: Text(
                           title.toUpperCase(),
-                          style: tt.labelMedium?.copyWith(
-                            letterSpacing: 1.3,
-                            color: EduColors.textSecondary,
+                          style: GoogleFonts.caveat(
+                            fontSize: 15,
                             fontWeight: FontWeight.w700,
+                            letterSpacing: 1.1,
+                            color: EduColors.textSecondary,
                           ),
                         ),
                       ),
@@ -117,4 +135,29 @@ class _SettingsSectionState extends State<SettingsSection>
       ),
     );
   }
+}
+
+class _SketchAccentLine extends CustomPainter {
+  const _SketchAccentLine({required this.width});
+  final double width;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.drawPath(
+      Path()
+        ..moveTo(0, size.height * 0.6)
+        ..quadraticBezierTo(
+            width * 0.30, size.height * 0.1,
+            width * 0.62, size.height * 0.7)
+        ..lineTo(width * 0.90, size.height * 0.3),
+      Paint()
+        ..color = EduColors.primary.withValues(alpha: 0.40)
+        ..strokeWidth = 1.5
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_SketchAccentLine old) => false;
 }

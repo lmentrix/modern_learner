@@ -1,4 +1,6 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:modern_learner_production/progress/data/progress_data.dart';
 import 'package:modern_learner_production/theme/theme.dart';
 
@@ -62,7 +64,6 @@ class _ProgressHeaderSectionState extends State<ProgressHeaderSection>
 
   @override
   Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
     final pct = totalXp / xpGoal;
 
     return Container(
@@ -83,7 +84,16 @@ class _ProgressHeaderSectionState extends State<ProgressHeaderSection>
           ),
         ],
       ),
-      child: Column(
+      child: Stack(
+        children: [
+          // Sketch scribble overlay — gives the card a hand-crafted feel
+          Positioned.fill(
+            child: ClipRRect(
+              borderRadius: EduRadius.borderXl,
+              child: CustomPaint(painter: _CardSketchOverlayPainter()),
+            ),
+          ),
+          Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -91,38 +101,46 @@ class _ProgressHeaderSectionState extends State<ProgressHeaderSection>
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Level $currentLevel',
-                      style: tt.labelLarge?.copyWith(
-                          color: Colors.white70, letterSpacing: 1.5)),
+                  Text(
+                    'Level $currentLevel',
+                    style: GoogleFonts.caveat(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white70,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
                   const SizedBox(height: 2),
                   AnimatedBuilder(
                     animation: _xpCount,
                     builder: (context, _) => Text(
                       '${_xpCount.value} XP',
-                      style: tt.displaySmall?.copyWith(
+                      style: GoogleFonts.caveat(
+                        fontSize: 36,
+                        fontWeight: FontWeight.w700,
                         color: Colors.white,
-                        fontWeight: FontWeight.w800,
+                        height: 1.0,
                       ),
                     ),
                   ),
                 ],
               ),
               const Spacer(),
-              // Level badge
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.18),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white30, width: 1.5),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  '$currentLevel',
-                  style: tt.headlineLarge?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w800,
+              // Level badge — hand-inked circle
+              CustomPaint(
+                painter: _SketchCircleBadgePainter(),
+                child: SizedBox(
+                  width: 60,
+                  height: 60,
+                  child: Center(
+                    child: Text(
+                      '$currentLevel',
+                      style: GoogleFonts.caveat(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -131,8 +149,14 @@ class _ProgressHeaderSectionState extends State<ProgressHeaderSection>
           const SizedBox(height: EduSpacing.s4),
 
           // XP bar
-          Text('$totalXp / $xpGoal XP to next level',
-              style: tt.labelMedium?.copyWith(color: Colors.white70)),
+          Text(
+            '$totalXp / $xpGoal XP to next level',
+            style: GoogleFonts.caveat(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: Colors.white70,
+            ),
+          ),
           const SizedBox(height: EduSpacing.s2),
           LayoutBuilder(
             builder: (context, constraints) => AnimatedBuilder(
@@ -188,6 +212,8 @@ class _ProgressHeaderSectionState extends State<ProgressHeaderSection>
             ],
           ),
         ],
+          ),
+        ],
       ),
     );
   }
@@ -206,7 +232,6 @@ class _StatPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
@@ -221,11 +246,126 @@ class _StatPill extends StatelessWidget {
             animation: animation,
             builder: (context, _) => Text(
               '${animation.value}$suffix',
-              style: tt.labelLarge?.copyWith(color: Colors.white),
+              style: GoogleFonts.caveat(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
             ),
           ),
         ],
       ),
     );
   }
+}
+
+// ── Sketch overlay — faint doodle lines on the card ─────────────────────────
+
+class _CardSketchOverlayPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.06)
+      ..strokeWidth = 1.0
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    // A few wandering squiggle lines for texture
+    canvas.drawPath(
+      Path()
+        ..moveTo(size.width * 0.05, size.height * 0.15)
+        ..quadraticBezierTo(
+            size.width * 0.25, size.height * 0.05,
+            size.width * 0.45, size.height * 0.18)
+        ..quadraticBezierTo(
+            size.width * 0.65, size.height * 0.30,
+            size.width * 0.85, size.height * 0.12),
+      paint,
+    );
+    canvas.drawPath(
+      Path()
+        ..moveTo(size.width * 0.10, size.height * 0.85)
+        ..quadraticBezierTo(
+            size.width * 0.35, size.height * 0.95,
+            size.width * 0.60, size.height * 0.80)
+        ..quadraticBezierTo(
+            size.width * 0.80, size.height * 0.70,
+            size.width * 0.95, size.height * 0.88),
+      paint,
+    );
+
+    // Small star doodle at top-right
+    final cx = size.width - 20.0;
+    const cy = 20.0;
+    const r = 8.0;
+    final inner = r * 0.42;
+    final starPath = Path();
+    for (var i = 0; i < 5; i++) {
+      final outerAngle = -math.pi / 2 + i * 2 * math.pi / 5;
+      final innerAngle = outerAngle + math.pi / 5;
+      final px = cx + r * math.cos(outerAngle);
+      final py = cy + r * math.sin(outerAngle);
+      final ix = cx + inner * math.cos(innerAngle);
+      final iy = cy + inner * math.sin(innerAngle);
+      i == 0 ? starPath.moveTo(px, py) : starPath.lineTo(px, py);
+      starPath.lineTo(ix, iy);
+    }
+    starPath.close();
+    canvas.drawPath(
+      starPath,
+      Paint()
+        ..color = Colors.white.withValues(alpha: 0.12)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.2
+        ..strokeCap = StrokeCap.round,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_CardSketchOverlayPainter old) => false;
+}
+
+// ── Hand-inked circle badge ──────────────────────────────────────────────────
+
+class _SketchCircleBadgePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final cx = size.width / 2;
+    final cy = size.height / 2;
+    const r = 26.0;
+
+    // Outer ink ring with slight wobble (two overlapping arcs)
+    canvas.drawArc(
+      Rect.fromCircle(center: Offset(cx, cy), radius: r),
+      -math.pi * 0.55,
+      math.pi * 1.85,
+      false,
+      Paint()
+        ..color = Colors.white.withValues(alpha: 0.55)
+        ..strokeWidth = 2.0
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round,
+    );
+    canvas.drawArc(
+      Rect.fromCircle(center: Offset(cx + 0.8, cy - 0.8), radius: r - 2),
+      math.pi * 0.80,
+      math.pi * 0.60,
+      false,
+      Paint()
+        ..color = Colors.white.withValues(alpha: 0.22)
+        ..strokeWidth = 1.2
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round,
+    );
+
+    // Faint fill
+    canvas.drawCircle(
+      Offset(cx, cy),
+      r - 1,
+      Paint()..color = Colors.white.withValues(alpha: 0.15),
+    );
+  }
+
+  @override
+  bool shouldRepaint(_SketchCircleBadgePainter old) => false;
 }

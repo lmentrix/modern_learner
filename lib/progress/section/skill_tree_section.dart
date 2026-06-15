@@ -147,9 +147,9 @@ class _SkillTreeSectionState extends State<SkillTreeSection>
               Text(
                 'Collect skills by completing challenges',
                 style: GoogleFonts.caveat(
-                  fontSize: 14,
+                  fontSize: 16,
                   color: EduColors.textSecondary,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],
@@ -259,10 +259,10 @@ class _SkillTreeSectionState extends State<SkillTreeSection>
                 child: Text(
                   label.toUpperCase(),
                   style: GoogleFonts.caveat(
-                    fontSize: 10.5,
+                    fontSize: 13,
                     fontWeight: FontWeight.w700,
-                    color: color.withValues(alpha: 0.50),
-                    letterSpacing: 1.2,
+                    color: color.withValues(alpha: 0.65),
+                    letterSpacing: 1.0,
                   ),
                 ),
               ),
@@ -347,16 +347,69 @@ class _ConnectionsPainter extends CustomPainter {
         final parentCenter = positions[prereqId];
         if (parentCenter == null) continue;
 
-        // Only draw cross-tier connections (skip b1→b2 within beginner row)
         final parentTier = nodeByIdTier[prereqId];
-        if (parentTier != null && _tierIndex(parentTier) == childTierIdx) continue;
+        final sameTier = parentTier != null && _tierIndex(parentTier) == childTierIdx;
 
-        final from = Offset(parentCenter.dx, parentCenter.dy + cardH / 2 - 4);
-        final to   = Offset(childCenter.dx,  childCenter.dy  - cardH / 2 + 4);
-
-        _drawConnection(canvas, from, to, node.state, prereqId);
+        if (sameTier) {
+          // Horizontal connection: from right-center of parent to left-center of child
+          final fromRight = parentCenter.dx < childCenter.dx;
+          final from = Offset(
+            fromRight ? parentCenter.dx + cardW / 2 - 4 : parentCenter.dx - cardW / 2 + 4,
+            parentCenter.dy,
+          );
+          final to = Offset(
+            fromRight ? childCenter.dx - cardW / 2 + 4 : childCenter.dx + cardW / 2 - 4,
+            childCenter.dy,
+          );
+          _drawHorizontalConnection(canvas, from, to, node.state, prereqId);
+        } else {
+          final from = Offset(parentCenter.dx, parentCenter.dy + cardH / 2 - 4);
+          final to   = Offset(childCenter.dx,  childCenter.dy  - cardH / 2 + 4);
+          _drawConnection(canvas, from, to, node.state, prereqId);
+        }
       }
     }
+  }
+
+  void _drawHorizontalConnection(
+    Canvas canvas, Offset from, Offset to,
+    NodeState state, String prereqId,
+  ) {
+    final active = state == NodeState.unlocked || state == NodeState.inProgress;
+    final locked = state == NodeState.locked;
+
+    final color = locked
+        ? const Color(0xFFCBD5E1)
+        : active
+            ? _activeColor(prereqId)
+            : EduColors.primary.withValues(alpha: 0.28);
+
+    final paint = Paint()
+      ..color       = color
+      ..strokeWidth = active ? 2.0 : (locked ? 1.2 : 1.5)
+      ..style       = PaintingStyle.stroke
+      ..strokeCap   = StrokeCap.round
+      ..strokeJoin  = StrokeJoin.round;
+
+    if (locked) {
+      _drawDashed(canvas, from, to, paint);
+      return;
+    }
+
+    // Gentle arc curving slightly downward for visual separation
+    final midX = (from.dx + to.dx) / 2;
+    final sag  = 10.0; // how much the arc dips below the node center
+    final path = Path()
+      ..moveTo(from.dx, from.dy)
+      ..cubicTo(midX, from.dy + sag, midX, to.dy + sag, to.dx, to.dy);
+
+    canvas.drawPath(path, paint);
+
+    // Arrow at end
+    _drawArrow(canvas, Offset(midX, to.dy + sag), to, paint..strokeWidth = 1.5);
+
+    // Ink dot at start
+    canvas.drawCircle(from, 2.8, Paint()..color = color);
   }
 
   void _drawConnection(
@@ -618,8 +671,8 @@ class _SketchLegend extends StatelessWidget {
               Text(
                 label,
                 style: GoogleFonts.caveat(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
                   color: EduColors.textSecondary,
                 ),
               ),

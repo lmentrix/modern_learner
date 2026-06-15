@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:modern_learner_production/theme/theme.dart';
 
 class XpProgressBar extends StatefulWidget {
@@ -55,16 +56,22 @@ class _XpProgressBarState extends State<XpProgressBar>
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
+            // Caveat for the label — feels hand-annotated
             Text(
               '${widget.xp} XP',
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: EduColors.primary,
-                    fontWeight: FontWeight.w700,
-                  ),
+              style: GoogleFonts.caveat(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: EduColors.primary,
+              ),
             ),
             Text(
-              '${widget.goal} goal',
-              style: Theme.of(context).textTheme.labelMedium,
+              'goal: ${widget.goal}',
+              style: GoogleFonts.caveat(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: EduColors.textSecondary,
+              ),
             ),
           ],
         ),
@@ -75,36 +82,37 @@ class _XpProgressBarState extends State<XpProgressBar>
               animation: _fill,
               builder: (context, _) {
                 final width = constraints.maxWidth;
-                if (width <= 0) return const SizedBox(height: 8);
+                if (width <= 0) return const SizedBox(height: 8.0);
                 final filled = (width * pct * _fill.value).clamp(0.0, width);
                 return Stack(
                   children: [
                     // Track
                     Container(
                       height: 8,
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         color: EduColors.primaryLight,
                         borderRadius: EduRadius.borderPill,
                       ),
                     ),
                     // Fill
-                    Container(
-                      height: 8,
-                      width: filled < 4 ? 0 : filled,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [EduColors.primaryLight, EduColors.primary],
-                        ),
-                        borderRadius: EduRadius.borderPill,
-                        boxShadow: [
-                          BoxShadow(
-                            color: EduColors.primary.withValues(alpha: 0.35),
-                            blurRadius: 6,
-                            offset: const Offset(0, 2),
+                    if (filled >= 4)
+                      Container(
+                        height: 8,
+                        width: filled,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [EduColors.primaryLight, EduColors.primary],
                           ),
-                        ],
+                          borderRadius: EduRadius.borderPill,
+                          boxShadow: [
+                            BoxShadow(
+                              color: EduColors.primary.withValues(alpha: 0.35),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
                   ],
                 );
               },

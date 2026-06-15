@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:modern_learner_production/profile/widgets/activity_grid.dart';
 import 'package:modern_learner_production/theme/theme.dart';
 
@@ -45,8 +46,6 @@ class _LearningActivitySectionState extends State<LearningActivitySection>
 
   @override
   Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-
     return FadeTransition(
       opacity: _fade,
       child: SlideTransition(
@@ -65,7 +64,25 @@ class _LearningActivitySectionState extends State<LearningActivitySection>
               children: [
                 Row(
                   children: [
-                    Text('Learning Activity', style: tt.titleLarge),
+                    // 40% sketch: Caveat title + very subtle underline (alpha at 40% of normal)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Learning Activity',
+                          style: GoogleFonts.caveat(
+                            fontSize: 19,
+                            fontWeight: FontWeight.w700,
+                            color: EduColors.textPrimary,
+                          ),
+                        ),
+                        CustomPaint(
+                          painter: _LightAccentLine(),
+                          size: const Size(130, 4),
+                        ),
+                      ],
+                    ),
                     const Spacer(),
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -73,11 +90,17 @@ class _LearningActivitySectionState extends State<LearningActivitySection>
                       decoration: BoxDecoration(
                         color: EduColors.primaryLight,
                         borderRadius: EduRadius.borderPill,
+                        border: Border.all(
+                          color: EduColors.primary.withValues(alpha: 0.18),
+                        ),
                       ),
                       child: Text(
                         '10 weeks',
-                        style: tt.labelMedium
-                            ?.copyWith(color: EduColors.primary),
+                        style: GoogleFonts.caveat(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: EduColors.primary,
+                        ),
                       ),
                     ),
                   ],
@@ -130,7 +153,6 @@ class _SummaryPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
     return Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10),
@@ -140,12 +162,49 @@ class _SummaryPill extends StatelessWidget {
         ),
         child: Column(
           children: [
-            Text(value,
-                style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
-            Text(label, style: tt.labelSmall),
+            // 40% sketch: Caveat for value, plain for label
+            Text(
+              value,
+              style: GoogleFonts.caveat(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: EduColors.textPrimary,
+              ),
+            ),
+            Text(
+              label,
+              style: GoogleFonts.caveat(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: EduColors.textSecondary,
+              ),
+            ),
           ],
         ),
       ),
     );
   }
+}
+
+// 40% sketch accent — only 16% opacity (40% of the normal 40% = ~16%)
+class _LightAccentLine extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.drawPath(
+      Path()
+        ..moveTo(0, size.height * 0.6)
+        ..quadraticBezierTo(
+            size.width * 0.30, size.height * 0.1,
+            size.width * 0.62, size.height * 0.7)
+        ..lineTo(size.width * 0.90, size.height * 0.3),
+      Paint()
+        ..color = EduColors.primary.withValues(alpha: 0.16)
+        ..strokeWidth = 1.3
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_LightAccentLine old) => false;
 }
