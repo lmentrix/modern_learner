@@ -14,11 +14,15 @@ class NoteCard extends StatelessWidget {
     required this.note,
     required this.onTap,
     this.index = 0,
+    this.onLongPress,
   });
 
   final StudyNote note;
   final VoidCallback onTap;
   final int index;
+  final VoidCallback? onLongPress;
+
+  static double tiltFor(int index) => _tilts[index % _tilts.length];
 
   // Deterministic tiny tilt per card
   static const _tilts = [-0.013, 0.009, -0.016, 0.011, -0.008, 0.014];
@@ -30,6 +34,7 @@ class NoteCard extends StatelessWidget {
 
     return GestureDetector(
       onTap: onTap,
+      onLongPress: onLongPress,
       child: Transform.rotate(
         angle: tilt,
         child: CustomPaint(
