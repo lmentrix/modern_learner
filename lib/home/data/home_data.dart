@@ -13,6 +13,36 @@ const mockStats = [
   QuickStat(label: 'Hours',   value: '38',  unit: 'this month', iconData: 0xe40c, cardColor: 0xFFFDE68A),
 ];
 
+const mockNotes = <NoteItem>[
+  NoteItem(
+    id: '1',
+    title: 'Photosynthesis Overview.pdf',
+    fileType: NoteFileType.pdf,
+    fileSize: '2.4 MB',
+    subject: 'Biology',
+    uploadedAt: 'Today',
+    cardColor: 0xFFBBF0D9,
+  ),
+  NoteItem(
+    id: '2',
+    title: 'Quadratic Equations Notes.docx',
+    fileType: NoteFileType.doc,
+    fileSize: '840 KB',
+    subject: 'Math',
+    uploadedAt: 'Yesterday',
+    cardColor: 0xFFE9D5FF,
+  ),
+  NoteItem(
+    id: '3',
+    title: 'WWII Timeline Diagram.png',
+    fileType: NoteFileType.image,
+    fileSize: '1.1 MB',
+    subject: 'History',
+    uploadedAt: 'Jun 12',
+    cardColor: 0xFFFDE68A,
+  ),
+];
+
 const currentUserName = 'Alex';
 const currentUserXp   = 3760;
 const currentUserXpGoal = 5000;

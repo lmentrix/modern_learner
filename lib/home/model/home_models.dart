@@ -15,6 +15,27 @@ class LeaderboardUser {
   final bool isCurrentUser;
 }
 
+enum NoteFileType { pdf, image, doc, other }
+
+class NoteItem {
+  const NoteItem({
+    required this.id,
+    required this.title,
+    required this.fileType,
+    required this.fileSize,
+    required this.subject,
+    required this.uploadedAt,
+    required this.cardColor,
+  });
+  final String id;
+  final String title;
+  final NoteFileType fileType;
+  final String fileSize;
+  final String subject;
+  final String uploadedAt;
+  final int cardColor;
+}
+
 class QuickStat {
   const QuickStat({
     required this.label,
