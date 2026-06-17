@@ -1,6 +1,8 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:modern_learner_production/global_bloc/bloc/global_bloc.dart';
 import 'package:modern_learner_production/home/data/home_data.dart';
 import 'package:modern_learner_production/home/widgets/xp_progress_bar.dart';
 import 'package:modern_learner_production/theme/theme.dart';
@@ -12,73 +14,75 @@ class HeaderSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(
-        EduSpacing.s6, EduSpacing.s8, EduSpacing.s6, EduSpacing.s6,
-      ),
-      decoration: BoxDecoration(
-        color: EduColors.surface,
-        borderRadius: const BorderRadius.vertical(bottom: EduRadius.xl),
-        boxShadow: EduColors.shadowCard,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    return BlocBuilder<GlobalBloc, GlobalState>(
+      buildWhen: (prev, curr) =>
+          prev.xp != curr.xp ||
+          prev.xpGoal != curr.xpGoal ||
+          prev.streak != curr.streak,
+      builder: (context, state) {
+        return Container(
+          padding: const EdgeInsets.fromLTRB(
+            EduSpacing.s6, EduSpacing.s8, EduSpacing.s6, EduSpacing.s6,
+          ),
+          decoration: BoxDecoration(
+            color: EduColors.surface,
+            borderRadius: const BorderRadius.vertical(bottom: EduRadius.xl),
+            boxShadow: EduColors.shadowCard,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Avatar — clean circle with a very subtle hand-inked ring
-              _SketchAvatar(),
-              const SizedBox(width: EduSpacing.s3),
-
-              // Greeting — Caveat for warmth, Inter stays for the structure
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Hello, $currentUserName 👋',
-                      style: GoogleFonts.caveat(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: EduColors.textPrimary,
-                        height: 1.2,
-                      ),
+              Row(
+                children: [
+                  _SketchAvatar(),
+                  const SizedBox(width: EduSpacing.s3),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Hello, $currentUserName 👋',
+                          style: GoogleFonts.caveat(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: EduColors.textPrimary,
+                            height: 1.2,
+                          ),
+                        ),
+                        Text(
+                          '${state.streak}-day streak 🔥',
+                          style: GoogleFonts.caveat(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w700,
+                            color: EduColors.primary,
+                          ),
+                        ),
+                      ],
                     ),
-                    Text(
-                      '$currentUserStreak-day streak 🔥',
-                      style: GoogleFonts.caveat(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w700,
-                        color: EduColors.primary,
-                      ),
+                  ),
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: EduColors.bg,
+                      shape: BoxShape.circle,
+                      boxShadow: EduColors.shadowCard,
                     ),
-                  ],
-                ),
+                    child: const Icon(Icons.notifications_none_rounded,
+                        color: EduColors.textPrimary, size: 22),
+                  ),
+                ],
               ),
-
-              // Bell — unchanged structure, just kept clean
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: EduColors.bg,
-                  shape: BoxShape.circle,
-                  boxShadow: EduColors.shadowCard,
-                ),
-                child: const Icon(Icons.notifications_none_rounded,
-                    color: EduColors.textPrimary, size: 22),
+              const SizedBox(height: EduSpacing.s5),
+              XpProgressBar(
+                xp: state.xp,
+                goal: state.xpGoal,
+                animate: animate,
               ),
             ],
           ),
-          const SizedBox(height: EduSpacing.s5),
-
-          XpProgressBar(
-            xp: currentUserXp,
-            goal: currentUserXpGoal,
-            animate: animate,
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

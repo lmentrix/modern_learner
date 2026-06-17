@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:modern_learner_production/profile/data/profile_data.dart';
 import 'package:modern_learner_production/profile/model/profile_models.dart';
 import 'package:modern_learner_production/theme/theme.dart';
 
 class ActivityGrid extends StatefulWidget {
-  const ActivityGrid({super.key, required this.animate});
+  const ActivityGrid({
+    super.key,
+    required this.animate,
+    required this.activityDays,
+  });
 
   final bool animate;
+  final List<ActivityDay> activityDays;
 
   @override
   State<ActivityGrid> createState() => _ActivityGridState();
@@ -16,12 +20,10 @@ class ActivityGrid extends StatefulWidget {
 class _ActivityGridState extends State<ActivityGrid>
     with SingleTickerProviderStateMixin {
   late final AnimationController _ctrl;
-  late final List<ActivityDay> _days;
 
   @override
   void initState() {
     super.initState();
-    _days = generateActivityGrid();
     _ctrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1000),
@@ -55,9 +57,8 @@ class _ActivityGridState extends State<ActivityGrid>
 
   @override
   Widget build(BuildContext context) {
-    // Arrange into 10 columns of 7 rows (Mon–Sun)
-    const cols = 10;
-    const rows = 7;
+    final days = widget.activityDays;
+    final cols = days.isEmpty ? 0 : (days.length / 7).ceil();
 
     return AnimatedBuilder(
       animation: _ctrl,
@@ -70,7 +71,7 @@ class _ActivityGridState extends State<ActivityGrid>
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Last 10 weeks',
+                  cols == 0 ? 'No activity yet' : 'Last $cols week${cols == 1 ? '' : 's'}',
                   style: GoogleFonts.caveat(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
@@ -111,19 +112,39 @@ class _ActivityGridState extends State<ActivityGrid>
               ],
             ),
             const SizedBox(height: EduSpacing.s3),
+            if (cols == 0)
+              SizedBox(
+                height: 7 * 14.0 + 6 * 3,
+                child: Row(
+                  children: List.generate(10, (_) => Expanded(
+                    child: Column(
+                      children: List.generate(7, (row) => Padding(
+                        padding: EdgeInsets.only(bottom: row == 6 ? 0 : 3),
+                        child: Container(
+                          height: 14,
+                          decoration: BoxDecoration(
+                            color: EduColors.border.withValues(alpha: 0.5),
+                            borderRadius: const BorderRadius.all(Radius.circular(3)),
+                          ),
+                        ),
+                      )),
+                    ),
+                  )),
+                ),
+              )
+            else
             SizedBox(
-              height: rows * 14.0 + (rows - 1) * 3,
+              height: 7 * 14.0 + 6 * 3,
               child: Row(
                 children: List.generate(cols, (col) {
-                  // Each column reveals based on progress
                   final colProgress = ((progress * cols) - col).clamp(0.0, 1.0);
                   return Expanded(
                     child: Column(
-                      children: List.generate(rows, (row) {
-                        final idx = col * rows + row;
-                        if (idx >= _days.length) return const SizedBox(height: 14);
-                        final day = _days[idx];
-                        final isLastRow = row == rows - 1;
+                      children: List.generate(7, (row) {
+                        final idx = col * 7 + row;
+                        if (idx >= days.length) return const SizedBox(height: 14);
+                        final day = days[idx];
+                        final isLastRow = row == 6;
                         return Padding(
                           padding: EdgeInsets.only(bottom: isLastRow ? 0 : 3),
                           child: Opacity(

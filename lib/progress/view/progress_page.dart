@@ -1,6 +1,8 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:modern_learner_production/global_bloc/bloc/global_bloc.dart';
 import 'package:modern_learner_production/progress/section/achievements_section.dart';
 import 'package:modern_learner_production/progress/section/progress_header_section.dart';
 import 'package:modern_learner_production/progress/section/saved_notes_section.dart';
@@ -135,7 +137,25 @@ class _ProgressPageState extends State<ProgressPage>
 
           // ── XP card ──────────────────────────────────────────────────────
           SliverToBoxAdapter(
-            child: _wrap(0, ProgressHeaderSection(animate: _started[0])),
+            child: _wrap(
+              0,
+              BlocBuilder<GlobalBloc, GlobalState>(
+                buildWhen: (prev, curr) =>
+                    prev.xp != curr.xp ||
+                    prev.xpGoal != curr.xpGoal ||
+                    prev.level != curr.level ||
+                    prev.lessonsCompleted != curr.lessonsCompleted ||
+                    prev.hoursStudied != curr.hoursStudied,
+                builder: (context, state) => ProgressHeaderSection(
+                  animate: _started[0],
+                  xp: state.xp,
+                  xpGoal: state.xpGoal,
+                  level: state.level,
+                  lessonsCompleted: state.lessonsCompleted,
+                  hoursStudied: state.hoursStudied,
+                ),
+              ),
+            ),
           ),
 
           const SliverToBoxAdapter(child: SizedBox(height: EduSpacing.s8)),

@@ -2,13 +2,27 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:modern_learner_production/profile/data/profile_data.dart';
+import 'package:modern_learner_production/profile/model/profile_models.dart';
 import 'package:modern_learner_production/profile/widgets/stat_chip.dart';
 import 'package:modern_learner_production/theme/theme.dart';
 
 class ProfileHeaderSection extends StatefulWidget {
-  const ProfileHeaderSection({super.key, required this.animate});
+  const ProfileHeaderSection({
+    super.key,
+    required this.animate,
+    required this.level,
+    required this.streak,
+    required this.lessonsCompleted,
+    required this.hoursStudied,
+    required this.notesCount,
+  });
 
   final bool animate;
+  final int level;
+  final int streak;
+  final int lessonsCompleted;
+  final int hoursStudied;
+  final int notesCount;
 
   @override
   State<ProfileHeaderSection> createState() => _ProfileHeaderSectionState();
@@ -49,6 +63,32 @@ class _ProfileHeaderSectionState extends State<ProfileHeaderSection>
   @override
   Widget build(BuildContext context) {
     final user = mockUser;
+    final stats = [
+      StatItem(
+        label: mockStats[0].label,
+        value: '${widget.lessonsCompleted}',
+        icon: mockStats[0].icon,
+        accentColor: mockStats[0].accentColor,
+      ),
+      StatItem(
+        label: mockStats[1].label,
+        value: '${widget.hoursStudied}',
+        icon: mockStats[1].icon,
+        accentColor: mockStats[1].accentColor,
+      ),
+      StatItem(
+        label: mockStats[2].label,
+        value: '${widget.notesCount}',
+        icon: mockStats[2].icon,
+        accentColor: mockStats[2].accentColor,
+      ),
+      StatItem(
+        label: mockStats[3].label,
+        value: '${widget.streak}d',
+        icon: mockStats[3].icon,
+        accentColor: mockStats[3].accentColor,
+      ),
+    ];
 
     return Column(
       children: [
@@ -112,7 +152,7 @@ class _ProfileHeaderSectionState extends State<ProfileHeaderSection>
                           border: Border.all(color: EduColors.surface, width: 2),
                         ),
                         child: Text(
-                          'Lv ${user.level}',
+                          'Lv ${widget.level}',
                           style: GoogleFonts.caveat(
                             fontSize: 14,
                             fontWeight: FontWeight.w800,
@@ -175,7 +215,7 @@ class _ProfileHeaderSectionState extends State<ProfileHeaderSection>
                         size: 13, color: Color(0xFFF59E0B)),
                     const SizedBox(width: 4),
                     Text(
-                      '${user.streak}-day streak',
+                      '${widget.streak}-day streak',
                       style: GoogleFonts.caveat(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
@@ -198,17 +238,17 @@ class _ProfileHeaderSectionState extends State<ProfileHeaderSection>
             children: [
               Row(
                 children: [
-                  Expanded(child: StatChip(stat: mockStats[0], animate: widget.animate)),
+                  Expanded(child: StatChip(stat: stats[0], animate: widget.animate)),
                   const SizedBox(width: EduSpacing.s3),
-                  Expanded(child: StatChip(stat: mockStats[1], animate: widget.animate)),
+                  Expanded(child: StatChip(stat: stats[1], animate: widget.animate)),
                 ],
               ),
               const SizedBox(height: EduSpacing.s3),
               Row(
                 children: [
-                  Expanded(child: StatChip(stat: mockStats[2], animate: widget.animate)),
+                  Expanded(child: StatChip(stat: stats[2], animate: widget.animate)),
                   const SizedBox(width: EduSpacing.s3),
-                  Expanded(child: StatChip(stat: mockStats[3], animate: widget.animate)),
+                  Expanded(child: StatChip(stat: stats[3], animate: widget.animate)),
                 ],
               ),
             ],

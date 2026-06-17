@@ -1,13 +1,25 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:modern_learner_production/progress/data/progress_data.dart';
 import 'package:modern_learner_production/theme/theme.dart';
 
 class ProgressHeaderSection extends StatefulWidget {
-  const ProgressHeaderSection({super.key, required this.animate});
+  const ProgressHeaderSection({
+    super.key,
+    required this.animate,
+    required this.xp,
+    required this.xpGoal,
+    required this.level,
+    required this.lessonsCompleted,
+    required this.hoursStudied,
+  });
 
   final bool animate;
+  final int xp;
+  final int xpGoal;
+  final int level;
+  final int lessonsCompleted;
+  final int hoursStudied;
 
   @override
   State<ProgressHeaderSection> createState() => _ProgressHeaderSectionState();
@@ -34,11 +46,11 @@ class _ProgressHeaderSectionState extends State<ProgressHeaderSection>
       duration: const Duration(milliseconds: 1400),
     );
     _xpFill = CurvedAnimation(parent: _xpCtrl, curve: Curves.easeOut);
-    _xpCount = IntTween(begin: 0, end: totalXp)
+    _xpCount = IntTween(begin: 0, end: widget.xp)
         .animate(CurvedAnimation(parent: _countCtrl, curve: Curves.easeOut));
-    _lessonCount = IntTween(begin: 0, end: lessonsCompleted)
+    _lessonCount = IntTween(begin: 0, end: widget.lessonsCompleted)
         .animate(CurvedAnimation(parent: _countCtrl, curve: Curves.easeOut));
-    _hoursCount = IntTween(begin: 0, end: hoursStudied)
+    _hoursCount = IntTween(begin: 0, end: widget.hoursStudied)
         .animate(CurvedAnimation(parent: _countCtrl, curve: Curves.easeOut));
 
     if (widget.animate) _start();
@@ -64,7 +76,7 @@ class _ProgressHeaderSectionState extends State<ProgressHeaderSection>
 
   @override
   Widget build(BuildContext context) {
-    final pct = totalXp / xpGoal;
+    final pct = widget.xp / widget.xpGoal;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: EduSpacing.s6),
@@ -102,7 +114,7 @@ class _ProgressHeaderSectionState extends State<ProgressHeaderSection>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Level $currentLevel',
+                    'Level ${widget.level}',
                     style: GoogleFonts.caveat(
                       fontSize: 17,
                       fontWeight: FontWeight.w700,
@@ -134,7 +146,7 @@ class _ProgressHeaderSectionState extends State<ProgressHeaderSection>
                   height: 60,
                   child: Center(
                     child: Text(
-                      '$currentLevel',
+                      '${widget.level}',
                       style: GoogleFonts.caveat(
                         fontSize: 28,
                         fontWeight: FontWeight.w800,
@@ -150,7 +162,7 @@ class _ProgressHeaderSectionState extends State<ProgressHeaderSection>
 
           // XP bar
           Text(
-            '$totalXp / $xpGoal XP to next level',
+            '${widget.xp} / ${widget.xpGoal} XP to next level',
             style: GoogleFonts.caveat(
               fontSize: 15,
               fontWeight: FontWeight.w600,

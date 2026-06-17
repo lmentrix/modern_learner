@@ -1,6 +1,8 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:modern_learner_production/global_bloc/bloc/global_bloc.dart';
 import 'package:modern_learner_production/profile/section/learning_activity_section.dart';
 import 'package:modern_learner_production/profile/section/profile_header_section.dart';
 import 'package:modern_learner_production/profile/section/settings_section.dart';
@@ -120,13 +122,48 @@ class _ProfilePageState extends State<ProfilePage>
           const SliverToBoxAdapter(child: SizedBox(height: EduSpacing.s6)),
 
           SliverToBoxAdapter(
-            child: _wrap(0, ProfileHeaderSection(animate: _started[0])),
+            child: _wrap(
+              0,
+              BlocBuilder<GlobalBloc, GlobalState>(
+                buildWhen: (prev, curr) =>
+                    prev.level != curr.level ||
+                    prev.streak != curr.streak ||
+                    prev.lessonsCompleted != curr.lessonsCompleted ||
+                    prev.hoursStudied != curr.hoursStudied ||
+                    prev.notesCount != curr.notesCount,
+                builder: (context, state) => ProfileHeaderSection(
+                  animate: _started[0],
+                  level: state.level,
+                  streak: state.streak,
+                  lessonsCompleted: state.lessonsCompleted,
+                  hoursStudied: state.hoursStudied,
+                  notesCount: state.notesCount,
+                ),
+              ),
+            ),
           ),
 
           const SliverToBoxAdapter(child: SizedBox(height: EduSpacing.s8)),
 
           SliverToBoxAdapter(
-            child: _wrap(1, LearningActivitySection(animate: _started[1])),
+            child: _wrap(
+              1,
+              BlocBuilder<GlobalBloc, GlobalState>(
+                buildWhen: (prev, curr) =>
+                    prev.bestWeekDays != curr.bestWeekDays ||
+                    prev.thisWeekDays != curr.thisWeekDays ||
+                    prev.totalActiveDays != curr.totalActiveDays ||
+                    prev.activityDays != curr.activityDays,
+                builder: (context, state) => LearningActivitySection(
+                  animate: _started[1],
+                  bestWeekDays: state.bestWeekDays,
+                  thisWeekDays: state.thisWeekDays,
+                  totalActiveDays: state.totalActiveDays,
+                  activityDays: state.activityDays,
+                  weeksTracked: state.weeksTracked,
+                ),
+              ),
+            ),
           ),
 
           const SliverToBoxAdapter(child: SizedBox(height: EduSpacing.s8)),

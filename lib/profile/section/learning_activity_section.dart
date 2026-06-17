@@ -1,12 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:modern_learner_production/profile/model/profile_models.dart';
 import 'package:modern_learner_production/profile/widgets/activity_grid.dart';
 import 'package:modern_learner_production/theme/theme.dart';
 
 class LearningActivitySection extends StatefulWidget {
-  const LearningActivitySection({super.key, required this.animate});
+  const LearningActivitySection({
+    super.key,
+    required this.animate,
+    required this.bestWeekDays,
+    required this.thisWeekDays,
+    required this.totalActiveDays,
+    required this.activityDays,
+    required this.weeksTracked,
+  });
 
   final bool animate;
+  final int bestWeekDays;
+  final int thisWeekDays;
+  final int totalActiveDays;
+  final List<ActivityDay> activityDays;
+  final int weeksTracked;
 
   @override
   State<LearningActivitySection> createState() =>
@@ -95,7 +109,7 @@ class _LearningActivitySectionState extends State<LearningActivitySection>
                         ),
                       ),
                       child: Text(
-                        '10 weeks',
+                        '${widget.weeksTracked} week${widget.weeksTracked == 1 ? '' : 's'}',
                         style: GoogleFonts.caveat(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
@@ -106,7 +120,10 @@ class _LearningActivitySectionState extends State<LearningActivitySection>
                   ],
                 ),
                 const SizedBox(height: EduSpacing.s5),
-                ActivityGrid(animate: widget.animate),
+                ActivityGrid(
+                  animate: widget.animate,
+                  activityDays: widget.activityDays,
+                ),
                 const SizedBox(height: EduSpacing.s5),
 
                 // Weekly summary pills
@@ -114,19 +131,19 @@ class _LearningActivitySectionState extends State<LearningActivitySection>
                   children: [
                     _SummaryPill(
                       label: 'Best week',
-                      value: '6 days',
+                      value: '${widget.bestWeekDays} days',
                       color: EduColors.accentGreen,
                     ),
                     const SizedBox(width: EduSpacing.s2),
                     _SummaryPill(
                       label: 'This week',
-                      value: '5 days',
+                      value: '${widget.thisWeekDays} days',
                       color: EduColors.primaryLight,
                     ),
                     const SizedBox(width: EduSpacing.s2),
                     _SummaryPill(
                       label: 'Total days',
-                      value: '58',
+                      value: '${widget.totalActiveDays}',
                       color: EduColors.accentYellow,
                     ),
                   ],

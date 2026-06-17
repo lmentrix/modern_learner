@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:modern_learner_production/global_bloc/bloc/global_bloc.dart';
 import 'package:modern_learner_production/home/data/home_data.dart';
+import 'package:modern_learner_production/home/model/home_models.dart';
 import 'package:modern_learner_production/home/widgets/stat_card.dart';
 import 'package:modern_learner_production/theme/theme.dart';
 
@@ -11,30 +14,53 @@ class QuickStatsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Padding(
-          padding: EduSpacing.pagePadding,
-          child: _SketchSectionTitle(label: 'Quick stats'),
-        ),
-        const SizedBox(height: EduSpacing.s4),
-        Padding(
-          padding: EduSpacing.pagePadding,
-          child: Row(
-            children: mockStats.map((stat) {
-              return Expanded(
-                child: Padding(
-                  padding: EdgeInsets.only(
-                    right: stat == mockStats.last ? 0 : EduSpacing.s3,
-                  ),
-                  child: StatCard(stat: stat, animate: animate),
-                ),
-              );
-            }).toList(),
+    return BlocBuilder<GlobalBloc, GlobalState>(
+      buildWhen: (prev, curr) =>
+          prev.lessonsCompleted != curr.lessonsCompleted ||
+          prev.hoursStudied != curr.hoursStudied,
+      builder: (context, state) {
+        final stats = [
+          QuickStat(
+            label: mockStats[0].label,
+            value: '${state.lessonsCompleted}',
+            unit: mockStats[0].unit,
+            iconData: mockStats[0].iconData,
+            cardColor: mockStats[0].cardColor,
           ),
-        ),
-      ],
+          QuickStat(
+            label: mockStats[1].label,
+            value: '${state.hoursStudied}',
+            unit: mockStats[1].unit,
+            iconData: mockStats[1].iconData,
+            cardColor: mockStats[1].cardColor,
+          ),
+        ];
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EduSpacing.pagePadding,
+              child: _SketchSectionTitle(label: 'Quick stats'),
+            ),
+            const SizedBox(height: EduSpacing.s4),
+            Padding(
+              padding: EduSpacing.pagePadding,
+              child: Row(
+                children: stats.map((stat) {
+                  return Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        right: stat == stats.last ? 0 : EduSpacing.s3,
+                      ),
+                      child: StatCard(stat: stat, animate: animate),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
