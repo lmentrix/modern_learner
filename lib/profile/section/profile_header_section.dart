@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:modern_learner_production/profile/data/profile_data.dart';
@@ -15,6 +16,9 @@ class ProfileHeaderSection extends StatefulWidget {
     required this.lessonsCompleted,
     required this.hoursStudied,
     required this.notesCount,
+    required this.displayName,
+    required this.avatarInitials,
+    required this.joinedDate,
   });
 
   final bool animate;
@@ -23,6 +27,9 @@ class ProfileHeaderSection extends StatefulWidget {
   final int lessonsCompleted;
   final int hoursStudied;
   final int notesCount;
+  final String displayName;
+  final String avatarInitials;
+  final String joinedDate;
 
   @override
   State<ProfileHeaderSection> createState() => _ProfileHeaderSectionState();
@@ -41,9 +48,10 @@ class _ProfileHeaderSectionState extends State<ProfileHeaderSection>
       vsync: this,
       duration: const Duration(milliseconds: 600),
     );
-    _avatarScale = Tween<double>(begin: 0.7, end: 1.0).animate(
-      CurvedAnimation(parent: _avatarCtrl, curve: Curves.elasticOut),
-    );
+    _avatarScale = Tween<double>(
+      begin: 0.7,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _avatarCtrl, curve: Curves.elasticOut));
     _avatarFade = CurvedAnimation(parent: _avatarCtrl, curve: Curves.easeOut);
     if (widget.animate) _avatarCtrl.forward();
   }
@@ -62,7 +70,6 @@ class _ProfileHeaderSectionState extends State<ProfileHeaderSection>
 
   @override
   Widget build(BuildContext context) {
-    final user = mockUser;
     final stats = [
       StatItem(
         label: mockStats[0].label,
@@ -103,11 +110,9 @@ class _ProfileHeaderSectionState extends State<ProfileHeaderSection>
                   alignment: Alignment.center,
                   children: [
                     // Hand-drawn sketch ring around avatar
-                    CustomPaint(
-                      painter: _AvatarSketchRingPainter(
-                        Color(user.avatarGradient.first),
-                      ),
-                      child: const SizedBox(width: 108, height: 108),
+                    const CustomPaint(
+                      painter: _AvatarSketchRingPainter(EduColors.primary),
+                      child: SizedBox(width: 108, height: 108),
                     ),
                     // Avatar
                     Container(
@@ -115,15 +120,14 @@ class _ProfileHeaderSectionState extends State<ProfileHeaderSection>
                       height: 84,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        gradient: LinearGradient(
-                          colors: user.avatarGradient.map((c) => Color(c)).toList(),
+                        gradient: const LinearGradient(
+                          colors: [EduColors.primaryLight, EduColors.primary],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Color(user.avatarGradient.first)
-                                .withValues(alpha: 0.35),
+                            color: EduColors.primary.withValues(alpha: 0.35),
                             blurRadius: 18,
                             offset: const Offset(0, 6),
                           ),
@@ -131,7 +135,9 @@ class _ProfileHeaderSectionState extends State<ProfileHeaderSection>
                       ),
                       alignment: Alignment.center,
                       child: Text(
-                        user.avatarInitials,
+                        widget.avatarInitials.isEmpty
+                            ? '?'
+                            : widget.avatarInitials,
                         style: GoogleFonts.caveat(
                           fontSize: 28,
                           fontWeight: FontWeight.w800,
@@ -145,11 +151,16 @@ class _ProfileHeaderSectionState extends State<ProfileHeaderSection>
                       right: 6,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 2),
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: EduColors.primary,
                           borderRadius: EduRadius.borderPill,
-                          border: Border.all(color: EduColors.surface, width: 2),
+                          border: Border.all(
+                            color: EduColors.surface,
+                            width: 2,
+                          ),
                         ),
                         child: Text(
                           'Lv ${widget.level}',
@@ -165,45 +176,27 @@ class _ProfileHeaderSectionState extends State<ProfileHeaderSection>
                 ),
                 const SizedBox(height: EduSpacing.s4),
                 Text(
-                  user.name,
+                  widget.displayName.isEmpty ? 'Learner' : widget.displayName,
                   style: GoogleFonts.caveat(
                     fontSize: 26,
                     fontWeight: FontWeight.w700,
                     color: EduColors.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  user.username,
-                  style: GoogleFonts.caveat(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700,
-                    color: EduColors.primary,
-                  ),
-                ),
-                const SizedBox(height: EduSpacing.s3),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: EduSpacing.s12),
-                  child: Text(
-                    user.bio,
-                    style: GoogleFonts.caveat(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: EduColors.textSecondary,
-                      height: 1.4,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
                 const SizedBox(height: EduSpacing.s3),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.calendar_today_outlined,
-                        size: 13, color: EduColors.textSecondary),
+                    const Icon(
+                      Icons.calendar_today_outlined,
+                      size: 13,
+                      color: EduColors.textSecondary,
+                    ),
                     const SizedBox(width: 4),
                     Text(
-                      'Member since ${user.joinedDate}',
+                      widget.joinedDate.isEmpty
+                          ? 'Member'
+                          : 'Member since ${widget.joinedDate}',
                       style: GoogleFonts.caveat(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
@@ -211,8 +204,11 @@ class _ProfileHeaderSectionState extends State<ProfileHeaderSection>
                       ),
                     ),
                     const SizedBox(width: EduSpacing.s4),
-                    const Icon(Icons.local_fire_department_rounded,
-                        size: 13, color: Color(0xFFF59E0B)),
+                    const Icon(
+                      Icons.local_fire_department_rounded,
+                      size: 13,
+                      color: Color(0xFFF59E0B),
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       '${widget.streak}-day streak',
@@ -238,17 +234,25 @@ class _ProfileHeaderSectionState extends State<ProfileHeaderSection>
             children: [
               Row(
                 children: [
-                  Expanded(child: StatChip(stat: stats[0], animate: widget.animate)),
+                  Expanded(
+                    child: StatChip(stat: stats[0], animate: widget.animate),
+                  ),
                   const SizedBox(width: EduSpacing.s3),
-                  Expanded(child: StatChip(stat: stats[1], animate: widget.animate)),
+                  Expanded(
+                    child: StatChip(stat: stats[1], animate: widget.animate),
+                  ),
                 ],
               ),
               const SizedBox(height: EduSpacing.s3),
               Row(
                 children: [
-                  Expanded(child: StatChip(stat: stats[2], animate: widget.animate)),
+                  Expanded(
+                    child: StatChip(stat: stats[2], animate: widget.animate),
+                  ),
                   const SizedBox(width: EduSpacing.s3),
-                  Expanded(child: StatChip(stat: stats[3], animate: widget.animate)),
+                  Expanded(
+                    child: StatChip(stat: stats[3], animate: widget.animate),
+                  ),
                 ],
               ),
             ],

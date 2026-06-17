@@ -2,6 +2,12 @@ part of 'global_bloc.dart';
 
 sealed class GlobalEvent {}
 
+/// Load all stats from Supabase for the given user.
+final class FetchUserStats extends GlobalEvent {
+  FetchUserStats({required this.userId});
+  final String userId;
+}
+
 /// Directly set XP (and optionally level/xpGoal).
 final class UpdateXp extends GlobalEvent {
   UpdateXp({required this.xp, this.level, this.xpGoal});
@@ -44,6 +50,12 @@ final class UpdateActivityWeeks extends GlobalEvent {
   final int? totalActiveDays;
 }
 
+/// Replace the full activity grid data.
+final class UpdateActivityDays extends GlobalEvent {
+  UpdateActivityDays({required this.activityDays});
+  final List<ActivityDay> activityDays;
+}
+
 /// Add a new voice note recorded on the mic page.
 final class AddVoiceNote extends GlobalEvent {}
 
@@ -55,9 +67,3 @@ final class AddUploadedNote extends GlobalEvent {}
 
 /// Remove an uploaded note from the home page.
 final class RemoveUploadedNote extends GlobalEvent {}
-
-/// Replace the full activity grid data (e.g. after a data load).
-final class UpdateActivityDays extends GlobalEvent {
-  UpdateActivityDays({required this.activityDays});
-  final List<ActivityDay> activityDays;
-}

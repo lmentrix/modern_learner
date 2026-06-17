@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:modern_learner_production/global_bloc/bloc/global_bloc.dart';
-import 'package:modern_learner_production/home/data/home_data.dart';
 import 'package:modern_learner_production/home/widgets/xp_progress_bar.dart';
 import 'package:modern_learner_production/theme/theme.dart';
 
@@ -18,7 +17,9 @@ class HeaderSection extends StatelessWidget {
       buildWhen: (prev, curr) =>
           prev.xp != curr.xp ||
           prev.xpGoal != curr.xpGoal ||
-          prev.streak != curr.streak,
+          prev.streak != curr.streak ||
+          prev.displayName != curr.displayName ||
+          prev.avatarInitials != curr.avatarInitials,
       builder: (context, state) {
         return Container(
           padding: const EdgeInsets.fromLTRB(
@@ -41,7 +42,7 @@ class HeaderSection extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Hello, $currentUserName 👋',
+                          'Hello, ${state.displayName.split(' ').first} 👋',
                           style: GoogleFonts.caveat(
                             fontSize: 18,
                             fontWeight: FontWeight.w700,
@@ -110,12 +111,15 @@ class _SketchAvatar extends StatelessWidget {
             shape: BoxShape.circle,
           ),
           alignment: Alignment.center,
-          child: Text(
-            'ME',
-            style: GoogleFonts.caveat(
-              fontSize: 13,
-              fontWeight: FontWeight.w800,
-              color: EduColors.textInverse,
+          child: BlocBuilder<GlobalBloc, GlobalState>(
+            buildWhen: (p, c) => p.avatarInitials != c.avatarInitials,
+            builder: (context, state) => Text(
+              state.avatarInitials.isEmpty ? '?' : state.avatarInitials,
+              style: GoogleFonts.caveat(
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                color: EduColors.textInverse,
+              ),
             ),
           ),
         ),

@@ -130,7 +130,10 @@ class _ProfilePageState extends State<ProfilePage>
                     prev.streak != curr.streak ||
                     prev.lessonsCompleted != curr.lessonsCompleted ||
                     prev.hoursStudied != curr.hoursStudied ||
-                    prev.notesCount != curr.notesCount,
+                    prev.notesCount != curr.notesCount ||
+                    prev.displayName != curr.displayName ||
+                    prev.avatarInitials != curr.avatarInitials ||
+                    prev.joinedDate != curr.joinedDate,
                 builder: (context, state) => ProfileHeaderSection(
                   animate: _started[0],
                   level: state.level,
@@ -138,6 +141,9 @@ class _ProfilePageState extends State<ProfilePage>
                   lessonsCompleted: state.lessonsCompleted,
                   hoursStudied: state.hoursStudied,
                   notesCount: state.notesCount,
+                  displayName: state.displayName,
+                  avatarInitials: state.avatarInitials,
+                  joinedDate: state.joinedDate,
                 ),
               ),
             ),
