@@ -2,10 +2,12 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:modern_learner_production/study/data/study_data.dart';
+import 'package:modern_learner_production/study/model/note_model.dart';
 import 'package:modern_learner_production/study/model/study_models.dart';
+import 'package:modern_learner_production/study/service/note_service.dart';
 import 'package:modern_learner_production/study/widgets/note_card.dart';
 import 'package:modern_learner_production/theme/theme.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Section
@@ -26,20 +28,75 @@ class NotesListSection extends StatefulWidget {
 }
 
 class _NotesListSectionState extends State<NotesListSection> {
-  late List<StudyNote> _notes;
+  late final NoteService _service;
+  List<StudyNote> _notes = [];
+  bool _loading = true;
 
   @override
   void initState() {
     super.initState();
-    _notes = List.from(mockNotes);
+    _service = NoteService(Supabase.instance.client);
+    _fetchNotes();
+  }
+
+  Future<void> _fetchNotes() async {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId == null) {
+      if (mounted) setState(() => _loading = false);
+      return;
+    }
+    try {
+      final models = await _service.fetchNotes(userId);
+      if (mounted) {
+        setState(() {
+          _notes = models.map(_toStudyNote).toList();
+          _loading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  StudyNote _toStudyNote(NoteModel m) => StudyNote(
+        id: m.id,
+        title: m.title,
+        subject: m.subject,
+        preview: m.preview,
+        body: m.body,
+        tagColor: m.tagColor,
+        readMinutes: m.readMinutes,
+        createdAt: _formatDate(m.createdAt),
+        markedRanges: m.markedRanges
+            .map((r) => MarkedRange(start: r.start, end: r.end, note: r.note))
+            .toList(),
+      );
+
+  static String _formatDate(DateTime dt) {
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    ];
+    final now = DateTime.now();
+    if (dt.year == now.year && dt.month == now.month && dt.day == now.day) {
+      return 'Today';
+    }
+    return '${months[dt.month - 1]} ${dt.day}';
   }
 
   void _deleteNote(String id) {
+    _service.deleteNote(id).ignore();
     setState(() => _notes.removeWhere((n) => n.id == id));
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_loading) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 40),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

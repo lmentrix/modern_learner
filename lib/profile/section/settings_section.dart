@@ -5,9 +5,10 @@ import 'package:modern_learner_production/profile/widgets/settings_tile_widget.d
 import 'package:modern_learner_production/theme/theme.dart';
 
 class SettingsSection extends StatefulWidget {
-  const SettingsSection({super.key, required this.animate});
+  const SettingsSection({super.key, required this.animate, this.onSignOut});
 
   final bool animate;
+  final VoidCallback? onSignOut;
 
   @override
   State<SettingsSection> createState() => _SettingsSectionState();
@@ -111,7 +112,12 @@ class _SettingsSectionState extends State<SettingsSection>
                           final isLast = ti == section.length - 1;
                           return Column(
                             children: [
-                              SettingsTileWidget(tile: tile),
+                              SettingsTileWidget(
+                                tile: tile,
+                                onTap: tile.isDestructive
+                                    ? widget.onSignOut
+                                    : null,
+                              ),
                               if (!isLast)
                                 Padding(
                                   padding: const EdgeInsets.only(

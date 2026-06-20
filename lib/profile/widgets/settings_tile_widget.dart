@@ -3,9 +3,10 @@ import 'package:modern_learner_production/profile/model/profile_models.dart';
 import 'package:modern_learner_production/theme/theme.dart';
 
 class SettingsTileWidget extends StatefulWidget {
-  const SettingsTileWidget({super.key, required this.tile});
+  const SettingsTileWidget({super.key, required this.tile, this.onTap});
 
   final SettingsTile tile;
+  final VoidCallback? onTap;
 
   @override
   State<SettingsTileWidget> createState() => _SettingsTileWidgetState();
@@ -29,7 +30,7 @@ class _SettingsTileWidgetState extends State<SettingsTileWidget> {
     return GestureDetector(
       onTap: tile.hasToggle
           ? () => setState(() => _toggled = !_toggled)
-          : () {},
+          : widget.onTap ?? () {},
       behavior: HitTestBehavior.opaque,
       child: Padding(
         padding: const EdgeInsets.symmetric(

@@ -2,16 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:modern_learner_production/auth/bloc/auth_bloc.dart';
-import 'package:modern_learner_production/auth/service/auth_service.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import 'package:modern_learner_production/auth/section/auth_sign_in_form.dart';
 import 'package:modern_learner_production/auth/section/auth_sign_up_form.dart';
 import 'package:modern_learner_production/auth/section/logo_section.dart';
+import 'package:modern_learner_production/auth/service/auth_service.dart';
 import 'package:modern_learner_production/auth/widgets/auth_submit_button.dart';
 import 'package:modern_learner_production/auth/widgets/auth_tab_switcher.dart';
 import 'package:modern_learner_production/auth/widgets/auth_toggle_link.dart';
 import 'package:modern_learner_production/auth/widgets/background_blob.dart';
-import 'package:modern_learner_production/global_bloc/bloc/global_bloc.dart';
 import 'package:modern_learner_production/theme/theme.dart';
 
 // ── Page ─────────────────────────────────────────────────────────────────────
@@ -22,9 +20,7 @@ class AuthPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => AuthBloc(
-        authService: AuthService(Supabase.instance.client),
-      ),
+      create: (_) => AuthBloc(authService: AuthService()),
       child: const _AuthView(),
     );
   }
@@ -52,14 +48,17 @@ class _AuthViewState extends State<_AuthView> with TickerProviderStateMixin {
   // Form
   final _signInKey = GlobalKey<FormState>();
   final _signUpKey = GlobalKey<FormState>();
-  final _nameCtrl  = TextEditingController();
+  final _nameCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
-  final _passCtrl  = TextEditingController();
-  bool _obscure    = true;
+  final _passCtrl = TextEditingController();
+
+  final _authService = AuthService();
+
+  bool _obscure = true;
 
   // Focus
   final _emailFocus = FocusNode();
-  final _passFocus  = FocusNode();
+  final _passFocus = FocusNode();
 
   @override
   void initState() {
@@ -73,24 +72,24 @@ class _AuthViewState extends State<_AuthView> with TickerProviderStateMixin {
       parent: _entranceCtrl,
       curve: const Interval(0.0, 0.55, curve: Curves.easeOut),
     );
-    _logoSlide = Tween<Offset>(
-      begin: const Offset(0, -0.12),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _entranceCtrl,
-      curve: const Interval(0.0, 0.55, curve: Curves.easeOut),
-    ));
+    _logoSlide = Tween<Offset>(begin: const Offset(0, -0.12), end: Offset.zero)
+        .animate(
+          CurvedAnimation(
+            parent: _entranceCtrl,
+            curve: const Interval(0.0, 0.55, curve: Curves.easeOut),
+          ),
+        );
     _formFade = CurvedAnimation(
       parent: _entranceCtrl,
       curve: const Interval(0.28, 1.0, curve: Curves.easeOut),
     );
-    _formSlide = Tween<Offset>(
-      begin: const Offset(0, 0.1),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _entranceCtrl,
-      curve: const Interval(0.28, 1.0, curve: Curves.easeOut),
-    ));
+    _formSlide = Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero)
+        .animate(
+          CurvedAnimation(
+            parent: _entranceCtrl,
+            curve: const Interval(0.28, 1.0, curve: Curves.easeOut),
+          ),
+        );
 
     _entranceCtrl.forward();
   }
@@ -118,41 +117,23 @@ class _AuthViewState extends State<_AuthView> with TickerProviderStateMixin {
   }
 
   void _submit() {
-    FocusScope.of(context).unfocus();
     if (_mode == AuthMode.signIn) {
-      if (!(_signInKey.currentState?.validate() ?? false)) return;
-      context.read<AuthBloc>().add(AuthSignInRequested(
-        email: _emailCtrl.text.trim(),
-        password: _passCtrl.text,
-      ));
+      _authService.signIn(email: _emailCtrl.text, password: _passCtrl.text);
     } else {
-      if (!(_signUpKey.currentState?.validate() ?? false)) return;
-      context.read<AuthBloc>().add(AuthSignUpRequested(
-        name: _nameCtrl.text.trim(),
-        email: _emailCtrl.text.trim(),
+      _authService.signUp(
+        name: _nameCtrl.text,
+        email: _emailCtrl.text,
         password: _passCtrl.text,
-      ));
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<AuthBloc, AuthState>(
-      listener: (context, state) {
-        if (state is AuthSuccess) {
-          context
-              .read<GlobalBloc>()
-              .add(FetchUserStats(userId: state.userId));
-        }
-        if (state is AuthFailure) {
-          ScaffoldMessenger.of(context)
-            ..hideCurrentSnackBar()
-            ..showSnackBar(SnackBar(content: Text(state.message)));
-        }
-      },
+      listener: (context, state) {},
       builder: (context, state) {
         final isLoading = state is AuthLoading;
-
         return Scaffold(
           backgroundColor: EduColors.bg,
           resizeToAvoidBottomInset: true,
@@ -196,8 +177,7 @@ class _AuthViewState extends State<_AuthView> with TickerProviderStateMixin {
                               boxShadow: EduColors.shadowRaised,
                             ),
                             child: Column(
-                              crossAxisAlignment:
-                                  CrossAxisAlignment.stretch,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 AuthTabSwitcher(
                                   mode: _mode,
@@ -207,11 +187,12 @@ class _AuthViewState extends State<_AuthView> with TickerProviderStateMixin {
                                 const SizedBox(height: EduSpacing.s6),
 
                                 AnimatedSwitcher(
-                                  duration:
-                                      const Duration(milliseconds: 260),
+                                  duration: const Duration(milliseconds: 260),
                                   transitionBuilder: (child, anim) =>
                                       FadeTransition(
-                                          opacity: anim, child: child),
+                                        opacity: anim,
+                                        child: child,
+                                      ),
                                   child: _mode == AuthMode.signIn
                                       ? AuthSignInForm(
                                           key: const ValueKey('si'),

@@ -4,19 +4,17 @@ import 'package:modern_learner_production/auth/model/auth_user_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AuthService {
-  AuthService(this._client);
-
-  final SupabaseClient _client;
+  SupabaseClient get _supabase => Supabase.instance.client;
 
   // ── Current user ───────────────────────────────────────────────────────────
 
   AuthUserModel? get currentUser {
-    final user = _client.auth.currentUser;
+    final user = _supabase.auth.currentUser;
     return user != null ? AuthUserModel.fromUser(user) : null;
   }
 
   Stream<AuthUserModel?> get authStateChanges {
-    return _client.auth.onAuthStateChange.map((event) {
+    return _supabase.auth.onAuthStateChange.map((event) {
       final user = event.session?.user;
       return user != null ? AuthUserModel.fromUser(user) : null;
     });
@@ -28,7 +26,7 @@ class AuthService {
     required String email,
     required String password,
   }) async {
-    final response = await _client.auth.signInWithPassword(
+    final response = await _supabase.auth.signInWithPassword(
       email: email,
       password: password,
     );
@@ -48,9 +46,7 @@ class AuthService {
     required String password,
   }) async {
     log('  [AuthService] auth.signUp → email: $email');
-    // Pass name in data so the handle_new_user trigger picks it up and
-    // inserts it into profiles automatically (along with user_progress).
-    final response = await _client.auth.signUp(
+    final response = await _supabase.auth.signUp(
       email: email,
       password: password,
       data: {'name': name},
@@ -62,10 +58,20 @@ class AuthService {
     if (response.user == null) {
       throw const AuthException('Sign up failed. Please try again.');
     }
-    // Supabase returns user_repeated_signup (HTTP 200, session: null) when the
-    // email is already registered. Treat this as a sign-in prompt rather than
-    // silently emitting AuthSuccess with no active session.
+
+    // Email confirmation required (e.g. cloud Supabase with confirmations on).
     if (response.session == null) {
+      throw const AuthException('Check your email for a confirmation link.');
+    }
+
+    // When autoconfirm is enabled, Supabase silently signs in an already-registered
+    // email instead of rejecting the request. Detect this by checking if the account
+    // was created more than 30 seconds ago — a genuinely new account is always fresh.
+    final createdAt = DateTime.tryParse(response.user!.createdAt);
+    if (createdAt != null &&
+        DateTime.now().toUtc().difference(createdAt.toUtc()) >
+            const Duration(seconds: 30)) {
+      await _supabase.auth.signOut();
       throw const AuthException(
         'This email is already registered. Please sign in instead.',
       );
@@ -76,5 +82,5 @@ class AuthService {
 
   // ── Sign out ───────────────────────────────────────────────────────────────
 
-  Future<void> signOut() => _client.auth.signOut();
+  Future<void> signOut() => _supabase.auth.signOut();
 }

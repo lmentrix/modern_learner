@@ -24,8 +24,7 @@ class AuthSubmitButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: EduColors.textPrimary,
           foregroundColor: Colors.white,
-          disabledBackgroundColor:
-              EduColors.textPrimary.withValues(alpha: 0.6),
+          disabledBackgroundColor: EduColors.textPrimary.withValues(alpha: 0.6),
           shape: const StadiumBorder(),
           elevation: 0,
         ),

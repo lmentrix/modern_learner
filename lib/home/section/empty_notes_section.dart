@@ -1,10 +1,13 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:modern_learner_production/home/data/home_data.dart';
 import 'package:modern_learner_production/home/model/home_models.dart';
+import 'package:modern_learner_production/home/model/upload_model.dart';
+import 'package:modern_learner_production/home/service/upload_service.dart';
 import 'package:modern_learner_production/home/widgets/note_card.dart';
 import 'package:modern_learner_production/theme/theme.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 // ── Section shell (stateful so it owns the notes list) ───────────────────────
 
@@ -16,14 +19,79 @@ class EmptyNotesSection extends StatefulWidget {
 }
 
 class _EmptyNotesSectionState extends State<EmptyNotesSection> {
-  final List<NoteItem> _notes = List.of(mockNotes);
+  late final UploadService _service;
+  List<NoteItem> _notes = [];
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _service = UploadService(Supabase.instance.client);
+    _fetchFiles();
+  }
+
+  Future<void> _fetchFiles() async {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId == null) {
+      if (mounted) setState(() => _loading = false);
+      return;
+    }
+    try {
+      final models = await _service.fetchFiles(userId);
+      if (mounted) {
+        setState(() {
+          _notes = models.map(_toNoteItem).toList();
+          _loading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  static NoteItem _toNoteItem(UploadedFileModel m) => NoteItem(
+        id: m.id,
+        title: m.title,
+        fileType: _mapFileType(m.fileType),
+        fileSize: m.fileSize,
+        subject: m.subject,
+        uploadedAt: _formatDate(m.uploadedAt),
+        cardColor: m.cardColor,
+      );
+
+  static NoteFileType _mapFileType(UploadFileType t) => switch (t) {
+        UploadFileType.pdf => NoteFileType.pdf,
+        UploadFileType.image => NoteFileType.image,
+        UploadFileType.doc => NoteFileType.doc,
+        UploadFileType.other => NoteFileType.other,
+      };
+
+  static String _formatDate(DateTime dt) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final d = DateTime(dt.year, dt.month, dt.day);
+    if (d == today) return 'Today';
+    if (d == today.subtract(const Duration(days: 1))) return 'Yesterday';
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    ];
+    return '${months[dt.month - 1]} ${dt.day}';
+  }
 
   void _delete(NoteItem note) {
+    _service.deleteFile(note.id).ignore();
     setState(() => _notes.remove(note));
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_loading) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 32),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: EduSpacing.s6),
       child: Column(
@@ -106,21 +174,17 @@ class _NotesListState extends State<_NotesList> {
   final Set<String> _deleting = {};
 
   void _handleDelete(NoteItem note, int index) {
-    HapticFeedback.mediumImpact();
     setState(() => _deleting.add(note.id));
 
-    // Let the dismiss animation finish, then collapse the row.
-    Future.delayed(const Duration(milliseconds: 260), () {
-      if (!mounted) return;
-      _listKey.currentState?.removeItem(
-        index,
-        (context, animation) => _buildRemovedCard(note, animation),
-        duration: const Duration(milliseconds: 320),
-      );
-      // Notify parent after collapse starts so the parent list shrinks too.
-      Future.delayed(const Duration(milliseconds: 160), () {
-        if (mounted) widget.onDelete(note);
-      });
+    // Burst animation finishes inside _Swipeable._confirmDismiss; by the time
+    // onDelete() is called the card has already visually vanished. Collapse row.
+    _listKey.currentState?.removeItem(
+      index,
+      (context, animation) => _buildRemovedCard(note, animation),
+      duration: const Duration(milliseconds: 400),
+    );
+    Future.delayed(const Duration(milliseconds: 200), () {
+      if (mounted) widget.onDelete(note);
     });
   }
 
@@ -154,6 +218,7 @@ class _NotesListState extends State<_NotesList> {
           animation: animation,
           isDeleting: _deleting.contains(note.id),
           isLast: index == widget.notes.length - 1,
+          accentColor: Color(note.cardColor),
           onDelete: () => _handleDelete(note, index),
           child: NoteCard(note: note),
         );
@@ -170,6 +235,7 @@ class _Swipeable extends StatefulWidget {
     required this.animation,
     required this.isDeleting,
     required this.isLast,
+    required this.accentColor,
     required this.onDelete,
     required this.child,
   });
@@ -177,6 +243,7 @@ class _Swipeable extends StatefulWidget {
   final Animation<double> animation;
   final bool isDeleting;
   final bool isLast;
+  final Color accentColor;
   final VoidCallback onDelete;
   final Widget child;
 
@@ -184,77 +251,70 @@ class _Swipeable extends StatefulWidget {
   State<_Swipeable> createState() => _SwipeableState();
 }
 
-class _SwipeableState extends State<_Swipeable>
-    with TickerProviderStateMixin {
-  // Phase 1: scribble lines draw across the card (0 → 1).
-  late final AnimationController _scribbleCtrl;
-  // Phase 2: card crumples — scaleX squishes then scaleY collapses.
-  late final AnimationController _crumpleCtrl;
-  late final Animation<double> _crumpleX;
-  late final Animation<double> _crumpleY;
-  late final Animation<double> _crumpleRotate;
+class _SwipeableState extends State<_Swipeable> with TickerProviderStateMixin {
+  // Single controller drives the full burst sequence (0 → 1, 750 ms).
+  AnimationController? _burst;
 
-  double _scribbleProgress = 0;
+  Animation<double>? _cardScale;
+  Animation<double>? _cardFade;
+  Animation<double>? _cardRotate;
 
   @override
   void initState() {
     super.initState();
 
-    _scribbleCtrl = AnimationController(
+    final burst = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 420),
-    )..addListener(() {
-        setState(() => _scribbleProgress = _scribbleCtrl.value);
-      });
+      duration: const Duration(milliseconds: 750),
+    );
+    _burst = burst;
 
-    _crumpleCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 320),
+    // Brief swell then elastic implode
+    _cardScale = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.07), weight: 10),
+      TweenSequenceItem(
+        tween: Tween(begin: 1.07, end: 0.0)
+            .chain(CurveTween(curve: Curves.easeInBack)),
+        weight: 90,
+      ),
+    ]).animate(CurvedAnimation(
+      parent: burst,
+      curve: const Interval(0.15, 0.72),
+    ));
+
+    _cardFade = Tween<double>(begin: 1.0, end: 0.0).animate(
+      CurvedAnimation(parent: burst, curve: const Interval(0.30, 0.72)),
     );
 
-    // ScaleX: 1 → 0  (squish horizontally like crumpling paper)
-    _crumpleX = Tween<double>(begin: 1.0, end: 0.0).animate(
-      CurvedAnimation(
-        parent: _crumpleCtrl,
-        curve: const Interval(0.0, 0.7, curve: Curves.easeInBack),
-      ),
-    );
-    // ScaleY: 1 → 0  (flatten after horizontal squish)
-    _crumpleY = Tween<double>(begin: 1.0, end: 0.0).animate(
-      CurvedAnimation(
-        parent: _crumpleCtrl,
-        curve: const Interval(0.3, 1.0, curve: Curves.easeIn),
-      ),
-    );
-    // Slight tilt while crumpling
-    _crumpleRotate = Tween<double>(begin: 0.0, end: 0.08).animate(
-      CurvedAnimation(
-        parent: _crumpleCtrl,
-        curve: const Interval(0.0, 0.5, curve: Curves.easeOut),
-      ),
-    );
+    _cardRotate = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 0.0, end: 0.06), weight: 50),
+      TweenSequenceItem(tween: Tween(begin: 0.06, end: -0.04), weight: 50),
+    ]).animate(CurvedAnimation(
+      parent: burst,
+      curve: const Interval(0.15, 0.70, curve: Curves.easeInOut),
+    ));
   }
 
   @override
   void dispose() {
-    _scribbleCtrl.dispose();
-    _crumpleCtrl.dispose();
+    _burst?.dispose();
     super.dispose();
   }
 
   Future<bool> _confirmDismiss(DismissDirection _) async {
+    final burst = _burst;
+    if (burst == null) { widget.onDelete(); return false; }
     HapticFeedback.mediumImpact();
-    // Draw scribbles across the card.
-    await _scribbleCtrl.forward();
+    await burst.animateTo(0.72);
     HapticFeedback.lightImpact();
-    // Crumple the card.
-    await _crumpleCtrl.forward();
+    await burst.animateTo(1.0);
     widget.onDelete();
-    return false; // AnimatedList handles the row collapse
+    return false;
   }
 
   @override
   Widget build(BuildContext context) {
+    final burst = _burst;
     return SizeTransition(
       sizeFactor: CurvedAnimation(parent: widget.animation, curve: Curves.easeOut),
       child: FadeTransition(
@@ -265,51 +325,48 @@ class _SwipeableState extends State<_Swipeable>
             key: ValueKey('dismiss_${widget.key}'),
             direction: DismissDirection.endToStart,
             confirmDismiss: _confirmDismiss,
-            // ── Sketch eraser panel ──────────────────────────────────────
-            background: CustomPaint(
-              painter: _SketchEraserPainter(),
-              child: Align(
-                alignment: Alignment.centerRight,
-                child: Padding(
-                  padding: const EdgeInsets.only(right: EduSpacing.s5),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      CustomPaint(
-                        size: const Size(28, 28),
-                        painter: _SketchTrashPainter(),
-                      ),
-                      const SizedBox(height: 5),
-                      Text(
-                        'erase',
-                        style: GoogleFonts.caveat(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFFDC2626),
+            background: _DeleteRevealPanel(accentColor: widget.accentColor),
+            child: burst == null
+                ? widget.child
+                : AnimatedBuilder(
+              animation: burst,
+              builder: (context, child) {
+                final t = burst.value;
+                return Stack(
+                  alignment: Alignment.center,
+                  clipBehavior: Clip.none,
+                  children: [
+                    // Burst FX layer (ripples, particles, sparkles)
+                    Positioned.fill(
+                      child: IgnorePointer(
+                        child: CustomPaint(
+                          painter: _BurstPainter(
+                            progress: t,
+                            accentColor: widget.accentColor,
+                          ),
                         ),
                       ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            // ── Card with scribble overlay + crumple transform ───────────
-            child: AnimatedBuilder(
-              animation: _crumpleCtrl,
-              builder: (context, child) => Transform(
-                alignment: Alignment.center,
-                transform: Matrix4.identity()
-                  ..rotateZ(_crumpleRotate.value)
-                  ..scale(_crumpleX.value, _crumpleY.value),
-                child: child,
-              ),
-              child: CustomPaint(
-                foregroundPainter: _ScribblePainter(
-                  progress: _scribbleProgress,
-                  color: const Color(0xFFDC2626),
-                ),
-                child: widget.child,
-              ),
+                    ),
+                    // Card — scale + rotate + fade
+                    Transform(
+                      alignment: Alignment.center,
+                      transform: Matrix4.identity()
+                        ..rotateZ(t > 0.15 ? (_cardRotate?.value ?? 0) : 0)
+                        ..scale(
+                          t > 0.15 ? (_cardScale?.value ?? 1.0) : 1.0,
+                          t > 0.15 ? (_cardScale?.value ?? 1.0) : 1.0,
+                        ),
+                      child: Opacity(
+                        opacity: t > 0.30
+                            ? (_cardFade?.value ?? 1.0).clamp(0.0, 1.0)
+                            : 1.0,
+                        child: child,
+                      ),
+                    ),
+                  ],
+                );
+              },
+              child: widget.child,
             ),
           ),
         ),
@@ -321,159 +378,191 @@ class _SwipeableState extends State<_Swipeable>
 // ── Sketch eraser background painter ─────────────────────────────────────────
 // Draws a light-red fill with a rough hand-drawn border.
 
-class _SketchEraserPainter extends CustomPainter {
+// ── Delete reveal panel ───────────────────────────────────────────────────────
+
+class _DeleteRevealPanel extends StatelessWidget {
+  const _DeleteRevealPanel({required this.accentColor});
+  final Color accentColor;
+
   @override
-  void paint(Canvas canvas, Size size) {
-    final r = 20.0;
-
-    // Soft fill
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(Offset.zero & size, Radius.circular(r)),
-      Paint()..color = const Color(0xFFFEE2E2),
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            accentColor.withValues(alpha: 0.10),
+            accentColor.withValues(alpha: 0.32),
+          ],
+        ),
+        borderRadius: EduRadius.borderXl,
+        border: Border.all(
+          color: accentColor.withValues(alpha: 0.38),
+          width: 1.4,
+        ),
+      ),
+      child: Align(
+        alignment: Alignment.centerRight,
+        child: Padding(
+          padding: const EdgeInsets.only(right: EduSpacing.s5),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.auto_delete_rounded,
+                  size: 26, color: accentColor.withValues(alpha: 0.85)),
+              const SizedBox(height: 4),
+              Text(
+                'delete',
+                style: GoogleFonts.caveat(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: accentColor.withValues(alpha: 0.85),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
+  }
+}
 
-    // Rough wobbly border — 4 sides drawn as slightly imperfect cubic curves
-    final stroke = Paint()
-      ..color = const Color(0xFFDC2626).withValues(alpha: 0.55)
-      ..strokeWidth = 1.8
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
+// ── BurstPainter ─────────────────────────────────────────────────────────────
+// Three layered FX driven by a single 0→1 progress value:
+//   Ripple rings    0.00 – 0.45
+//   Paper particles 0.00 – 0.55
+//   Sparkle glints  0.50 – 0.85
 
-    final w = size.width;
-    final h = size.height;
-    final path = Path()
-      ..moveTo(r + 2, 1)
-      ..cubicTo(w * 0.35, -2, w * 0.65, 3, w - r - 1, 1)   // top
-      ..cubicTo(w + 2, r, w - 2, h - r, w - 1, h - r - 1)  // right
-      ..cubicTo(w - r, h + 2, r + 2, h - 3, 1, h - r - 1)  // bottom
-      ..cubicTo(-2, h - r, 3, r, 1, r + 1)                  // left
-      ..close();
-    canvas.drawPath(path, stroke);
+class _BurstPainter extends CustomPainter {
+  _BurstPainter({required this.progress, required this.accentColor});
+
+  final double progress;
+  final Color accentColor;
+
+  static final List<_ParticleDef> _particles = _buildParticles();
+  static final List<_SparkleDef>  _sparkles  = _buildSparkles();
+
+  static List<_ParticleDef> _buildParticles() {
+    final rng = math.Random(7);
+    return List.generate(16, (i) {
+      final angle = (i / 16) * math.pi * 2 + rng.nextDouble() * 0.4;
+      return _ParticleDef(
+        angle: angle,
+        dist:  70.0 + rng.nextDouble() * 60,
+        size:  4.0  + rng.nextDouble() * 6,
+        rot:   rng.nextDouble() * math.pi * 2,
+        delay: rng.nextDouble() * 0.18,
+      );
+    });
+  }
+
+  static List<_SparkleDef> _buildSparkles() {
+    final rng = math.Random(13);
+    return List.generate(6, (i) {
+      final angle = (i / 6) * math.pi * 2 + rng.nextDouble() * 0.5;
+      return _SparkleDef(
+        angle: angle,
+        dist:  55.0 + rng.nextDouble() * 45,
+        size:  6.0  + rng.nextDouble() * 8,
+      );
+    });
   }
 
   @override
-  bool shouldRepaint(_SketchEraserPainter _) => false;
-}
-
-// ── Sketch trash icon painter ─────────────────────────────────────────────────
-// Hand-drawn trash can: rough rectangle body + lid + three lines inside.
-
-class _SketchTrashPainter extends CustomPainter {
-  @override
   void paint(Canvas canvas, Size size) {
-    final p = Paint()
-      ..color = const Color(0xFFDC2626)
-      ..strokeWidth = 1.8
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
+    if (progress <= 0) return;
+    final cx = size.width  / 2;
+    final cy = size.height / 2;
+    final center = Offset(cx, cy);
 
-    final w = size.width;
-    final h = size.height;
-
-    // Body (rough rectangle, slightly wobbly)
-    canvas.drawPath(
-      Path()
-        ..moveTo(w * 0.18, h * 0.32)
-        ..cubicTo(w * 0.15, h * 0.55, w * 0.17, h * 0.80, w * 0.20, h * 0.92)
-        ..cubicTo(w * 0.38, h * 0.96, w * 0.62, h * 0.95, w * 0.80, h * 0.92)
-        ..cubicTo(w * 0.83, h * 0.78, w * 0.85, h * 0.52, w * 0.82, h * 0.32),
-      p,
-    );
-
-    // Lid
-    canvas.drawPath(
-      Path()
-        ..moveTo(w * 0.10, h * 0.28)
-        ..cubicTo(w * 0.35, h * 0.22, w * 0.65, h * 0.24, w * 0.90, h * 0.28),
-      p,
-    );
-
-    // Handle on lid
-    canvas.drawPath(
-      Path()
-        ..moveTo(w * 0.38, h * 0.24)
-        ..cubicTo(w * 0.40, h * 0.12, w * 0.60, h * 0.12, w * 0.62, h * 0.24),
-      p,
-    );
-
-    // Three inner lines
-    for (final t in [0.42, 0.55, 0.68]) {
-      canvas.drawLine(
-        Offset(w * 0.35, h * t),
-        Offset(w * 0.33, h * (t + 0.22)),
-        p,
+    // ── Ripple rings (0 → 0.45) ─────────────────────────────────────────
+    final rippleT = (progress / 0.45).clamp(0.0, 1.0);
+    for (int r = 0; r < 3; r++) {
+      final delay = r * 0.22;
+      final t = ((rippleT - delay) / (1.0 - delay)).clamp(0.0, 1.0);
+      if (t <= 0) continue;
+      canvas.drawCircle(
+        center,
+        t * (size.width * 0.62),
+        Paint()
+          ..color = accentColor.withValues(alpha: (1 - t) * 0.52)
+          ..strokeWidth = 2.5 - t * 1.8
+          ..style = PaintingStyle.stroke,
       );
     }
-  }
 
-  @override
-  bool shouldRepaint(_SketchTrashPainter _) => false;
-}
+    // ── Paper-bit particles (0 → 0.55) ──────────────────────────────────
+    final particleT = (progress / 0.55).clamp(0.0, 1.0);
+    for (final p in _particles) {
+      final t = ((particleT - p.delay) / (1 - p.delay)).clamp(0.0, 1.0);
+      if (t <= 0) continue;
+      final eased = Curves.easeOut.transform(t);
+      // Arc: gravity pulls bits slightly downward
+      final dx = math.cos(p.angle) * p.dist * eased;
+      final dy = math.sin(p.angle) * p.dist * eased + 16 * eased * eased;
+      final alpha = (1.0 - Curves.easeIn.transform(t)) * 0.9;
+      final half = p.size / 2;
 
-// ── Scribble overlay painter ──────────────────────────────────────────────────
-// Progressively draws 3 rough diagonal lines across the card as progress 0→1.
+      canvas.save();
+      canvas.translate(cx + dx, cy + dy);
+      canvas.rotate(p.rot + t * math.pi * 1.8);
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(-half, -half * 0.55, p.size, p.size * 0.55),
+          const Radius.circular(2),
+        ),
+        Paint()..color = accentColor.withValues(alpha: alpha),
+      );
+      canvas.restore();
+    }
 
-class _ScribblePainter extends CustomPainter {
-  const _ScribblePainter({required this.progress, required this.color});
-  final double progress;
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (progress == 0) return;
-
-    final paint = Paint()
-      ..color = color.withValues(alpha: 0.75)
-      ..strokeWidth = 2.8
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-
-    // Three rough lines; each occupies 1/3 of the total progress.
-    final lines = [
-      _wobblyLine(
-        Offset(size.width * 0.04, size.height * 0.20),
-        Offset(size.width * 0.96, size.height * 0.78),
-        cx1: size.width * 0.30, cy1: size.height * 0.10,
-        cx2: size.width * 0.68, cy2: size.height * 0.88,
-      ),
-      _wobblyLine(
-        Offset(size.width * 0.96, size.height * 0.22),
-        Offset(size.width * 0.04, size.height * 0.80),
-        cx1: size.width * 0.70, cy1: size.height * 0.08,
-        cx2: size.width * 0.28, cy2: size.height * 0.90,
-      ),
-      _wobblyLine(
-        Offset(size.width * 0.10, size.height * 0.50),
-        Offset(size.width * 0.90, size.height * 0.52),
-        cx1: size.width * 0.35, cy1: size.height * 0.38,
-        cx2: size.width * 0.65, cy2: size.height * 0.64,
-      ),
-    ];
-
-    const perLine = 1.0 / 3;
-    for (int i = 0; i < lines.length; i++) {
-      final start = i * perLine;
-      if (progress <= start) break;
-      final t = ((progress - start) / perLine).clamp(0.0, 1.0);
-      for (final m in lines[i].computeMetrics()) {
-        canvas.drawPath(m.extractPath(0, m.length * t), paint);
+    // ── Sparkle glints (0.50 → 0.85) ────────────────────────────────────
+    final sparkT = ((progress - 0.50) / 0.35).clamp(0.0, 1.0);
+    if (sparkT > 0) {
+      for (final s in _sparkles) {
+        final eased = Curves.easeOut.transform(sparkT);
+        final dx = math.cos(s.angle) * s.dist * eased;
+        final dy = math.sin(s.angle) * s.dist * eased;
+        // Flash in (0→0.5) then out (0.5→1)
+        final alpha = sparkT < 0.5 ? sparkT * 2 : (1 - sparkT) * 2;
+        final sz = s.size * (0.5 + 0.5 * (1 - sparkT));
+        _drawStar(canvas, Offset(cx + dx, cy + dy), sz,
+            accentColor.withValues(alpha: alpha * 0.92));
       }
     }
   }
 
-  Path _wobblyLine(Offset p1, Offset p2,
-      {required double cx1, required double cy1,
-      required double cx2, required double cy2}) {
-    return Path()
-      ..moveTo(p1.dx, p1.dy)
-      ..cubicTo(cx1, cy1, cx2, cy2, p2.dx, p2.dy);
+  void _drawStar(Canvas canvas, Offset c, double size, Color color) {
+    final h = size / 2;
+    final thin = h * 0.22;
+    final path = Path()
+      ..moveTo(c.dx,        c.dy - h)
+      ..lineTo(c.dx + thin, c.dy - thin)
+      ..lineTo(c.dx + h,    c.dy)
+      ..lineTo(c.dx + thin, c.dy + thin)
+      ..lineTo(c.dx,        c.dy + h)
+      ..lineTo(c.dx - thin, c.dy + thin)
+      ..lineTo(c.dx - h,    c.dy)
+      ..lineTo(c.dx - thin, c.dy - thin)
+      ..close();
+    canvas.drawPath(path, Paint()..color = color);
   }
 
   @override
-  bool shouldRepaint(_ScribblePainter old) => old.progress != progress;
+  bool shouldRepaint(_BurstPainter old) =>
+      old.progress != progress || old.accentColor != accentColor;
+}
+
+class _ParticleDef {
+  const _ParticleDef({
+    required this.angle, required this.dist,
+    required this.size,  required this.rot, required this.delay,
+  });
+  final double angle, dist, size, rot, delay;
+}
+
+class _SparkleDef {
+  const _SparkleDef({required this.angle, required this.dist, required this.size});
+  final double angle, dist, size;
 }
 
 // ── Empty / upload state ──────────────────────────────────────────────────────

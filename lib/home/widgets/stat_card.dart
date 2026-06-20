@@ -26,9 +26,10 @@ class _StatCardState extends State<StatCard>
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     );
-    _counter = IntTween(begin: 0, end: target).animate(
-      CurvedAnimation(parent: _ctrl, curve: Curves.easeOut),
-    );
+    _counter = IntTween(
+      begin: 0,
+      end: target,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
     if (widget.animate) _ctrl.forward();
   }
 
@@ -75,8 +76,11 @@ class _StatCardState extends State<StatCard>
                   color: EduColors.textPrimary,
                 ),
               ),
-              const Icon(Icons.north_east_rounded,
-                  size: 18, color: EduColors.textSecondary),
+              const Icon(
+                Icons.north_east_rounded,
+                size: 18,
+                color: EduColors.textSecondary,
+              ),
             ],
           ),
           const SizedBox(height: EduSpacing.s3),
@@ -95,10 +99,8 @@ class _StatCardState extends State<StatCard>
           // Big number stays crisp (data should read cleanly)
           AnimatedBuilder(
             animation: _counter,
-            builder: (context, _) => Text(
-              '${_counter.value}',
-              style: _dataNumber,
-            ),
+            builder: (context, _) =>
+                Text('${_counter.value}', style: _dataNumber),
           ),
 
           // Unit in Caveat

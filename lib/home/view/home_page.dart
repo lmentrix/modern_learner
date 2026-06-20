@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:modern_learner_production/home/section/empty_notes_section.dart';
 import 'package:modern_learner_production/home/section/header_section.dart';
 import 'package:modern_learner_production/home/section/leaderboard_section.dart';
+import 'package:modern_learner_production/home/data/home_data.dart';
 import 'package:modern_learner_production/home/section/quick_stats_section.dart';
 import 'package:modern_learner_production/home/section/walking_scene_section.dart';
 import 'package:modern_learner_production/theme/theme.dart';
@@ -16,12 +17,12 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   // ── Entrance stagger ──────────────────────────────────────────────────────
   static const _sectionCount = 4;
-  static const _staggerMs    = 120;
-  static const _durationMs   = 420;
+  static const _staggerMs = 120;
+  static const _durationMs = 420;
 
   late final List<AnimationController> _ctrls;
-  late final List<Animation<double>>   _fades;
-  late final List<Animation<Offset>>   _slides;
+  late final List<Animation<double>> _fades;
+  late final List<Animation<Offset>> _slides;
   final List<bool> _started = List.filled(_sectionCount, false);
 
   // ── Pull-to-refresh state ─────────────────────────────────────────────────
@@ -92,7 +93,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   @override
   void dispose() {
-    for (final c in _ctrls) { c.dispose(); }
+    for (final c in _ctrls) {
+      c.dispose();
+    }
     super.dispose();
   }
 
@@ -110,7 +113,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       if (px < 0) {
         setState(() {
           _isDragging = true;
-          _pullOffset  = (-px).clamp(0.0, _maxPull);
+          _pullOffset = (-px).clamp(0.0, _maxPull);
         });
       } else if (!_isDragging && _pullOffset > 0) {
         // Snapped back to normal scroll without releasing — reset immediately.
@@ -139,7 +142,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   Future<void> _doRefresh() async {
     setState(() {
       _isRefreshing = true;
-      _pullOffset   = _maxPull; // hold scene fully open during refresh
+      _pullOffset = _maxPull; // hold scene fully open during refresh
     });
 
     // Replace with a real data reload.
@@ -157,9 +160,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   // ── Entrance animation helper ─────────────────────────────────────────────
 
   Widget _wrap(int index, Widget child) => FadeTransition(
-        opacity: _fades[index],
-        child: SlideTransition(position: _slides[index], child: child),
-      );
+    opacity: _fades[index],
+    child: SlideTransition(position: _slides[index], child: child),
+  );
 
   // ── Build ─────────────────────────────────────────────────────────────────
 
@@ -209,21 +212,24 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   ),
 
                   const SliverToBoxAdapter(
-                      child: SizedBox(height: EduSpacing.s8)),
+                    child: SizedBox(height: EduSpacing.s8),
+                  ),
 
                   SliverToBoxAdapter(
-                    child: _wrap(1, QuickStatsSection(animate: _started[1])),
+                    child: _wrap(1, QuickStatsSection(animate: _started[1], stat: mockStats[0])),
                   ),
 
                   const SliverToBoxAdapter(
-                      child: SizedBox(height: EduSpacing.s8)),
+                    child: SizedBox(height: EduSpacing.s8),
+                  ),
 
                   SliverToBoxAdapter(
                     child: _wrap(2, LeaderboardSection(animate: _started[2])),
                   ),
 
                   const SliverToBoxAdapter(
-                      child: SizedBox(height: EduSpacing.s8)),
+                    child: SizedBox(height: EduSpacing.s8),
+                  ),
 
                   SliverToBoxAdapter(
                     child: _wrap(3, const EmptyNotesSection()),

@@ -1,8 +1,9 @@
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:modern_learner_production/global_bloc/bloc/global_bloc.dart';
+import 'package:modern_learner_production/auth/service/auth_service.dart';
+import 'package:modern_learner_production/profile/data/profile_data.dart';
 import 'package:modern_learner_production/profile/section/learning_activity_section.dart';
 import 'package:modern_learner_production/profile/section/profile_header_section.dart';
 import 'package:modern_learner_production/profile/section/settings_section.dart';
@@ -26,6 +27,12 @@ class _ProfilePageState extends State<ProfilePage>
   late final List<Animation<Offset>> _slides;
   final List<bool> _started = List.filled(_sectionCount, false);
 
+  final _activityDays = generateActivityGrid();
+  static const _bestWeekDays = 5;
+  static const _thisWeekDays = 3;
+  static const _totalActiveDays = 42;
+  static const _weeksTracked = 10;
+
   @override
   void initState() {
     super.initState();
@@ -40,10 +47,12 @@ class _ProfilePageState extends State<ProfilePage>
         .map((c) => CurvedAnimation(parent: c, curve: Curves.easeOut))
         .toList();
     _slides = _ctrls
-        .map((c) => Tween<Offset>(
-              begin: const Offset(0, 0.06),
-              end: Offset.zero,
-            ).animate(CurvedAnimation(parent: c, curve: Curves.easeOut)))
+        .map(
+          (c) => Tween<Offset>(
+            begin: const Offset(0, 0.06),
+            end: Offset.zero,
+          ).animate(CurvedAnimation(parent: c, curve: Curves.easeOut)),
+        )
         .toList();
     _launch();
   }
@@ -60,17 +69,68 @@ class _ProfilePageState extends State<ProfilePage>
 
   @override
   void dispose() {
-    for (final c in _ctrls) { c.dispose(); }
+    for (final c in _ctrls) {
+      c.dispose();
+    }
     super.dispose();
   }
 
+  Future<void> _confirmSignOut() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(
+          'Sign out?',
+          style: GoogleFonts.caveat(
+            fontSize: 22,
+            fontWeight: FontWeight.w700,
+            color: EduColors.textPrimary,
+          ),
+        ),
+        content: Text(
+          'You will need to sign in again to continue.',
+          style: GoogleFonts.inter(
+            fontSize: 14,
+            color: EduColors.textSecondary,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.inter(color: EduColors.textSecondary),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(
+              'Sign out',
+              style: GoogleFonts.inter(
+                color: const Color(0xFFDC2626),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && mounted) {
+      await AuthService().signOut();
+    }
+  }
+
   Widget _wrap(int i, Widget child) => FadeTransition(
-        opacity: _fades[i],
-        child: SlideTransition(position: _slides[i], child: child),
-      );
+    opacity: _fades[i],
+    child: SlideTransition(position: _slides[i], child: child),
+  );
 
   @override
   Widget build(BuildContext context) {
+    final lessonsCompleted = int.tryParse(mockStats[0].value) ?? 0;
+    final hoursStudied = int.tryParse(mockStats[1].value) ?? 0;
+    final notesCount = int.tryParse(mockStats[2].value) ?? 0;
+
     return Scaffold(
       backgroundColor: EduColors.bg,
       body: CustomScrollView(
@@ -81,7 +141,10 @@ class _ProfilePageState extends State<ProfilePage>
               bottom: false,
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(
-                  EduSpacing.s6, EduSpacing.s4, EduSpacing.s6, 0,
+                  EduSpacing.s6,
+                  EduSpacing.s4,
+                  EduSpacing.s6,
+                  0,
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -108,7 +171,10 @@ class _ProfilePageState extends State<ProfilePage>
                     ),
                     Row(
                       children: [
-                        _IconBtn(icon: Icons.notifications_none_rounded, onTap: () {}),
+                        _IconBtn(
+                          icon: Icons.notifications_none_rounded,
+                          onTap: () {},
+                        ),
                         const SizedBox(width: EduSpacing.s2),
                         _IconBtn(icon: Icons.edit_outlined, onTap: () {}),
                       ],
@@ -124,27 +190,16 @@ class _ProfilePageState extends State<ProfilePage>
           SliverToBoxAdapter(
             child: _wrap(
               0,
-              BlocBuilder<GlobalBloc, GlobalState>(
-                buildWhen: (prev, curr) =>
-                    prev.level != curr.level ||
-                    prev.streak != curr.streak ||
-                    prev.lessonsCompleted != curr.lessonsCompleted ||
-                    prev.hoursStudied != curr.hoursStudied ||
-                    prev.notesCount != curr.notesCount ||
-                    prev.displayName != curr.displayName ||
-                    prev.avatarInitials != curr.avatarInitials ||
-                    prev.joinedDate != curr.joinedDate,
-                builder: (context, state) => ProfileHeaderSection(
-                  animate: _started[0],
-                  level: state.level,
-                  streak: state.streak,
-                  lessonsCompleted: state.lessonsCompleted,
-                  hoursStudied: state.hoursStudied,
-                  notesCount: state.notesCount,
-                  displayName: state.displayName,
-                  avatarInitials: state.avatarInitials,
-                  joinedDate: state.joinedDate,
-                ),
+              ProfileHeaderSection(
+                animate: _started[0],
+                level: mockUser.level,
+                streak: mockUser.streak,
+                lessonsCompleted: lessonsCompleted,
+                hoursStudied: hoursStudied,
+                notesCount: notesCount,
+                displayName: mockUser.name,
+                avatarInitials: mockUser.avatarInitials,
+                joinedDate: mockUser.joinedDate,
               ),
             ),
           ),
@@ -154,20 +209,13 @@ class _ProfilePageState extends State<ProfilePage>
           SliverToBoxAdapter(
             child: _wrap(
               1,
-              BlocBuilder<GlobalBloc, GlobalState>(
-                buildWhen: (prev, curr) =>
-                    prev.bestWeekDays != curr.bestWeekDays ||
-                    prev.thisWeekDays != curr.thisWeekDays ||
-                    prev.totalActiveDays != curr.totalActiveDays ||
-                    prev.activityDays != curr.activityDays,
-                builder: (context, state) => LearningActivitySection(
-                  animate: _started[1],
-                  bestWeekDays: state.bestWeekDays,
-                  thisWeekDays: state.thisWeekDays,
-                  totalActiveDays: state.totalActiveDays,
-                  activityDays: state.activityDays,
-                  weeksTracked: state.weeksTracked,
-                ),
+              LearningActivitySection(
+                animate: _started[1],
+                bestWeekDays: _bestWeekDays,
+                thisWeekDays: _thisWeekDays,
+                totalActiveDays: _totalActiveDays,
+                activityDays: _activityDays,
+                weeksTracked: _weeksTracked,
               ),
             ),
           ),
@@ -175,7 +223,10 @@ class _ProfilePageState extends State<ProfilePage>
           const SliverToBoxAdapter(child: SizedBox(height: EduSpacing.s8)),
 
           SliverToBoxAdapter(
-            child: _wrap(2, SettingsSection(animate: _started[2])),
+            child: _wrap(
+              2,
+              SettingsSection(animate: _started[2], onSignOut: _confirmSignOut),
+            ),
           ),
 
           const SliverToBoxAdapter(child: SizedBox(height: 100)),
@@ -197,8 +248,11 @@ class _PageTitleUnderline extends CustomPainter {
       Path()
         ..moveTo(0, size.height * 0.55)
         ..quadraticBezierTo(
-            size.width * 0.32, size.height * 0.05,
-            size.width * 0.68, size.height * 0.80)
+          size.width * 0.32,
+          size.height * 0.05,
+          size.width * 0.68,
+          size.height * 0.80,
+        )
         ..lineTo(size.width, size.height * 0.30),
       paint,
     );
@@ -206,8 +260,11 @@ class _PageTitleUnderline extends CustomPainter {
       Path()
         ..moveTo(1.5, size.height * 0.95)
         ..quadraticBezierTo(
-            size.width * 0.38, size.height * 0.50,
-            size.width * 0.72, size.height * 1.0)
+          size.width * 0.38,
+          size.height * 0.50,
+          size.width * 0.72,
+          size.height * 1.0,
+        )
         ..lineTo(size.width, size.height * 0.70),
       paint
         ..color = EduColors.primary.withValues(alpha: 0.18)
@@ -250,16 +307,16 @@ class _IconBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => GestureDetector(
-        onTap: onTap,
-        child: Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: EduColors.surface,
-            shape: BoxShape.circle,
-            boxShadow: EduColors.shadowCard,
-          ),
-          child: Icon(icon, color: EduColors.textPrimary, size: 20),
-        ),
-      );
+    onTap: onTap,
+    child: Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        color: EduColors.surface,
+        shape: BoxShape.circle,
+        boxShadow: EduColors.shadowCard,
+      ),
+      child: Icon(icon, color: EduColors.textPrimary, size: 20),
+    ),
+  );
 }

@@ -1,9 +1,10 @@
-import 'dart:developer';
-import 'dart:io';
+import 'dart:async';
 
 import 'package:bloc/bloc.dart';
+import 'package:meta/meta.dart';
+import 'package:modern_learner_production/auth/model/auth_user_model.dart';
 import 'package:modern_learner_production/auth/service/auth_service.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'auth_event.dart';
 part 'auth_state.dart';
@@ -11,61 +12,72 @@ part 'auth_state.dart';
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   AuthBloc({required AuthService authService})
       : _authService = authService,
-        super(AuthInitial()) {
-    on<AuthSignInRequested>(_onSignIn);
-    on<AuthSignUpRequested>(_onSignUp);
+        super(const AuthInitial()) {
+    on<AuthStatusChanged>(_onStatusChanged);
+    on<SignInUser>(_onSignIn);
+    on<SignUpUser>(_onSignUp);
+    on<SignOutUser>(_onSignOut);
+
+    _authSubscription = _authService.authStateChanges.listen((user) {
+      add(AuthStatusChanged(user));
+    });
   }
 
   final AuthService _authService;
+  StreamSubscription<AuthUserModel?>? _authSubscription;
 
-  Future<void> _onSignIn(
-    AuthSignInRequested event,
-    Emitter<AuthState> emit,
-  ) async {
-    emit(AuthLoading());
+  void _onStatusChanged(AuthStatusChanged event, Emitter<AuthState> emit) {
+    if (event.user != null) {
+      emit(AuthAuthenticated(event.user!));
+    } else {
+      emit(const AuthUnauthenticated());
+    }
+  }
+
+  Future<void> _onSignIn(SignInUser event, Emitter<AuthState> emit) async {
+    emit(const AuthLoading());
     try {
       final user = await _authService.signIn(
         email: event.email,
         password: event.password,
       );
-      emit(AuthSuccess(userId: user.id));
+      emit(AuthAuthenticated(user));
     } on AuthException catch (e) {
-      emit(AuthFailure(message: e.message));
-    } on SocketException {
-      emit(AuthFailure(
-        message: 'Cannot reach server. Check your internet connection.',
-      ));
-    } catch (_) {
-      emit(AuthFailure(message: 'Something went wrong. Please try again.'));
+      emit(AuthError(e.message));
+    } catch (e) {
+      emit(AuthError(e.toString()));
     }
   }
 
-  Future<void> _onSignUp(
-    AuthSignUpRequested event,
-    Emitter<AuthState> emit,
-  ) async {
-    log('▶ [AuthBloc] signUp called — email: ${event.email}, name: ${event.name}');
-    emit(AuthLoading());
+  Future<void> _onSignUp(SignUpUser event, Emitter<AuthState> emit) async {
+    emit(const AuthLoading());
     try {
-      log('  → calling AuthService.signUp...');
       final user = await _authService.signUp(
         name: event.name,
         email: event.email,
         password: event.password,
       );
-      log('  ✓ signUp success — userId: ${user.id}');
-      emit(AuthSuccess(userId: user.id));
+      emit(AuthAuthenticated(user));
     } on AuthException catch (e) {
-      log('  ✗ AuthException: ${e.message}');
-      emit(AuthFailure(message: e.message));
-    } on SocketException catch (e) {
-      log('  ✗ SocketException: $e');
-      emit(AuthFailure(
-        message: 'Cannot reach server. Check your internet connection.',
-      ));
-    } catch (e, st) {
-      log('  ✗ Unknown error: $e', stackTrace: st);
-      emit(AuthFailure(message: 'Something went wrong. Please try again.'));
+      emit(AuthError(e.message));
+    } catch (e) {
+      emit(AuthError(e.toString()));
     }
+  }
+
+  Future<void> _onSignOut(SignOutUser event, Emitter<AuthState> emit) async {
+    emit(const AuthLoading());
+    try {
+      await _authService.signOut();
+      emit(const AuthUnauthenticated());
+    } catch (e) {
+      emit(AuthError(e.toString()));
+    }
+  }
+
+  @override
+  Future<void> close() {
+    _authSubscription?.cancel();
+    return super.close();
   }
 }
