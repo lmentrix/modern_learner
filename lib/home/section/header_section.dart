@@ -6,9 +6,20 @@ import 'package:modern_learner_production/home/widgets/xp_progress_bar.dart';
 import 'package:modern_learner_production/theme/theme.dart';
 
 class HeaderSection extends StatelessWidget {
-  const HeaderSection({super.key, required this.animate});
+  const HeaderSection({
+    super.key,
+    required this.animate,
+    required this.displayName,
+    required this.streak,
+    required this.xp,
+    required this.xpGoal,
+  });
 
   final bool animate;
+  final String displayName;
+  final int streak;
+  final int xp;
+  final int xpGoal;
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +47,7 @@ class HeaderSection extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Hello, Yifei',
+                      'Hello, $displayName',
                       style: GoogleFonts.caveat(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
@@ -45,7 +56,7 @@ class HeaderSection extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      '600-day streak 🔥',
+                      '$streak-day streak 🔥',
                       style: GoogleFonts.caveat(
                         fontSize: 17,
                         fontWeight: FontWeight.w700,
@@ -72,7 +83,7 @@ class HeaderSection extends StatelessWidget {
             ],
           ),
           const SizedBox(height: EduSpacing.s5),
-          XpProgressBar(xp: 5000, goal: 6000, animate: animate),
+          XpProgressBar(xp: xp, goal: xpGoal, animate: animate),
         ],
       ),
     );

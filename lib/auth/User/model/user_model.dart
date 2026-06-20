@@ -1,3 +1,5 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 class UserModel {
   const UserModel({
     required this.id,
@@ -12,6 +14,21 @@ class UserModel {
   final String email;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+
+  factory UserModel.fromIdentity(UserIdentity identity) {
+    final data = identity.identityData ?? {};
+    return UserModel(
+      id: identity.userId,
+      name: (data['name'] as String?) ?? '',
+      email: (data['email'] as String?) ?? '',
+      createdAt: identity.createdAt != null
+          ? DateTime.tryParse(identity.createdAt!)
+          : null,
+      updatedAt: identity.updatedAt != null
+          ? DateTime.tryParse(identity.updatedAt!)
+          : null,
+    );
+  }
 
   factory UserModel.fromMap(Map<String, dynamic> map) {
     return UserModel(

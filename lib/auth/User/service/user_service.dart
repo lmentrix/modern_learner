@@ -4,13 +4,12 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class UserService {
   SupabaseClient get _client => Supabase.instance.client;
 
-  Future<UserModel> fetchUser(String userId) async {
-    final response = await _client
-        .from('profiles')
-        .select()
-        .eq('id', userId)
-        .single();
-    return UserModel.fromMap(response);
+  Future<UserModel> fetchUser() async {
+    final identities = await _client.auth.getUserIdentities();
+    if (identities.isEmpty) {
+      throw Exception('No identities found for current user');
+    }
+    return UserModel.fromIdentity(identities.first);
   }
 
   Future<List<UserModel>> fetchAllUsers() async {
@@ -44,36 +43,6 @@ class UserService {
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     );
-  }
-
-  Future<UserModel> upsertProfile({
-    required String id,
-    required String name,
-    required String email,
-  }) async {
-    final now = DateTime.now().toIso8601String();
-    await _client.from('profiles').upsert({
-      'id': id,
-      'name': name,
-      'email': email,
-      'updated_at': now,
-    }, onConflict: 'id');
-    return fetchUser(id);
-  }
-
-  Future<UserModel> updateProfile({
-    required String id,
-    String? name,
-    String? email,
-  }) async {
-    final data = <String, dynamic>{
-      'updated_at': DateTime.now().toIso8601String(),
-    };
-    if (name != null) data['name'] = name;
-    if (email != null) data['email'] = email;
-
-    await _client.from('profiles').update(data).eq('id', id);
-    return fetchUser(id);
   }
 
   Future<void> deleteProfile(String userId) async {

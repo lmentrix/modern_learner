@@ -52,8 +52,6 @@ class _AuthViewState extends State<_AuthView> with TickerProviderStateMixin {
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
 
-  final _authService = AuthService();
-
   bool _obscure = true;
 
   // Focus
@@ -117,21 +115,42 @@ class _AuthViewState extends State<_AuthView> with TickerProviderStateMixin {
   }
 
   void _submit() {
+    final bloc = context.read<AuthBloc>();
     if (_mode == AuthMode.signIn) {
-      _authService.signIn(email: _emailCtrl.text, password: _passCtrl.text);
+      if (_signInKey.currentState?.validate() ?? false) {
+        bloc.add(
+          SignInUser(
+            email: _emailCtrl.text.trim(),
+            password: _passCtrl.text.trim(),
+          ),
+        );
+      }
     } else {
-      _authService.signUp(
-        name: _nameCtrl.text,
-        email: _emailCtrl.text,
-        password: _passCtrl.text,
-      );
+      if (_signUpKey.currentState?.validate() ?? false) {
+        bloc.add(
+          SignUpUser(
+            name: _nameCtrl.text.trim(),
+            email: _emailCtrl.text.trim(),
+            password: _passCtrl.text.trim(),
+          ),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<AuthBloc, AuthState>(
-      listener: (context, state) {},
+      listener: (context, state) {
+        if (state is AuthError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message),
+              backgroundColor: const Color(0xFFDC2626),
+            ),
+          );
+        }
+      },
       builder: (context, state) {
         final isLoading = state is AuthLoading;
         return Scaffold(
@@ -228,7 +247,7 @@ class _AuthViewState extends State<_AuthView> with TickerProviderStateMixin {
                                 AuthSubmitButton(
                                   mode: _mode,
                                   loading: isLoading,
-                                  onPressed: isLoading ? null : _submit,
+                                  onPressed: isLoading ? null : () => _submit(),
                                 ),
 
                                 if (_mode == AuthMode.signIn) ...[

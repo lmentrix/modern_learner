@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:modern_learner_production/bloc/global_bloc.dart';
+import 'package:modern_learner_production/home/data/home_data.dart';
 import 'package:modern_learner_production/home/section/empty_notes_section.dart';
 import 'package:modern_learner_production/home/section/header_section.dart';
 import 'package:modern_learner_production/home/section/leaderboard_section.dart';
-import 'package:modern_learner_production/home/data/home_data.dart';
 import 'package:modern_learner_production/home/section/quick_stats_section.dart';
 import 'package:modern_learner_production/home/section/walking_scene_section.dart';
 import 'package:modern_learner_production/theme/theme.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -77,6 +80,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           ).animate(CurvedAnimation(parent: c, curve: Curves.easeOut)),
         )
         .toList();
+
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId != null) {
+      context.read<GlobalBloc>().add(FetchGlobalStats(userId));
+    }
 
     _launchEntrance();
   }
@@ -206,7 +214,18 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                       0,
                       SafeArea(
                         bottom: false,
-                        child: HeaderSection(animate: _started[0]),
+                        child: BlocBuilder<GlobalBloc, GlobalState>(
+                          builder: (context, state) {
+                            final loaded = state is GlobalLoaded ? state : null;
+                            return HeaderSection(
+                              animate: _started[0],
+                              displayName: loaded?.displayName ?? '',
+                              streak: 0,
+                              xp: 0,
+                              xpGoal: 5000,
+                            );
+                          },
+                        ),
                       ),
                     ),
                   ),
@@ -216,7 +235,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   ),
 
                   SliverToBoxAdapter(
-                    child: _wrap(1, QuickStatsSection(animate: _started[1], stat: mockStats[0])),
+                    child: _wrap(
+                      1,
+                      QuickStatsSection(
+                        animate: _started[1],
+                        stat: mockStats[0],
+                      ),
+                    ),
                   ),
 
                   const SliverToBoxAdapter(

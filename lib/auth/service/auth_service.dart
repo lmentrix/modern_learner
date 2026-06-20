@@ -49,7 +49,6 @@ class AuthService {
     final response = await _supabase.auth.signUp(
       email: email,
       password: password,
-      data: {'name': name},
     );
     log(
       '  [AuthService] auth.signUp response — user: ${response.user?.id}, session: ${response.session != null}',

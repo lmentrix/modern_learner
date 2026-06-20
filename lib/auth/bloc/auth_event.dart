@@ -12,7 +12,11 @@ final class SignInUser extends AuthEvent {
 }
 
 final class SignUpUser extends AuthEvent {
-  const SignUpUser({required this.name, required this.email, required this.password});
+  const SignUpUser({
+    required this.name,
+    required this.email,
+    required this.password,
+  });
   final String name;
   final String email;
   final String password;

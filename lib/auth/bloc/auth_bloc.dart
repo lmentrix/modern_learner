@@ -11,8 +11,8 @@ part 'auth_state.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   AuthBloc({required AuthService authService})
-      : _authService = authService,
-        super(const AuthInitial()) {
+    : _authService = authService,
+      super(const AuthInitial()) {
     on<AuthStatusChanged>(_onStatusChanged);
     on<SignInUser>(_onSignIn);
     on<SignUpUser>(_onSignUp);

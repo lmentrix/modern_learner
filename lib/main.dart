@@ -1,7 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:modern_learner_production/auth/User/service/user_service.dart';
+import 'package:modern_learner_production/bloc/global_bloc.dart';
 import 'package:modern_learner_production/router/router.dart';
 import 'package:modern_learner_production/theme/theme.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -26,12 +29,15 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'Modern Learner',
-      debugShowCheckedModeBanner: false,
-      theme: EduTheme.light,
-      themeMode: ThemeMode.light,
-      routerConfig: appRouter,
+    return BlocProvider(
+      create: (_) => GlobalBloc(userService: UserService()),
+      child: MaterialApp.router(
+        title: 'Modern Learner',
+        debugShowCheckedModeBanner: false,
+        theme: EduTheme.light,
+        themeMode: ThemeMode.light,
+        routerConfig: appRouter,
+      ),
     );
   }
 }
