@@ -13,6 +13,7 @@ class SkillTreeBloc extends Bloc<SkillTreeEvent, SkillTreeState> {
     on<UnlockSkill>(_onUnlock);
     on<StartSkill>(_onStart);
     on<ToggleSkillLock>(_onToggle);
+    on<EvaluateRequirements>(_onEvaluateRequirements);
   }
 
   void _onFetch(FetchSkillTree event, Emitter<SkillTreeState> emit) async {
@@ -67,16 +68,7 @@ class SkillTreeBloc extends Bloc<SkillTreeEvent, SkillTreeState> {
 
     final updated = current.nodes.map((node) {
       if (node.id == event.nodeId) {
-        return SkillNode(
-          id: node.id,
-          title: node.title,
-          description: node.description,
-          icon: node.icon,
-          tier: node.tier,
-          state: NodeState.unlocked,
-          xpReward: node.xpReward,
-          prerequisiteIds: node.prerequisiteIds,
-        );
+        return _copyNode(node, state: NodeState.unlocked);
       }
       return node;
     }).toList();
@@ -102,16 +94,7 @@ class SkillTreeBloc extends Bloc<SkillTreeEvent, SkillTreeState> {
 
     final updated = current.nodes.map((node) {
       if (node.id == event.nodeId) {
-        return SkillNode(
-          id: node.id,
-          title: node.title,
-          description: node.description,
-          icon: node.icon,
-          tier: node.tier,
-          state: NodeState.inProgress,
-          xpReward: node.xpReward,
-          prerequisiteIds: node.prerequisiteIds,
-        );
+        return _copyNode(node, state: NodeState.inProgress);
       }
       return node;
     }).toList();
@@ -142,27 +125,12 @@ class SkillTreeBloc extends Bloc<SkillTreeEvent, SkillTreeState> {
         final allPrereqsMet = node.prerequisiteIds.every(
           (id) => current.unlockedNodeIds.contains(id),
         );
-        return SkillNode(
-          id: node.id,
-          title: node.title,
-          description: node.description,
-          icon: node.icon,
-          tier: node.tier,
+        return _copyNode(
+          node,
           state: allPrereqsMet ? NodeState.unlocked : NodeState.available,
-          xpReward: node.xpReward,
-          prerequisiteIds: node.prerequisiteIds,
         );
       } else {
-        return SkillNode(
-          id: node.id,
-          title: node.title,
-          description: node.description,
-          icon: node.icon,
-          tier: node.tier,
-          state: NodeState.locked,
-          xpReward: node.xpReward,
-          prerequisiteIds: node.prerequisiteIds,
-        );
+        return _copyNode(node, state: NodeState.locked);
       }
     }).toList();
 
@@ -182,6 +150,56 @@ class SkillTreeBloc extends Bloc<SkillTreeEvent, SkillTreeState> {
     );
   }
 
+  void _onEvaluateRequirements(
+    EvaluateRequirements event,
+    Emitter<SkillTreeState> emit,
+  ) {
+    if (state is! SkillTreeLoaded) return;
+    final current = state as SkillTreeLoaded;
+
+    var changed = false;
+    final updated = current.nodes.map((node) {
+      if (node.state != NodeState.locked) return node;
+      if (!_meetsRequirements(
+        node,
+        event.xp,
+        event.level,
+        event.lessons,
+        event.hours,
+        event.notes,
+        event.files,
+        event.streak,
+      )) return node;
+
+      final allPrereqsMet = node.prerequisiteIds.every(
+        (id) => current.unlockedNodeIds.contains(id),
+      );
+
+      if (allPrereqsMet) {
+        changed = true;
+        return _copyNode(node, state: NodeState.unlocked);
+      } else {
+        changed = true;
+        return _copyNode(node, state: NodeState.available);
+      }
+    }).toList();
+
+    if (!changed) return;
+
+    _propagateAvailability(updated);
+
+    emit(
+      SkillTreeLoaded(
+        nodes: updated,
+        totalNodes: current.totalNodes,
+        unlockedCount: updated
+            .where((n) => n.state == NodeState.unlocked)
+            .length,
+        totalTiers: current.totalTiers,
+      ),
+    );
+  }
+
   void _propagateAvailability(List<SkillNode> nodes) {
     final unlockedIds = nodes
         .where((n) => n.state == NodeState.unlocked)
@@ -197,16 +215,7 @@ class SkillTreeBloc extends Bloc<SkillTreeEvent, SkillTreeState> {
       );
 
       if (allPrereqsMet) {
-        nodes[i] = SkillNode(
-          id: node.id,
-          title: node.title,
-          description: node.description,
-          icon: node.icon,
-          tier: node.tier,
-          state: NodeState.available,
-          xpReward: node.xpReward,
-          prerequisiteIds: node.prerequisiteIds,
-        );
+        nodes[i] = _copyNode(node, state: NodeState.available);
       }
     }
   }
@@ -227,32 +236,52 @@ class SkillTreeBloc extends Bloc<SkillTreeEvent, SkillTreeState> {
       );
 
       if (anyPrereqLocked) {
-        nodes[i] = SkillNode(
-          id: node.id,
-          title: node.title,
-          description: node.description,
-          icon: node.icon,
-          tier: node.tier,
-          state: NodeState.locked,
-          xpReward: node.xpReward,
-          prerequisiteIds: node.prerequisiteIds,
-        );
+        nodes[i] = _copyNode(node, state: NodeState.locked);
       }
     }
   }
 
   List<SkillNode> _loadSkillTree() {
-    return skillTree.map((node) {
-      return SkillNode(
-        id: node.id,
-        title: node.title,
-        description: node.description,
-        icon: node.icon,
-        tier: node.tier,
-        state: node.state,
-        xpReward: node.xpReward,
-        prerequisiteIds: node.prerequisiteIds,
-      );
-    }).toList();
+    return skillTree.map((node) => _copyNode(node)).toList();
+  }
+
+  SkillNode _copyNode(SkillNode node, {NodeState? state}) {
+    return SkillNode(
+      id: node.id,
+      title: node.title,
+      description: node.description,
+      icon: node.icon,
+      tier: node.tier,
+      state: state ?? node.state,
+      xpReward: node.xpReward,
+      prerequisiteIds: node.prerequisiteIds,
+      requiredXp: node.requiredXp,
+      requiredLevel: node.requiredLevel,
+      requiredLessons: node.requiredLessons,
+      requiredHours: node.requiredHours,
+      requiredNotes: node.requiredNotes,
+      requiredFiles: node.requiredFiles,
+      requiredStreak: node.requiredStreak,
+    );
+  }
+
+  bool _meetsRequirements(
+    SkillNode node,
+    int xp,
+    int level,
+    int lessons,
+    int hours,
+    int notes,
+    int files,
+    int streak,
+  ) {
+    if (node.requiredXp > 0 && xp < node.requiredXp) return false;
+    if (node.requiredLevel > 0 && level < node.requiredLevel) return false;
+    if (node.requiredLessons > 0 && lessons < node.requiredLessons) return false;
+    if (node.requiredHours > 0 && hours < node.requiredHours) return false;
+    if (node.requiredNotes > 0 && notes < node.requiredNotes) return false;
+    if (node.requiredFiles > 0 && files < node.requiredFiles) return false;
+    if (node.requiredStreak > 0 && streak < node.requiredStreak) return false;
+    return true;
   }
 }

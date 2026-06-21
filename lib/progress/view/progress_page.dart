@@ -175,27 +175,19 @@ class _ProgressPageState extends State<ProgressPage>
           SliverToBoxAdapter(
             child: _wrap(
               1,
-              BlocProvider(
-                create: (_) => SkillTreeBloc()..add(const FetchSkillTree()),
-                child: BlocBuilder<SkillTreeBloc, SkillTreeState>(
-                  builder: (context, state) {
-                    if (state is SkillTreeLoaded) {
-                      return SkillTreeSection(
-                        animate: _started[1],
-                        nodes: state.nodes,
-                        unlockedCount: state.unlockedCount,
-                        totalNodes: state.totalNodes,
-                      );
-                    }
-                    if (state is SkillTreeLoading) {
-                      return const SizedBox(
-                        height: 400,
-                        child: Center(child: CircularProgressIndicator()),
-                      );
-                    }
+              BlocBuilder<GlobalBloc, GlobalState>(
+                builder: (ctx, globalState) {
+                  if (globalState is! GlobalLoaded) {
                     return const SizedBox.shrink();
-                  },
-                ),
+                  }
+                  return BlocProvider(
+                    create: (_) => SkillTreeBloc()..add(const FetchSkillTree()),
+                    child: _SkillTreeRoot(
+                      globalLoaded: globalState,
+                      animate: _started[1],
+                    ),
+                  );
+                },
               ),
             ),
           ),
@@ -216,6 +208,78 @@ class _ProgressPageState extends State<ProgressPage>
 
           const SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],
+      ),
+    );
+  }
+}
+
+class _SkillTreeRoot extends StatefulWidget {
+  const _SkillTreeRoot({required this.globalLoaded, required this.animate});
+
+  final GlobalLoaded globalLoaded;
+  final bool animate;
+
+  @override
+  State<_SkillTreeRoot> createState() => _SkillTreeRootState();
+}
+
+class _SkillTreeRootState extends State<_SkillTreeRoot> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final gs = widget.globalLoaded;
+      context.read<SkillTreeBloc>().add(
+        EvaluateRequirements(
+          gs.xp ?? 0,
+          gs.level ?? 0,
+          gs.lessons ?? 0,
+          gs.hours ?? 0,
+          gs.notes ?? 0,
+          gs.files ?? 0,
+          gs.streak ?? 0,
+        ),
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocListener<GlobalBloc, GlobalState>(
+      listener: (context, state) {
+        if (state is GlobalLoaded) {
+          context.read<SkillTreeBloc>().add(
+            EvaluateRequirements(
+              state.xp ?? 0,
+              state.level ?? 0,
+              state.lessons ?? 0,
+              state.hours ?? 0,
+              state.notes ?? 0,
+              state.files ?? 0,
+              state.streak ?? 0,
+            ),
+          );
+        }
+      },
+      child: BlocBuilder<SkillTreeBloc, SkillTreeState>(
+        builder: (context, state) {
+          if (state is SkillTreeLoaded) {
+            return SkillTreeSection(
+              animate: widget.animate,
+              nodes: state.nodes,
+              unlockedCount: state.unlockedCount,
+              totalNodes: state.totalNodes,
+            );
+          }
+          if (state is SkillTreeLoading) {
+            return const SizedBox(
+              height: 400,
+              child: Center(child: CircularProgressIndicator()),
+            );
+          }
+          return const SizedBox.shrink();
+        },
       ),
     );
   }

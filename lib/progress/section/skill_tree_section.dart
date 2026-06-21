@@ -38,13 +38,13 @@ const _kTilt = {
   'm1': 0.010,
 };
 
-const _kCardW = 92.0;
-const _kCardH = 108.0;
-const _kRowGap = 62.0; // gap between card bottom and next card top
-const _kRowH = _kCardH + _kRowGap;
-const _kPadTop = 20.0;
-const _kPadBot = 28.0;
-const _kCanvasH = _kPadTop + 4 * _kCardH + 3 * _kRowGap + _kPadBot;
+const _kCardW    = 92.0;
+const _kCardH    = 108.0;
+const _kRowGap   = 62.0;
+const _kRowH     = _kCardH + _kRowGap;
+const _kPadTop   = 32.0;
+const _kPadBot   = 28.0;
+const _kCanvasH  = _kPadTop + 4 * _kCardH + 3 * _kRowGap + _kPadBot;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Section
@@ -223,7 +223,14 @@ class _SkillTreeSectionState extends State<SkillTreeSection>
                       ),
                     ),
 
-                    // Tier label strips
+                    // Tier dividers (subtle dashed lines)
+                    Positioned.fill(
+                      child: CustomPaint(
+                        painter: _TierDividersPainter(),
+                      ),
+                    ),
+
+                    // Tier label badges
                     ..._buildTierLabels(w),
 
                     // Skill nodes
@@ -260,42 +267,37 @@ class _SkillTreeSectionState extends State<SkillTreeSection>
 
   List<Widget> _buildTierLabels(double canvasW) {
     const tierRows = [
-      (SkillTier.beginner, 0, 'Beginner', Color(0xFF059669)),
-      (SkillTier.intermediate, 1, 'Intermediate', Color(0xFF7C3AED)),
-      (SkillTier.advanced, 2, 'Advanced', Color(0xFFD97706)),
-      (SkillTier.master, 3, 'Grand', Color(0xFFEA580C)),
+      (0, 'BEGINNER', Color(0xFF059669)),
+      (1, 'INTERMEDIATE', Color(0xFF7C3AED)),
+      (2, 'ADVANCED', Color(0xFFD97706)),
+      (3, 'MASTER', Color(0xFFEA580C)),
     ];
 
     return [
-      for (final (_, row, label, color) in tierRows)
+      for (final (row, label, color) in tierRows)
         Positioned(
-          top: _kPadTop + row * _kRowH - 2,
+          top: _kPadTop + row * _kRowH - 18,
           left: 0,
           right: 0,
-          child: Row(
-            children: [
-              Container(
-                width: 3,
-                height: _kCardH + 4,
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.35),
-                  borderRadius: EduRadius.borderPill,
+          child: Center(
+            child: Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.10),
+                borderRadius: EduRadius.borderPill,
+                border: Border.all(color: color.withValues(alpha: 0.30)),
+              ),
+              child: Text(
+                label,
+                style: GoogleFonts.caveat(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: color.withValues(alpha: 0.80),
+                  letterSpacing: 1.5,
                 ),
               ),
-              const SizedBox(width: 6),
-              RotatedBox(
-                quarterTurns: 0,
-                child: Text(
-                  label.toUpperCase(),
-                  style: GoogleFonts.caveat(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: color.withValues(alpha: 0.65),
-                    letterSpacing: 1.0,
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
     ];
@@ -565,6 +567,36 @@ class _ConnectionsPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_ConnectionsPainter old) => false;
+}
+
+class _TierDividersPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    const tiers = [
+      (Color(0xFF059669), 'BEGINNER', 0),
+      (Color(0xFF7C3AED), 'INTERMEDIATE', 1),
+      (Color(0xFFD97706), 'ADVANCED', 2),
+      (Color(0xFFEA580C), 'MASTER', 3),
+    ];
+
+    for (final (color, _, row) in tiers) {
+      final y = _kPadTop + row * _kRowH - 6;
+      final line = Paint()
+        ..color = color.withValues(alpha: 0.12)
+        ..strokeWidth = 0.8
+        ..style = PaintingStyle.stroke;
+      const dashW = 5.0;
+      const gap = 4.0;
+      var x = 40.0;
+      while (x < size.width - 16) {
+        canvas.drawLine(Offset(x, y), Offset(x + dashW, y), line);
+        x += dashW + gap;
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_TierDividersPainter old) => false;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -46,7 +46,7 @@ class GlobalBloc extends Bloc<GlobalEvent, GlobalState> {
       emit(
         GlobalLoaded(
           displayName: _emailToName(profile?.email ?? ''),
-          xp: 0,
+          xp: 1000,
           level: 0,
           streak: 0,
           lessons: 0,

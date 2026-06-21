@@ -12,16 +12,30 @@ class SkillNode {
     required this.state,
     required this.xpReward,
     this.prerequisiteIds = const [],
+    this.requiredXp = 0,
+    this.requiredLevel = 0,
+    this.requiredLessons = 0,
+    this.requiredHours = 0,
+    this.requiredNotes = 0,
+    this.requiredFiles = 0,
+    this.requiredStreak = 0,
   });
 
   final String id;
   final String title;
   final String description;
-  final int icon; // IconData codePoint
+  final int icon;
   final SkillTier tier;
   final NodeState state;
   final int xpReward;
   final List<String> prerequisiteIds;
+  final int requiredXp;
+  final int requiredLevel;
+  final int requiredLessons;
+  final int requiredHours;
+  final int requiredNotes;
+  final int requiredFiles;
+  final int requiredStreak;
 }
 
 class Achievement {
