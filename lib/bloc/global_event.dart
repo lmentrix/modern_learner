@@ -11,3 +11,4 @@ final class FetchGlobalStats extends GlobalEvent {
 }
 
 final class RefreshGlobalStats extends GlobalEvent {}
+

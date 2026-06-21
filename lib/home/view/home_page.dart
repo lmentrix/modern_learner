@@ -7,6 +7,7 @@ import 'package:modern_learner_production/home/section/header_section.dart';
 import 'package:modern_learner_production/home/section/leaderboard_section.dart';
 import 'package:modern_learner_production/home/section/quick_stats_section.dart';
 import 'package:modern_learner_production/home/section/walking_scene_section.dart';
+import 'package:modern_learner_production/profile/service/profile_service.dart';
 import 'package:modern_learner_production/theme/theme.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -27,6 +28,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   late final List<Animation<double>> _fades;
   late final List<Animation<Offset>> _slides;
   final List<bool> _started = List.filled(_sectionCount, false);
+  final _saveData = saveData();
 
   // ── Pull-to-refresh state ─────────────────────────────────────────────────
 
@@ -217,12 +219,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         child: BlocBuilder<GlobalBloc, GlobalState>(
                           builder: (context, state) {
                             final loaded = state is GlobalLoaded ? state : null;
+                            _saveData;
                             return HeaderSection(
                               animate: _started[0],
                               displayName: loaded?.displayName ?? '',
-                              streak: 0,
-                              xp: 0,
-                              xpGoal: 5000,
+                              streak: loaded?.streak ?? 0,
+                              xp: loaded?.xp ?? 0,
+                              xpGoal: loaded?.xpGoal ?? 0,
                             );
                           },
                         ),

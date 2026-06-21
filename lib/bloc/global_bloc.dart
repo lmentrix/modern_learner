@@ -37,12 +37,26 @@ class GlobalBloc extends Bloc<GlobalEvent, GlobalState> {
 
       final profile = client.auth.currentUser;
       final userId = profile?.id ?? '';
+      final createdAt = profile?.createdAt;
       if (userId.isEmpty) {
         emit(const GlobalError('Not authenticated'));
         return;
       }
 
-      emit(GlobalLoaded(displayName: _emailToName(profile?.email ?? '')));
+      emit(
+        GlobalLoaded(
+          displayName: _emailToName(profile?.email ?? ''),
+          xp: 0,
+          level: 0,
+          streak: 0,
+          lessons: 0,
+          hours: 0,
+          notes: 0,
+          files: 0,
+          xpGoal: 0,
+          joinDate: beautifyCreatedAt(createdAt ?? ''),
+        ),
+      );
     } catch (e) {
       emit(GlobalError(e.toString()));
     }
@@ -51,5 +65,11 @@ class GlobalBloc extends Bloc<GlobalEvent, GlobalState> {
   String _emailToName(String email) {
     if (!email.contains('@')) return email.isEmpty ? 'Learner' : email;
     return email.split('@').first;
+  }
+
+  String beautifyCreatedAt(String createdAt) {
+    if (createdAt.isEmpty) return '';
+    final date = DateTime.parse(createdAt);
+    return '${date.day}/${date.month}/${date.year}';
   }
 }

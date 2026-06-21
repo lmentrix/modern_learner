@@ -1,7 +1,10 @@
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:modern_learner_production/profile/data/profile_data.dart';
+import 'package:modern_learner_production/bloc/global_bloc.dart';
+import 'package:modern_learner_production/progress/bloc/skill_tree_bloc.dart';
 import 'package:modern_learner_production/progress/section/achievements_section.dart';
 import 'package:modern_learner_production/progress/section/progress_header_section.dart';
 import 'package:modern_learner_production/progress/section/saved_notes_section.dart';
@@ -26,12 +29,6 @@ class _ProgressPageState extends State<ProgressPage>
   late final List<Animation<Offset>> _slides;
   final List<bool> _started = List.filled(_sectionCount, false);
 
-  static const _xp = 3760;
-  static const _xpGoal = 5000;
-  static const _level = 14;
-  static const _lessonsCompleted = 124;
-  static const _hoursStudied = 38;
-
   @override
   void initState() {
     super.initState();
@@ -46,10 +43,12 @@ class _ProgressPageState extends State<ProgressPage>
         .map((c) => CurvedAnimation(parent: c, curve: Curves.easeOut))
         .toList();
     _slides = _entranceCtrls
-        .map((c) => Tween<Offset>(
-              begin: const Offset(0, 0.05),
-              end: Offset.zero,
-            ).animate(CurvedAnimation(parent: c, curve: Curves.easeOut)))
+        .map(
+          (c) => Tween<Offset>(
+            begin: const Offset(0, 0.05),
+            end: Offset.zero,
+          ).animate(CurvedAnimation(parent: c, curve: Curves.easeOut)),
+        )
         .toList();
     _launch();
   }
@@ -66,14 +65,16 @@ class _ProgressPageState extends State<ProgressPage>
 
   @override
   void dispose() {
-    for (final c in _entranceCtrls) { c.dispose(); }
+    for (final c in _entranceCtrls) {
+      c.dispose();
+    }
     super.dispose();
   }
 
   Widget _wrap(int i, Widget child) => FadeTransition(
-        opacity: _fades[i],
-        child: SlideTransition(position: _slides[i], child: child),
-      );
+    opacity: _fades[i],
+    child: SlideTransition(position: _slides[i], child: child),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -88,7 +89,10 @@ class _ProgressPageState extends State<ProgressPage>
               bottom: false,
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(
-                  EduSpacing.s6, EduSpacing.s5, EduSpacing.s6, EduSpacing.s5,
+                  EduSpacing.s6,
+                  EduSpacing.s5,
+                  EduSpacing.s6,
+                  EduSpacing.s5,
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -131,8 +135,11 @@ class _ProgressPageState extends State<ProgressPage>
                         shape: BoxShape.circle,
                         boxShadow: EduColors.shadowCard,
                       ),
-                      child: const Icon(Icons.share_outlined,
-                          color: EduColors.textPrimary, size: 20),
+                      child: const Icon(
+                        Icons.share_outlined,
+                        color: EduColors.textPrimary,
+                        size: 20,
+                      ),
                     ),
                   ],
                 ),
@@ -144,13 +151,20 @@ class _ProgressPageState extends State<ProgressPage>
           SliverToBoxAdapter(
             child: _wrap(
               0,
-              ProgressHeaderSection(
-                animate: _started[0],
-                xp: _xp,
-                xpGoal: _xpGoal,
-                level: _level,
-                lessonsCompleted: _lessonsCompleted,
-                hoursStudied: _hoursStudied,
+              BlocBuilder<GlobalBloc, GlobalState>(
+                builder: (context, state) {
+                  if (state case GlobalLoaded loaded) {
+                    return ProgressHeaderSection(
+                      animate: _started[0],
+                      xp: loaded.xp ?? 0,
+                      xpGoal: loaded.xpGoal ?? 0,
+                      level: loaded.level ?? 0,
+                      lessonsCompleted: loaded.lessons ?? 0,
+                      hoursStudied: loaded.hours ?? 0,
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
               ),
             ),
           ),
@@ -159,7 +173,31 @@ class _ProgressPageState extends State<ProgressPage>
 
           // ── Skill tree ───────────────────────────────────────────────────
           SliverToBoxAdapter(
-            child: _wrap(1, SkillTreeSection(animate: _started[1])),
+            child: _wrap(
+              1,
+              BlocProvider(
+                create: (_) => SkillTreeBloc()..add(const FetchSkillTree()),
+                child: BlocBuilder<SkillTreeBloc, SkillTreeState>(
+                  builder: (context, state) {
+                    if (state is SkillTreeLoaded) {
+                      return SkillTreeSection(
+                        animate: _started[1],
+                        nodes: state.nodes,
+                        unlockedCount: state.unlockedCount,
+                        totalNodes: state.totalNodes,
+                      );
+                    }
+                    if (state is SkillTreeLoading) {
+                      return const SizedBox(
+                        height: 400,
+                        child: Center(child: CircularProgressIndicator()),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
+              ),
+            ),
           ),
 
           const SliverToBoxAdapter(child: SizedBox(height: EduSpacing.s8)),
@@ -198,8 +236,11 @@ class _PageTitleUnderlinePainter extends CustomPainter {
       Path()
         ..moveTo(0, size.height * 0.5)
         ..quadraticBezierTo(
-            size.width * 0.32, size.height * 0.0,
-            size.width * 0.68, size.height * 0.8)
+          size.width * 0.32,
+          size.height * 0.0,
+          size.width * 0.68,
+          size.height * 0.8,
+        )
         ..lineTo(size.width, size.height * 0.3),
       ul,
     );
@@ -208,8 +249,11 @@ class _PageTitleUnderlinePainter extends CustomPainter {
       Path()
         ..moveTo(1.5, size.height * 0.9)
         ..quadraticBezierTo(
-            size.width * 0.38, size.height * 0.4,
-            size.width * 0.72, size.height * 1.0)
+          size.width * 0.38,
+          size.height * 0.4,
+          size.width * 0.72,
+          size.height * 1.0,
+        )
         ..lineTo(size.width, size.height * 0.65),
       ul
         ..color = EduColors.primary.withValues(alpha: 0.20)

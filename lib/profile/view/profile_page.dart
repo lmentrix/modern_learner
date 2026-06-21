@@ -1,8 +1,10 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:modern_learner_production/auth/service/auth_service.dart';
+import 'package:modern_learner_production/bloc/global_bloc.dart';
 import 'package:modern_learner_production/profile/data/profile_data.dart';
 import 'package:modern_learner_production/profile/section/learning_activity_section.dart';
 import 'package:modern_learner_production/profile/section/profile_header_section.dart';
@@ -127,10 +129,6 @@ class _ProfilePageState extends State<ProfilePage>
 
   @override
   Widget build(BuildContext context) {
-    final lessonsCompleted = int.tryParse(mockStats[0].value) ?? 0;
-    final hoursStudied = int.tryParse(mockStats[1].value) ?? 0;
-    final notesCount = int.tryParse(mockStats[2].value) ?? 0;
-
     return Scaffold(
       backgroundColor: EduColors.bg,
       body: CustomScrollView(
@@ -188,19 +186,36 @@ class _ProfilePageState extends State<ProfilePage>
           const SliverToBoxAdapter(child: SizedBox(height: EduSpacing.s6)),
 
           SliverToBoxAdapter(
-            child: _wrap(
-              0,
-              ProfileHeaderSection(
-                animate: _started[0],
-                level: mockUser.level,
-                streak: mockUser.streak,
-                lessonsCompleted: lessonsCompleted,
-                hoursStudied: hoursStudied,
-                notesCount: notesCount,
-                displayName: mockUser.name,
-                avatarInitials: mockUser.avatarInitials,
-                joinedDate: mockUser.joinedDate,
-              ),
+            child: BlocBuilder<GlobalBloc, GlobalState>(
+              builder: (context, state) {
+                if (state case GlobalLoaded loaded) {
+                  final initials = loaded.displayName.isNotEmpty
+                      ? loaded.displayName
+                            .split(' ')
+                            .where((w) => w.isNotEmpty)
+                            .map((w) => w[0])
+                            .take(2)
+                            .join()
+                            .toUpperCase()
+                      : '?';
+
+                  return ProfileHeaderSection(
+                    animate: _started[0],
+                    level: loaded.level ?? 0,
+                    xp: loaded.xp ?? 0,
+                    xpGoal: loaded.xpGoal ?? 0,
+                    streak: loaded.streak ?? 0,
+                    lessonsCompleted: loaded.lessons ?? 0,
+                    hoursStudied: loaded.hours ?? 0,
+                    notesCount: loaded.notes ?? 0,
+                    filesCount: loaded.files ?? 0,
+                    displayName: loaded.displayName,
+                    avatarInitials: initials,
+                    joinedDate: loaded.joinDate ?? '',
+                  );
+                }
+                return const SizedBox.shrink();
+              },
             ),
           ),
 

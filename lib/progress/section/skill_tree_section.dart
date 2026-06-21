@@ -1,7 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:modern_learner_production/progress/data/progress_data.dart';
 import 'package:modern_learner_production/progress/model/progress_models.dart';
 import 'package:modern_learner_production/progress/widget/skill_node_widget.dart';
 import 'package:modern_learner_production/theme/theme.dart';
@@ -39,9 +38,18 @@ const _kCanvasH  = _kPadTop + 4 * _kCardH + 3 * _kRowGap + _kPadBot;
 // ─────────────────────────────────────────────────────────────────────────────
 
 class SkillTreeSection extends StatefulWidget {
-  const SkillTreeSection({super.key, required this.animate});
+  const SkillTreeSection({
+    super.key,
+    required this.animate,
+    required this.nodes,
+    required this.unlockedCount,
+    required this.totalNodes,
+  });
 
   final bool animate;
+  final List<SkillNode> nodes;
+  final int unlockedCount;
+  final int totalNodes;
 
   @override
   State<SkillTreeSection> createState() => _SkillTreeSectionState();
@@ -104,7 +112,6 @@ class _SkillTreeSectionState extends State<SkillTreeSection>
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
-    final unlocked = skillTree.where((n) => n.state == NodeState.unlocked).length;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -133,7 +140,7 @@ class _SkillTreeSectionState extends State<SkillTreeSection>
                       ),
                     ),
                     child: Text(
-                      '$unlocked/${skillTree.length} unlocked',
+                      '${widget.unlockedCount}/${widget.totalNodes} unlocked',
                       style: tt.labelMedium?.copyWith(
                         color: EduColors.primary,
                         fontWeight: FontWeight.w700,
@@ -183,7 +190,7 @@ class _SkillTreeSectionState extends State<SkillTreeSection>
                     Positioned.fill(
                       child: CustomPaint(
                         painter: _ConnectionsPainter(
-                          nodes:     skillTree,
+                          nodes:     widget.nodes,
                           positions: positions,
                           cardW:     _kCardW,
                           cardH:     _kCardH,
@@ -277,7 +284,7 @@ class _SkillTreeSectionState extends State<SkillTreeSection>
       for (var i = 0; i < _orderedIds.length; i++)
         Builder(builder: (context) {
           final id = _orderedIds[i];
-          final node = skillTree.firstWhere((n) => n.id == id);
+          final node = widget.nodes.firstWhere((n) => n.id == id);
           final center = positions[id]!;
           final tilt = _kTilt[id] ?? 0.0;
 

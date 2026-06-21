@@ -12,10 +12,13 @@ class ProfileHeaderSection extends StatefulWidget {
     super.key,
     required this.animate,
     required this.level,
+    required this.xp,
+    required this.xpGoal,
     required this.streak,
     required this.lessonsCompleted,
     required this.hoursStudied,
     required this.notesCount,
+    required this.filesCount,
     required this.displayName,
     required this.avatarInitials,
     required this.joinedDate,
@@ -23,10 +26,13 @@ class ProfileHeaderSection extends StatefulWidget {
 
   final bool animate;
   final int level;
+  final int xp;
+  final int xpGoal;
   final int streak;
   final int lessonsCompleted;
   final int hoursStudied;
   final int notesCount;
+  final int filesCount;
   final String displayName;
   final String avatarInitials;
   final String joinedDate;
@@ -194,9 +200,7 @@ class _ProfileHeaderSectionState extends State<ProfileHeaderSection>
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      widget.joinedDate.isEmpty
-                          ? 'Member'
-                          : 'Member since ${widget.joinedDate}',
+                      'Member since ${widget.joinedDate}',
                       style: GoogleFonts.caveat(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
@@ -222,6 +226,51 @@ class _ProfileHeaderSectionState extends State<ProfileHeaderSection>
                 ),
               ],
             ),
+          ),
+        ),
+
+        const SizedBox(height: EduSpacing.s5),
+
+        // ── XP progress ─────────────────────────────────────────────────
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: EduSpacing.s6),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'XP',
+                    style: GoogleFonts.caveat(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: EduColors.textSecondary,
+                    ),
+                  ),
+                  Text(
+                    '${widget.xp} / ${widget.xpGoal}',
+                    style: GoogleFonts.caveat(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: EduColors.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: EduSpacing.s1),
+              ClipRRect(
+                borderRadius: EduRadius.borderPill,
+                child: LinearProgressIndicator(
+                  value: widget.xpGoal > 0
+                      ? (widget.xp / widget.xpGoal).clamp(0.0, 1.0)
+                      : 0,
+                  minHeight: 6,
+                  backgroundColor: EduColors.primary.withValues(alpha: 0.12),
+                  valueColor: const AlwaysStoppedAnimation(EduColors.primary),
+                ),
+              ),
+            ],
           ),
         ),
 

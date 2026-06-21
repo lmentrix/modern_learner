@@ -1,4 +1,45 @@
 class UserProfile {
+
+  factory UserProfile.fromJson(Map<String, dynamic> json) {
+    final name = (json['name'] as String?) ?? '';
+    final email = (json['email'] as String?) ?? '';
+    final createdAt = json['created_at'] as String?;
+    final progress = json['user_progress'] as Map<String, dynamic>?;
+
+    String joinedDate = '';
+    if (createdAt != null) {
+      final dt = DateTime.tryParse(createdAt);
+      if (dt != null) {
+        joinedDate = '${_months[dt.month - 1]} ${dt.year}';
+      }
+    }
+
+    final initials = name.isNotEmpty
+        ? name
+              .split(' ')
+              .where((w) => w.isNotEmpty)
+              .map((w) => w[0])
+              .take(2)
+              .join()
+              .toUpperCase()
+        : email.isNotEmpty
+        ? email[0].toUpperCase()
+        : '?';
+
+    return UserProfile(
+      name: name,
+      username: email.isNotEmpty ? email.split('@').first : '',
+      email: email,
+      bio: '',
+      level: progress?['level'] ?? 1,
+      xp: progress?['total_xp'] ?? 0,
+      xpGoal: progress?['xp_goal'] ?? 100,
+      streak: progress?['streak'] ?? 0,
+      joinedDate: joinedDate,
+      avatarInitials: initials,
+      avatarGradient: const [0xFF6C63FF, 0xFF3F51B5],
+    );
+  }
   const UserProfile({
     required this.name,
     required this.username,
@@ -23,7 +64,24 @@ class UserProfile {
   final int streak;
   final String joinedDate;
   final String avatarInitials;
-  final List<int> avatarGradient; // two hex colors
+  final List<int> avatarGradient;
+
+  static const _months = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+
+  Map<String, dynamic> toJson() => {'name': name, 'email': email};
 }
 
 class ActivityDay {
