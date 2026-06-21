@@ -138,10 +138,10 @@ class _SkillNodeWidgetState extends State<SkillNodeWidget>
                   // ── XP badge ─────────────────────────────────────────
                   const SizedBox(height: 2),
                   _XpAnnotation(
-                    xp:       node.xpReward,
-                    ink:      ink,
+                    node: node,
+                    ink: ink,
                     unlocked: unlocked,
-                    locked:   locked,
+                    locked: locked,
                     available: available,
                   ),
                 ],
@@ -277,21 +277,25 @@ class _StateBadge extends StatelessWidget {
 
 class _XpAnnotation extends StatelessWidget {
   const _XpAnnotation({
-    required this.xp,
+    required this.node,
     required this.ink,
     required this.unlocked,
     required this.locked,
     required this.available,
   });
 
-  final int xp;
+  final SkillNode node;
   final Color ink;
   final bool unlocked, locked, available;
 
   @override
   Widget build(BuildContext context) {
+    final label = unlocked
+        ? '+${node.xpReward} XP'
+        : '${node.requiredXp} XP';
+
     return Text(
-      '+$xp XP',
+      label,
       style: GoogleFonts.caveat(
         fontSize: 13,
         fontWeight: FontWeight.w700,

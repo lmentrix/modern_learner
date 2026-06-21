@@ -12,7 +12,7 @@ const skillTree = [
     tier: SkillTier.beginner,
     state: NodeState.locked,
     xpReward: 100,
-    requiredLessons: 1,
+    requiredXp: 0,
   ),
   SkillNode(
     id: 'b2',
@@ -23,7 +23,7 @@ const skillTree = [
     state: NodeState.locked,
     xpReward: 150,
     prerequisiteIds: ['b1'],
-    requiredNotes: 3,
+    requiredXp: 100,
   ),
   SkillNode(
     id: 'b3',
@@ -34,7 +34,7 @@ const skillTree = [
     state: NodeState.locked,
     xpReward: 200,
     prerequisiteIds: ['b1'],
-    requiredFiles: 5,
+    requiredXp: 200,
   ),
 
   // ── Intermediate tier ──────────────────────────────────────────────────────
@@ -47,7 +47,7 @@ const skillTree = [
     state: NodeState.locked,
     xpReward: 300,
     prerequisiteIds: ['b2'],
-    requiredStreak: 7,
+    requiredXp: 300,
   ),
   SkillNode(
     id: 'i2',
@@ -58,7 +58,7 @@ const skillTree = [
     state: NodeState.locked,
     xpReward: 350,
     prerequisiteIds: ['b2', 'b3'],
-    requiredHours: 1,
+    requiredXp: 450,
   ),
   SkillNode(
     id: 'i3',
@@ -69,7 +69,7 @@ const skillTree = [
     state: NodeState.locked,
     xpReward: 400,
     prerequisiteIds: ['b3'],
-    requiredFiles: 10,
+    requiredXp: 600,
   ),
 
   // ── Advanced tier ──────────────────────────────────────────────────────────
@@ -82,7 +82,7 @@ const skillTree = [
     state: NodeState.locked,
     xpReward: 600,
     prerequisiteIds: ['i1', 'i2'],
-    requiredLessons: 50,
+    requiredXp: 900,
   ),
   SkillNode(
     id: 'a2',
@@ -93,7 +93,7 @@ const skillTree = [
     state: NodeState.locked,
     xpReward: 700,
     prerequisiteIds: ['i2', 'i3'],
-    requiredNotes: 5,
+    requiredXp: 1200,
   ),
 
   // ── Master tier ────────────────────────────────────────────────────────────
@@ -106,7 +106,7 @@ const skillTree = [
     state: NodeState.locked,
     xpReward: 1500,
     prerequisiteIds: ['a1', 'a2'],
-    requiredXp: 5000,
+    requiredXp: 2000,
   ),
 ];
 
