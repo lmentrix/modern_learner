@@ -1,6 +1,9 @@
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:modern_learner_production/progress/bloc/skill_tree_bloc.dart';
 import 'package:modern_learner_production/progress/model/progress_models.dart';
 import 'package:modern_learner_production/progress/widget/skill_node_widget.dart';
 import 'package:modern_learner_production/theme/theme.dart';
@@ -11,27 +14,37 @@ import 'package:modern_learner_production/theme/theme.dart';
 
 /// x-position as a fraction of the canvas width, y as a tier row index.
 const _kLayout = {
-  'b1': (0.17, 0), 'b2': (0.50, 0), 'b3': (0.83, 0),
-  'i1': (0.17, 1), 'i2': (0.50, 1), 'i3': (0.83, 1),
-  'a1': (0.33, 2), 'a2': (0.67, 2),
+  'b1': (0.17, 0),
+  'b2': (0.50, 0),
+  'b3': (0.83, 0),
+  'i1': (0.17, 1),
+  'i2': (0.50, 1),
+  'i3': (0.83, 1),
+  'a1': (0.33, 2),
+  'a2': (0.67, 2),
   'm1': (0.50, 3),
 };
 
 /// Deterministic tilt for each node (radians).
 const _kTilt = {
-  'b1':  0.032, 'b2': -0.018, 'b3':  0.025,
-  'i1': -0.028, 'i2':  0.014, 'i3': -0.022,
-  'a1':  0.019, 'a2': -0.030,
-  'm1':  0.010,
+  'b1': 0.032,
+  'b2': -0.018,
+  'b3': 0.025,
+  'i1': -0.028,
+  'i2': 0.014,
+  'i3': -0.022,
+  'a1': 0.019,
+  'a2': -0.030,
+  'm1': 0.010,
 };
 
-const _kCardW    = 92.0;
-const _kCardH    = 108.0;
-const _kRowGap   = 62.0;   // gap between card bottom and next card top
-const _kRowH     = _kCardH + _kRowGap;
-const _kPadTop   = 20.0;
-const _kPadBot   = 28.0;
-const _kCanvasH  = _kPadTop + 4 * _kCardH + 3 * _kRowGap + _kPadBot;
+const _kCardW = 92.0;
+const _kCardH = 108.0;
+const _kRowGap = 62.0; // gap between card bottom and next card top
+const _kRowH = _kCardH + _kRowGap;
+const _kPadTop = 20.0;
+const _kPadBot = 28.0;
+const _kCanvasH = _kPadTop + 4 * _kCardH + 3 * _kRowGap + _kPadBot;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Section
@@ -63,9 +76,14 @@ class _SkillTreeSectionState extends State<SkillTreeSection>
 
   // One controller per node, ordered by row then column
   static final _orderedIds = [
-    'b1', 'b2', 'b3',
-    'i1', 'i2', 'i3',
-    'a1', 'a2',
+    'b1',
+    'b2',
+    'b3',
+    'i1',
+    'i2',
+    'i3',
+    'a1',
+    'a2',
     'm1',
   ];
 
@@ -83,8 +101,12 @@ class _SkillTreeSectionState extends State<SkillTreeSection>
         .map((c) => CurvedAnimation(parent: c, curve: Curves.easeOut))
         .toList();
     _scales = _ctrls
-        .map((c) => Tween<double>(begin: 0.78, end: 1.0)
-            .animate(CurvedAnimation(parent: c, curve: Curves.elasticOut)))
+        .map(
+          (c) => Tween<double>(
+            begin: 0.78,
+            end: 1.0,
+          ).animate(CurvedAnimation(parent: c, curve: Curves.elasticOut)),
+        )
         .toList();
     if (widget.animate) _stagger();
   }
@@ -105,7 +127,9 @@ class _SkillTreeSectionState extends State<SkillTreeSection>
 
   @override
   void dispose() {
-    for (final c in _ctrls) { c.dispose(); }
+    for (final c in _ctrls) {
+      c.dispose();
+    }
     super.dispose();
   }
 
@@ -131,7 +155,10 @@ class _SkillTreeSectionState extends State<SkillTreeSection>
                   ),
                   const Spacer(),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: EduColors.primaryLight,
                       borderRadius: EduRadius.borderPill,
@@ -181,19 +208,17 @@ class _SkillTreeSectionState extends State<SkillTreeSection>
                   children: [
                     // Paper texture
                     Positioned.fill(
-                      child: CustomPaint(
-                        painter: _PaperTexturePainter(),
-                      ),
+                      child: CustomPaint(painter: _PaperTexturePainter()),
                     ),
 
                     // Connection lines (below nodes)
                     Positioned.fill(
                       child: CustomPaint(
                         painter: _ConnectionsPainter(
-                          nodes:     widget.nodes,
+                          nodes: widget.nodes,
                           positions: positions,
-                          cardW:     _kCardW,
-                          cardH:     _kCardH,
+                          cardW: _kCardW,
+                          cardH: _kCardH,
                         ),
                       ),
                     ),
@@ -213,10 +238,7 @@ class _SkillTreeSectionState extends State<SkillTreeSection>
         const SizedBox(height: EduSpacing.s6),
 
         // ── Hand-drawn legend ──────────────────────────────────────────────
-        Padding(
-          padding: EduSpacing.pagePadding,
-          child: _SketchLegend(),
-        ),
+        Padding(padding: EduSpacing.pagePadding, child: _SketchLegend()),
 
         const SizedBox(height: EduSpacing.s4),
       ],
@@ -238,10 +260,10 @@ class _SkillTreeSectionState extends State<SkillTreeSection>
 
   List<Widget> _buildTierLabels(double canvasW) {
     const tierRows = [
-      (SkillTier.beginner,     0, 'Beginner',     Color(0xFF059669)),
+      (SkillTier.beginner, 0, 'Beginner', Color(0xFF059669)),
       (SkillTier.intermediate, 1, 'Intermediate', Color(0xFF7C3AED)),
-      (SkillTier.advanced,     2, 'Advanced',     Color(0xFFD97706)),
-      (SkillTier.master,       3, 'Grand',        Color(0xFFEA580C)),
+      (SkillTier.advanced, 2, 'Advanced', Color(0xFFD97706)),
+      (SkillTier.master, 3, 'Grand', Color(0xFFEA580C)),
     ];
 
     return [
@@ -282,34 +304,41 @@ class _SkillTreeSectionState extends State<SkillTreeSection>
   List<Widget> _buildNodes(Map<String, Offset> positions) {
     return [
       for (var i = 0; i < _orderedIds.length; i++)
-        Builder(builder: (context) {
-          final id = _orderedIds[i];
-          final node = widget.nodes.firstWhere((n) => n.id == id);
-          final center = positions[id]!;
-          final tilt = _kTilt[id] ?? 0.0;
+        Builder(
+          builder: (context) {
+            final id = _orderedIds[i];
+            final node = widget.nodes.firstWhere((n) => n.id == id);
+            final center = positions[id]!;
+            final tilt = _kTilt[id] ?? 0.0;
 
-          // Guard: stale hot-reload State may have fewer _fades entries.
-          final safeIdx = i < _fades.length ? i : null;
-          final nodeWidget = SkillNodeWidget(
-            node: node, animate: widget.animate, tilt: tilt, index: i,
-          );
+            // Guard: stale hot-reload State may have fewer _fades entries.
+            final safeIdx = i < _fades.length ? i : null;
+            final nodeWidget = SkillNodeWidget(
+              node: node,
+              animate: widget.animate,
+              tilt: tilt,
+              index: i,
+              onTap: () =>
+                  context.read<SkillTreeBloc>().add(ToggleSkillLock(node.id)),
+            );
 
-          return Positioned(
-            left:  center.dx - _kCardW / 2,
-            top:   center.dy - _kCardH / 2,
-            width:  _kCardW,
-            height: _kCardH,
-            child: safeIdx != null
-                ? FadeTransition(
-                    opacity: _fades[safeIdx],
-                    child: ScaleTransition(
-                      scale: _scales[safeIdx],
-                      child: nodeWidget,
-                    ),
-                  )
-                : nodeWidget,
-          );
-        }),
+            return Positioned(
+              left: center.dx - _kCardW / 2,
+              top: center.dy - _kCardH / 2,
+              width: _kCardW,
+              height: _kCardH,
+              child: safeIdx != null
+                  ? FadeTransition(
+                      opacity: _fades[safeIdx],
+                      child: ScaleTransition(
+                        scale: _scales[safeIdx],
+                        child: nodeWidget,
+                      ),
+                    )
+                  : nodeWidget,
+            );
+          },
+        ),
     ];
   }
 }
@@ -333,16 +362,20 @@ class _ConnectionsPainter extends CustomPainter {
 
   static int _tierIndex(SkillTier t) {
     switch (t) {
-      case SkillTier.beginner:     return 0;
-      case SkillTier.intermediate: return 1;
-      case SkillTier.advanced:     return 2;
-      case SkillTier.master:       return 3;
+      case SkillTier.beginner:
+        return 0;
+      case SkillTier.intermediate:
+        return 1;
+      case SkillTier.advanced:
+        return 2;
+      case SkillTier.master:
+        return 3;
     }
   }
 
   @override
   void paint(Canvas canvas, Size size) {
-    final nodeByIdTier = { for (final n in nodes) n.id: n.tier };
+    final nodeByIdTier = {for (final n in nodes) n.id: n.tier};
 
     for (final node in nodes) {
       final childCenter = positions[node.id];
@@ -355,23 +388,28 @@ class _ConnectionsPainter extends CustomPainter {
         if (parentCenter == null) continue;
 
         final parentTier = nodeByIdTier[prereqId];
-        final sameTier = parentTier != null && _tierIndex(parentTier) == childTierIdx;
+        final sameTier =
+            parentTier != null && _tierIndex(parentTier) == childTierIdx;
 
         if (sameTier) {
           // Horizontal connection: from right-center of parent to left-center of child
           final fromRight = parentCenter.dx < childCenter.dx;
           final from = Offset(
-            fromRight ? parentCenter.dx + cardW / 2 - 4 : parentCenter.dx - cardW / 2 + 4,
+            fromRight
+                ? parentCenter.dx + cardW / 2 - 4
+                : parentCenter.dx - cardW / 2 + 4,
             parentCenter.dy,
           );
           final to = Offset(
-            fromRight ? childCenter.dx - cardW / 2 + 4 : childCenter.dx + cardW / 2 - 4,
+            fromRight
+                ? childCenter.dx - cardW / 2 + 4
+                : childCenter.dx + cardW / 2 - 4,
             childCenter.dy,
           );
           _drawHorizontalConnection(canvas, from, to, node.state, prereqId);
         } else {
           final from = Offset(parentCenter.dx, parentCenter.dy + cardH / 2 - 4);
-          final to   = Offset(childCenter.dx,  childCenter.dy  - cardH / 2 + 4);
+          final to = Offset(childCenter.dx, childCenter.dy - cardH / 2 + 4);
           _drawConnection(canvas, from, to, node.state, prereqId);
         }
       }
@@ -379,8 +417,11 @@ class _ConnectionsPainter extends CustomPainter {
   }
 
   void _drawHorizontalConnection(
-    Canvas canvas, Offset from, Offset to,
-    NodeState state, String prereqId,
+    Canvas canvas,
+    Offset from,
+    Offset to,
+    NodeState state,
+    String prereqId,
   ) {
     final active = state == NodeState.unlocked || state == NodeState.inProgress;
     final locked = state == NodeState.locked;
@@ -388,15 +429,15 @@ class _ConnectionsPainter extends CustomPainter {
     final color = locked
         ? const Color(0xFFCBD5E1)
         : active
-            ? _activeColor(prereqId)
-            : EduColors.primary.withValues(alpha: 0.28);
+        ? _activeColor(prereqId)
+        : EduColors.primary.withValues(alpha: 0.28);
 
     final paint = Paint()
-      ..color       = color
+      ..color = color
       ..strokeWidth = active ? 2.0 : (locked ? 1.2 : 1.5)
-      ..style       = PaintingStyle.stroke
-      ..strokeCap   = StrokeCap.round
-      ..strokeJoin  = StrokeJoin.round;
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
 
     if (locked) {
       _drawDashed(canvas, from, to, paint);
@@ -405,7 +446,7 @@ class _ConnectionsPainter extends CustomPainter {
 
     // Gentle arc curving slightly downward for visual separation
     final midX = (from.dx + to.dx) / 2;
-    final sag  = 10.0; // how much the arc dips below the node center
+    final sag = 10.0; // how much the arc dips below the node center
     final path = Path()
       ..moveTo(from.dx, from.dy)
       ..cubicTo(midX, from.dy + sag, midX, to.dy + sag, to.dx, to.dy);
@@ -420,8 +461,11 @@ class _ConnectionsPainter extends CustomPainter {
   }
 
   void _drawConnection(
-    Canvas canvas, Offset from, Offset to,
-    NodeState state, String prereqId,
+    Canvas canvas,
+    Offset from,
+    Offset to,
+    NodeState state,
+    String prereqId,
   ) {
     final active = state == NodeState.unlocked || state == NodeState.inProgress;
     final locked = state == NodeState.locked;
@@ -429,15 +473,15 @@ class _ConnectionsPainter extends CustomPainter {
     final color = locked
         ? const Color(0xFFCBD5E1)
         : active
-            ? _activeColor(prereqId)
-            : EduColors.primary.withValues(alpha: 0.28);
+        ? _activeColor(prereqId)
+        : EduColors.primary.withValues(alpha: 0.28);
 
     final paint = Paint()
-      ..color       = color
+      ..color = color
       ..strokeWidth = active ? 2.2 : (locked ? 1.2 : 1.6)
-      ..style       = PaintingStyle.stroke
-      ..strokeCap   = StrokeCap.round
-      ..strokeJoin  = StrokeJoin.round;
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
 
     if (locked) {
       _drawDashed(canvas, from, to, paint);
@@ -446,8 +490,8 @@ class _ConnectionsPainter extends CustomPainter {
 
     // Bezier curve — control points pushed toward the midpoint vertically
     final midY = (from.dy + to.dy) / 2;
-    final cp1  = Offset(from.dx, midY);
-    final cp2  = Offset(to.dx,   midY);
+    final cp1 = Offset(from.dx, midY);
+    final cp2 = Offset(to.dx, midY);
 
     final path = Path()
       ..moveTo(from.dx, from.dy)
@@ -476,7 +520,7 @@ class _ConnectionsPainter extends CustomPainter {
     if (len < 1) return;
     final angle = math.atan2(dy, dx);
     const arrowLen = 7.5;
-    const spread   = 0.42;
+    const spread = 0.42;
 
     canvas.drawLine(
       to,
@@ -497,15 +541,15 @@ class _ConnectionsPainter extends CustomPainter {
   }
 
   void _drawDashed(Canvas canvas, Offset from, Offset to, Paint paint) {
-    final dx   = to.dx - from.dx;
-    final dy   = to.dy - from.dy;
+    final dx = to.dx - from.dx;
+    final dy = to.dy - from.dy;
     final dist = math.sqrt(dx * dx + dy * dy);
     const dash = 5.0;
-    const gap  = 4.0;
+    const gap = 4.0;
     var d = 0.0;
     var on = true;
     while (d < dist) {
-      final seg  = on ? dash : gap;
+      final seg = on ? dash : gap;
       final next = math.min(d + seg, dist);
       if (on) {
         canvas.drawLine(
@@ -538,7 +582,7 @@ class _PaperTexturePainter extends CustomPainter {
 
     // Subtle horizontal lines (like notebook paper)
     final line = Paint()
-      ..color       = const Color(0xFF94A3B8).withValues(alpha: 0.07)
+      ..color = const Color(0xFF94A3B8).withValues(alpha: 0.07)
       ..strokeWidth = 0.5;
     const lineH = 18.0;
     for (double y = lineH; y < size.height; y += lineH) {
@@ -552,8 +596,8 @@ class _PaperTexturePainter extends CustomPainter {
         const Radius.circular(16),
       ),
       Paint()
-        ..color     = const Color(0xFF94A3B8).withValues(alpha: 0.18)
-        ..style     = PaintingStyle.stroke
+        ..color = const Color(0xFF94A3B8).withValues(alpha: 0.18)
+        ..style = PaintingStyle.stroke
         ..strokeWidth = 1,
     );
   }
@@ -588,9 +632,9 @@ class _StampTextPainter extends CustomPainter {
 
     // Hand-drawn underline (two overlapping strokes)
     final ul = Paint()
-      ..color       = const Color(0xFF7C3AED).withValues(alpha: 0.75)
+      ..color = const Color(0xFF7C3AED).withValues(alpha: 0.75)
       ..strokeWidth = 2.2
-      ..strokeCap   = StrokeCap.round;
+      ..strokeCap = StrokeCap.round;
 
     const y = 31.0;
     const w = 88.0;
@@ -608,12 +652,18 @@ class _StampTextPainter extends CustomPainter {
         ..moveTo(1.5, y + 2.2)
         ..quadraticBezierTo(w * 0.40, y + 3.5, w * 0.75, y + 1.5)
         ..lineTo(w, y + 2.5),
-      ul..color = const Color(0xFF7C3AED).withValues(alpha: 0.22) ..strokeWidth = 1.4,
+      ul
+        ..color = const Color(0xFF7C3AED).withValues(alpha: 0.22)
+        ..strokeWidth = 1.4,
     );
 
     // Small star decoration
-    _drawStar(canvas, const Offset(96, 12), 5.5,
-        const Color(0xFFF59E0B).withValues(alpha: 0.80));
+    _drawStar(
+      canvas,
+      const Offset(96, 12),
+      5.5,
+      const Color(0xFFF59E0B).withValues(alpha: 0.80),
+    );
   }
 
   void _drawStar(Canvas canvas, Offset center, double r, Color color) {
@@ -627,16 +677,26 @@ class _StampTextPainter extends CustomPainter {
     for (var i = 0; i < 5; i++) {
       final outerAngle = -math.pi / 2 + i * 2 * math.pi / 5;
       final innerAngle = outerAngle + math.pi / 5;
-      final px = center.dx + r     * math.cos(outerAngle);
-      final py = center.dy + r     * math.sin(outerAngle);
+      final px = center.dx + r * math.cos(outerAngle);
+      final py = center.dy + r * math.sin(outerAngle);
       final ix = center.dx + inner * math.cos(innerAngle);
       final iy = center.dy + inner * math.sin(innerAngle);
       i == 0 ? path.moveTo(px, py) : path.lineTo(px, py);
       path.lineTo(ix, iy);
     }
     path.close();
-    canvas.drawPath(path, paint..style = PaintingStyle.fill..color = color.withValues(alpha: 0.25));
-    canvas.drawPath(path, paint..style = PaintingStyle.stroke..color = color);
+    canvas.drawPath(
+      path,
+      paint
+        ..style = PaintingStyle.fill
+        ..color = color.withValues(alpha: 0.25),
+    );
+    canvas.drawPath(
+      path,
+      paint
+        ..style = PaintingStyle.stroke
+        ..color = color,
+    );
   }
 
   @override
@@ -651,10 +711,10 @@ class _SketchLegend extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const items = [
-      ('Unlocked',    Color(0xFF059669), Icons.check_rounded),
+      ('Unlocked', Color(0xFF059669), Icons.check_rounded),
       ('In Progress', Color(0xFF7C3AED), Icons.play_arrow_rounded),
-      ('Available',   Color(0xFF6B7280), Icons.radio_button_unchecked_rounded),
-      ('Locked',      Color(0xFFB0BAC8), Icons.lock_rounded),
+      ('Available', Color(0xFF6B7280), Icons.radio_button_unchecked_rounded),
+      ('Locked', Color(0xFFB0BAC8), Icons.lock_rounded),
     ];
 
     return Wrap(
@@ -666,10 +726,14 @@ class _SketchLegend extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                width: 16, height: 16,
+                width: 16,
+                height: 16,
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.18),
-                  border: Border.all(color: color.withValues(alpha: 0.55), width: 1.3),
+                  border: Border.all(
+                    color: color.withValues(alpha: 0.55),
+                    width: 1.3,
+                  ),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Icon(icon, size: 9, color: color),

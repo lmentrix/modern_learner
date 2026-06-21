@@ -10,7 +10,7 @@ const skillTree = [
     description: 'Complete your first lesson.',
     icon: 0xe80c, // school
     tier: SkillTier.beginner,
-    state: NodeState.unlocked,
+    state: NodeState.locked,
     xpReward: 100,
   ),
   SkillNode(
@@ -19,7 +19,7 @@ const skillTree = [
     description: 'Save 3 notes from any study session.',
     icon: 0xe3b7, // note_alt
     tier: SkillTier.beginner,
-    state: NodeState.unlocked,
+    state: NodeState.locked,
     xpReward: 150,
     prerequisiteIds: ['b1'],
   ),
@@ -29,7 +29,7 @@ const skillTree = [
     description: 'Use AI Explain on 5 passages.',
     icon: 0xe0da, // psychology
     tier: SkillTier.beginner,
-    state: NodeState.unlocked,
+    state: NodeState.locked,
     xpReward: 200,
     prerequisiteIds: ['b1'],
   ),
@@ -41,7 +41,7 @@ const skillTree = [
     description: 'Maintain a 7-day learning streak.',
     icon: 0xe61c, // local_fire_department
     tier: SkillTier.intermediate,
-    state: NodeState.unlocked,
+    state: NodeState.locked,
     xpReward: 300,
     prerequisiteIds: ['b2'],
   ),
@@ -51,7 +51,7 @@ const skillTree = [
     description: 'Finish a note with 10+ min read time.',
     icon: 0xe1a1, // diving
     tier: SkillTier.intermediate,
-    state: NodeState.inProgress,
+    state: NodeState.locked,
     xpReward: 350,
     prerequisiteIds: ['b2', 'b3'],
   ),
@@ -61,7 +61,7 @@ const skillTree = [
     description: 'Generate 10 AI images from study content.',
     icon: 0xe3f4, // image
     tier: SkillTier.intermediate,
-    state: NodeState.available,
+    state: NodeState.locked,
     xpReward: 400,
     prerequisiteIds: ['b3'],
   ),
@@ -73,7 +73,7 @@ const skillTree = [
     description: 'Complete 50 lessons across any subjects.',
     icon: 0xe870, // workspace_premium
     tier: SkillTier.advanced,
-    state: NodeState.available,
+    state: NodeState.locked,
     xpReward: 600,
     prerequisiteIds: ['i1', 'i2'],
   ),

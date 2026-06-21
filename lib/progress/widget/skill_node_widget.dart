@@ -37,12 +37,14 @@ class SkillNodeWidget extends StatefulWidget {
     required this.animate,
     this.tilt = 0.0,
     this.index = 0,
+    this.onTap,
   });
 
   final SkillNode node;
   final bool animate;
-  final double tilt;   // radians
+  final double tilt;
   final int index;
+  final VoidCallback? onTap;
 
   @override
   State<SkillNodeWidget> createState() => _SkillNodeWidgetState();
@@ -89,7 +91,9 @@ class _SkillNodeWidgetState extends State<SkillNodeWidget>
       opacity: locked ? 0.50 : 1.0,
       child: Transform.rotate(
         angle: widget.tilt,
-        child: SizedBox(
+        child: GestureDetector(
+          onTap: widget.onTap,
+          child: SizedBox(
           width: 92,
           height: 108,
           child: CustomPaint(
@@ -145,6 +149,7 @@ class _SkillNodeWidgetState extends State<SkillNodeWidget>
             ),
           ),
         ),
+      ),
       ),
     );
   }

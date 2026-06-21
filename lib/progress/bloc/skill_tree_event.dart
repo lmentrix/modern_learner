@@ -22,3 +22,8 @@ final class StartSkill extends SkillTreeEvent {
   const StartSkill(this.nodeId);
   final String nodeId;
 }
+
+final class ToggleSkillLock extends SkillTreeEvent {
+  const ToggleSkillLock(this.nodeId);
+  final String nodeId;
+}
