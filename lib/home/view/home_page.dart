@@ -183,17 +183,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // ── Walking scene card ─────────────────────────────────────────
-          // Lives in the normal layout flow — no Stack, no Positioned.
-          // AnimatedContainer grows/shrinks as _sceneH changes.
-          // duration=0 while finger is down (instant tracking),
-          // duration=280ms after release (smooth snap-back or snap-open).
           AnimatedContainer(
             duration: _isDragging ? Duration.zero : _collapseDuration,
             curve: Curves.easeOut,
             height: _sceneH,
-            // Clip prevents the WalkingSceneSection from overflowing
-            // while the container is animating to/from 0.
             clipBehavior: Clip.hardEdge,
             decoration: const BoxDecoration(),
             child: WalkingSceneSection(isRefreshing: _isRefreshing),
@@ -204,9 +197,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             child: NotificationListener<ScrollNotification>(
               onNotification: _onScrollNotification,
               child: CustomScrollView(
-                // AlwaysScrollableScrollPhysics fires ScrollUpdate with
-                // negative pixels when the user over-pulls at the top,
-                // even on Android.
                 physics: const BouncingScrollPhysics(
                   parent: AlwaysScrollableScrollPhysics(),
                 ),
@@ -216,10 +206,23 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                       0,
                       SafeArea(
                         bottom: false,
-                        child: BlocBuilder<GlobalBloc, GlobalState>(
+                        child: BlocConsumer<GlobalBloc, GlobalState>(
+                          listener: (context, state) {
+                            if (state is GlobalError) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(state.message),
+                                  backgroundColor: const Color(0xFFDC2626),
+                                ),
+                              );
+                            }
+
+                            if (state is GlobalLoaded) {
+                              context.read<GlobalBloc>().add(SaveGlobalStats());
+                            }
+                          },
                           builder: (context, state) {
                             final loaded = state is GlobalLoaded ? state : null;
-                            _saveData;
                             return HeaderSection(
                               animate: _started[0],
                               displayName: loaded?.displayName ?? '',
