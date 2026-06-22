@@ -5,11 +5,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:modern_learner_production/auth/service/auth_service.dart';
 import 'package:modern_learner_production/bloc/global_bloc.dart';
-import 'package:modern_learner_production/profile/data/profile_data.dart';
 import 'package:modern_learner_production/profile/section/learning_activity_section.dart';
 import 'package:modern_learner_production/profile/section/profile_header_section.dart';
 import 'package:modern_learner_production/profile/section/settings_section.dart';
 import 'package:modern_learner_production/theme/theme.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -28,12 +28,6 @@ class _ProfilePageState extends State<ProfilePage>
   late final List<Animation<double>> _fades;
   late final List<Animation<Offset>> _slides;
   final List<bool> _started = List.filled(_sectionCount, false);
-
-  final _activityDays = generateActivityGrid();
-  static const _bestWeekDays = 5;
-  static const _thisWeekDays = 3;
-  static const _totalActiveDays = 42;
-  static const _weeksTracked = 10;
 
   @override
   void initState() {
@@ -56,7 +50,15 @@ class _ProfilePageState extends State<ProfilePage>
           ).animate(CurvedAnimation(parent: c, curve: Curves.easeOut)),
         )
         .toList();
+    _fetchLearningActivity();
     _launch();
+  }
+
+  void _fetchLearningActivity() {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId != null) {
+      context.read<GlobalBloc>().add(LearningActivity(userId));
+    }
   }
 
   void _launch() {
@@ -222,16 +224,22 @@ class _ProfilePageState extends State<ProfilePage>
           const SliverToBoxAdapter(child: SizedBox(height: EduSpacing.s8)),
 
           SliverToBoxAdapter(
-            child: _wrap(
-              1,
-              LearningActivitySection(
-                animate: _started[1],
-                bestWeekDays: _bestWeekDays,
-                thisWeekDays: _thisWeekDays,
-                totalActiveDays: _totalActiveDays,
-                activityDays: _activityDays,
-                weeksTracked: _weeksTracked,
-              ),
+            child: BlocBuilder<GlobalBloc, GlobalState>(
+              builder: (context, state) {
+                final loaded = state is GlobalLoaded ? state : null;
+
+                return _wrap(
+                  1,
+                  LearningActivitySection(
+                    animate: _started[1],
+                    bestWeekDays: loaded?.bestWeekDays ?? 0,
+                    thisWeekDays: loaded?.thisWeekDays ?? 0,
+                    totalActiveDays: loaded?.totalActiveDays ?? 0,
+                    activityDays: loaded?.activityDays ?? const [],
+                    weeksTracked: loaded?.weeksTracked ?? 0,
+                  ),
+                );
+              },
             ),
           ),
 
@@ -289,7 +297,7 @@ class _PageTitleUnderline extends CustomPainter {
     final cx = size.width + 8.0;
     final cy = size.height * 0.45;
     const r = 4.5;
-    final inner = r * 0.42;
+    const inner = r * 0.42;
     final path = Path();
     for (var i = 0; i < 5; i++) {
       final oa = -math.pi / 2 + i * 2 * math.pi / 5;

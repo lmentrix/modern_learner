@@ -40,3 +40,32 @@ Future<UserProfile> saveData() async {
 
   return fetchProfile(currentUser.id);
 }
+
+Future<List<ActivityDay>> fetchActivityDays() async {
+  final currentUser = _client.auth.currentUser;
+  if (currentUser == null) {
+    throw Exception('Not authenticated');
+  }
+
+  final response = await _client
+      .from('learning_activity_days')
+      .select()
+      .eq('user_id', currentUser.id)
+      .order('date', ascending: true);
+
+  return (response as List<dynamic>)
+      .map((row) => ActivityDay.fromJson(row as Map<String, dynamic>))
+      .toList();
+}
+
+Future<void> upsertActivityDay(ActivityDay day) async {
+  final currentUser = _client.auth.currentUser;
+  if (currentUser == null) {
+    throw Exception('Not authenticated');
+  }
+
+  await _client.from('learning_activity_days').upsert({
+    'user_id': currentUser.id,
+    'activity_date': day.date.toIso8601String().split('T').first,
+  });
+}

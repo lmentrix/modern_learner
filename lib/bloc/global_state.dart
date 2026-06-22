@@ -9,17 +9,14 @@ final class GlobalInitial extends GlobalState {}
 
 final class GlobalLoading extends GlobalState {}
 
-final class Activity {
-  const Activity({required this.date, required this.intensity});
-  final DateTime date;
-  final int intensity;
-
-  //TODO: implement all activities
-}
-
 final class GlobalLoaded extends GlobalState {
   const GlobalLoaded({
     required this.displayName,
+    required this.bestWeekDays,
+    required this.thisWeekDays,
+    required this.totalActiveDays,
+    required this.activityDays,
+    required this.weeksTracked,
     this.xp,
     this.level,
     this.streak,
@@ -28,11 +25,15 @@ final class GlobalLoaded extends GlobalState {
     this.notes,
     this.files,
     this.xpGoal,
-    this.activity,
     this.joinDate,
   });
 
   final String displayName;
+  final int bestWeekDays;
+  final int thisWeekDays;
+  final int totalActiveDays;
+  final List<ActivityDay> activityDays;
+  final int weeksTracked;
   final int? xp;
   final int? level;
   final int? streak;
@@ -42,7 +43,6 @@ final class GlobalLoaded extends GlobalState {
   final int? files;
   final int? xpGoal;
   final String? joinDate;
-  final Activity? activity;
 }
 
 final class GlobalError extends GlobalState {

@@ -87,6 +87,14 @@ class UserProfile {
 class ActivityDay {
   const ActivityDay({required this.date, required this.intensity});
 
+  factory ActivityDay.fromJson(Map<String, dynamic> json) {
+    final dateStr = json['date'] as String;
+    return ActivityDay(
+      date: DateTime.parse(dateStr),
+      intensity: (json['intensity'] as int?) ?? 0,
+    );
+  }
+
   final DateTime date;
   final int intensity; // 0 = none, 1 = light, 2 = medium, 3 = high
 }

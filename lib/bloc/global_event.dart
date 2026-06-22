@@ -13,3 +13,9 @@ final class FetchGlobalStats extends GlobalEvent {
 final class RefreshGlobalStats extends GlobalEvent {}
 
 final class SaveGlobalStats extends GlobalEvent {}
+
+final class LearningActivity extends GlobalEvent {
+  const LearningActivity(this.userId);
+
+  final String userId;
+}
