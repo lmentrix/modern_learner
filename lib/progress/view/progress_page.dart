@@ -27,7 +27,11 @@ class _ProgressPageState extends State<ProgressPage>
   late final List<AnimationController> _entranceCtrls;
   late final List<Animation<double>> _fades;
   late final List<Animation<Offset>> _slides;
+  SkillTreeBloc? _skillTreeBloc;
   final List<bool> _started = List.filled(_sectionCount, false);
+
+  SkillTreeBloc get _progressBloc =>
+      _skillTreeBloc ??= SkillTreeBloc()..add(const FetchSkillTree());
 
   @override
   void initState() {
@@ -68,6 +72,7 @@ class _ProgressPageState extends State<ProgressPage>
     for (final c in _entranceCtrls) {
       c.dispose();
     }
+    _skillTreeBloc?.close();
     super.dispose();
   }
 
@@ -78,136 +83,176 @@ class _ProgressPageState extends State<ProgressPage>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: EduColors.bg,
-      body: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
-        slivers: [
-          // ── Page header ──────────────────────────────────────────────────
-          SliverToBoxAdapter(
-            child: SafeArea(
-              bottom: false,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  EduSpacing.s6,
-                  EduSpacing.s5,
-                  EduSpacing.s6,
-                  EduSpacing.s5,
+    return BlocProvider.value(
+      value: _progressBloc,
+      child: BlocListener<SkillTreeBloc, SkillTreeState>(
+        listenWhen: (previous, current) =>
+            current is SkillTreeLoaded &&
+            (current.newlyUnlockedSkillIds.isNotEmpty ||
+                current.newlyUnlockedAchievementIds.isNotEmpty),
+        listener: (context, state) {
+          if (state is! SkillTreeLoaded) return;
+          final skillCount = state.newlyUnlockedSkillIds.length;
+          final achievementCount = state.newlyUnlockedAchievementIds.length;
+          final parts = [
+            if (skillCount > 0)
+              '$skillCount skill${skillCount == 1 ? '' : 's'}',
+            if (achievementCount > 0)
+              '$achievementCount achievement${achievementCount == 1 ? '' : 's'}',
+          ];
+
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              SnackBar(
+                content: Text('XP unlocked ${parts.join(' and ')}'),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+        },
+        child: Scaffold(
+          backgroundColor: EduColors.bg,
+          body: CustomScrollView(
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              // ── Page header ──────────────────────────────────────────────────
+              SliverToBoxAdapter(
+                child: SafeArea(
+                  bottom: false,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      EduSpacing.s6,
+                      EduSpacing.s5,
+                      EduSpacing.s6,
+                      EduSpacing.s5,
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Progress',
+                                style: GoogleFonts.caveat(
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.w700,
+                                  color: EduColors.textPrimary,
+                                  height: 1.1,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              CustomPaint(
+                                painter: _PageTitleUnderlinePainter(),
+                                size: const Size(110, 6),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Your learning journey so far.',
+                                style: GoogleFonts.caveat(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: EduColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: EduColors.surface,
+                            shape: BoxShape.circle,
+                            boxShadow: EduColors.shadowCard,
+                          ),
+                          child: const Icon(
+                            Icons.share_outlined,
+                            color: EduColors.textPrimary,
+                            size: 20,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Progress',
-                            style: GoogleFonts.caveat(
-                              fontSize: 32,
-                              fontWeight: FontWeight.w700,
-                              color: EduColors.textPrimary,
-                              height: 1.1,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          CustomPaint(
-                            painter: _PageTitleUnderlinePainter(),
-                            size: const Size(110, 6),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Your learning journey so far.',
-                            style: GoogleFonts.caveat(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: EduColors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: EduColors.surface,
-                        shape: BoxShape.circle,
-                        boxShadow: EduColors.shadowCard,
-                      ),
-                      child: const Icon(
-                        Icons.share_outlined,
-                        color: EduColors.textPrimary,
-                        size: 20,
-                      ),
-                    ),
-                  ],
+              ),
+
+              // ── XP card ──────────────────────────────────────────────────────
+              SliverToBoxAdapter(
+                child: _wrap(
+                  0,
+                  BlocBuilder<GlobalBloc, GlobalState>(
+                    builder: (context, state) {
+                      if (state case GlobalLoaded loaded) {
+                        return ProgressHeaderSection(
+                          animate: _started[0],
+                          xp: loaded.xp ?? 0,
+                          xpGoal: loaded.xpGoal ?? 0,
+                          level: loaded.level ?? 0,
+                          lessonsCompleted: loaded.lessons ?? 0,
+                          hoursStudied: loaded.hours ?? 0,
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
                 ),
               ),
-            ),
-          ),
 
-          // ── XP card ──────────────────────────────────────────────────────
-          SliverToBoxAdapter(
-            child: _wrap(
-              0,
-              BlocBuilder<GlobalBloc, GlobalState>(
-                builder: (context, state) {
-                  if (state case GlobalLoaded loaded) {
-                    return ProgressHeaderSection(
-                      animate: _started[0],
-                      xp: loaded.xp ?? 0,
-                      xpGoal: loaded.xpGoal ?? 0,
-                      level: loaded.level ?? 0,
-                      lessonsCompleted: loaded.lessons ?? 0,
-                      hoursStudied: loaded.hours ?? 0,
-                    );
-                  }
-                  return const SizedBox.shrink();
-                },
+              const SliverToBoxAdapter(child: SizedBox(height: EduSpacing.s8)),
+
+              // ── Skill tree ───────────────────────────────────────────────────
+              SliverToBoxAdapter(
+                child: _wrap(
+                  1,
+                  BlocBuilder<GlobalBloc, GlobalState>(
+                    builder: (ctx, globalState) {
+                      if (globalState is! GlobalLoaded) {
+                        return const SizedBox.shrink();
+                      }
+                      return _SkillTreeRoot(
+                        globalLoaded: globalState,
+                        animate: _started[1],
+                      );
+                    },
+                  ),
+                ),
               ),
-            ),
-          ),
 
-          const SliverToBoxAdapter(child: SizedBox(height: EduSpacing.s8)),
+              const SliverToBoxAdapter(child: SizedBox(height: EduSpacing.s10)),
 
-          // ── Skill tree ───────────────────────────────────────────────────
-          SliverToBoxAdapter(
-            child: _wrap(
-              1,
-              BlocBuilder<GlobalBloc, GlobalState>(
-                builder: (ctx, globalState) {
-                  if (globalState is! GlobalLoaded) {
-                    return const SizedBox.shrink();
-                  }
-                  return BlocProvider(
-                    create: (_) => SkillTreeBloc()..add(const FetchSkillTree()),
-                    child: _SkillTreeRoot(
-                      globalLoaded: globalState,
-                      animate: _started[1],
-                    ),
-                  );
-                },
+              // ── Achievements ─────────────────────────────────────────────────
+              SliverToBoxAdapter(
+                child: _wrap(
+                  2,
+                  BlocBuilder<SkillTreeBloc, SkillTreeState>(
+                    builder: (context, state) {
+                      if (state is! SkillTreeLoaded) {
+                        return const SizedBox.shrink();
+                      }
+                      return AchievementsSection(
+                        animate: _started[2],
+                        achievements: state.achievements,
+                        currentXp: state.currentXp,
+                      );
+                    },
+                  ),
+                ),
               ),
-            ),
+
+              const SliverToBoxAdapter(child: SizedBox(height: EduSpacing.s8)),
+
+              // ── Saved notes ──────────────────────────────────────────────────
+              SliverToBoxAdapter(
+                child: _wrap(3, SavedNotesSection(animate: _started[3])),
+              ),
+
+              const SliverToBoxAdapter(child: SizedBox(height: 100)),
+            ],
           ),
-
-          const SliverToBoxAdapter(child: SizedBox(height: EduSpacing.s10)),
-
-          // ── Achievements ─────────────────────────────────────────────────
-          SliverToBoxAdapter(
-            child: _wrap(2, AchievementsSection(animate: _started[2])),
-          ),
-
-          const SliverToBoxAdapter(child: SizedBox(height: EduSpacing.s8)),
-
-          // ── Saved notes ──────────────────────────────────────────────────
-          SliverToBoxAdapter(
-            child: _wrap(3, SavedNotesSection(animate: _started[3])),
-          ),
-
-          const SliverToBoxAdapter(child: SizedBox(height: 100)),
-        ],
+        ),
       ),
     );
   }
@@ -230,17 +275,7 @@ class _SkillTreeRootState extends State<_SkillTreeRoot> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final gs = widget.globalLoaded;
-      context.read<SkillTreeBloc>().add(
-        EvaluateRequirements(
-          gs.xp ?? 0,
-          gs.level ?? 0,
-          gs.lessons ?? 0,
-          gs.hours ?? 0,
-          gs.notes ?? 0,
-          gs.files ?? 0,
-          gs.streak ?? 0,
-        ),
-      );
+      context.read<SkillTreeBloc>().add(EvaluateXpProgress(gs.xp ?? 0));
     });
   }
 
@@ -249,17 +284,7 @@ class _SkillTreeRootState extends State<_SkillTreeRoot> {
     return BlocListener<GlobalBloc, GlobalState>(
       listener: (context, state) {
         if (state is GlobalLoaded) {
-          context.read<SkillTreeBloc>().add(
-            EvaluateRequirements(
-              state.xp ?? 0,
-              state.level ?? 0,
-              state.lessons ?? 0,
-              state.hours ?? 0,
-              state.notes ?? 0,
-              state.files ?? 0,
-              state.streak ?? 0,
-            ),
-          );
+          context.read<SkillTreeBloc>().add(EvaluateXpProgress(state.xp ?? 0));
         }
       },
       child: BlocBuilder<SkillTreeBloc, SkillTreeState>(
@@ -270,6 +295,8 @@ class _SkillTreeRootState extends State<_SkillTreeRoot> {
               nodes: state.nodes,
               unlockedCount: state.unlockedCount,
               totalNodes: state.totalNodes,
+              currentXp: state.currentXp,
+              nextMilestone: state.nextMilestone,
             );
           }
           if (state is SkillTreeLoading) {

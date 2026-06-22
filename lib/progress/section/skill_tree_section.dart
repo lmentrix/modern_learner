@@ -1,10 +1,9 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:modern_learner_production/progress/bloc/skill_tree_bloc.dart';
 import 'package:modern_learner_production/progress/model/progress_models.dart';
+import 'package:modern_learner_production/progress/repo/xp_achievement_calculator.dart';
 import 'package:modern_learner_production/progress/widget/skill_node_widget.dart';
 import 'package:modern_learner_production/theme/theme.dart';
 
@@ -61,12 +60,16 @@ class SkillTreeSection extends StatefulWidget {
     required this.nodes,
     required this.unlockedCount,
     required this.totalNodes,
+    required this.currentXp,
+    required this.nextMilestone,
   });
 
   final bool animate;
   final List<SkillNode> nodes;
   final int unlockedCount;
   final int totalNodes;
+  final int currentXp;
+  final XpMilestone? nextMilestone;
 
   @override
   State<SkillTreeSection> createState() => _SkillTreeSectionState();
@@ -189,6 +192,11 @@ class _SkillTreeSectionState extends State<SkillTreeSection>
                   color: EduColors.textSecondary,
                   fontWeight: FontWeight.w600,
                 ),
+              ),
+              const SizedBox(height: EduSpacing.s3),
+              _XpReactionCard(
+                currentXp: widget.currentXp,
+                nextMilestone: widget.nextMilestone,
               ),
             ],
           ),
@@ -392,8 +400,6 @@ class _SkillTreeSectionState extends State<SkillTreeSection>
               animate: widget.animate,
               tilt: tilt,
               index: i,
-              onTap: () =>
-                  context.read<SkillTreeBloc>().add(ToggleSkillLock(node.id)),
             );
 
             return Positioned(
@@ -414,6 +420,89 @@ class _SkillTreeSectionState extends State<SkillTreeSection>
           },
         ),
     ];
+  }
+}
+
+class _XpReactionCard extends StatelessWidget {
+  const _XpReactionCard({required this.currentXp, required this.nextMilestone});
+
+  final int currentXp;
+  final XpMilestone? nextMilestone;
+
+  @override
+  Widget build(BuildContext context) {
+    final milestone = nextMilestone;
+    final targetXp = milestone?.requiredXp ?? currentXp;
+    final remaining = math.max(0, targetXp - currentXp);
+    final progress = targetXp == 0
+        ? 1.0
+        : (currentXp / targetXp).clamp(0.0, 1.0);
+    final typeLabel = milestone?.type == XpMilestoneType.achievement
+        ? 'achievement'
+        : 'skill';
+
+    return Container(
+      padding: const EdgeInsets.all(EduSpacing.s3),
+      decoration: BoxDecoration(
+        color: EduColors.primaryLight.withValues(alpha: 0.45),
+        borderRadius: EduRadius.borderMd,
+        border: Border.all(color: EduColors.primary.withValues(alpha: 0.22)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.auto_awesome_rounded,
+                size: 17,
+                color: EduColors.primary,
+              ),
+              const SizedBox(width: EduSpacing.s2),
+              Expanded(
+                child: Text(
+                  milestone == null
+                      ? 'All XP milestones unlocked'
+                      : 'Next $typeLabel: ${milestone.title}',
+                  style: GoogleFonts.caveat(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: EduColors.textPrimary,
+                  ),
+                ),
+              ),
+              Text(
+                '$currentXp XP',
+                style: GoogleFonts.caveat(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: EduColors.primary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: EduSpacing.s2),
+          ClipRRect(
+            borderRadius: EduRadius.borderPill,
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 7,
+              backgroundColor: EduColors.surface,
+              color: EduColors.primary,
+            ),
+          ),
+          const SizedBox(height: EduSpacing.s1),
+          Text(
+            milestone == null ? 'Journey complete' : '$remaining XP to unlock',
+            style: GoogleFonts.caveat(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: EduColors.textSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

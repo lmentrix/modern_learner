@@ -46,12 +46,18 @@ class _ProgressHeaderSectionState extends State<ProgressHeaderSection>
       duration: const Duration(milliseconds: 1400),
     );
     _xpFill = CurvedAnimation(parent: _xpCtrl, curve: Curves.easeOut);
-    _xpCount = IntTween(begin: 0, end: widget.xp)
-        .animate(CurvedAnimation(parent: _countCtrl, curve: Curves.easeOut));
-    _lessonCount = IntTween(begin: 0, end: widget.lessonsCompleted)
-        .animate(CurvedAnimation(parent: _countCtrl, curve: Curves.easeOut));
-    _hoursCount = IntTween(begin: 0, end: widget.hoursStudied)
-        .animate(CurvedAnimation(parent: _countCtrl, curve: Curves.easeOut));
+    _xpCount = IntTween(
+      begin: 0,
+      end: widget.xp,
+    ).animate(CurvedAnimation(parent: _countCtrl, curve: Curves.easeOut));
+    _lessonCount = IntTween(
+      begin: 0,
+      end: widget.lessonsCompleted,
+    ).animate(CurvedAnimation(parent: _countCtrl, curve: Curves.easeOut));
+    _hoursCount = IntTween(
+      begin: 0,
+      end: widget.hoursStudied,
+    ).animate(CurvedAnimation(parent: _countCtrl, curve: Curves.easeOut));
 
     if (widget.animate) _start();
   }
@@ -106,124 +112,124 @@ class _ProgressHeaderSectionState extends State<ProgressHeaderSection>
             ),
           ),
           Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              Row(
                 children: [
-                  Text(
-                    'Level ${widget.level}',
-                    style: GoogleFonts.caveat(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white70,
-                      letterSpacing: 1.2,
-                    ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Level ${widget.level}',
+                        style: GoogleFonts.caveat(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white70,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      AnimatedBuilder(
+                        animation: _xpCount,
+                        builder: (context, _) => Text(
+                          '${_xpCount.value} XP',
+                          style: GoogleFonts.caveat(
+                            fontSize: 36,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                            height: 1.0,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 2),
-                  AnimatedBuilder(
-                    animation: _xpCount,
-                    builder: (context, _) => Text(
-                      '${_xpCount.value} XP',
-                      style: GoogleFonts.caveat(
-                        fontSize: 36,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                        height: 1.0,
+                  const Spacer(),
+                  // Level badge — hand-inked circle
+                  CustomPaint(
+                    painter: _SketchCircleBadgePainter(),
+                    child: SizedBox(
+                      width: 60,
+                      height: 60,
+                      child: Center(
+                        child: Text(
+                          '${widget.level}',
+                          style: GoogleFonts.caveat(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                          ),
+                        ),
                       ),
                     ),
                   ),
                 ],
               ),
-              const Spacer(),
-              // Level badge — hand-inked circle
-              CustomPaint(
-                painter: _SketchCircleBadgePainter(),
-                child: SizedBox(
-                  width: 60,
-                  height: 60,
-                  child: Center(
-                    child: Text(
-                      '${widget.level}',
-                      style: GoogleFonts.caveat(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
+              const SizedBox(height: EduSpacing.s4),
+
+              // XP bar
+              Text(
+                '${widget.xp} / ${widget.xpGoal} XP to next level',
+                style: GoogleFonts.caveat(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white70,
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: EduSpacing.s4),
-
-          // XP bar
-          Text(
-            '${widget.xp} / ${widget.xpGoal} XP to next level',
-            style: GoogleFonts.caveat(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: Colors.white70,
-            ),
-          ),
-          const SizedBox(height: EduSpacing.s2),
-          LayoutBuilder(
-            builder: (context, constraints) => AnimatedBuilder(
-              animation: _xpFill,
-              builder: (context, _) {
-                final w = constraints.maxWidth;
-                if (w <= 0) return const SizedBox(height: 8);
-                final filled = (w * pct * _xpFill.value).clamp(0.0, w);
-                return Stack(
-                  children: [
-                    Container(
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: Colors.white24,
-                        borderRadius: EduRadius.borderPill,
-                      ),
-                    ),
-                    Container(
-                      height: 8,
-                      width: filled < 4 ? 0 : filled,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: EduRadius.borderPill,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.white.withValues(alpha: 0.5),
-                            blurRadius: 6,
+              const SizedBox(height: EduSpacing.s2),
+              LayoutBuilder(
+                builder: (context, constraints) => AnimatedBuilder(
+                  animation: _xpFill,
+                  builder: (context, _) {
+                    final w = constraints.maxWidth;
+                    if (w <= 0) return const SizedBox(height: 8);
+                    final filled = (w * pct * _xpFill.value).clamp(0.0, w);
+                    return Stack(
+                      children: [
+                        Container(
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: Colors.white24,
+                            borderRadius: EduRadius.borderPill,
                           ),
-                        ],
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ),
-          const SizedBox(height: EduSpacing.s5),
-
-          // Stats row
-          Row(
-            children: [
-              _StatPill(
-                animation: _lessonCount,
-                suffix: ' lessons',
-                icon: Icons.menu_book_rounded,
+                        ),
+                        Container(
+                          height: 8,
+                          width: filled < 4 ? 0 : filled,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: EduRadius.borderPill,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.white.withValues(alpha: 0.5),
+                                blurRadius: 6,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
               ),
-              const SizedBox(width: EduSpacing.s3),
-              _StatPill(
-                animation: _hoursCount,
-                suffix: ' hours',
-                icon: Icons.schedule_rounded,
+              const SizedBox(height: EduSpacing.s5),
+
+              // Stats row
+              Row(
+                children: [
+                  _StatPill(
+                    animation: _lessonCount,
+                    suffix: ' lessons',
+                    icon: Icons.menu_book_rounded,
+                  ),
+                  const SizedBox(width: EduSpacing.s3),
+                  _StatPill(
+                    animation: _hoursCount,
+                    suffix: ' hours',
+                    icon: Icons.schedule_rounded,
+                  ),
+                ],
               ),
             ],
-          ),
-        ],
           ),
         ],
       ),
@@ -287,22 +293,34 @@ class _CardSketchOverlayPainter extends CustomPainter {
       Path()
         ..moveTo(size.width * 0.05, size.height * 0.15)
         ..quadraticBezierTo(
-            size.width * 0.25, size.height * 0.05,
-            size.width * 0.45, size.height * 0.18)
+          size.width * 0.25,
+          size.height * 0.05,
+          size.width * 0.45,
+          size.height * 0.18,
+        )
         ..quadraticBezierTo(
-            size.width * 0.65, size.height * 0.30,
-            size.width * 0.85, size.height * 0.12),
+          size.width * 0.65,
+          size.height * 0.30,
+          size.width * 0.85,
+          size.height * 0.12,
+        ),
       paint,
     );
     canvas.drawPath(
       Path()
         ..moveTo(size.width * 0.10, size.height * 0.85)
         ..quadraticBezierTo(
-            size.width * 0.35, size.height * 0.95,
-            size.width * 0.60, size.height * 0.80)
+          size.width * 0.35,
+          size.height * 0.95,
+          size.width * 0.60,
+          size.height * 0.80,
+        )
         ..quadraticBezierTo(
-            size.width * 0.80, size.height * 0.70,
-            size.width * 0.95, size.height * 0.88),
+          size.width * 0.80,
+          size.height * 0.70,
+          size.width * 0.95,
+          size.height * 0.88,
+        ),
       paint,
     );
 

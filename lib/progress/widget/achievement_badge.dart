@@ -3,9 +3,14 @@ import 'package:modern_learner_production/progress/model/progress_models.dart';
 import 'package:modern_learner_production/theme/theme.dart';
 
 class AchievementBadge extends StatelessWidget {
-  const AchievementBadge({super.key, required this.achievement});
+  const AchievementBadge({
+    super.key,
+    required this.achievement,
+    required this.currentXp,
+  });
 
   final Achievement achievement;
+  final int currentXp;
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +37,7 @@ class AchievementBadge extends StatelessWidget {
                     color: bg.withValues(alpha: 0.25),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
-                  )
+                  ),
                 ],
         ),
         child: Column(
@@ -46,7 +51,11 @@ class AchievementBadge extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               child: locked
-                  ? const Icon(Icons.lock_rounded, size: 22, color: EduColors.textSecondary)
+                  ? const Icon(
+                      Icons.lock_rounded,
+                      size: 22,
+                      color: EduColors.textSecondary,
+                    )
                   : Icon(
                       IconData(achievement.icon, fontFamily: 'MaterialIcons'),
                       size: 22,
@@ -69,6 +78,13 @@ class AchievementBadge extends StatelessWidget {
               Text(
                 achievement.unlockedDate,
                 style: tt.labelSmall?.copyWith(color: EduColors.textSecondary),
+              ),
+            ] else ...[
+              const SizedBox(height: 4),
+              Text(
+                '${achievement.requiredXp - currentXp} XP to go',
+                style: tt.labelSmall?.copyWith(color: EduColors.textSecondary),
+                textAlign: TextAlign.center,
               ),
             ],
           ],

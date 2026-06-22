@@ -1,13 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:modern_learner_production/progress/data/progress_data.dart';
+import 'package:modern_learner_production/progress/model/progress_models.dart';
 import 'package:modern_learner_production/progress/widget/achievement_badge.dart';
 import 'package:modern_learner_production/theme/theme.dart';
 
 class AchievementsSection extends StatefulWidget {
-  const AchievementsSection({super.key, required this.animate});
+  const AchievementsSection({
+    super.key,
+    required this.animate,
+    required this.achievements,
+    required this.currentXp,
+  });
 
   final bool animate;
+  final List<Achievement> achievements;
+  final int currentXp;
 
   @override
   State<AchievementsSection> createState() => _AchievementsSectionState();
@@ -27,8 +34,10 @@ class _AchievementsSectionState extends State<AchievementsSection>
       duration: const Duration(milliseconds: 450),
     );
     _fade = CurvedAnimation(parent: _ctrl, curve: Curves.easeOut);
-    _slide = Tween<Offset>(begin: const Offset(0, 0.08), end: Offset.zero)
-        .animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
+    _slide = Tween<Offset>(
+      begin: const Offset(0, 0.08),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
     if (widget.animate) _ctrl.forward();
   }
 
@@ -46,7 +55,9 @@ class _AchievementsSectionState extends State<AchievementsSection>
 
   @override
   Widget build(BuildContext context) {
-    final unlockedCount = achievements.where((a) => a.unlocked).length;
+    final unlockedCount = widget.achievements
+        .where((achievement) => achievement.unlocked)
+        .length;
 
     return FadeTransition(
       opacity: _fade,
@@ -72,16 +83,19 @@ class _AchievementsSectionState extends State<AchievementsSection>
                           color: EduColors.textPrimary,
                         ),
                       ),
-                      CustomPaint(
+                      const CustomPaint(
                         painter: _SketchAccentLine(width: 100),
-                        size: const Size(100, 5),
+                        size: Size(100, 5),
                       ),
                     ],
                   ),
                   const SizedBox(width: EduSpacing.s2),
                   const SizedBox(height: 4),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFFDE68A).withValues(alpha: 0.4),
                       borderRadius: EduRadius.borderPill,
@@ -90,7 +104,7 @@ class _AchievementsSectionState extends State<AchievementsSection>
                       ),
                     ),
                     child: Text(
-                      '$unlockedCount/${achievements.length}',
+                      '$unlockedCount/${widget.achievements.length}',
                       style: GoogleFonts.caveat(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
@@ -107,10 +121,13 @@ class _AchievementsSectionState extends State<AchievementsSection>
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 padding: EduSpacing.pagePadding,
-                itemCount: achievements.length,
-                separatorBuilder: (_, __) => const SizedBox(width: EduSpacing.s3),
-                itemBuilder: (context, i) =>
-                    AchievementBadge(achievement: achievements[i]),
+                itemCount: widget.achievements.length,
+                separatorBuilder: (context, index) =>
+                    const SizedBox(width: EduSpacing.s3),
+                itemBuilder: (context, i) => AchievementBadge(
+                  achievement: widget.achievements[i],
+                  currentXp: widget.currentXp,
+                ),
               ),
             ),
           ],
@@ -130,8 +147,11 @@ class _SketchAccentLine extends CustomPainter {
       Path()
         ..moveTo(0, size.height * 0.6)
         ..quadraticBezierTo(
-            width * 0.30, size.height * 0.1,
-            width * 0.62, size.height * 0.7)
+          width * 0.30,
+          size.height * 0.1,
+          width * 0.62,
+          size.height * 0.7,
+        )
         ..lineTo(width * 0.90, size.height * 0.3),
       Paint()
         ..color = EduColors.primary.withValues(alpha: 0.40)

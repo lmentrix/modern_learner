@@ -29,8 +29,11 @@ class SavedNoteTile extends StatelessWidget {
               color: tagBg,
               borderRadius: EduRadius.borderMd,
             ),
-            child: const Icon(Icons.sticky_note_2_outlined,
-                size: 22, color: EduColors.textPrimary),
+            child: const Icon(
+              Icons.sticky_note_2_outlined,
+              size: 22,
+              color: EduColors.textPrimary,
+            ),
           ),
           const SizedBox(width: EduSpacing.s3),
           Expanded(
@@ -40,7 +43,10 @@ class SavedNoteTile extends StatelessWidget {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: tagBg,
                         borderRadius: EduRadius.borderPill,

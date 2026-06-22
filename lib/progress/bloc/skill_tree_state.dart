@@ -16,17 +16,27 @@ final class SkillTreeLoading extends SkillTreeState {
 final class SkillTreeLoaded extends SkillTreeState {
   const SkillTreeLoaded({
     required this.nodes,
+    required this.achievements,
     required this.totalNodes,
     required this.unlockedCount,
     required this.totalTiers,
+    required this.currentXp,
+    this.nextMilestone,
     this.newlyUnlockedId,
+    this.newlyUnlockedSkillIds = const [],
+    this.newlyUnlockedAchievementIds = const [],
   });
 
   final List<SkillNode> nodes;
+  final List<Achievement> achievements;
   final int totalNodes;
   final int unlockedCount;
   final int totalTiers;
+  final int currentXp;
+  final XpMilestone? nextMilestone;
   final String? newlyUnlockedId;
+  final List<String> newlyUnlockedSkillIds;
+  final List<String> newlyUnlockedAchievementIds;
 
   List<SkillNode> get beginnerNodes =>
       nodes.where((n) => n.tier == SkillTier.beginner).toList();
@@ -51,8 +61,15 @@ final class SkillTreeLoaded extends SkillTreeState {
     return true;
   }
 
-  Set<String> get unlockedNodeIds =>
-      nodes.where((n) => n.state == NodeState.unlocked).map((n) => n.id).toSet();
+  Set<String> get unlockedNodeIds => nodes
+      .where((n) => n.state == NodeState.unlocked)
+      .map((n) => n.id)
+      .toSet();
+
+  Set<String> get unlockedAchievementIds => achievements
+      .where((achievement) => achievement.unlocked)
+      .map((achievement) => achievement.id)
+      .toSet();
 }
 
 final class SkillTreeError extends SkillTreeState {

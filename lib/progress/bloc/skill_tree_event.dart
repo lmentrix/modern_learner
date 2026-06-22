@@ -28,14 +28,8 @@ final class ToggleSkillLock extends SkillTreeEvent {
   final String nodeId;
 }
 
-final class EvaluateRequirements extends SkillTreeEvent {
-  const EvaluateRequirements(this.xp, this.level, this.lessons, this.hours,
-      this.notes, this.files, this.streak);
+final class EvaluateXpProgress extends SkillTreeEvent {
+  const EvaluateXpProgress(this.xp);
+
   final int xp;
-  final int level;
-  final int lessons;
-  final int hours;
-  final int notes;
-  final int files;
-  final int streak;
 }

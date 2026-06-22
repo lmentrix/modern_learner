@@ -12,7 +12,7 @@ const skillTree = [
     tier: SkillTier.beginner,
     state: NodeState.locked,
     xpReward: 100,
-    requiredXp: 0,
+    requiredXp: 50,
   ),
   SkillNode(
     id: 'b2',
@@ -121,6 +121,7 @@ const achievements = [
     unlocked: true,
     unlockedDate: 'Jun 12',
     rarityColor: 0xFFFDE68A,
+    requiredXp: 100,
   ),
   Achievement(
     id: 'ach2',
@@ -130,6 +131,7 @@ const achievements = [
     unlocked: true,
     unlockedDate: 'Jun 10',
     rarityColor: 0xFFBBF0D9,
+    requiredXp: 500,
   ),
   Achievement(
     id: 'ach3',
@@ -139,6 +141,7 @@ const achievements = [
     unlocked: true,
     unlockedDate: 'Jun 8',
     rarityColor: 0xFFE9D5FF,
+    requiredXp: 1000,
   ),
   Achievement(
     id: 'ach4',
@@ -148,6 +151,7 @@ const achievements = [
     unlocked: false,
     unlockedDate: '',
     rarityColor: 0xFFBBF0D9,
+    requiredXp: 2000,
   ),
   Achievement(
     id: 'ach5',
@@ -157,6 +161,7 @@ const achievements = [
     unlocked: false,
     unlockedDate: '',
     rarityColor: 0xFFFDE68A,
+    requiredXp: 3500,
   ),
 ];
 
@@ -178,7 +183,8 @@ const savedNotes = [
     subject: 'Philosophy',
     tagColor: 0xFFE9D5FF,
     savedDate: 'Jun 11',
-    excerpt: '"You have power over your mind, not outside events. Realise this, and you will find strength."',
+    excerpt:
+        '"You have power over your mind, not outside events. Realise this, and you will find strength."',
   ),
 ];
 

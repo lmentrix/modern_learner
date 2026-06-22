@@ -47,6 +47,7 @@ class Achievement {
     required this.unlocked,
     required this.unlockedDate,
     required this.rarityColor,
+    required this.requiredXp,
   });
 
   final String id;
@@ -56,6 +57,7 @@ class Achievement {
   final bool unlocked;
   final String unlockedDate;
   final int rarityColor;
+  final int requiredXp;
 }
 
 class SavedNoteRef {

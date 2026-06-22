@@ -1,37 +1,46 @@
 import 'package:bloc/bloc.dart';
-import 'package:meta/meta.dart';
+import 'package:flutter/foundation.dart';
 import 'package:modern_learner_production/progress/data/progress_data.dart';
 import 'package:modern_learner_production/progress/model/progress_models.dart';
+import 'package:modern_learner_production/progress/repo/xp_achievement_calculator.dart';
 
 part 'skill_tree_event.dart';
 part 'skill_tree_state.dart';
 
 class SkillTreeBloc extends Bloc<SkillTreeEvent, SkillTreeState> {
-  SkillTreeBloc() : super(const SkillTreeInitial()) {
+  SkillTreeBloc({
+    XpAchievementCalculator calculator = const XpAchievementCalculator(),
+  }) : _calculator = calculator,
+       super(const SkillTreeInitial()) {
     on<FetchSkillTree>(_onFetch);
     on<RefreshSkillTree>(_onRefresh);
     on<UnlockSkill>(_onUnlock);
     on<StartSkill>(_onStart);
     on<ToggleSkillLock>(_onToggle);
-    on<EvaluateRequirements>(_onEvaluateRequirements);
+    on<EvaluateXpProgress>(_onEvaluateXpProgress);
   }
+
+  final XpAchievementCalculator _calculator;
 
   void _onFetch(FetchSkillTree event, Emitter<SkillTreeState> emit) async {
     emit(const SkillTreeLoading());
     try {
       final nodes = _loadSkillTree();
-      final totalNodes = nodes.length;
-      final unlockedCount = nodes
-          .where((n) => n.state == NodeState.unlocked)
-          .length;
-      final tiers = nodes.map((n) => n.tier).toSet().length;
+      final result = _calculator.calculate(
+        xp: 0,
+        skillNodes: nodes,
+        achievements: achievements,
+      );
 
       emit(
         SkillTreeLoaded(
-          nodes: nodes,
-          totalNodes: totalNodes,
-          unlockedCount: unlockedCount,
-          totalTiers: tiers,
+          nodes: result.skillNodes,
+          achievements: result.achievements,
+          totalNodes: nodes.length,
+          unlockedCount: 0,
+          totalTiers: nodes.map((n) => n.tier).toSet().length,
+          currentXp: result.xp,
+          nextMilestone: result.nextMilestone,
         ),
       );
     } catch (e) {
@@ -40,21 +49,28 @@ class SkillTreeBloc extends Bloc<SkillTreeEvent, SkillTreeState> {
   }
 
   void _onRefresh(RefreshSkillTree event, Emitter<SkillTreeState> emit) async {
+    final xp = switch (state) {
+      SkillTreeLoaded loaded => loaded.currentXp,
+      _ => 0,
+    };
     emit(const SkillTreeLoading());
     try {
       final nodes = _loadSkillTree();
-      final totalNodes = nodes.length;
-      final unlockedCount = nodes
-          .where((n) => n.state == NodeState.unlocked)
-          .length;
-      final tiers = nodes.map((n) => n.tier).toSet().length;
+      final result = _calculator.calculate(
+        xp: xp,
+        skillNodes: nodes,
+        achievements: achievements,
+      );
 
       emit(
         SkillTreeLoaded(
-          nodes: nodes,
-          totalNodes: totalNodes,
-          unlockedCount: unlockedCount,
-          totalTiers: tiers,
+          nodes: result.skillNodes,
+          achievements: result.achievements,
+          totalNodes: nodes.length,
+          unlockedCount: 0,
+          totalTiers: nodes.map((n) => n.tier).toSet().length,
+          currentXp: result.xp,
+          nextMilestone: result.nextMilestone,
         ),
       );
     } catch (e) {
@@ -78,11 +94,14 @@ class SkillTreeBloc extends Bloc<SkillTreeEvent, SkillTreeState> {
     emit(
       SkillTreeLoaded(
         nodes: updated,
+        achievements: current.achievements,
         totalNodes: current.totalNodes,
         unlockedCount: updated
             .where((n) => n.state == NodeState.unlocked)
             .length,
         totalTiers: current.totalTiers,
+        currentXp: current.currentXp,
+        nextMilestone: current.nextMilestone,
         newlyUnlockedId: event.nodeId,
       ),
     );
@@ -102,11 +121,14 @@ class SkillTreeBloc extends Bloc<SkillTreeEvent, SkillTreeState> {
     emit(
       SkillTreeLoaded(
         nodes: updated,
+        achievements: current.achievements,
         totalNodes: current.totalNodes,
         unlockedCount: updated
             .where((n) => n.state == NodeState.unlocked)
             .length,
         totalTiers: current.totalTiers,
+        currentXp: current.currentXp,
+        nextMilestone: current.nextMilestone,
       ),
     );
   }
@@ -140,62 +162,46 @@ class SkillTreeBloc extends Bloc<SkillTreeEvent, SkillTreeState> {
     emit(
       SkillTreeLoaded(
         nodes: updated,
+        achievements: current.achievements,
         totalNodes: current.totalNodes,
         unlockedCount: updated
             .where((n) => n.state == NodeState.unlocked)
             .length,
         totalTiers: current.totalTiers,
+        currentXp: current.currentXp,
+        nextMilestone: current.nextMilestone,
         newlyUnlockedId: isCurrentlyLocked ? event.nodeId : null,
       ),
     );
   }
 
-  void _onEvaluateRequirements(
-    EvaluateRequirements event,
+  void _onEvaluateXpProgress(
+    EvaluateXpProgress event,
     Emitter<SkillTreeState> emit,
   ) {
     if (state is! SkillTreeLoaded) return;
     final current = state as SkillTreeLoaded;
-
-    var changed = false;
-    final updated = current.nodes.map((node) {
-      if (node.state != NodeState.locked) return node;
-      if (!_meetsRequirements(
-        node,
-        event.xp,
-        event.level,
-        event.lessons,
-        event.hours,
-        event.notes,
-        event.files,
-        event.streak,
-      )) return node;
-
-      final allPrereqsMet = node.prerequisiteIds.every(
-        (id) => current.unlockedNodeIds.contains(id),
-      );
-
-      if (allPrereqsMet) {
-        changed = true;
-        return _copyNode(node, state: NodeState.unlocked);
-      } else {
-        changed = true;
-        return _copyNode(node, state: NodeState.available);
-      }
-    }).toList();
-
-    if (!changed) return;
-
-    _propagateAvailability(updated);
+    final result = _calculator.calculate(
+      xp: event.xp,
+      skillNodes: _loadSkillTree(),
+      achievements: achievements,
+      previouslyUnlockedSkillIds: current.unlockedNodeIds,
+      previouslyUnlockedAchievementIds: current.unlockedAchievementIds,
+    );
 
     emit(
       SkillTreeLoaded(
-        nodes: updated,
+        nodes: result.skillNodes,
+        achievements: result.achievements,
         totalNodes: current.totalNodes,
-        unlockedCount: updated
+        unlockedCount: result.skillNodes
             .where((n) => n.state == NodeState.unlocked)
             .length,
         totalTiers: current.totalTiers,
+        currentXp: result.xp,
+        nextMilestone: result.nextMilestone,
+        newlyUnlockedSkillIds: result.newlyUnlockedSkillIds,
+        newlyUnlockedAchievementIds: result.newlyUnlockedAchievementIds,
       ),
     );
   }
@@ -263,25 +269,5 @@ class SkillTreeBloc extends Bloc<SkillTreeEvent, SkillTreeState> {
       requiredFiles: node.requiredFiles,
       requiredStreak: node.requiredStreak,
     );
-  }
-
-  bool _meetsRequirements(
-    SkillNode node,
-    int xp,
-    int level,
-    int lessons,
-    int hours,
-    int notes,
-    int files,
-    int streak,
-  ) {
-    if (node.requiredXp > 0 && xp < node.requiredXp) return false;
-    if (node.requiredLevel > 0 && level < node.requiredLevel) return false;
-    if (node.requiredLessons > 0 && lessons < node.requiredLessons) return false;
-    if (node.requiredHours > 0 && hours < node.requiredHours) return false;
-    if (node.requiredNotes > 0 && notes < node.requiredNotes) return false;
-    if (node.requiredFiles > 0 && files < node.requiredFiles) return false;
-    if (node.requiredStreak > 0 && streak < node.requiredStreak) return false;
-    return true;
   }
 }

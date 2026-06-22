@@ -33,8 +33,12 @@ class _SavedNotesSectionState extends State<SavedNotesSection>
         .map((c) => CurvedAnimation(parent: c, curve: Curves.easeOut))
         .toList();
     _slides = _ctrls
-        .map((c) => Tween<Offset>(begin: const Offset(0, 0.07), end: Offset.zero)
-            .animate(CurvedAnimation(parent: c, curve: Curves.easeOut)))
+        .map(
+          (c) => Tween<Offset>(
+            begin: const Offset(0, 0.07),
+            end: Offset.zero,
+          ).animate(CurvedAnimation(parent: c, curve: Curves.easeOut)),
+        )
         .toList();
     if (widget.animate) _stagger();
   }
@@ -55,7 +59,9 @@ class _SavedNotesSectionState extends State<SavedNotesSection>
 
   @override
   void dispose() {
-    for (final c in _ctrls) { c.dispose(); }
+    for (final c in _ctrls) {
+      c.dispose();
+    }
     super.dispose();
   }
 
@@ -109,7 +115,10 @@ class _SavedNotesSectionState extends State<SavedNotesSection>
               position: _slides[i],
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(
-                  EduSpacing.s6, 0, EduSpacing.s6, EduSpacing.s4,
+                  EduSpacing.s6,
+                  0,
+                  EduSpacing.s6,
+                  EduSpacing.s4,
                 ),
                 child: SavedNoteTile(ref: savedNotes[i]),
               ),
@@ -131,8 +140,11 @@ class _SketchAccentLine extends CustomPainter {
       Path()
         ..moveTo(0, size.height * 0.6)
         ..quadraticBezierTo(
-            width * 0.30, size.height * 0.1,
-            width * 0.62, size.height * 0.7)
+          width * 0.30,
+          size.height * 0.1,
+          width * 0.62,
+          size.height * 0.7,
+        )
         ..lineTo(width * 0.90, size.height * 0.3),
       Paint()
         ..color = EduColors.primary.withValues(alpha: 0.40)
