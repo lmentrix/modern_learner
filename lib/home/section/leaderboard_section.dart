@@ -30,9 +30,12 @@ class _LeaderboardSectionState extends State<LeaderboardSection>
       ),
     );
     _slides = _ctrls
-        .map((c) => Tween<double>(begin: 32, end: 0).animate(
-              CurvedAnimation(parent: c, curve: Curves.easeOut),
-            ))
+        .map(
+          (c) => Tween<double>(
+            begin: 32,
+            end: 0,
+          ).animate(CurvedAnimation(parent: c, curve: Curves.easeOut)),
+        )
         .toList();
     _fades = _ctrls
         .map((c) => CurvedAnimation(parent: c, curve: Curves.easeOut))
@@ -57,7 +60,9 @@ class _LeaderboardSectionState extends State<LeaderboardSection>
 
   @override
   void dispose() {
-    for (final c in _ctrls) { c.dispose(); }
+    for (final c in _ctrls) {
+      c.dispose();
+    }
     super.dispose();
   }
 
@@ -93,7 +98,7 @@ class _LeaderboardSectionState extends State<LeaderboardSection>
               ),
               const Spacer(),
               GestureDetector(
-                onTap: () {},
+                onTap: () {}, //TODO: goto leader board page
                 child: Text(
                   'See all →',
                   style: GoogleFonts.caveat(
@@ -150,8 +155,11 @@ class _ThinAccentLine extends CustomPainter {
       Path()
         ..moveTo(0, size.height * 0.6)
         ..quadraticBezierTo(
-            size.width * 0.30, size.height * 0.1,
-            size.width * 0.62, size.height * 0.7)
+          size.width * 0.30,
+          size.height * 0.1,
+          size.width * 0.62,
+          size.height * 0.7,
+        )
         ..lineTo(size.width * 0.90, size.height * 0.3),
       Paint()
         ..color = EduColors.primary.withValues(alpha: 0.40)

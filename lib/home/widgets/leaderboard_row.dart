@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:modern_learner_production/bloc/global_bloc.dart';
 import 'package:modern_learner_production/home/model/home_models.dart';
 import 'package:modern_learner_production/theme/theme.dart';
 
 class LeaderboardRow extends StatelessWidget {
-  const LeaderboardRow({
-    super.key,
-    required this.user,
-    required this.maxXp,
-  });
+  const LeaderboardRow({super.key, required this.user, required this.maxXp});
 
   final LeaderboardUser user;
   final int maxXp;
@@ -16,7 +14,7 @@ class LeaderboardRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isMe = user.isCurrentUser;
-    final pct  = user.xp / maxXp;
+    final pct = user.xp / maxXp;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -27,7 +25,9 @@ class LeaderboardRow extends StatelessWidget {
         borderRadius: EduRadius.borderMd,
         border: isMe
             ? Border.all(
-                color: EduColors.primary.withValues(alpha: 0.22), width: 1)
+                color: EduColors.primary.withValues(alpha: 0.22),
+                width: 1,
+              )
             : null,
       ),
       child: Row(
@@ -72,13 +72,20 @@ class LeaderboardRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  isMe ? 'You' : user.name,
-                  style: GoogleFonts.caveat(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700,
-                    color: isMe ? EduColors.primary : EduColors.textPrimary,
-                  ),
+                BlocBuilder<GlobalBloc, GlobalState>(
+                  builder: (context, state) {
+                    final name = state is GlobalLoaded
+                        ? state.displayName
+                        : 'You';
+                    return Text(
+                      isMe ? name : user.name, // TODO: display user name
+                      style: GoogleFonts.caveat(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                        color: isMe ? EduColors.primary : EduColors.textPrimary,
+                      ),
+                    );
+                  },
                 ),
                 const SizedBox(height: 4),
                 ClipRRect(

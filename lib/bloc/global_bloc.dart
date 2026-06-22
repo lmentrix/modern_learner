@@ -39,22 +39,29 @@ class GlobalBloc extends Bloc<GlobalEvent, GlobalState> {
       final profile = client.auth.currentUser;
       final userId = profile?.id ?? '';
       final createdAt = profile?.createdAt;
+
       if (userId.isEmpty) {
         emit(const GlobalError('Not authenticated'));
         return;
       }
 
+      final Map<String, dynamic> userInfo = await client
+          .from('user_progress')
+          .select()
+          .eq('user_id', userId)
+          .single(); // .single() returns Future<Map<String, dynamic>>
+
       emit(
         GlobalLoaded(
           displayName: _emailToName(profile?.email ?? ''),
-          xp: 0,
-          level: 0,
-          streak: 0,
-          lessons: 0,
-          hours: 0,
-          notes: 0,
-          files: 0,
-          xpGoal: 0,
+          xp: userInfo['total_xp'] as int? ?? 0,
+          xpGoal: userInfo['xp_goal'] as int? ?? 5000,
+          level: userInfo['level'] as int? ?? 0,
+          streak: userInfo['streak'] as int? ?? 0,
+          lessons: (userInfo['completed_lessons'] as Map?)?.length ?? 0,
+          hours: userInfo['hours_studied'] as int? ?? 0,
+          notes: userInfo['notes_count'] as int? ?? 0,
+          files: userInfo['uploaded_notes_count'] as int? ?? 0,
           joinDate: beautifyCreatedAt(createdAt ?? ''),
         ),
       );

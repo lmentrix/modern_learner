@@ -5,10 +5,14 @@ import 'package:modern_learner_production/home/widgets/stat_card.dart';
 import 'package:modern_learner_production/theme/theme.dart';
 
 class QuickStatsSection extends StatelessWidget {
-  const QuickStatsSection({super.key, required this.animate, required this.stat});
+  const QuickStatsSection({
+    super.key,
+    required this.animate,
+    required this.stats,
+  });
 
   final bool animate;
-  final QuickStat stat;
+  final List<QuickStat> stats;
 
   @override
   Widget build(BuildContext context) {
@@ -24,11 +28,15 @@ class QuickStatsSection extends StatelessWidget {
           padding: EduSpacing.pagePadding,
           child: Row(
             children: [
-              Expanded(
-                child: StatCard(
-                  animate: animate, stat: stat
+              for (var i = 0; i < stats.length; i++)
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.only(
+                      right: i < stats.length - 1 ? EduSpacing.s2 : 0,
+                    ),
+                    child: StatCard(animate: animate, stat: stats[i]),
+                  ),
                 ),
-              ),
             ],
           ),
         ),
