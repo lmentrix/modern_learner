@@ -38,13 +38,17 @@ const _kTilt = {
   'm1': 0.010,
 };
 
-const _kCardW    = 92.0;
-const _kCardH    = 108.0;
-const _kRowGap   = 62.0;
-const _kRowH     = _kCardH + _kRowGap;
-const _kPadTop   = 32.0;
-const _kPadBot   = 28.0;
-const _kCanvasH  = _kPadTop + 4 * _kCardH + 3 * _kRowGap + _kPadBot;
+const _kCardW = 92.0;
+const _kCardH = 108.0;
+
+// Each tier owns a complete vertical lane: banner, breathing room, node card,
+// and bottom clearance. Keeping these areas separate prevents banners from
+// painting over nodes or escaping into the following Achievements section.
+const _kTierLaneH = 166.0;
+const _kBannerTop = 10.0;
+const _kNodeTop = 42.0;
+const _kCanvasBottomPadding = 18.0;
+const _kCanvasH = 4 * _kTierLaneH + _kCanvasBottomPadding;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Section
@@ -200,42 +204,57 @@ class _SkillTreeSectionState extends State<SkillTreeSection>
               final w = constraints.maxWidth;
               final positions = _buildPositions(w);
 
-              return SizedBox(
+              return Container(
                 width: w,
                 height: _kCanvasH,
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    // Paper texture
-                    Positioned.fill(
-                      child: CustomPaint(painter: _PaperTexturePainter()),
+                decoration: BoxDecoration(
+                  borderRadius: EduRadius.borderLg,
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF475569).withValues(alpha: 0.08),
+                      blurRadius: 18,
+                      offset: const Offset(0, 6),
                     ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: EduRadius.borderLg,
+                  child: Stack(
+                    clipBehavior: Clip.hardEdge,
+                    children: [
+                      // Paper texture
+                      Positioned.fill(
+                        child: CustomPaint(painter: _PaperTexturePainter()),
+                      ),
 
-                    // Connection lines (below nodes)
-                    Positioned.fill(
-                      child: CustomPaint(
-                        painter: _ConnectionsPainter(
-                          nodes: widget.nodes,
-                          positions: positions,
-                          cardW: _kCardW,
-                          cardH: _kCardH,
+                      // Soft tier lanes improve scanability without competing
+                      // with the node cards.
+                      ..._buildTierBackgrounds(w),
+
+                      // Connection lines (below nodes)
+                      Positioned.fill(
+                        child: CustomPaint(
+                          painter: _ConnectionsPainter(
+                            nodes: widget.nodes,
+                            positions: positions,
+                            cardW: _kCardW,
+                            cardH: _kCardH,
+                          ),
                         ),
                       ),
-                    ),
 
-                    // Tier dividers (subtle dashed lines)
-                    Positioned.fill(
-                      child: CustomPaint(
-                        painter: _TierDividersPainter(),
+                      // Tier dividers (subtle dashed lines)
+                      Positioned.fill(
+                        child: CustomPaint(painter: _TierDividersPainter()),
                       ),
-                    ),
 
-                    // Tier label badges
-                    ..._buildTierLabels(w),
+                      // Tier label badges
+                      ..._buildTierLabels(),
 
-                    // Skill nodes
-                    ..._buildNodes(positions),
-                  ],
+                      // Skill nodes
+                      ..._buildNodes(positions),
+                    ],
+                  ),
                 ),
               );
             },
@@ -247,7 +266,7 @@ class _SkillTreeSectionState extends State<SkillTreeSection>
         // ── Hand-drawn legend ──────────────────────────────────────────────
         Padding(padding: EduSpacing.pagePadding, child: _SketchLegend()),
 
-        const SizedBox(height: EduSpacing.s4),
+        const SizedBox(height: EduSpacing.s6),
       ],
     );
   }
@@ -259,45 +278,98 @@ class _SkillTreeSectionState extends State<SkillTreeSection>
     for (final entry in _kLayout.entries) {
       final (xFrac, row) = entry.value;
       final cx = xFrac * canvasW;
-      final cy = _kPadTop + _kCardH / 2 + row * _kRowH;
+      final cy = row * _kTierLaneH + _kNodeTop + _kCardH / 2;
       positions[entry.key] = Offset(cx, cy);
     }
     return positions;
   }
 
-  List<Widget> _buildTierLabels(double canvasW) {
-    const tierRows = [
-      (0, 'BEGINNER', Color(0xFF059669)),
-      (1, 'INTERMEDIATE', Color(0xFF7C3AED)),
-      (2, 'ADVANCED', Color(0xFFD97706)),
-      (3, 'MASTER', Color(0xFFEA580C)),
+  List<Widget> _buildTierBackgrounds(double canvasW) {
+    const tierColors = [
+      Color(0xFF059669),
+      Color(0xFF7C3AED),
+      Color(0xFFD97706),
+      Color(0xFFEA580C),
     ];
 
     return [
-      for (final (row, label, color) in tierRows)
+      for (var row = 0; row < tierColors.length; row++)
         Positioned(
-          top: _kPadTop + row * _kRowH - 18,
+          top: row * _kTierLaneH,
           left: 0,
-          right: 0,
-          child: Center(
-            child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.10),
-                borderRadius: EduRadius.borderPill,
-                border: Border.all(color: color.withValues(alpha: 0.30)),
-              ),
-              child: Text(
-                label,
-                style: GoogleFonts.caveat(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: color.withValues(alpha: 0.80),
-                  letterSpacing: 1.5,
+          width: canvasW,
+          height: _kTierLaneH,
+          child: ColoredBox(
+            color: tierColors[row].withValues(alpha: row.isEven ? 0.025 : 0.04),
+          ),
+        ),
+    ];
+  }
+
+  List<Widget> _buildTierLabels() {
+    const tierRows = [
+      (0, 'BEGINNER', 'Foundation', Color(0xFF059669)),
+      (1, 'INTERMEDIATE', 'Momentum', Color(0xFF7C3AED)),
+      (2, 'ADVANCED', 'Mastery', Color(0xFFD97706)),
+      (3, 'MASTER', 'Capstone', Color(0xFFEA580C)),
+    ];
+
+    return [
+      for (final (row, label, caption, color) in tierRows)
+        Positioned(
+          top: row * _kTierLaneH + _kBannerTop,
+          left: 12,
+          right: 12,
+          child: Row(
+            children: [
+              Container(
+                width: 7,
+                height: 7,
+                decoration: BoxDecoration(
+                  color: color,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: color.withValues(alpha: 0.30),
+                      blurRadius: 5,
+                    ),
+                  ],
                 ),
               ),
-            ),
+              const SizedBox(width: 7),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 3,
+                ),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.10),
+                  borderRadius: EduRadius.borderPill,
+                  border: Border.all(color: color.withValues(alpha: 0.30)),
+                ),
+                child: Text(
+                  label,
+                  style: GoogleFonts.caveat(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: color,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  caption,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.caveat(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: EduColors.textSecondary,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
     ];
@@ -448,7 +520,7 @@ class _ConnectionsPainter extends CustomPainter {
 
     // Gentle arc curving slightly downward for visual separation
     final midX = (from.dx + to.dx) / 2;
-    final sag = 10.0; // how much the arc dips below the node center
+    const sag = 10.0; // how much the arc dips below the node center
     final path = Path()
       ..moveTo(from.dx, from.dy)
       ..cubicTo(midX, from.dy + sag, midX, to.dy + sag, to.dx, to.dy);
@@ -580,7 +652,7 @@ class _TierDividersPainter extends CustomPainter {
     ];
 
     for (final (color, _, row) in tiers) {
-      final y = _kPadTop + row * _kRowH - 6;
+      final y = row * _kTierLaneH + 35;
       final line = Paint()
         ..color = color.withValues(alpha: 0.12)
         ..strokeWidth = 0.8

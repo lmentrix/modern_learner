@@ -192,7 +192,7 @@ class _ProgressPageState extends State<ProgressPage>
             ),
           ),
 
-          const SliverToBoxAdapter(child: SizedBox(height: EduSpacing.s8)),
+          const SliverToBoxAdapter(child: SizedBox(height: EduSpacing.s10)),
 
           // ── Achievements ─────────────────────────────────────────────────
           SliverToBoxAdapter(
@@ -328,7 +328,7 @@ class _PageTitleUnderlinePainter extends CustomPainter {
     final cx = size.width + 8;
     final cy = size.height * 0.4;
     const r = 4.5;
-    final inner = r * 0.42;
+    const inner = r * 0.42;
     final path = Path();
     for (var i = 0; i < 5; i++) {
       final outerAngle = -math.pi / 2 + i * 2 * math.pi / 5;
