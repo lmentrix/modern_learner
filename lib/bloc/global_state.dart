@@ -17,6 +17,8 @@ final class GlobalLoaded extends GlobalState {
     required this.totalActiveDays,
     required this.activityDays,
     required this.weeksTracked,
+    required this.todayActiveSeconds,
+    required this.isActivityTracking,
     this.xp,
     this.level,
     this.streak,
@@ -34,6 +36,8 @@ final class GlobalLoaded extends GlobalState {
   final int totalActiveDays;
   final List<ActivityDay> activityDays;
   final int weeksTracked;
+  final int todayActiveSeconds;
+  final bool isActivityTracking;
   final int? xp;
   final int? level;
   final int? streak;
@@ -43,6 +47,36 @@ final class GlobalLoaded extends GlobalState {
   final int? files;
   final int? xpGoal;
   final String? joinDate;
+
+  GlobalLoaded copyWith({
+    int? bestWeekDays,
+    int? thisWeekDays,
+    int? totalActiveDays,
+    List<ActivityDay>? activityDays,
+    int? weeksTracked,
+    int? todayActiveSeconds,
+    bool? isActivityTracking,
+  }) {
+    return GlobalLoaded(
+      displayName: displayName,
+      bestWeekDays: bestWeekDays ?? this.bestWeekDays,
+      thisWeekDays: thisWeekDays ?? this.thisWeekDays,
+      totalActiveDays: totalActiveDays ?? this.totalActiveDays,
+      activityDays: activityDays ?? this.activityDays,
+      weeksTracked: weeksTracked ?? this.weeksTracked,
+      todayActiveSeconds: todayActiveSeconds ?? this.todayActiveSeconds,
+      isActivityTracking: isActivityTracking ?? this.isActivityTracking,
+      xp: xp,
+      level: level,
+      streak: streak,
+      lessons: lessons,
+      hours: hours,
+      notes: notes,
+      files: files,
+      xpGoal: xpGoal,
+      joinDate: joinDate,
+    );
+  }
 }
 
 final class GlobalError extends GlobalState {

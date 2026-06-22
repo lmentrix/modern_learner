@@ -1,5 +1,4 @@
 class UserProfile {
-
   factory UserProfile.fromJson(Map<String, dynamic> json) {
     final name = (json['name'] as String?) ?? '';
     final email = (json['email'] as String?) ?? '';
@@ -85,19 +84,34 @@ class UserProfile {
 }
 
 class ActivityDay {
-  const ActivityDay({required this.date, required this.intensity});
+  const ActivityDay({
+    required this.date,
+    required this.intensity,
+    this.activeSeconds = 0,
+  });
 
   factory ActivityDay.fromJson(Map<String, dynamic> json) {
-    final dateStr = json['date'] as String;
+    final dateStr = (json['date'] ?? json['activity_date']) as String;
+    final activeSeconds = json['active_seconds'] as int? ?? 0;
     return ActivityDay(
       date: DateTime.parse(dateStr),
-      intensity: (json['intensity'] as int?) ?? 0,
+      intensity:
+          (json['intensity'] as int?) ?? activityIntensity(activeSeconds),
+      activeSeconds: activeSeconds,
     );
   }
 
   final DateTime date;
   final int intensity; // 0 = none, 1 = light, 2 = medium, 3 = high
+  final int activeSeconds;
 }
+
+int activityIntensity(int activeSeconds) => switch (activeSeconds) {
+  <= 0 => 0,
+  < 10 * 60 => 1,
+  < 30 * 60 => 2,
+  _ => 3,
+};
 
 class StatItem {
   const StatItem({

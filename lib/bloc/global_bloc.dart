@@ -1,20 +1,28 @@
 import 'package:bloc/bloc.dart';
 import 'package:flutter/foundation.dart';
 import 'package:modern_learner_production/profile/model/profile_models.dart';
+import 'package:modern_learner_production/profile/repo/activity_calculation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'global_event.dart';
 part 'global_state.dart';
 
 class GlobalBloc extends Bloc<GlobalEvent, GlobalState> {
-  GlobalBloc() : super(GlobalInitial()) {
+  GlobalBloc({ActivityCalculation? activityCalculation})
+    : _activityCalculation =
+          activityCalculation ?? ActivityCalculation(Supabase.instance.client),
+      super(GlobalInitial()) {
     on<FetchGlobalStats>(_onFetch);
     on<RefreshGlobalStats>(_onRefresh);
     on<SaveGlobalStats>(_onSave);
 
     //learning activity
     on<LearningActivity>(_onLearningActivity);
+    on<StartLearningActivityMonitoring>(_onStartActivityMonitoring);
+    on<SyncLearningActivity>(_onSyncLearningActivity);
   }
+
+  final ActivityCalculation _activityCalculation;
 
   Future<void> _onFetch(
     FetchGlobalStats event,
@@ -67,10 +75,7 @@ class GlobalBloc extends Bloc<GlobalEvent, GlobalState> {
           .eq('user_id', userId)
           .single(); // .single() returns Future<Map<String, dynamic>>
 
-      final activityInfo = await _ensureAndFetchLearningActivity(
-        client,
-        userId,
-      );
+      final activityInfo = await _activityCalculation.fetchSummary(userId);
 
       emit(
         GlobalLoaded(
@@ -89,6 +94,8 @@ class GlobalBloc extends Bloc<GlobalEvent, GlobalState> {
           totalActiveDays: activityInfo.totalActiveDays,
           activityDays: activityInfo.activityDays,
           weeksTracked: activityInfo.weeksTracked,
+          todayActiveSeconds: activityInfo.todayActiveSeconds,
+          isActivityTracking: _activityCalculation.isTracking,
         ),
       );
     } catch (e) {
@@ -103,35 +110,54 @@ class GlobalBloc extends Bloc<GlobalEvent, GlobalState> {
     await _load(emit, expectedUserId: userId);
   }
 
-  Future<_LearningActivityData> _ensureAndFetchLearningActivity(
-    SupabaseClient client,
-    String userId,
+  Future<void> _onStartActivityMonitoring(
+    StartLearningActivityMonitoring event,
+    Emitter<GlobalState> emit,
   ) async {
-    await client
-        .from('learning_activity')
-        .upsert(
-          {
-            'user_id': userId,
-            'best_week_days': 0,
-            'this_week_days': 0,
-            'total_active_days': 0,
-            'activity_days': <Map<String, Object>>[],
-            'weeks_tracked': 0,
-          },
-          onConflict: 'user_id',
-          ignoreDuplicates: true,
+    _activityCalculation.startTracking();
+    await _refreshActivityState(emit, event.userId);
+  }
+
+  Future<void> _onSyncLearningActivity(
+    SyncLearningActivity event,
+    Emitter<GlobalState> emit,
+  ) async {
+    await _refreshActivityState(
+      emit,
+      event.userId,
+      stopTracking: event.stopTracking,
+    );
+  }
+
+  Future<void> _refreshActivityState(
+    Emitter<GlobalState> emit,
+    String userId, {
+    bool stopTracking = false,
+  }) async {
+    try {
+      final summary = await _activityCalculation.sync(
+        userId: userId,
+        stopTracking: stopTracking,
+      );
+      final current = state;
+      if (current is GlobalLoaded) {
+        emit(
+          current.copyWith(
+            bestWeekDays: summary.bestWeekDays,
+            thisWeekDays: summary.thisWeekDays,
+            totalActiveDays: summary.totalActiveDays,
+            activityDays: summary.activityDays,
+            weeksTracked: summary.weeksTracked,
+            todayActiveSeconds: summary.todayActiveSeconds,
+            isActivityTracking: _activityCalculation.isTracking,
+          ),
         );
-
-    final row = await client
-        .from('learning_activity')
-        .select(
-          'best_week_days, this_week_days, total_active_days, '
-          'activity_days, weeks_tracked',
-        )
-        .eq('user_id', userId)
-        .single();
-
-    return _LearningActivityData.fromJson(row);
+      }
+    } catch (error) {
+      if (state is! GlobalLoaded) {
+        emit(GlobalError('Failed to sync learning activity: $error'));
+      }
+    }
   }
 
   Future<void> _onSave(SaveGlobalStats event, Emitter<GlobalState> emit) async {
@@ -177,40 +203,4 @@ class GlobalBloc extends Bloc<GlobalEvent, GlobalState> {
     final date = DateTime.parse(createdAt);
     return '${date.day}/${date.month}/${date.year}';
   }
-}
-
-final class _LearningActivityData {
-  const _LearningActivityData({
-    required this.bestWeekDays,
-    required this.thisWeekDays,
-    required this.totalActiveDays,
-    required this.activityDays,
-    required this.weeksTracked,
-  });
-
-  factory _LearningActivityData.fromJson(Map<String, dynamic> json) {
-    final rawDays = json['activity_days'];
-    final activityDays = rawDays is List
-        ? rawDays
-              .whereType<Map>()
-              .map(
-                (day) => ActivityDay.fromJson(Map<String, dynamic>.from(day)),
-              )
-              .toList(growable: false)
-        : const <ActivityDay>[];
-
-    return _LearningActivityData(
-      bestWeekDays: json['best_week_days'] as int? ?? 0,
-      thisWeekDays: json['this_week_days'] as int? ?? 0,
-      totalActiveDays: json['total_active_days'] as int? ?? 0,
-      activityDays: activityDays,
-      weeksTracked: json['weeks_tracked'] as int? ?? 0,
-    );
-  }
-
-  final int bestWeekDays;
-  final int thisWeekDays;
-  final int totalActiveDays;
-  final List<ActivityDay> activityDays;
-  final int weeksTracked;
 }

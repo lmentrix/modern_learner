@@ -13,6 +13,8 @@ class LearningActivitySection extends StatefulWidget {
     required this.totalActiveDays,
     required this.activityDays,
     required this.weeksTracked,
+    required this.todayActiveSeconds,
+    required this.isTracking,
   });
 
   final bool animate;
@@ -21,6 +23,8 @@ class LearningActivitySection extends StatefulWidget {
   final int totalActiveDays;
   final List<ActivityDay> activityDays;
   final int weeksTracked;
+  final int todayActiveSeconds;
+  final bool isTracking;
 
   @override
   State<LearningActivitySection> createState() =>
@@ -41,8 +45,10 @@ class _LearningActivitySectionState extends State<LearningActivitySection>
       duration: const Duration(milliseconds: 420),
     );
     _fade = CurvedAnimation(parent: _ctrl, curve: Curves.easeOut);
-    _slide = Tween<Offset>(begin: const Offset(0, 0.06), end: Offset.zero)
-        .animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
+    _slide = Tween<Offset>(
+      begin: const Offset(0, 0.06),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
     if (widget.animate) _ctrl.forward();
   }
 
@@ -100,7 +106,9 @@ class _LearningActivitySectionState extends State<LearningActivitySection>
                     const Spacer(),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: EduColors.primaryLight,
                         borderRadius: EduRadius.borderPill,
@@ -118,6 +126,11 @@ class _LearningActivitySectionState extends State<LearningActivitySection>
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: EduSpacing.s4),
+                _OnlineTimeStatus(
+                  activeSeconds: widget.todayActiveSeconds,
+                  isTracking: widget.isTracking,
                 ),
                 const SizedBox(height: EduSpacing.s5),
                 ActivityGrid(
@@ -152,6 +165,81 @@ class _LearningActivitySectionState extends State<LearningActivitySection>
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _OnlineTimeStatus extends StatelessWidget {
+  const _OnlineTimeStatus({
+    required this.activeSeconds,
+    required this.isTracking,
+  });
+
+  final int activeSeconds;
+  final bool isTracking;
+
+  @override
+  Widget build(BuildContext context) {
+    final hours = activeSeconds ~/ 3600;
+    final minutes = (activeSeconds % 3600) ~/ 60;
+    final seconds = activeSeconds % 60;
+    final timeLabel = hours > 0
+        ? '${hours}h ${minutes}m'
+        : minutes > 0
+        ? '${minutes}m ${seconds}s'
+        : '${seconds}s';
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: EduSpacing.s3,
+        vertical: EduSpacing.s2,
+      ),
+      decoration: BoxDecoration(
+        color: EduColors.primaryLight.withValues(alpha: 0.35),
+        borderRadius: EduRadius.borderMd,
+        border: Border.all(color: EduColors.primary.withValues(alpha: 0.16)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 9,
+            height: 9,
+            decoration: BoxDecoration(
+              color: isTracking
+                  ? const Color(0xFF10B981)
+                  : EduColors.textSecondary,
+              shape: BoxShape.circle,
+              boxShadow: isTracking
+                  ? [
+                      BoxShadow(
+                        color: const Color(0xFF10B981).withValues(alpha: 0.35),
+                        blurRadius: 6,
+                      ),
+                    ]
+                  : null,
+            ),
+          ),
+          const SizedBox(width: EduSpacing.s2),
+          Expanded(
+            child: Text(
+              isTracking ? 'Online time is being recorded' : 'Tracking paused',
+              style: GoogleFonts.caveat(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: EduColors.textSecondary,
+              ),
+            ),
+          ),
+          Text(
+            '$timeLabel today',
+            style: GoogleFonts.caveat(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: EduColors.primary,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -211,8 +299,11 @@ class _LightAccentLine extends CustomPainter {
       Path()
         ..moveTo(0, size.height * 0.6)
         ..quadraticBezierTo(
-            size.width * 0.30, size.height * 0.1,
-            size.width * 0.62, size.height * 0.7)
+          size.width * 0.30,
+          size.height * 0.1,
+          size.width * 0.62,
+          size.height * 0.7,
+        )
         ..lineTo(size.width * 0.90, size.height * 0.3),
       Paint()
         ..color = EduColors.primary.withValues(alpha: 0.16)

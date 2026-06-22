@@ -51,7 +51,7 @@ Future<List<ActivityDay>> fetchActivityDays() async {
       .from('learning_activity_days')
       .select()
       .eq('user_id', currentUser.id)
-      .order('date', ascending: true);
+      .order('activity_date', ascending: true);
 
   return (response as List<dynamic>)
       .map((row) => ActivityDay.fromJson(row as Map<String, dynamic>))

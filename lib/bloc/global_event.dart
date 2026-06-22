@@ -19,3 +19,16 @@ final class LearningActivity extends GlobalEvent {
 
   final String userId;
 }
+
+final class StartLearningActivityMonitoring extends GlobalEvent {
+  const StartLearningActivityMonitoring(this.userId);
+
+  final String userId;
+}
+
+final class SyncLearningActivity extends GlobalEvent {
+  const SyncLearningActivity(this.userId, {this.stopTracking = false});
+
+  final String userId;
+  final bool stopTracking;
+}

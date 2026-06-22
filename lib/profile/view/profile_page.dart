@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -19,7 +20,7 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   static const _sectionCount = 3;
   static const _staggerMs = 130;
   static const _durationMs = 400;
@@ -27,11 +28,13 @@ class _ProfilePageState extends State<ProfilePage>
   late final List<AnimationController> _ctrls;
   late final List<Animation<double>> _fades;
   late final List<Animation<Offset>> _slides;
+  Timer? _activitySyncTimer;
   final List<bool> _started = List.filled(_sectionCount, false);
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _ctrls = List.generate(
       _sectionCount,
       (_) => AnimationController(
@@ -51,13 +54,53 @@ class _ProfilePageState extends State<ProfilePage>
         )
         .toList();
     _fetchLearningActivity();
+    _startActivityMonitoring();
     _launch();
   }
 
+  String? get _userId => Supabase.instance.client.auth.currentUser?.id;
+
   void _fetchLearningActivity() {
-    final userId = Supabase.instance.client.auth.currentUser?.id;
+    final userId = _userId;
     if (userId != null) {
       context.read<GlobalBloc>().add(LearningActivity(userId));
+    }
+  }
+
+  void _startActivityMonitoring() {
+    final userId = _userId;
+    if (userId == null) return;
+
+    context.read<GlobalBloc>().add(StartLearningActivityMonitoring(userId));
+    _activitySyncTimer?.cancel();
+    _activitySyncTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (!mounted) return;
+      context.read<GlobalBloc>().add(SyncLearningActivity(userId));
+    });
+  }
+
+  void _stopActivityMonitoring() {
+    _activitySyncTimer?.cancel();
+    _activitySyncTimer = null;
+    final userId = _userId;
+    if (userId != null) {
+      context.read<GlobalBloc>().add(
+        SyncLearningActivity(userId, stopTracking: true),
+      );
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _startActivityMonitoring();
+      return;
+    }
+    if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached ||
+        state == AppLifecycleState.hidden) {
+      _stopActivityMonitoring();
     }
   }
 
@@ -72,7 +115,18 @@ class _ProfilePageState extends State<ProfilePage>
   }
 
   @override
+  void reassemble() {
+    super.reassemble();
+    WidgetsBinding.instance
+      ..removeObserver(this)
+      ..addObserver(this);
+    _startActivityMonitoring();
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _stopActivityMonitoring();
     for (final c in _ctrls) {
       c.dispose();
     }
@@ -237,6 +291,8 @@ class _ProfilePageState extends State<ProfilePage>
                     totalActiveDays: loaded?.totalActiveDays ?? 0,
                     activityDays: loaded?.activityDays ?? const [],
                     weeksTracked: loaded?.weeksTracked ?? 0,
+                    todayActiveSeconds: loaded?.todayActiveSeconds ?? 0,
+                    isTracking: loaded?.isActivityTracking ?? false,
                   ),
                 );
               },
