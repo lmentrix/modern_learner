@@ -6,9 +6,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:modern_learner_production/auth/service/auth_service.dart';
 import 'package:modern_learner_production/bloc/global_bloc.dart';
+import 'package:modern_learner_production/profile/repo/streak_calculation.dart';
 import 'package:modern_learner_production/profile/section/learning_activity_section.dart';
 import 'package:modern_learner_production/profile/section/profile_header_section.dart';
 import 'package:modern_learner_production/profile/section/settings_section.dart';
+import 'package:modern_learner_production/profile/view/streak_calendar.dart';
 import 'package:modern_learner_production/theme/theme.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -28,7 +30,11 @@ class _ProfilePageState extends State<ProfilePage>
   late final List<AnimationController> _ctrls;
   late final List<Animation<double>> _fades;
   late final List<Animation<Offset>> _slides;
+  late final StreakCalculation _streakCalculation;
   Timer? _activitySyncTimer;
+  int? _realOnlineStreak;
+  bool _isSyncingStreak = false;
+  bool _hasShownStreakCalendar = false;
   final List<bool> _started = List.filled(_sectionCount, false);
 
   @override
@@ -53,8 +59,10 @@ class _ProfilePageState extends State<ProfilePage>
           ).animate(CurvedAnimation(parent: c, curve: Curves.easeOut)),
         )
         .toList();
+    _streakCalculation = StreakCalculation(Supabase.instance.client);
     _fetchLearningActivity();
     _startActivityMonitoring();
+    _showStreakCalendarOnEntry();
     _launch();
   }
 
@@ -76,6 +84,46 @@ class _ProfilePageState extends State<ProfilePage>
     _activitySyncTimer = Timer.periodic(const Duration(seconds: 30), (_) {
       if (!mounted) return;
       context.read<GlobalBloc>().add(SyncLearningActivity(userId));
+      _syncRealOnlineStreak(userId);
+    });
+  }
+
+  Future<void> _syncRealOnlineStreak(String userId) async {
+    if (_isSyncingStreak) return;
+    _isSyncingStreak = true;
+    try {
+      final streak = await _streakCalculation.syncOnlineDayAndFetchStreak(
+        userId: userId,
+      );
+      if (!mounted) return;
+      setState(() => _realOnlineStreak = streak);
+    } catch (error) {
+      debugPrint('Failed to sync online streak: $error');
+    } finally {
+      _isSyncingStreak = false;
+    }
+  }
+
+  void _showStreakCalendarOnEntry() {
+    if (_hasShownStreakCalendar) return;
+    _hasShownStreakCalendar = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final userId = _userId;
+      if (!mounted || userId == null) return;
+
+      final streak = await showGeneralDialog<int>(
+        context: context,
+        barrierDismissible: true,
+        barrierLabel: 'Close streak calendar',
+        barrierColor: Colors.black.withValues(alpha: 0.24),
+        transitionDuration: const Duration(milliseconds: 260),
+        pageBuilder: (dialogContext, _, _) {
+          return StreakCalendarPage(userId: userId);
+        },
+      );
+      if (!mounted || streak == null) return;
+      setState(() => _realOnlineStreak = streak);
+      context.read<GlobalBloc>().add(LearningActivity(userId));
     });
   }
 
@@ -260,7 +308,7 @@ class _ProfilePageState extends State<ProfilePage>
                     level: loaded.level ?? 0,
                     xp: loaded.xp ?? 0,
                     xpGoal: loaded.xpGoal ?? 0,
-                    streak: loaded.streak ?? 0,
+                    streak: _realOnlineStreak ?? loaded.streak ?? 0,
                     lessonsCompleted: loaded.lessons ?? 0,
                     hoursStudied: loaded.hours ?? 0,
                     notesCount: loaded.notes ?? 0,

@@ -20,8 +20,9 @@ class EmptyNotesSection extends StatefulWidget {
 
 class _EmptyNotesSectionState extends State<EmptyNotesSection> {
   late final UploadService _service;
-  List<NoteItem> _notes = [];
+  List<NoteItem> _files = [];
   bool _loading = true;
+  String? _error;
 
   @override
   void initState() {
@@ -36,35 +37,38 @@ class _EmptyNotesSectionState extends State<EmptyNotesSection> {
       if (mounted) setState(() => _loading = false);
       return;
     }
+
     try {
       final models = await _service.fetchFiles(userId);
-      if (mounted) {
-        setState(() {
-          _notes = models.map(_toNoteItem).toList();
-          _loading = false;
-        });
-      }
+      if (!mounted) return;
+      setState(() {
+        _files = models.map(_toFileItem).toList(growable: false);
+        _loading = false;
+        _error = null;
+      });
     } catch (_) {
-      if (mounted) setState(() => _loading = false);
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _error = 'Failed to load files';
+      });
     }
   }
 
-  static NoteItem _toNoteItem(UploadedFileModel m) => NoteItem(
-        id: m.id,
-        title: m.title,
-        fileType: _mapFileType(m.fileType),
-        fileSize: m.fileSize,
-        subject: m.subject,
-        uploadedAt: _formatDate(m.uploadedAt),
-        cardColor: m.cardColor,
-      );
-
-  static NoteFileType _mapFileType(UploadFileType t) => switch (t) {
-        UploadFileType.pdf => NoteFileType.pdf,
-        UploadFileType.image => NoteFileType.image,
-        UploadFileType.doc => NoteFileType.doc,
-        UploadFileType.other => NoteFileType.other,
-      };
+  static NoteItem _toFileItem(UploadedFileModel file) => NoteItem(
+    id: file.id,
+    title: file.title,
+    fileType: switch (file.fileType) {
+      UploadFileType.pdf => NoteFileType.pdf,
+      UploadFileType.image => NoteFileType.image,
+      UploadFileType.doc => NoteFileType.doc,
+      UploadFileType.other => NoteFileType.other,
+    },
+    fileSize: file.fileSize,
+    subject: file.subject,
+    uploadedAt: _formatDate(file.uploadedAt),
+    cardColor: file.cardColor == 0 ? 0xFFE9D5FF : file.cardColor,
+  );
 
   static String _formatDate(DateTime dt) {
     final now = DateTime.now();
@@ -73,25 +77,31 @@ class _EmptyNotesSectionState extends State<EmptyNotesSection> {
     if (d == today) return 'Today';
     if (d == today.subtract(const Duration(days: 1))) return 'Yesterday';
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     return '${months[dt.month - 1]} ${dt.day}';
-  }
-
-  void _delete(NoteItem note) {
-    _service.deleteFile(note.id).ignore();
-    setState(() => _notes.remove(note));
   }
 
   @override
   Widget build(BuildContext context) {
     if (_loading) {
       return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 32),
+        padding: EdgeInsets.symmetric(vertical: 24),
         child: Center(child: CircularProgressIndicator()),
       );
     }
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: EduSpacing.s6),
       child: Column(
@@ -106,7 +116,7 @@ class _EmptyNotesSectionState extends State<EmptyNotesSection> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'My notes',
+                    'My files',
                     style: GoogleFonts.caveat(
                       fontSize: 20,
                       fontWeight: FontWeight.w700,
@@ -120,36 +130,69 @@ class _EmptyNotesSectionState extends State<EmptyNotesSection> {
                 ],
               ),
               const Spacer(),
-              if (_notes.isNotEmpty)
+              if (_files.isNotEmpty)
                 _UploadChip(label: '+ Upload', onTap: () {}),
             ],
           ),
 
-          const SizedBox(height: EduSpacing.s8),
+          const SizedBox(height: EduSpacing.s4),
 
           // ── Content — cross-fades between list and empty state ───────────
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 380),
-            switchInCurve: Curves.easeOut,
-            switchOutCurve: Curves.easeIn,
-            transitionBuilder: (child, animation) => FadeTransition(
-              opacity: animation,
-              child: SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(0, 0.06),
-                  end: Offset.zero,
-                ).animate(animation),
-                child: child,
+          if (_error != null)
+            _NoteErrorState(message: _error!, onRetry: _fetchFiles)
+          else
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 380),
+              switchInCurve: Curves.easeOut,
+              switchOutCurve: Curves.easeIn,
+              transitionBuilder: (child, animation) => FadeTransition(
+                opacity: animation,
+                child: SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(0, 0.06),
+                    end: Offset.zero,
+                  ).animate(animation),
+                  child: child,
+                ),
               ),
+              child: _files.isEmpty
+                  ? const Center(
+                      key: ValueKey('empty'),
+                      child: _UploadEmptyState(),
+                    )
+                  : _NotesList(
+                      key: const ValueKey('list'),
+                      notes: _files,
+                      onDelete: (file) {
+                        _service.deleteFile(file.id).ignore();
+                        setState(() => _files.remove(file));
+                      },
+                    ),
             ),
-            child: _notes.isEmpty
-                ? const Center(key: ValueKey('empty'), child: _UploadEmptyState())
-                : _NotesList(
-                    key: const ValueKey('list'),
-                    notes: _notes,
-                    onDelete: _delete,
-                  ),
+        ],
+      ),
+    );
+  }
+}
+
+class _NoteErrorState extends StatelessWidget {
+  const _NoteErrorState({required this.message, required this.onRetry});
+
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        children: [
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodyMedium,
           ),
+          const SizedBox(height: EduSpacing.s3),
+          TextButton(onPressed: onRetry, child: const Text('Try again')),
         ],
       ),
     );
@@ -208,6 +251,7 @@ class _NotesListState extends State<_NotesList> {
       key: _listKey,
       initialItemCount: widget.notes.length,
       shrinkWrap: true,
+      padding: EdgeInsets.zero,
       physics: const NeverScrollableScrollPhysics(),
       itemBuilder: (context, index, animation) {
         if (index >= widget.notes.length) return const SizedBox.shrink();
@@ -270,29 +314,34 @@ class _SwipeableState extends State<_Swipeable> with TickerProviderStateMixin {
     _burst = burst;
 
     // Brief swell then elastic implode
-    _cardScale = TweenSequence<double>([
-      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.07), weight: 10),
-      TweenSequenceItem(
-        tween: Tween(begin: 1.07, end: 0.0)
-            .chain(CurveTween(curve: Curves.easeInBack)),
-        weight: 90,
-      ),
-    ]).animate(CurvedAnimation(
-      parent: burst,
-      curve: const Interval(0.15, 0.72),
-    ));
+    _cardScale =
+        TweenSequence<double>([
+          TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.07), weight: 10),
+          TweenSequenceItem(
+            tween: Tween(
+              begin: 1.07,
+              end: 0.0,
+            ).chain(CurveTween(curve: Curves.easeInBack)),
+            weight: 90,
+          ),
+        ]).animate(
+          CurvedAnimation(parent: burst, curve: const Interval(0.15, 0.72)),
+        );
 
     _cardFade = Tween<double>(begin: 1.0, end: 0.0).animate(
       CurvedAnimation(parent: burst, curve: const Interval(0.30, 0.72)),
     );
 
-    _cardRotate = TweenSequence<double>([
-      TweenSequenceItem(tween: Tween(begin: 0.0, end: 0.06), weight: 50),
-      TweenSequenceItem(tween: Tween(begin: 0.06, end: -0.04), weight: 50),
-    ]).animate(CurvedAnimation(
-      parent: burst,
-      curve: const Interval(0.15, 0.70, curve: Curves.easeInOut),
-    ));
+    _cardRotate =
+        TweenSequence<double>([
+          TweenSequenceItem(tween: Tween(begin: 0.0, end: 0.06), weight: 50),
+          TweenSequenceItem(tween: Tween(begin: 0.06, end: -0.04), weight: 50),
+        ]).animate(
+          CurvedAnimation(
+            parent: burst,
+            curve: const Interval(0.15, 0.70, curve: Curves.easeInOut),
+          ),
+        );
   }
 
   @override
@@ -303,7 +352,10 @@ class _SwipeableState extends State<_Swipeable> with TickerProviderStateMixin {
 
   Future<bool> _confirmDismiss(DismissDirection _) async {
     final burst = _burst;
-    if (burst == null) { widget.onDelete(); return false; }
+    if (burst == null) {
+      widget.onDelete();
+      return false;
+    }
     HapticFeedback.mediumImpact();
     await burst.animateTo(0.72);
     HapticFeedback.lightImpact();
@@ -316,9 +368,15 @@ class _SwipeableState extends State<_Swipeable> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     final burst = _burst;
     return SizeTransition(
-      sizeFactor: CurvedAnimation(parent: widget.animation, curve: Curves.easeOut),
+      sizeFactor: CurvedAnimation(
+        parent: widget.animation,
+        curve: Curves.easeOut,
+      ),
       child: FadeTransition(
-        opacity: CurvedAnimation(parent: widget.animation, curve: Curves.easeOut),
+        opacity: CurvedAnimation(
+          parent: widget.animation,
+          curve: Curves.easeOut,
+        ),
         child: Padding(
           padding: EdgeInsets.only(bottom: widget.isLast ? 0 : EduSpacing.s3),
           child: Dismissible(
@@ -329,45 +387,47 @@ class _SwipeableState extends State<_Swipeable> with TickerProviderStateMixin {
             child: burst == null
                 ? widget.child
                 : AnimatedBuilder(
-              animation: burst,
-              builder: (context, child) {
-                final t = burst.value;
-                return Stack(
-                  alignment: Alignment.center,
-                  clipBehavior: Clip.none,
-                  children: [
-                    // Burst FX layer (ripples, particles, sparkles)
-                    Positioned.fill(
-                      child: IgnorePointer(
-                        child: CustomPaint(
-                          painter: _BurstPainter(
-                            progress: t,
-                            accentColor: widget.accentColor,
+                    animation: burst,
+                    builder: (context, child) {
+                      final t = burst.value;
+                      return Stack(
+                        alignment: Alignment.center,
+                        clipBehavior: Clip.none,
+                        children: [
+                          // Burst FX layer (ripples, particles, sparkles)
+                          Positioned.fill(
+                            child: IgnorePointer(
+                              child: CustomPaint(
+                                painter: _BurstPainter(
+                                  progress: t,
+                                  accentColor: widget.accentColor,
+                                ),
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                    ),
-                    // Card — scale + rotate + fade
-                    Transform(
-                      alignment: Alignment.center,
-                      transform: Matrix4.identity()
-                        ..rotateZ(t > 0.15 ? (_cardRotate?.value ?? 0) : 0)
-                        ..scale(
-                          t > 0.15 ? (_cardScale?.value ?? 1.0) : 1.0,
-                          t > 0.15 ? (_cardScale?.value ?? 1.0) : 1.0,
-                        ),
-                      child: Opacity(
-                        opacity: t > 0.30
-                            ? (_cardFade?.value ?? 1.0).clamp(0.0, 1.0)
-                            : 1.0,
-                        child: child,
-                      ),
-                    ),
-                  ],
-                );
-              },
-              child: widget.child,
-            ),
+                          // Card — scale + rotate + fade
+                          Transform(
+                            alignment: Alignment.center,
+                            transform: Matrix4.identity()
+                              ..rotateZ(
+                                t > 0.15 ? (_cardRotate?.value ?? 0) : 0,
+                              )
+                              ..scale(
+                                t > 0.15 ? (_cardScale?.value ?? 1.0) : 1.0,
+                                t > 0.15 ? (_cardScale?.value ?? 1.0) : 1.0,
+                              ),
+                            child: Opacity(
+                              opacity: t > 0.30
+                                  ? (_cardFade?.value ?? 1.0).clamp(0.0, 1.0)
+                                  : 1.0,
+                              child: child,
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                    child: widget.child,
+                  ),
           ),
         ),
       ),
@@ -407,8 +467,11 @@ class _DeleteRevealPanel extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.auto_delete_rounded,
-                  size: 26, color: accentColor.withValues(alpha: 0.85)),
+              Icon(
+                Icons.auto_delete_rounded,
+                size: 26,
+                color: accentColor.withValues(alpha: 0.85),
+              ),
               const SizedBox(height: 4),
               Text(
                 'delete',
@@ -439,7 +502,7 @@ class _BurstPainter extends CustomPainter {
   final Color accentColor;
 
   static final List<_ParticleDef> _particles = _buildParticles();
-  static final List<_SparkleDef>  _sparkles  = _buildSparkles();
+  static final List<_SparkleDef> _sparkles = _buildSparkles();
 
   static List<_ParticleDef> _buildParticles() {
     final rng = math.Random(7);
@@ -447,9 +510,9 @@ class _BurstPainter extends CustomPainter {
       final angle = (i / 16) * math.pi * 2 + rng.nextDouble() * 0.4;
       return _ParticleDef(
         angle: angle,
-        dist:  70.0 + rng.nextDouble() * 60,
-        size:  4.0  + rng.nextDouble() * 6,
-        rot:   rng.nextDouble() * math.pi * 2,
+        dist: 70.0 + rng.nextDouble() * 60,
+        size: 4.0 + rng.nextDouble() * 6,
+        rot: rng.nextDouble() * math.pi * 2,
         delay: rng.nextDouble() * 0.18,
       );
     });
@@ -461,8 +524,8 @@ class _BurstPainter extends CustomPainter {
       final angle = (i / 6) * math.pi * 2 + rng.nextDouble() * 0.5;
       return _SparkleDef(
         angle: angle,
-        dist:  55.0 + rng.nextDouble() * 45,
-        size:  6.0  + rng.nextDouble() * 8,
+        dist: 55.0 + rng.nextDouble() * 45,
+        size: 6.0 + rng.nextDouble() * 8,
       );
     });
   }
@@ -470,7 +533,7 @@ class _BurstPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     if (progress <= 0) return;
-    final cx = size.width  / 2;
+    final cx = size.width / 2;
     final cy = size.height / 2;
     final center = Offset(cx, cy);
 
@@ -525,8 +588,12 @@ class _BurstPainter extends CustomPainter {
         // Flash in (0→0.5) then out (0.5→1)
         final alpha = sparkT < 0.5 ? sparkT * 2 : (1 - sparkT) * 2;
         final sz = s.size * (0.5 + 0.5 * (1 - sparkT));
-        _drawStar(canvas, Offset(cx + dx, cy + dy), sz,
-            accentColor.withValues(alpha: alpha * 0.92));
+        _drawStar(
+          canvas,
+          Offset(cx + dx, cy + dy),
+          sz,
+          accentColor.withValues(alpha: alpha * 0.92),
+        );
       }
     }
   }
@@ -535,13 +602,13 @@ class _BurstPainter extends CustomPainter {
     final h = size / 2;
     final thin = h * 0.22;
     final path = Path()
-      ..moveTo(c.dx,        c.dy - h)
+      ..moveTo(c.dx, c.dy - h)
       ..lineTo(c.dx + thin, c.dy - thin)
-      ..lineTo(c.dx + h,    c.dy)
+      ..lineTo(c.dx + h, c.dy)
       ..lineTo(c.dx + thin, c.dy + thin)
-      ..lineTo(c.dx,        c.dy + h)
+      ..lineTo(c.dx, c.dy + h)
       ..lineTo(c.dx - thin, c.dy + thin)
-      ..lineTo(c.dx - h,    c.dy)
+      ..lineTo(c.dx - h, c.dy)
       ..lineTo(c.dx - thin, c.dy - thin)
       ..close();
     canvas.drawPath(path, Paint()..color = color);
@@ -554,14 +621,21 @@ class _BurstPainter extends CustomPainter {
 
 class _ParticleDef {
   const _ParticleDef({
-    required this.angle, required this.dist,
-    required this.size,  required this.rot, required this.delay,
+    required this.angle,
+    required this.dist,
+    required this.size,
+    required this.rot,
+    required this.delay,
   });
   final double angle, dist, size, rot, delay;
 }
 
 class _SparkleDef {
-  const _SparkleDef({required this.angle, required this.dist, required this.size});
+  const _SparkleDef({
+    required this.angle,
+    required this.dist,
+    required this.size,
+  });
   final double angle, dist, size;
 }
 
@@ -609,7 +683,7 @@ class _UploadEmptyStateState extends State<_UploadEmptyState>
         ),
         const SizedBox(height: EduSpacing.s6),
         Text(
-          'No notes yet',
+          'No files yet',
           style: tt.titleMedium?.copyWith(color: EduColors.textPrimary),
         ),
         const SizedBox(height: EduSpacing.s1),
@@ -629,7 +703,7 @@ class _UploadEmptyStateState extends State<_UploadEmptyState>
           onPressed: () {},
           icon: const Icon(Icons.upload_rounded, size: 18),
           label: Text(
-            'Upload a note',
+            'Upload a file',
             style: tt.titleSmall?.copyWith(color: EduColors.textInverse),
           ),
         ),
@@ -743,10 +817,7 @@ class _DashedCardPainter extends CustomPainter {
       Rect.fromLTWH(0, 0, size.width, size.height),
       const Radius.circular(20),
     );
-    canvas.drawRRect(
-      rr,
-      Paint()..color = EduColors.surface,
-    );
+    canvas.drawRRect(rr, Paint()..color = EduColors.surface);
 
     const dashW = 6.0;
     const gap = 4.0;
@@ -760,10 +831,7 @@ class _DashedCardPainter extends CustomPainter {
     for (final m in metrics) {
       double d = 0;
       while (d < m.length) {
-        canvas.drawPath(
-          m.extractPath(d, d + dashW),
-          paint,
-        );
+        canvas.drawPath(m.extractPath(d, d + dashW), paint);
         d += dashW + gap;
       }
     }
@@ -812,9 +880,9 @@ class _Sparkle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => CustomPaint(
-        size: Size(size, size),
-        painter: _SparkPainter(color: color),
-      );
+    size: Size(size, size),
+    painter: _SparkPainter(color: color),
+  );
 }
 
 class _SparkPainter extends CustomPainter {
@@ -852,8 +920,11 @@ class _ThinAccentLine extends CustomPainter {
       Path()
         ..moveTo(0, size.height * 0.6)
         ..quadraticBezierTo(
-            size.width * 0.30, size.height * 0.1,
-            size.width * 0.62, size.height * 0.7)
+          size.width * 0.30,
+          size.height * 0.1,
+          size.width * 0.62,
+          size.height * 0.7,
+        )
         ..lineTo(size.width * 0.90, size.height * 0.3),
       Paint()
         ..color = EduColors.primary.withValues(alpha: 0.40)
@@ -866,4 +937,3 @@ class _ThinAccentLine extends CustomPainter {
   @override
   bool shouldRepaint(_ThinAccentLine old) => false;
 }
-
